@@ -1,0 +1,10 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/models/materials/village_craft/oak.png" id="1_otl7n"]
+
+[resource]
+albedo_texture = ExtResource("1_otl7n")
+roughness = 0.94
+uv1_scale = Vector3(0.65, 0.65, 0.65)
+uv1_triplanar = true
+texture_filter = 5

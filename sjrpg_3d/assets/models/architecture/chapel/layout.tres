@@ -1,0 +1,46 @@
+[gd_resource type="Resource" format=3]
+
+[resource]
+metadata/report = {
+"bounds": AABB(-3.0501456, 0, -2.6529257, 6.1031694, 7.7999997, 6.2335014),
+"door_bottom": Vector3(-1.68, 0.28, 2.4005756),
+"door_height": 3.0,
+"door_recess": 0.0,
+"door_width": 1.4560000000000002,
+"entrance_offset": -1.6800000000000002,
+"facade_reliefs": 8,
+"floor_height": 0.28,
+"footprint": Vector2(5.6, 4.8011513),
+"gable_count": 2,
+"gable_heights": Vector2(4.6, 6.2),
+"hybrid_facade": true,
+"meshes": [{
+"$node": "ChapelDetail_stone"
+}, {
+"$node": "ChapelDetail_facade"
+}, {
+"$node": "ChapelDetail_slate"
+}, {
+"$node": "ChapelDetail_bronze"
+}, {
+"$node": "ChapelDetail_lead"
+}],
+"nave_front": 1.4403453826904296,
+"oculi": [],
+"pieces": 468,
+"reference": "assets/source/style/approved-game-reference.jpg",
+"roof_rows": 18,
+"surfaces": 5,
+"tower_height": 7.799999999999999,
+"triangles": 6124,
+"windows": []
+}
+metadata/mesh_roles = {
+"ChapelDetail_bronze": "bronze",
+"ChapelDetail_facade": "facade",
+"ChapelDetail_lead": "lead",
+"ChapelDetail_slate": "slate",
+"ChapelDetail_stone": "stone"
+}
+metadata/node_flags = {}
+metadata/source_dimensions = Vector3(3.5, 4.375, 3.0007195)

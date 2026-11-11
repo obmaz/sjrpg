@@ -1,0 +1,25 @@
+[gd_resource type="Resource" format=3]
+
+[resource]
+metadata/report = {
+"arches": 16,
+"bays": 8,
+"collision_changes": 1,
+"deck": PackedVector2Array(7645.547, 4239.893, 8227.547, 3903.0874, 8359.574, 3978.5317, 7777.574, 4315.3374),
+"deck_height": 0.045,
+"foundation_parts": 9,
+"length_m": 10.671274,
+"opening_guards": true,
+"solid_arcade_backing": true,
+"surfaces": 4,
+"triangles": 4356,
+"width_m": 2.4055953
+}
+metadata/mesh_roles = {
+"IronGrille": "IronGrille",
+"JointedCoping": "JointedCoping",
+"JointedPaving": "JointedPaving",
+"PierAndArchStone": "PierAndArchStone"
+}
+metadata/node_flags = {}
+metadata/source_dimensions = Vector3(0, 0, 0)

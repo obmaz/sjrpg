@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "id": "home",
+  "sourceType": "offline_native_mesh_bake",
+  "inputs": [
+    {
+      "path": "tools/architecture_art/bake.gd",
+      "sha256": "3fdfcf340bea93504597404b763435e3cb1627a1480584c56faf3baadf0e0b0f"
+    },
+    {
+      "path": "tools/architecture_art/house_builder.gd",
+      "sha256": "e521b09136e72b74de8836c94acdb8633c3692f47beb742a5c6277230ce33ed2"
+    },
+    {
+      "path": "scripts/iso.gd",
+      "sha256": "2b727818d9bdf36c7aa6308d24c785ba9474aa217b10c82ba67c54c1a1404bfd"
+    },
+    {
+      "path": "scripts/village.gd",
+      "sha256": "8768492e0bb5d95c619f4996d92d47dbf424b71ade1de429cf16f2d988e3f8c5"
+    },
+    {
+      "path": "assets/data/village.json",
+      "sha256": "830c6b0125c090318b26482c151e789b12bf887164cd970246e2a0a093c88f72"
+    },
+    {
+      "path": "assets/models/architecture/shared/house_plan.gd",
+      "sha256": "a45bb894a69522c783a433762b1832bbfc02715ec146afca306e2603dc4d7c1c"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "model.glb",
+      "sha256": "ab021a860cdfdc00959310614a62d695a41b6bbfb85ff29c2c94be73782cc0cb"
+    },
+    {
+      "path": "layout.tres",
+      "sha256": "d97d58cfd43d9674948371f95268051d503e50a84b36e1ce2a635858104aeb3f"
+    },
+    {
+      "path": "visual.tscn",
+      "sha256": "62bf36c71b4054a3412e39631ee33d3f065abfa1b87b02c4eeaa242e0ab49645"
+    },
+    {
+      "path": "asset.json",
+      "sha256": "facec7cee157aeecd1a726173b3aa7f4ac86a505e8ea31e5bb3d0497bfb29d4a"
+    },
+    {
+      "path": "materials/stone.tres",
+      "sha256": "d8ce2e8db6fc9e97c5d65b41bd23860be0035a3deeeeee3171997fd857c7be54"
+    },
+    {
+      "path": "materials/wall.tres",
+      "sha256": "01fda4ea0e2cf274377fbe99f15c61fb2bea5a4ae01a65eacebfd6c19f7cbf9f"
+    },
+    {
+      "path": "materials/wood.tres",
+      "sha256": "e65fb5d204931531b4d80ed7f24c2eacc93420f3f663ce14ea38da3f829134de"
+    },
+    {
+      "path": "materials/iron.tres",
+      "sha256": "b049e629ea23852d8af43fec268a1ff973fd998a5b8627e2195a5c728b224802"
+    },
+    {
+      "path": "materials/glass.tres",
+      "sha256": "4cf2bd1fd6c3b59209bbaaee91b1f2bcd221a810f9ad8863b642a549ff545417"
+    },
+    {
+      "path": "materials/slate.tres",
+      "sha256": "0dc6bc39baa198ce49204b6db69e8e3f0ef562a1780e925d9275930b4471f8b9"
+    }
+  ],
+  "triangles": 10480,
+  "meshes": 6,
+  "materialRoles": [
+    "stone",
+    "wall",
+    "wood",
+    "iron",
+    "glass",
+    "slate"
+  ],
+  "units": "metres; +Y up; existing +Z front and foot datum",
+  "materialPolicy": "GLB contains neutral PBR slots; visual.tscn binds original Godot shaders and shared textures without image copies.",
+  "collisionPolicy": "existing Native plans and SpatialWorld3D own collision; visual asset contains no physics bodies"
+}

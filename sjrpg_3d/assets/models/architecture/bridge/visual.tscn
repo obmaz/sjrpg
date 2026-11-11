@@ -1,0 +1,16 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://assets/models/architecture/shared/visual.gd" id="visual"]
+[ext_resource type="PackedScene" path="res://assets/models/architecture/bridge/model.glb" id="model"]
+[ext_resource type="Resource" path="res://assets/models/architecture/bridge/layout.tres" id="layout"]
+[ext_resource type="Material" path="res://assets/models/architecture/bridge/materials/PierAndArchStone.tres" id="PierAndArchStone"]
+[ext_resource type="Material" path="res://assets/models/architecture/bridge/materials/JointedCoping.tres" id="JointedCoping"]
+[ext_resource type="Material" path="res://assets/models/architecture/bridge/materials/IronGrille.tres" id="IronGrille"]
+[ext_resource type="Material" path="res://assets/models/architecture/bridge/materials/JointedPaving.tres" id="JointedPaving"]
+
+[node name="Bridge" type="Node3D"]
+script = ExtResource("visual")
+layout = ExtResource("layout")
+materials = {"PierAndArchStone": ExtResource("PierAndArchStone"), "JointedCoping": ExtResource("JointedCoping"), "IronGrille": ExtResource("IronGrille"), "JointedPaving": ExtResource("JointedPaving")}
+
+[node name="Geometry" parent="." instance=ExtResource("model")]

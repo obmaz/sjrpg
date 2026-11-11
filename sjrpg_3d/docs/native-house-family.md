@@ -1,6 +1,6 @@
 # 네이티브 주택 패밀리
 
-[3D 에셋 제작 기준](../../docs/3d-asset-guide.md)을 따르는 숲1장의 네 주택입니다. 위치와 기단 폭·깊이는 기존 `village`의 실제 투영 발자국에서 도출하며, `NativeHouse3D.build(presenter, root, key, width, depth, height)`가 실제 메시를 만듭니다. 예배당은 별도 `Ortho3DChapel`을 유지합니다.
+[3D 에셋 제작 기준](../../docs/3d-asset-guide.md)을 따르는 숲1장의 네 주택입니다. 위치와 기단 폭·깊이는 기존 `village`의 실제 투영 발자국에서 도출하며, `NativeHouse3D.build(presenter, root, key, width, depth, height)`가 [검수된 GLB 씬](native-architecture-models.md)을 배치합니다. 모델링 코드는 `tools/architecture_art/house_builder.gd`, 공통 규격은 `NativeHousePlan`에 있습니다. 예배당은 별도 GLB 씬을 사용합니다.
 
 | 키 | 역할과 구조 | 벽 / 지붕 재질 | 삼각형 | 서피스 |
 | --- | --- | --- | ---: | ---: |

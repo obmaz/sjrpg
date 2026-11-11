@@ -32,7 +32,7 @@ func run() -> void:
 	check("detailed bridge preserves the actual playable deck and rail endpoints", report["deck"] == game.village.bridge.deck_polygon() and report["foundation_parts"] == 9 and before == game.village.bridge.solids())
 	check("bridge has real arches, closed recess backing and a bounded material budget", report["arches"] >= 4 and report["solid_arcade_backing"] and report["triangles"] < 6000 and report["surfaces"] == 4)
 	check("bridge does not mirror front faces or add hidden colliders", bridge.basis.determinant() > 0.0 and bridge.find_children("*", "CollisionObject3D", true, false).is_empty())
-	for child: MeshInstance3D in bridge.get_children():
+	for child: MeshInstance3D in bridge.find_children("*", "MeshInstance3D", true, false):
 		_check_closed_surface(child.mesh, child.name)
 	var world_shrubs: Array[Node] = environment.forest.find_children("NativeUnderbrush", "Node3D", true, false)
 	var count := 0

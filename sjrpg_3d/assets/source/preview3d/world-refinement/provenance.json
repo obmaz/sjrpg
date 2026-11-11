@@ -65,12 +65,12 @@
       "sha256": "828f055cd0e08e513afd72930e074a171fbea3783b1ea0cc7faa13e8bb3dfd04"
     },
     {
-      "path": "scripts/ortho_3d_chapel.gd",
-      "sha256": "fb1a15b62506244e4dc87911d37103be5eaf30ab6c9153714df3f932186427ec"
+      "path": "tools/architecture_art/chapel_builder.gd",
+      "sha256": "ccb5c94fce1c16190baa05a8a255a475c780670a213b0e3b0ee9eaeb84a56957"
     },
     {
-      "path": "scripts/ortho_3d_fortification.gd",
-      "sha256": "f0a321889c8b87cf8e9a0e1c65b3954c98e1fd382b1733356af68177c9b9118d"
+      "path": "tools/architecture_art/fortress_builder.gd",
+      "sha256": "7a244c8adb5fdba3bd121c8a734a406966bd410f1547f1eb998caa76b3182cc4"
     },
     {
       "path": "scripts/spatial_world_3d.gd",
@@ -105,8 +105,8 @@
       "sha256": "f2b6563e0c55b384a04b5f225017cde7b56f6daafef36f13a4b3565cfc7ef51e"
     },
     {
-      "path": "scripts/native_bridge_3d.gd",
-      "sha256": "caec8144322c354980b67c13a338d9aaa64e937facf8b456d2d768e834c39bc4"
+      "path": "tools/architecture_art/bridge_builder.gd",
+      "sha256": "0f012cb235453a9b111269d047642746bdadf31e1db514bb3c4dbae1dd256818"
     },
     {
       "path": "assets/models/materials/village_craft/surfaces.gd",
@@ -123,7 +123,7 @@
   ],
   "roofed_corner_revision": {
     "reference": "2026-11-10 사용자 대화 첨부: 회색 성벽 양 끝의 높은 원형 망루와 원뿔 지붕. 시각 구조 참고이며 외부 모델/텍스처를 복제하지 않음.",
-    "generator": "scripts/ortho_3d_fortification.gd",
+    "generator": "tools/architecture_art/fortress_builder.gd",
     "collision": "scripts/native_fortress_plan.gd + scripts/spatial_world_3d.gd",
     "triangles_whole_family": 32136,
     "static_surfaces": 5,

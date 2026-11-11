@@ -1,0 +1,135 @@
+[gd_resource type="Resource" format=3]
+
+[resource]
+metadata/report = {
+"body_inset": 0.1,
+"bounds": AABB(-2.6702507, 0, -1.9171612, 5.3405013, 5.135, 3.8343225),
+"closed_door": true,
+"collision_note": "Existing whole-house footprint remains solid; doors are closed, smith/stable recesses carry blocking worktops or rails. No enterable interior is promised.",
+"corner_quoins": 40,
+"door_approach": Rect2(-0.81, 1.6845224, 1.62, 0.85),
+"door_height": 2.25,
+"door_width": 1.38,
+"door_x": 0.0,
+"eaves_height": 3.06,
+"footprint": Vector2(4.8722763, 3.3690448),
+"ground_envelope": AABB(-2.4361382, 0, -1.6845224, 4.8722763, 3.06, 3.3690448),
+"height_max": 5.135,
+"key": "sw",
+"materials": ["stone", "wall", "slate", "wood", "iron", "glass"],
+"meshes": [{
+"$node": "House_sw_stone"
+}, {
+"$node": "House_sw_wall"
+}, {
+"$node": "House_sw_wood"
+}, {
+"$node": "House_sw_iron"
+}, {
+"$node": "House_sw_glass"
+}, {
+"$node": "House_sw_slate"
+}],
+"openings": [{
+"actual_recess": 0.12,
+"opening": {
+"arch": true,
+"bottom": 0.16,
+"height": 2.25,
+"role": "closed_door",
+"width": 1.38,
+"x": 0.0
+},
+"transform": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.4845223),
+"wall_depth": 0.2
+}, {
+"actual_recess": 0.12,
+"opening": {
+"arch": false,
+"bottom": 1.06,
+"height": 1.1,
+"role": "window",
+"width": 0.72,
+"x": 0.0
+},
+"transform": Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, -1.4845223),
+"wall_depth": 0.2
+}, {
+"actual_recess": 0.12,
+"opening": {
+"arch": false,
+"bottom": 1.03,
+"height": 1.18,
+"role": "window",
+"width": 0.86,
+"x": 0.0
+},
+"transform": Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -2.236138, 0, 0),
+"wall_depth": 0.2
+}, {
+"actual_recess": 0.12,
+"opening": {
+"arch": false,
+"bottom": 0.54,
+"height": 1.66,
+"role": "stable_bay",
+"width": 2.078331346511841,
+"x": 0.0
+},
+"transform": Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 2.236138, 0, 0),
+"wall_depth": 0.2
+}],
+"pieces": 262,
+"roof_edges": [{
+"a": Vector3(-2.5961382, 3.1100132, -1.8445224),
+"b": Vector3(0, 4.64, -1.8445224),
+"kind": "roof_pitch"
+}, {
+"a": Vector3(-2.5961382, 3.1100132, 1.8445224),
+"b": Vector3(0, 4.64, 1.8445224),
+"kind": "roof_pitch"
+}, {
+"a": Vector3(-2.6561382, 3.06, -1.9045224),
+"b": Vector3(-2.6561382, 3.06, 1.9045224),
+"kind": "ground_axis"
+}, {
+"a": Vector3(2.5961382, 3.1100132, -1.8445224),
+"b": Vector3(0, 4.64, -1.8445224),
+"kind": "roof_pitch"
+}, {
+"a": Vector3(2.5961382, 3.1100132, 1.8445224),
+"b": Vector3(0, 4.64, 1.8445224),
+"kind": "roof_pitch"
+}, {
+"a": Vector3(2.6561382, 3.06, -1.9045224),
+"b": Vector3(2.6561382, 3.06, 1.9045224),
+"kind": "ground_axis"
+}],
+"roof_overhang": 0.2341125,
+"roof_overhang_nominal": 0.22,
+"roof_rise": 1.55,
+"slate_tile_m": 2.6,
+"slate_tiles": 190,
+"style": {
+"label": "timber stable house",
+"slate": "roof_stable",
+"stone": "village_stone",
+"wall": "stable",
+"wood": "door_stable"
+},
+"surface_mapping": "one complete facade per cell, including front/rear gables; structural trim retains metre UVs",
+"surfaces": 6,
+"timber_mapping": "beam-local longitudinal grain, shared existing door material; metre UVs",
+"timber_tile_m": 1.5384615384615383,
+"triangles": 7700
+}
+metadata/mesh_roles = {
+"House_sw_glass": "glass",
+"House_sw_iron": "iron",
+"House_sw_slate": "slate",
+"House_sw_stone": "stone",
+"House_sw_wall": "wall",
+"House_sw_wood": "wood"
+}
+metadata/node_flags = {}
+metadata/source_dimensions = Vector3(4.8722763, 2.9, 3.3690448)

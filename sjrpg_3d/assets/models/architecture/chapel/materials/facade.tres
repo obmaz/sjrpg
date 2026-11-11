@@ -1,0 +1,11 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://assets/models/architecture/chapel/facade.gdshader" id="1_s0ivx"]
+[ext_resource type="Texture2D" path="res://assets/models/architecture/chapel/albedo.png" id="2_t52ga"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_s0ivx")
+shader_parameter/atlas = ExtResource("2_t52ga")
+shader_parameter/entrance_rows = PackedVector2Array(0, 0.018, 0.104166664, 0.03, 0.2337963, 0.29, 0.3472222, 0.33, 1, 0.982)
+shader_parameter/nave_rows = PackedVector2Array(0, 0.018, 0.07601351, 0.03, 0.4222973, 0.39, 0.4560811, 0.4, 0.48986486, 0.44, 0.5743243, 0.6, 0.9459459, 0.95, 1, 0.982)

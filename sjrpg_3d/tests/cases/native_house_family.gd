@@ -131,7 +131,7 @@ func _timber_axes(preview: Ortho3DPreview) -> void:
 	# Measure UV derivatives on the actual emitted beam geometry after rotation.
 	# A two-metre beam must retain grain direction and metre scale in all axes.
 	for axis in 3:
-		var builder := NativeHouse3D.new()
+		var builder := preload("res://tools/architecture_art/house_builder.gd").new()
 		var root := Node3D.new()
 		preview.stage.add_child(root)
 		root.position = Vector3(900, 0, 900)

@@ -1,16 +1,20 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 1.0,
   "id": "smith",
   "kind": "surface",
   "mapping": "facade",
   "albedo": "albedo.png",
   "atlasGrid": [
-    2,
-    2
+    2.0,
+    2.0
   ],
   "tileMetres": 2.56,
   "roughness": 0.94,
   "fullFacade": true,
-  "roofCell": 0,
-  "infillOnly": true
+  "roofCell": 0.0,
+  "infillOnly": true,
+  "model": "model.glb",
+  "scene": "visual.tscn",
+  "layout": "layout.tres",
+  "modelSchemaVersion": 1
 }

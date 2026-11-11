@@ -1,0 +1,16 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://scripts/native_asset_surface.gdshader" id="1_63hr2"]
+[ext_resource type="Texture2D" path="res://assets/models/architecture/bridge/albedo.png" id="2_dciws"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_63hr2")
+shader_parameter/atlas = ExtResource("2_dciws")
+shader_parameter/extent = Vector3(1, 1, 1)
+shader_parameter/gable_rise = 0.0
+shader_parameter/tile = true
+shader_parameter/tile_metres = 2.56
+shader_parameter/cell_override = 2
+shader_parameter/roughness = 0.94
+metadata/asset_id = "bridge"

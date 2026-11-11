@@ -1,0 +1,16 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://scripts/native_asset_surface.gdshader" id="1_xu4e7"]
+[ext_resource type="Texture2D" path="res://assets/models/architecture/smith/albedo.png" id="2_gfa32"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_xu4e7")
+shader_parameter/atlas = ExtResource("2_gfa32")
+shader_parameter/extent = Vector3(7.3385687, 3.06, 4.314981)
+shader_parameter/gable_rise = 1.4
+shader_parameter/tile = false
+shader_parameter/tile_metres = 2.56
+shader_parameter/cell_override = -1
+shader_parameter/roughness = 0.94
+metadata/asset_id = "smith"

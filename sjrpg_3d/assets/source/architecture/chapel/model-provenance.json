@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "id": "chapel",
+  "sourceType": "offline_native_mesh_bake",
+  "inputs": [
+    {
+      "path": "tools/architecture_art/bake.gd",
+      "sha256": "3fdfcf340bea93504597404b763435e3cb1627a1480584c56faf3baadf0e0b0f"
+    },
+    {
+      "path": "tools/architecture_art/chapel_builder.gd",
+      "sha256": "ccb5c94fce1c16190baa05a8a255a475c780670a213b0e3b0ee9eaeb84a56957"
+    },
+    {
+      "path": "scripts/iso.gd",
+      "sha256": "2b727818d9bdf36c7aa6308d24c785ba9474aa217b10c82ba67c54c1a1404bfd"
+    },
+    {
+      "path": "scripts/village.gd",
+      "sha256": "8768492e0bb5d95c619f4996d92d47dbf424b71ade1de429cf16f2d988e3f8c5"
+    },
+    {
+      "path": "assets/data/village.json",
+      "sha256": "830c6b0125c090318b26482c151e789b12bf887164cd970246e2a0a093c88f72"
+    },
+    {
+      "path": "scripts/native_chapel_plan.gd",
+      "sha256": "e006c262ee0ba7d3f4a0d1a4600c9aeae88ab93dcfccda3956d4deb92103b7ce"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "model.glb",
+      "sha256": "cf02690a5932ed15288fb8ee5df965a7ff44d36fe5b7ba04a2a2459f6c61cf04"
+    },
+    {
+      "path": "layout.tres",
+      "sha256": "16ddb332e959cadf499e1f3258b4864adbb3ae81d0cffadd4c0a8fd75760f76c"
+    },
+    {
+      "path": "visual.tscn",
+      "sha256": "9e613e2af22f6df9d75b4486f7e4f52ff478e0a11c3605bf7713293d36038347"
+    },
+    {
+      "path": "asset.json",
+      "sha256": "7f4a09b54a5b4d431788e76a0ed038026d40dba3fb1fd7ea778598c3dbb185d6"
+    },
+    {
+      "path": "materials/stone.tres",
+      "sha256": "6da23724a5d675fe4c84e3e605d7b380f8e17d80265e91797fa87f77f591ffb3"
+    },
+    {
+      "path": "materials/facade.tres",
+      "sha256": "8a7bf7b5ad8807433e06c3c3ac4980290b8e40d1bffad6262894536c96b33622"
+    },
+    {
+      "path": "materials/slate.tres",
+      "sha256": "baa758f16aaebe26b7a056983148a299a0d51c5bd6675cf1b7e972d02cd4c89a"
+    },
+    {
+      "path": "materials/bronze.tres",
+      "sha256": "295dd18c2ee21ad42010528a47558b32332087df1a7e1bad4453eb2af4ecc91a"
+    },
+    {
+      "path": "materials/lead.tres",
+      "sha256": "b049e629ea23852d8af43fec268a1ff973fd998a5b8627e2195a5c728b224802"
+    }
+  ],
+  "triangles": 6124,
+  "meshes": 5,
+  "materialRoles": [
+    "stone",
+    "facade",
+    "slate",
+    "bronze",
+    "lead"
+  ],
+  "units": "metres; +Y up; existing +Z front and foot datum",
+  "materialPolicy": "GLB contains neutral PBR slots; visual.tscn binds original Godot shaders and shared textures without image copies.",
+  "collisionPolicy": "existing Native plans and SpatialWorld3D own collision; visual asset contains no physics bodies"
+}

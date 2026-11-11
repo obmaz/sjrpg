@@ -21,6 +21,8 @@
 
 ## 3D 제작
 
+- [건물 GLB·씬·오프라인 제작](native-architecture-models.md)
+
 - [예배당](native-chapel-refinement.md), [집](native-house-family.md)
 - [주민](native-residents.md), [전사](native-warrior.md), [몬스터](native-enemy-models.md)
 - [공유 배우 표면](native-actor-surfaces.md)

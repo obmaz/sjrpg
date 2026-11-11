@@ -117,3 +117,7 @@ tools/serve.sh
 ## 몬스터의 독립 씬
 
 `NativeEnemyModels`는 게임 상태를 관찰하는 표시 어댑터입니다. 몬스터 여섯 종은 `assets/models/enemies/<kind>/`의 GLB·`visual.tscn`·`asset.json`을 읽고, `shared/visual.gd`가 실제 클립과 타격 시각을 연결합니다. 각 인스턴스의 골격·재질은 분리하고 원본 메시·클립은 공유합니다. 절차형 몬스터 생성기는 제거했으며 원본/클립 변환은 오프라인 도구가 담당합니다. 제작·접지·캐시·검수·출처는 [몬스터 안내](native-enemy-models.md)를 따릅니다.
+
+## 건물 씬과 제작 도구
+
+마을의 주택 네 채·예배당·성곽/성문·다리는 `NativeArchitectureAssets`가 개별 GLB 씬을 인스턴스화합니다. 메시·UV·문짝 피벗은 GLB, 엔진 전용 표면은 씬의 공유 재질, 측정/노드 경로는 자산별 `layout.tres`에 있습니다. `NativeHouse3D`·`Ortho3DChapel`·`NativeBridge3D`는 배치 어댑터이며 `Ortho3DFortification`은 기존 성문 상태만 연결합니다. 실제 이동/충돌은 기존 Plan과 `SpatialWorld3D`가 유지합니다. 모델링 코드는 `tools/architecture_art/`로 옮겼으며 APK/Web에서 제외합니다. 자산별 재현·외부 제작·검수는 [건물 GLB 계약](native-architecture-models.md)을 따릅니다.

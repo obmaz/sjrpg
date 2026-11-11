@@ -1,0 +1,16 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://scripts/native_asset_surface.gdshader" id="1_j4gyd"]
+[ext_resource type="Texture2D" path="res://assets/models/architecture/home/albedo.png" id="2_8u3ip"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_j4gyd")
+shader_parameter/atlas = ExtResource("2_8u3ip")
+shader_parameter/extent = Vector3(4.8974414, 3.35, 2.6418254)
+shader_parameter/gable_rise = 1.9
+shader_parameter/tile = false
+shader_parameter/tile_metres = 2.56
+shader_parameter/cell_override = -1
+shader_parameter/roughness = 0.94
+metadata/asset_id = "home"

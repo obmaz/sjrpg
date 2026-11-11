@@ -1,0 +1,17 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://assets/models/architecture/shared/visual.gd" id="visual"]
+[ext_resource type="PackedScene" path="res://assets/models/architecture/chapel/model.glb" id="model"]
+[ext_resource type="Resource" path="res://assets/models/architecture/chapel/layout.tres" id="layout"]
+[ext_resource type="Material" path="res://assets/models/architecture/chapel/materials/stone.tres" id="stone"]
+[ext_resource type="Material" path="res://assets/models/architecture/chapel/materials/facade.tres" id="facade"]
+[ext_resource type="Material" path="res://assets/models/architecture/chapel/materials/slate.tres" id="slate"]
+[ext_resource type="Material" path="res://assets/models/architecture/chapel/materials/bronze.tres" id="bronze"]
+[ext_resource type="Material" path="res://assets/models/architecture/chapel/materials/lead.tres" id="lead"]
+
+[node name="Chapel" type="Node3D"]
+script = ExtResource("visual")
+layout = ExtResource("layout")
+materials = {"stone": ExtResource("stone"), "facade": ExtResource("facade"), "slate": ExtResource("slate"), "bronze": ExtResource("bronze"), "lead": ExtResource("lead")}
+
+[node name="Geometry" parent="." instance=ExtResource("model")]

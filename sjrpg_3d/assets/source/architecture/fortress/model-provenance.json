@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "id": "fortress",
+  "sourceType": "offline_native_mesh_bake",
+  "inputs": [
+    {
+      "path": "tools/architecture_art/bake.gd",
+      "sha256": "3fdfcf340bea93504597404b763435e3cb1627a1480584c56faf3baadf0e0b0f"
+    },
+    {
+      "path": "tools/architecture_art/fortress_builder.gd",
+      "sha256": "7a244c8adb5fdba3bd121c8a734a406966bd410f1547f1eb998caa76b3182cc4"
+    },
+    {
+      "path": "scripts/iso.gd",
+      "sha256": "2b727818d9bdf36c7aa6308d24c785ba9474aa217b10c82ba67c54c1a1404bfd"
+    },
+    {
+      "path": "scripts/village.gd",
+      "sha256": "8768492e0bb5d95c619f4996d92d47dbf424b71ade1de429cf16f2d988e3f8c5"
+    },
+    {
+      "path": "assets/data/village.json",
+      "sha256": "830c6b0125c090318b26482c151e789b12bf887164cd970246e2a0a093c88f72"
+    },
+    {
+      "path": "scripts/native_fortress_plan.gd",
+      "sha256": "331d62dc95b13428497e317e3050495e8ca351e17f39bdee641ea9cbefd817e9"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "model.glb",
+      "sha256": "f88af51d0f2b95bde55e120a24e1e8e24c1a20abfb8dd6bb83ad1d0894519e86"
+    },
+    {
+      "path": "layout.tres",
+      "sha256": "d3ada1b7eb435062659a088880b88a85ce93a47cfb463f2d1e5e16c2ec1c826e"
+    },
+    {
+      "path": "visual.tscn",
+      "sha256": "e89ec233e28dd7bd720e9b90d09242f0e618168d697572d43d17690473325a66"
+    },
+    {
+      "path": "asset.json",
+      "sha256": "4cd27fc7687b018c278b406abe8700df17066537b3a100a92facd0418b96f5f3"
+    },
+    {
+      "path": "materials/wood.tres",
+      "sha256": "4dcb7abe01abc26b934a03ab230db3128486dd40a70735b6b7e4821e9aaef18f"
+    },
+    {
+      "path": "materials/iron.tres",
+      "sha256": "b049e629ea23852d8af43fec268a1ff973fd998a5b8627e2195a5c728b224802"
+    },
+    {
+      "path": "materials/stone.tres",
+      "sha256": "87e7dad123ae3fca731e4e9d9116fc33dc470093ebdcce6a5cb2c8ab6161a669"
+    },
+    {
+      "path": "materials/granite.tres",
+      "sha256": "f299f946e441e2583f53f7c5e133cbf04328599027dd5595bc57523490c51df2"
+    },
+    {
+      "path": "materials/tower_slate.tres",
+      "sha256": "c4dc4f09bf728f143cb0d7c3396cc89146401278dfa69664129f05b80f3b7737"
+    }
+  ],
+  "triangles": 32136,
+  "meshes": 21,
+  "materialRoles": [
+    "wood",
+    "iron",
+    "stone",
+    "granite",
+    "tower_slate"
+  ],
+  "units": "metres; +Y up; existing +Z front and foot datum",
+  "materialPolicy": "GLB contains neutral PBR slots; visual.tscn binds original Godot shaders and shared textures without image copies.",
+  "collisionPolicy": "existing Native plans and SpatialWorld3D own collision; visual asset contains no physics bodies"
+}

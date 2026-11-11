@@ -1,0 +1,10 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://assets/models/materials/village_craft/surface.gdshader" id="1_5uyul"]
+[ext_resource type="Texture2D" path="res://assets/models/materials/village_craft/masonry.png" id="2_q3c7k"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_5uyul")
+shader_parameter/atlas = ExtResource("2_q3c7k")
+shader_parameter/cell_override = -1

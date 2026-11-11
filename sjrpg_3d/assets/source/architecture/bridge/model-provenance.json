@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "bridge",
+  "sourceType": "offline_native_mesh_bake",
+  "inputs": [
+    {
+      "path": "tools/architecture_art/bake.gd",
+      "sha256": "3fdfcf340bea93504597404b763435e3cb1627a1480584c56faf3baadf0e0b0f"
+    },
+    {
+      "path": "tools/architecture_art/bridge_builder.gd",
+      "sha256": "0f012cb235453a9b111269d047642746bdadf31e1db514bb3c4dbae1dd256818"
+    },
+    {
+      "path": "scripts/iso.gd",
+      "sha256": "2b727818d9bdf36c7aa6308d24c785ba9474aa217b10c82ba67c54c1a1404bfd"
+    },
+    {
+      "path": "scripts/village.gd",
+      "sha256": "8768492e0bb5d95c619f4996d92d47dbf424b71ade1de429cf16f2d988e3f8c5"
+    },
+    {
+      "path": "assets/data/village.json",
+      "sha256": "830c6b0125c090318b26482c151e789b12bf887164cd970246e2a0a093c88f72"
+    },
+    {
+      "path": "scripts/native_bridge_plan.gd",
+      "sha256": "f2b6563e0c55b384a04b5f225017cde7b56f6daafef36f13a4b3565cfc7ef51e"
+    },
+    {
+      "path": "scripts/native_scenery_props_3d.gd",
+      "sha256": "27872b38e31f9e39eb55672e25a5a04edf7068f4e8dce1230e8b947f9eb8a7b7"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "model.glb",
+      "sha256": "14c3c6a5b75faed2f58ffd6933b2acd62e7ce32c7b3fac9b29068d6b0ddebaa3"
+    },
+    {
+      "path": "layout.tres",
+      "sha256": "6b0acf689413035beb1977c63089ebab6e4461f5850be9e24c680caefaf7e297"
+    },
+    {
+      "path": "visual.tscn",
+      "sha256": "6365aeee2f72f155a4ca2354c8d5aa9a285c57b25159289bc64af707f291a531"
+    },
+    {
+      "path": "asset.json",
+      "sha256": "4333d5bc41fd2955eee549cdd54c12160dfd1c36b0fff9ec50e125de5814b4c0"
+    },
+    {
+      "path": "materials/PierAndArchStone.tres",
+      "sha256": "9bfcbfa48ed0cee8bcfcc01b0a93403e01140bd0a1e6d3c0de89f6a995bc4e78"
+    },
+    {
+      "path": "materials/JointedCoping.tres",
+      "sha256": "a85cdc4ed3d66e63f12fc578e8b9888927a50a2520c2a1f9d96acb513b140318"
+    },
+    {
+      "path": "materials/IronGrille.tres",
+      "sha256": "bef0cd81bfb0639d7daeff99950b7e8b0b3a16dd41271d79b94997e083b55965"
+    },
+    {
+      "path": "materials/JointedPaving.tres",
+      "sha256": "542ab0c4dd876bc820c25a1409b3a22ef07552f5bea3d7836cd4dd4273b2251c"
+    }
+  ],
+  "triangles": 4356,
+  "meshes": 4,
+  "materialRoles": [
+    "PierAndArchStone",
+    "JointedCoping",
+    "IronGrille",
+    "JointedPaving"
+  ],
+  "units": "metres; +Y up; existing +Z front and foot datum",
+  "materialPolicy": "GLB contains neutral PBR slots; visual.tscn binds original Godot shaders and shared textures without image copies.",
+  "collisionPolicy": "existing Native plans and SpatialWorld3D own collision; visual asset contains no physics bodies"
+}

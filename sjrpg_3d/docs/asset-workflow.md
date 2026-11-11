@@ -4,13 +4,13 @@
 
 ## 현재 연결 구조
 
-- `assets/models/architecture/<id>/asset.json`과 `albedo.png`: 건물별 전용 네 면 표면. 현재 ID는 shop, smith, stable, home, chapel, bridge입니다.
+- `assets/models/architecture/<id>/`: [GLB·개별 씬·재질·배치 기록](native-architecture-models.md). ID는 shop, smith, stable, home, chapel, fortress, bridge입니다. 기존 여섯 표면 자산은 같은 폴더의 `asset.json`과 `albedo.png`를 유지합니다.
 - `scripts/native_asset_surface.gd`: 폴더별 설정을 읽는 공용 어댑터. 원화 추가·수정에는 이 파일을 고치지 않습니다.
 - `scripts/native_asset_surface.gdshader`: 집과 예배당의 실제 로컬 좌표로 네 방향 벽을 구별하고, 면 전체에 각 원화를 한 번 배치합니다. 창·문·골조와 충돌은 실제 기하가 유지합니다. 다리는 같은 어댑터의 미터 타일 모드를 사용합니다.
 - `assets/models/environment/cave_entrance/model.gd`와 `plan.gd`: 동굴 입구만 담당하는 메시 제작기와 표시·충돌의 공통 치수. 동굴 내부 생성·진입 규칙은 이 에셋에 넣지 않습니다.
 - `assets/source/architecture/<id>/`: 채택 원본·실제 프롬프트·출처와 해시. 패키지에서는 제외합니다.
 
-`asset.json`은 schemaVersion=1, kind=surface, atlasGrid=[2,2]를 사용합니다. albedo는 같은 폴더의 파일명이며 경로를 벗어날 수 없습니다. mapping은 facade 또는 tile, tileMetres는 미터 단위, roughness는 0~1입니다. 셀 순서는 정면(+Z), 오른쪽(+X), 뒤(-Z), 왼쪽(-X)입니다. 수정자는 다른 에셋의 JSON이나 전역 등록 파일을 함께 고치지 않습니다.
+기존 여섯 표면의 `asset.json`은 schemaVersion=1, kind=surface, atlasGrid=[2,2]를 유지하고 모델 경로를 함께 지정합니다. 성곽 모델은 kind=model입니다. albedo는 같은 폴더의 파일명이며 경로를 벗어날 수 없습니다. mapping은 facade 또는 tile, tileMetres는 미터 단위, roughness는 0~1입니다. 셀 순서는 정면(+Z), 오른쪽(+X), 뒤(-Z), 왼쪽(-X)입니다. 수정자는 다른 에셋의 JSON이나 전역 등록 파일을 함께 고치지 않습니다.
 
 주택 네 채와 예배당은 `fullFacade=true`를 사용합니다. 각 셀은 작은 재료 타일 대신 실제 창·문 위치에 맞춘 완성된 외벽 한 면입니다. 앞뒤는 박공 꼭대기까지, 양 측면은 처마까지 한 번 매핑하며, 건물 생성기가 전달한 실제 박공 높이를 사용합니다. 작은 지붕창의 채움은 공용 석재를 사용해 본채의 창·문 그림을 다시 투영하지 않습니다. 다리의 미터 타일 모드는 유지합니다.
 
@@ -50,7 +50,7 @@ GLB/텍스처/라이선스·원본 출처·제작 도구 버전은 같은 에셋
 
 동굴의 로컬 메시와 별개로 `frame()`은 주변 땅보다3.2m 낮고, 지형 통합 어댑터가 외부20m 하강로와 암반 측면을 연결합니다. 모델 교체 시 바깥 지면을0m로 가정해 입구 전체를 다시 올리지 않습니다.
 
-정적 모델의 생성 코드는 에셋 루트에 `NativePlayerOcclusion.mark_object(root)`를 한 번 호출합니다. 벽·지붕·장식·부속 메시를 그 아래에 두면 가릴 때 모델 전체에 같은 투명도가 적용되며, 재질별 정적 배칭 후에도 소속이 유지됩니다. 나무처럼 각 인스턴스가 한 오브젝트인 MultiMesh에는 `occlusion_static_instances=true` 메타데이터를 지정합니다. 플레이어·NPC·몬스터에는 이 표시를 붙이지 않으며, 정적 모델 안의 움직이는 부품은 `occlusion_dynamic=true`로 제외합니다. 연속된 월드 지면·물·길도 등록하지 않습니다.
+정적 모델의 배치 어댑터는 인스턴스 루트에 `NativePlayerOcclusion.mark_object(root)`를 한 번 호출합니다. 벽·지붕·장식·부속 메시를 그 아래에 두면 가릴 때 모델 전체에 같은 투명도가 적용되며, 재질별 정적 배칭 후에도 소속이 유지됩니다. 나무처럼 각 인스턴스가 한 오브젝트인 MultiMesh에는 `occlusion_static_instances=true` 메타데이터를 지정합니다. 플레이어·NPC·몬스터에는 이 표시를 붙이지 않으며, 정적 모델 안의 움직이는 부품은 `occlusion_dynamic=true`로 제외합니다. 연속된 월드 지면·물·길도 등록하지 않습니다.
 
 분수의 전용 표면 패키지는 `assets/models/environment/fountain/`입니다. `albedo.png`의 좌상은 세로 기둥 아치 패널, 우상은 수조 외벽, 좌하는 덮개, 우하는 기초입니다. `asset.json`의 `legacyWater`는 기존2D 분수 물의 텍스처와 픽셀 UV 영역을 지정하며, 표면 교체 때 공용 표시기나 물리 규칙을 수정하지 않습니다. 중심 기둥의 아치 몰딩은 실제 기하이고, 기존5.20×3.88×5.20m 크기와 두 낙수점·보행 충돌은 유지합니다.
 
