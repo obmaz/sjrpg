@@ -146,7 +146,7 @@ func damage_for(id: String, mult: float) -> float:
 # ───────────────────────── loop ─────────────────────────
 
 func _process(delta: float) -> void:
-	if dead or warp_locked:
+	if dead:
 		return
 	_tick_timers(delta)
 	var regen := 7.0 * (1.0 + passive("regen"))
@@ -155,6 +155,9 @@ func _process(delta: float) -> void:
 	else:
 		resource = maxf(0.0, resource - 2.0 * delta)
 	hp = minf(max_hp, hp + max_hp * 0.006 * delta)
+	# 워프는 조작만 잠근다. 쿨다운/버프/회복은 월드와 같은 시간으로 흐른다.
+	if warp_locked:
+		return
 
 	delta = _hitstop.consume(delta)
 	if delta <= 0.0:
@@ -285,7 +288,7 @@ func _tick_timers(delta: float) -> void:
 			frenzy_stacks = 0
 	if buffs.has("storm"):
 		_storm_timer -= delta
-		if _storm_timer <= 0.0:
+		if _storm_timer <= 0.0 and not warp_locked:
 			_storm_timer = 1.6
 			var target: Enemy = game.nearest_enemy(position, 320.0)
 			if target and SpatialCombat3D.area_reaches(game, position, target.position, 320.0 + target.radius):

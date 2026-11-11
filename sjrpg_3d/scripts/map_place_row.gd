@@ -12,6 +12,7 @@ var _ink := Color.WHITE
 var _selected := false
 var _pointer := -2
 var _drag := Vector2.ZERO
+var _dragged := false
 
 
 func setup(index: int, marker: Dictionary) -> MapPlaceRow:
@@ -84,22 +85,34 @@ func _gui_input(event: InputEvent) -> void:
 		pressed.emit()
 		accept_event()
 	elif event is InputEventScreenTouch:
-		_pointer_event(event.position, event.pressed, event.index)
+		if event.canceled and event.index == _pointer:
+			_pointer = -2
+		else:
+			_pointer_event(event.position, event.pressed, event.index)
 	elif event is InputEventScreenDrag and event.index == _pointer:
-		_drag += event.relative
+		_track_drag(event.relative)
 	elif event is InputEventMouseButton and event.device != InputEvent.DEVICE_ID_EMULATION:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			_pointer_event(event.position, event.pressed, -1)
 	elif event is InputEventMouseMotion and _pointer == -1:
-		_drag += event.relative
+		_track_drag(event.relative)
+
+
+func _track_drag(relative: Vector2) -> void:
+	_drag += relative
+	# 손가락이 출발점으로 되돌아와도 이미 시작한 스크롤을 탭으로 바꾸지 않는다.
+	_dragged = _dragged or _drag.length() >= 12
 
 
 func _pointer_event(at: Vector2, down: bool, index: int) -> void:
 	if down:
+		if _pointer != -2:
+			return
 		_pointer = index
 		_drag = Vector2.ZERO
+		_dragged = false
 	elif index == _pointer:
 		_pointer = -2
-		if _drag.length() < 12 and Rect2(Vector2.ZERO, size).has_point(at):
+		if not _dragged and Rect2(Vector2.ZERO, size).has_point(at):
 			grab_focus()
 			pressed.emit()

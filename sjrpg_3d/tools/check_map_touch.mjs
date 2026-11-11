@@ -44,6 +44,21 @@ try {
     }
     await page.waitForFunction(() => window.__sjrpgAdventureReady && window.__sjrpgMapPanel?.places?.length, null, {timeout: 180000});
     let state = await snapshot(); proof.steps.push(state);
+    // 손가락이 원래 좌표로 돌아와도 한 번 시작한 스크롤은 선택이 되면 안 된다.
+    const [lx, ly, lw, lh] = state.list;
+    const start = point(state, lx + lw * .5, ly + lh * .65);
+    await input.send('Input.dispatchTouchEvent', {type: 'touchStart', touchPoints: [{...start, id: 1}]});
+    for (const direction of [-1, 1]) {
+        for (let step = 1; step <= 10; step++) {
+            const offset = direction < 0 ? -step * 4 : -40 + step * 4;
+            await input.send('Input.dispatchTouchEvent', {type: 'touchMove', touchPoints: [{x: start.x, y: start.y + offset, id: 1}]});
+            await wait(30);
+        }
+    }
+    await input.send('Input.dispatchTouchEvent', {type: 'touchEnd', touchPoints: []});
+    await wait(500);
+    state = await snapshot(); proof.steps.push(state);
+    check(state.selected === '', 'reversing a real finger scroll never selects a row');
     const initial = state.places[0].row[1];
     await swipe(state, -1);
     state = await snapshot();

@@ -128,4 +128,8 @@ tools/serve.sh
 
 몬스터 보행의 `locomotion.distance_curve`는 오프라인120Hz 지지발 측정으로 만든 거리→GLB 시각 표입니다. 실시간 실제 이동 거리를 역보간하며, 접지 시각마다 평균 속도에서 어긋나던 앞뒤 발 움직임을 보정합니다. [모델·재측정 계약](native-enemy-models.md)을 따릅니다.
 
-`WarpTravel`은 수락·잠금·전환 시계를, `Exploration._complete_warp`는 실제 도착 재검증·공간 이동·회복·저장을 소유합니다. `NativeWarpFx`는 그 시계만 읽어 전체 배우 알파와 재사용하는 빛을 표시합니다. `Game._tick_corpse_list`는 활성 영역과 동굴 방문 중 숨겨진 필드의 시체 수명을 같은 모험 시계로 처리합니다. 기본15초/끝3초 페이드이며 삭제 시 스킬 대상·원본 기록·3D 표시를 함께 정리합니다. `warp_transition`과 `corpse_expiry`가 실제 공간/재질 복원과 정상 프레임 만료를 검증합니다.
+`WarpTravel`은 수락·잠금·전환 시계를, `Exploration._complete_warp`는 실제 도착 재검증·공간 이동·회복·저장을 소유합니다. 워프 연출의 프레임 간격만 최대1/15초로 제한하고 전환 프레임은 완전 숨김으로 고정합니다. 플레이어 쿨다운·버프·회복은 실제 delta를 사용하며 워프 중 능동/주기 공격은 실행하지 않습니다. `NativeWarpFx`는 그 시계만 읽어 재사용하는 빛을 표시하고, [ActorWarpFade](../scripts/rendering/actor_warp_fade.gd)가 배우 전체 표시/재질 복원을 담당합니다. 매 출발에 현재 표면을 다시 읽고 Standard/ORM 등 `BaseMaterial3D`의 얕은 사본을 표면 간 공유하며 종료/취소에 재질·오버레이·그림자·표시 상태를 복원합니다. 텍스처는 복제하지 않습니다. 임의 ShaderMaterial·다중 패스·기본 재질은 알파 계약을 추측하지 않고 배우 전체를 동시에 숨김/표시하며 원본 표면을 바꾸지 않습니다. 이 경우 빛은 유지하지만 부드러운 배우 페이드는 적용하지 않습니다.
+
+`MapPlaceRow`는 드래그 임계값을 넘긴 상태를 손을 뗄 때까지 유지합니다. 방향 반전·터치 취소·다른 손가락이 탭을 만들지 않으며 부모 목록의 스크롤을 막지 않습니다. `map_place_row_input`과 실제 터치 도구 `tools/check_map_touch.mjs`가 이를 검증합니다.
+
+`Game._tick_corpse_list`는 활성 영역과 동굴 방문 중 숨겨진 필드의 시체 수명을 같은 모험 시계로 처리합니다. 기본15초/끝3초 페이드이며 삭제 시 스킬 대상·원본 기록·3D 표시를 함께 정리합니다. `warp_transition`·`actor_warp_fade`·`corpse_expiry`가 실제 공간/재질 복원과 정상 프레임 만료를 검증합니다.

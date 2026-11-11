@@ -1,13 +1,11 @@
 class_name NativeWarpFx
 extends RefCounted
-## 플레이어 전체의 원본 재질은 보존하고 전용 알파 사본과 재사용하는 작은 빛 기둥만 표시한다.
+## 전환 시계에 맞춰 배우 표시 헬퍼와 재사용하는 작은 빛 기둥을 동기화한다.
 var preview: Node
 var root: Node3D
 var rings: Array[MeshInstance3D] = []
 var motes: MultiMeshInstance3D
-var slots: Array[Dictionary] = []
-var _materials := {}
-var _meshes: Array[Dictionary] = []
+var fade := ActorWarpFade.new()
 var _was_active := false
 
 
@@ -59,31 +57,7 @@ func _create() -> void:
 	motes.material_override = _ink()
 	motes.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	root.add_child(motes)
-	for child in preview.actor.find_children("*", "MeshInstance3D", true, false):
-		var actor_mesh := child as MeshInstance3D
-		_meshes.append({"mesh": actor_mesh, "shadow": actor_mesh.cast_shadow})
-		if actor_mesh.material_override != null:
-			_add_slot(actor_mesh, -1, actor_mesh.material_override, actor_mesh.material_override)
-		else:
-			for surface in actor_mesh.mesh.get_surface_count():
-				_add_slot(
-					actor_mesh,
-					surface,
-					actor_mesh.get_active_material(surface),
-					actor_mesh.get_surface_override_material(surface)
-				)
-
-
-func _add_slot(mesh: MeshInstance3D, surface: int, source: Material, original: Material) -> void:
-	assert(source is StandardMaterial3D, "워프하는 배우 표면은 StandardMaterial3D 계약을 따릅니다.")
-	var key := source.get_instance_id()
-	if not _materials.has(key):
-		var fade := source.duplicate() as StandardMaterial3D
-		fade.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		_materials[key] = {"fade": fade, "color": (source as StandardMaterial3D).albedo_color}
-	slots.append(
-		{"mesh": mesh, "surface": surface, "original": original, "material": _materials[key]}
-	)
+	fade.prepare(preview.actor)
 
 
 func sync() -> void:
@@ -93,24 +67,7 @@ func sync() -> void:
 	if root == null:
 		_create()
 	root.visible = travel.active
-	for slot in slots:
-		var material: Material = slot["material"]["fade"] if travel.active else slot["original"]
-		var mesh: MeshInstance3D = slot["mesh"]
-		if int(slot["surface"]) < 0:
-			mesh.material_override = material
-		else:
-			mesh.set_surface_override_material(int(slot["surface"]), material)
-	for entry in _meshes:
-		var mesh: MeshInstance3D = entry["mesh"]
-		mesh.cast_shadow = (
-			GeometryInstance3D.SHADOW_CASTING_SETTING_OFF if travel.active else entry["shadow"]
-		)
-		if travel.active:
-			mesh.material_overlay = null
-	for material: Dictionary in _materials.values():
-		var ink: Color = material["color"]
-		ink.a *= travel.opacity()
-		(material["fade"] as StandardMaterial3D).albedo_color = ink
+	fade.sync(preview.actor, travel.active, travel.opacity())
 	_was_active = travel.active
 	if not travel.active:
 		return
@@ -146,11 +103,7 @@ func sync() -> void:
 func warm_up() -> void:
 	if DisplayServer.get_name() == "headless":
 		return
-	var samples: Array = []
-	for slot in slots:
-		samples.append(
-			{"mesh": (slot["mesh"] as MeshInstance3D).mesh, "ink": slot["material"]["fade"]}
-		)
+	var samples := fade.warmup_samples()
 	for ring in rings:
 		samples.append({"mesh": ring.mesh, "ink": ring.material_override})
 	samples.append({"mesh": motes.multimesh.mesh, "ink": motes.material_override})
