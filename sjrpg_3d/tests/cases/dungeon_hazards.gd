@@ -134,6 +134,37 @@ func run() -> void:
 		"a dodge invulnerability window remains effective",
 		game.player.hp == hurt and not target.hit_actors.has(game.player.get_instance_id())
 	)
+	var far: DungeonTrap = hazards.traps.back()
+	far.phase = DungeonTrap.Phase.ACTIVE
+	far.age = .3
+	far.hit_actors.clear()
+	var distant: Enemy = game.enemies[1]
+	game.spatial_world.teleport_source_actor(
+		distant, far.position + Iso.project(far.direction * 65.0), distant.radius, true
+	)
+	var untouched := distant.hp
+	var far_age := far.age
+	hazards.tick(.01)
+	check(
+		"remote phases keep flowing without exhausting an untouched chamber",
+		(
+			far.age > far_age
+			and distant.hp == untouched
+			and not far.hit_actors.has(distant.get_instance_id())
+		)
+	)
+	game.spatial_world.teleport_source_actor(
+		game.player, far.position + Iso.project(Vector2(100, 100)), Player.RADIUS
+	)
+	hazards.tick(.01)
+	check(
+		"approaching a running trap enables the same environmental combat",
+		distant.hp < untouched and far.hit_actors.has(distant.get_instance_id())
+	)
+	var nearby_damage := distant.hp
+	game.spatial_world.teleport_source_actor(game.player, target.position, Player.RADIUS)
+	hazards.tick(.01)
+	check("moving away never repeats one activation's damage", distant.hp == nearby_damage)
 	game.player._invulnerable = 0
 	target.age = .35
 	visual.sync()

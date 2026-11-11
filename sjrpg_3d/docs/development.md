@@ -136,7 +136,7 @@ tools/serve.sh
 
 동굴의 실제 바닥·경사·경계는 `DungeonRelief`가 공유하고, `DungeonHazards`가 장치의 시계·피해를 소유합니다. `NativeDungeonHazards`와 HUD·지도는 같은 상태를 읽습니다. 모델 교체 경계·수명·검사는 [동굴 구조](native-cave.md)를 따릅니다.
 
-동굴의 방별 처치 진행은 `DungeonRooms`가 생성 시 등록한 적 ID를 추적합니다. HUD와 지도는 같은 상태를 읽으며 `DungeonRuntime`이 사망·재입장 수명을 연결합니다.
+동굴의 방별 처치 진행은 `DungeonRooms`가 생성 시 등록한 적 ID를 추적합니다. HUD와 지도는 같은 상태를 읽으며 `DungeonRuntime`이 사망·재입장 수명을 연결합니다. 함정 주기는 전체 동굴에서 흐르며, `DungeonHazards`의20m 전투 반경이 먼 방의 피해/대상 검색만 제한합니다.
 
 HUD는 Viewport 크기 변경 신호에서도 표시를 갱신합니다. `TouchControls.refresh_layout()`과 `Minimap.refresh_layout()`은 조작·피드백·알림 시계를 진행시키지 않고 그림/터치 범위를 재배치합니다. `hud_pause_resize`는 실제 일시정지 중 가로·세로 왕복 신호와 시간 정지를 검사합니다.
 
