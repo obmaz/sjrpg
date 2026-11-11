@@ -16,6 +16,7 @@
 - [저장 슬롯](save-slots.md)
 - [선택·이어하기 화면](selection-screen-design.md)
 - [UI 패밀리](woodland-ui-family.md)
+- [지도·장소 목록·실제 위치 동기화](world-map.md)
 - [타격감](juice.md)
 - [음악](music.md)
 

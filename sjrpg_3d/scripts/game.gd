@@ -38,6 +38,7 @@ var exploration: Exploration
 var dungeon: DungeonRuntime
 var field_root: Node2D
 var map_shapes: Array[Dictionary] = []
+var map_state: MapWorldState
 var enemies: Array[Enemy] = []
 var chests: Array[Chest] = []
 var cosmetic_effects: Array[Effect] = []
@@ -96,6 +97,7 @@ func _ready() -> void:
 	forest_atmosphere = ForestAtmosphere.new().setup(forest_lighting.openings)
 	field_root.add_child(forest_atmosphere)
 	map_shapes = MapGeometry.build(village)
+	map_state = MapWorldState.new().setup(self)
 	var chest_def: Dictionary = village.data["sprites"]["chest"]
 	var broken_def: Dictionary = village.data["sprites"]["chest-broken"]
 	for i in village.chest_points.size():
@@ -973,10 +975,16 @@ func _update_impact_camera(delta: float) -> void:
 	camera.offset = _impact_offset
 
 
+func refresh_map(force_check := false) -> void:
+	if map_state != null:
+		map_state.refresh(force_check)
+
+
 func _process(delta: float) -> void:
 	Gamepad.set_combat_enabled(_gamepad_playable())
 	if not native_ready:
 		return
+	refresh_map()
 	# Forest-root visibility disables/restores lighting in the same cave-transition frame.
 	_sync_forest_daylight()
 	WorldLighting.advance(delta)

@@ -1,8 +1,26 @@
 class_name MapPanel
 extends PanelFrame
-
+## 지도는 고정 시야, 장소 목록은 독립 스크롤이다. 번호 선택이 실제 이동을 실행하지 않는다.
 var game: Node
 var _tab := 0
+var canvas: WorldMapCanvas
+var selected_id := ""
+var _map_area: BoxContainer
+var _map_column: VBoxContainer
+var _places: VBoxContainer
+var _list_scroll: ScrollContainer
+var _selected: Label
+var _rows := {}
+var _places_key := 0
+var _last_revision := -1
+var _last_markers := 0
+var _last_player := Vector2.INF
+var _last_facing := INF
+var _scope := false
+var _places_label: Label
+var _review_clock := 0.0
+var _reveal_frames := 0
+
 
 func setup(g: Node) -> MapPanel:
 	game = g
@@ -11,87 +29,244 @@ func setup(g: Node) -> MapPanel:
 
 func _ready() -> void:
 	super._ready()
-	set_header("바람 동굴 지도" if game.dungeon.active else "숲의 지도", "미니맵을 누르거나 M 키로 열기")
 	_rebuild()
-	add_footer("탐험 계속하기", func(): closed.emit(), true)
+	add_footer("탐험 계속하기", _close_map, true)
+	body_holder.resized.connect(_layout_map)
+
+
+func _close_map() -> void:
+	closed.emit()
+
+
+func _tab_selected(index: int) -> void:
+	_tab = index
+	_rebuild()
 
 
 func _rebuild() -> void:
-	if game.dungeon.active:
+	_scope = game.dungeon.active
+	if _scope:
 		_tab = 0
-	set_tabs(["동굴 지도"] if game.dungeon.active else ["전체 지도", "안식처·워프 이동"], _tab, func(index):
-		_tab = index
-		_rebuild())
+	set_header("바람 동굴 지도" if _scope else "숲의 지도", "번호 또는 장소를 누르면 확대 · 지도를 끌어 이동")
+	set_tabs(["동굴 지도"] if _scope else ["장소 찾기", "안식처·워프"], _tab, _tab_selected)
 	clear_body()
-	if _tab == 0:
-		var canvas := MapCanvas.new()
-		canvas.game = game
-		canvas.custom_minimum_size = Vector2(0, 460)
-		body.add_child(canvas)
-		body.add_child(PanelFrame.wrap_label("흰 화살표: 내 위치 · 빨강: 적 · 청록: 입구 · 노랑: 귀환문" if game.dungeon.active else "흰 화살표: 내 위치 · 노랑: 의뢰 · 청록: 시설 · 보라: 발견한 안식처 · 주황: 파수꾼", 17))
-		body.add_child(PanelFrame.wrap_label(game.dungeon.objective() if game.dungeon.active else Quests.main_objective(), 20, UiKit.GOLD))
-		for marker in MapGeometry.markers(game):
-			body.add_child(PanelFrame.wrap_label(marker["label"], 18, marker["color"]))
+	if is_instance_valid(_map_area):
+		body_holder.remove_child(_map_area)
+		_map_area.queue_free()
+		_map_area = null
+	canvas = null
+	_rows.clear()
+	_places_key = 0
+	_last_revision = -1
+	_last_markers = 0
+	selected_id = ""
+	scroll.visible = _tab != 0
+	if _tab != 0:
+		_build_travel()
 		return
+	_map_area = BoxContainer.new()
+	_map_area.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_map_area.add_theme_constant_override("separation", 14)
+	body_holder.add_child(_map_area)
+	_map_column = VBoxContainer.new()
+	_map_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_map_column.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_map_column.size_flags_stretch_ratio = 1.35
+	_map_area.add_child(_map_column)
+	canvas = WorldMapCanvas.new()
+	canvas.game = game
+	canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	canvas.place_selected.connect(_select_place)
+	_map_column.add_child(canvas)
+	var controls := HBoxContainer.new()
+	controls.add_theme_constant_override("separation", 6)
+	_map_column.add_child(controls)
+	for choice: Array in [["전체", "all"], ["내 위치", "player"], ["-", "out"], ["+", "in"]]:
+		var button := UiKit.button(choice[0], 17)
+		button.custom_minimum_size = Vector2(64, 64)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.pressed.connect(_map_action.bind(choice[1]))
+		controls.add_child(button)
+	_selected = PanelFrame.wrap_label("목록에서 장소를 선택하세요", 16, UiKit.GOLD)
+	_selected.custom_minimum_size.y = 36
+	_map_column.add_child(_selected)
+	var places_column := VBoxContainer.new()
+	places_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	places_column.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_map_area.add_child(places_column)
+	_places_label = UiKit.label("장소", 17, UiKit.MUTED, true)
+	places_column.add_child(_places_label)
+	_list_scroll = ScrollContainer.new()
+	_list_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_list_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_list_scroll.scroll_deadzone = 12
+	places_column.add_child(_list_scroll)
+	_places = VBoxContainer.new()
+	_places.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_places.add_theme_constant_override("separation", 8)
+	_list_scroll.add_child(_places)
+	_sync_map()
+	_layout_map.call_deferred()
+
+
+func _layout_map() -> void:
+	if not is_instance_valid(_map_area):
+		return
+	var vertical := body_holder.size.y > body_holder.size.x * .85
+	_map_area.vertical = vertical
+	_map_column.size_flags_stretch_ratio = 1.25 if vertical else 1.4
+	# 회전 뒤 새 행 높이가 정해진 다음 선택한 행을 다시 드러낸다.
+	_reveal_frames = 2
+
+
+func _process(delta: float) -> void:
+	if game == null:
+		return
+	if _scope != game.dungeon.active:
+		_rebuild()
+		return
+	if is_instance_valid(_map_area):
+		_sync_map()
+		if _reveal_frames > 0:
+			_reveal_frames -= 1
+			if _reveal_frames == 0:
+				_reveal_selected()
+	if OS.has_feature("web") and game.ortho_preview != null and game.ortho_preview._probe_enabled:
+		_review_clock += delta
+		if _review_clock >= .15:
+			_review_clock = 0.0
+			JavaScriptBridge.eval(
+				"window.__sjrpgMapPanel = " + JSON.stringify(review_snapshot()), true
+			)
+
+
+func _sync_map() -> void:
+	game.refresh_map()
+	var markers := MapGeometry.markers(game)
+	var key := []
+	for marker in markers:
+		key.append([marker["id"], marker["label"], marker["color"]])
+	if _places_key != key.hash():
+		_places_key = key.hash()
+		for row in _places.get_children():
+			_places.remove_child(row)
+			row.queue_free()
+		_rows.clear()
+		for index in markers.size():
+			var row := MapPlaceRow.new().setup(index + 1, markers[index])
+			row.pressed.connect(_select_place.bind(str(markers[index]["id"])))
+			_places.add_child(row)
+			_rows[row.place_id] = row
+		_places_label.text = "장소 %d · 번호 선택" % markers.size()
+	if not _rows.has(selected_id):
+		selected_id = ""
+		canvas.selected_id = ""
+		_selected.text = "흰 화살표: 내 위치 · 빨강: 적"
+	for marker in markers:
+		var distance := (
+			Iso.unproject(marker["pos"] - game.player.position).length() / SpatialWorld3D.UNITS
+		)
+		(_rows[marker["id"]] as MapPlaceRow).update_state(
+			marker, distance, marker["id"] == selected_id
+		)
+		if marker["id"] == selected_id:
+			_selected.text = "%s · %d m" % [marker["label"], roundi(distance)]
+	var fingerprint := markers.hash()
+	if (
+		_last_revision != game.map_state.revision
+		or _last_markers != fingerprint
+		or _last_player != game.player.position
+		or _last_facing != game.player.facing
+	):
+		_last_revision = game.map_state.revision
+		_last_markers = fingerprint
+		_last_player = game.player.position
+		_last_facing = game.player.facing
+		canvas.update_source(markers)
+
+
+func _select_place(id: String) -> void:
+	selected_id = id
+	canvas.select_place(id)
+	_sync_map()
+	_reveal_selected()
+
+
+func _reveal_selected() -> void:
+	var row: Control = _rows.get(selected_id)
+	if row != null:
+		_list_scroll.ensure_control_visible(row)
+
+
+func _map_action(action: String) -> void:
+	match action:
+		"all":
+			canvas.show_all()
+		"player":
+			canvas.show_player()
+		"in":
+			canvas.change_zoom(1.35)
+		"out":
+			canvas.change_zoom(1.0 / 1.35)
+
+
+func _build_travel() -> void:
 	var reason: String = game.exploration.travel_block_reason()
-	body.add_child(PanelFrame.wrap_label(reason if reason != "" else "워프게이트 또는 안식처에서 발견한 목적지로 무료 이동합니다. 도착 시 생명과 자원을 회복합니다.", 20))
-	for id in Exploration.NAMES:
+	body.add_child(
+		PanelFrame.wrap_label(reason if reason != "" else "발견한 목적지를 선택하면 이동하고 생명·자원을 회복합니다.", 20)
+	)
+	for id: String in Exploration.NAMES:
 		var found := GameState.discovered_sanctuaries.has(id)
-		var destination: String = id
-		var button := UiKit.button(Exploration.NAMES[id] + ("" if found else " · 직접 방문해 발견하세요"), 21)
+		var button := UiKit.button(Exploration.NAMES[id] + ("" if found else " · 미발견"), 20)
 		button.custom_minimum_size = Vector2(0, 76)
 		button.disabled = not found or reason != "" or id == game.exploration.current_origin()
-		button.pressed.connect(func():
-			if game.exploration.travel(destination):
-				closed.emit())
+		button.pressed.connect(_travel.bind(id))
 		body.add_child(button)
 
 
-class MapCanvas:
-	extends Control
-	var game: Node
+func _travel(id: String) -> void:
+	if game.exploration.travel(id):
+		closed.emit()
 
-	func _draw() -> void:
-		draw_style_box(UiKit.panel_style(UiKit.SURFACE), Rect2(Vector2.ZERO, size))
-		var boundary := PackedVector2Array()
-		for point in [game.FIELD.position, Vector2(game.FIELD.end.x, game.FIELD.position.y), game.FIELD.end, Vector2(game.FIELD.position.x, game.FIELD.end.y)]:
-			boundary.append(Iso.project(point))
-		var bounds: Rect2 = game.dungeon.layout.bounds if game.dungeon.active else Iso.poly_bounds(boundary)
-		var scale_factor := minf((size.x - 36.0) / bounds.size.x, (size.y - 36.0) / bounds.size.y)
-		var origin := size / 2.0 - bounds.get_center() * scale_factor
-		for shape in game.map_shapes:
-			var polygon := PackedVector2Array()
-			for point in shape["poly"]:
-				polygon.append(origin + point * scale_factor)
-			if polygon.size() >= 3:
-				draw_colored_polygon(polygon, shape["color"])
-		var labels: Array[Rect2] = []
-		if game.dungeon.active:
-			for enemy in game.enemies:
-				if not enemy.dead:
-					draw_circle(origin + enemy.position * scale_factor, 3.5, Color("ed6856"))
-		for marker in MapGeometry.markers(game):
-			var at: Vector2 = origin + marker["pos"] * scale_factor
-			draw_circle(at, 5.0, marker["color"])
-			var label_size := Vector2(UiKit.BOLD_FONT.get_string_size(marker["label"], HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x + 10.0, 25.0)
-			var label := Rect2(Vector2(clampf(at.x + 8.0, 6.0, size.x - label_size.x - 6.0), clampf(at.y - 28.0, 6.0, size.y - 31.0)), label_size)
-			for attempt in 14:
-				var overlap := false
-				for used in labels:
-					if label.intersects(used):
-						overlap = true
-						break
-				if not overlap:
-					break
-				label.position.y += 27.0
-				if label.end.y > size.y - 6.0:
-					label.position.y = 6.0
-			labels.append(label)
-			draw_line(at, label.position + Vector2(0, 13), marker["color"], 1.0, true)
-			draw_rect(label, Color(0.04, 0.08, 0.06, 0.9))
-			draw_string(UiKit.BOLD_FONT, label.position + Vector2(5, 19), marker["label"], HORIZONTAL_ALIGNMENT_LEFT, -1, 18, marker["color"])
-		var hero: Vector2 = origin + game.player.position * scale_factor
-		draw_circle(hero, 11.0, Color("10201a"))
-		draw_arc(hero, 10.0, 0, TAU, 24, Color.WHITE, 2.0, true)
-		var direction := Vector2.from_angle(game.player.facing)
-		draw_colored_polygon(PackedVector2Array([hero + direction * 9.0, hero + direction.rotated(2.5) * 7.0, hero + direction.rotated(-2.5) * 7.0]), Color.WHITE)
+
+## 자동 브라우저 검수 전용 읽기 값. 게임 입력이나 위치를 바꾸는 인터페이스는 제공하지 않는다.
+func review_snapshot() -> Dictionary:
+	var places := []
+	if is_instance_valid(canvas):
+		for marker in canvas.markers:
+			var row: Control = _rows.get(marker["id"])
+			var rect := row.get_global_rect() if row != null else Rect2()
+			var point: Vector2 = canvas.global_position + canvas.to_canvas(marker["pos"])
+			var badge: Rect2 = canvas.badges.get(marker["id"], Rect2())
+			badge.position += canvas.global_position
+			places.append(
+				{
+					"id": marker["id"],
+					"name": marker["label"],
+					"world": [marker["pos"].x, marker["pos"].y],
+					"point": [point.x, point.y],
+					"badge": [badge.position.x, badge.position.y, badge.size.x, badge.size.y],
+					"row": [rect.position.x, rect.position.y, rect.size.x, rect.size.y]
+				}
+			)
+	var view := get_viewport_rect().size
+	var map_rect := canvas.get_global_rect() if is_instance_valid(canvas) else Rect2()
+	var list_rect := _list_scroll.get_global_rect() if is_instance_valid(_list_scroll) else Rect2()
+	return {
+		"view": [view.x, view.y],
+		"selected": selected_id,
+		"tab": _tab,
+		"scope": "cave" if game.dungeon.active else "forest",
+		"places": places,
+		"zoom": canvas.zoom if is_instance_valid(canvas) else 0,
+		"center": [canvas.view_center.x, canvas.view_center.y] if is_instance_valid(canvas) else [],
+		"map": [map_rect.position.x, map_rect.position.y, map_rect.size.x, map_rect.size.y],
+		"list": [list_rect.position.x, list_rect.position.y, list_rect.size.x, list_rect.size.y]
+	}
+
+
+func _exit_tree() -> void:
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.__sjrpgMapPanel = null", true)
+	super._exit_tree()

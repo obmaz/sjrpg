@@ -139,6 +139,15 @@ func run() -> void:
 	minimap._update_geometry(origin)
 	check("in-place source count changes still invalidate the cache", minimap.geometry_rebuilds == rebuilds + 1)
 	rebuilds = minimap.geometry_rebuilds
+	var moved_polygon: PackedVector2Array = source.map_shapes[2]["poly"]
+	moved_polygon[0] += Vector2(70, 20)
+	source.map_shapes[2]["poly"] = moved_polygon
+	source.map_shapes[2]["color"] = Color("ab7766")
+	minimap._update_geometry(origin)
+	check("same-count vertex and color edits invalidate the stationary minimap", minimap.geometry_rebuilds == rebuilds + 1)
+	_check_mesh("same-count edit", minimap)
+
+	rebuilds = minimap.geometry_rebuilds
 	source.map_shapes = source.map_shapes.duplicate(true)
 	minimap._update_geometry(origin)
 	check("equal contents in a replacement source array still invalidate the cache", minimap.geometry_rebuilds == rebuilds + 1)

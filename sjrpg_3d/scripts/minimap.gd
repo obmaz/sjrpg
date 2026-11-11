@@ -46,6 +46,7 @@ var _geometry: Array[Dictionary] = []
 var _geometry_mesh: ArrayMesh
 var _geometry_source: Array[Dictionary] = []
 var _geometry_count := -1
+var _geometry_hash := 0
 var _geometry_origin := Vector2.INF
 var _geometry_radius := -1.0
 var geometry_rebuilds := 0
@@ -74,7 +75,9 @@ static func painted_bounds(disc_radius: float, control_size: Vector2) -> Rect2:
 	var outer := disc_radius + 2.5 * u + aa
 	var shadow := disc_radius + 0.25 * u + 1.25 * u + aa
 	var bounds := Rect2(c - Vector2.ONE * outer, Vector2.ONE * outer * 2.0)
-	bounds = bounds.merge(Rect2(c + Vector2(0, 1.0) * u - Vector2.ONE * shadow, Vector2.ONE * shadow * 2.0))
+	bounds = bounds.merge(
+		Rect2(c + Vector2(0, 1.0) * u - Vector2.ONE * shadow, Vector2.ONE * shadow * 2.0)
+	)
 	var stud := (COMPASS_RADIUS + 0.55) * u + aa
 	var compass := c + COMPASS_OFFSET * disc_radius
 	return bounds.merge(Rect2(compass - Vector2.ONE * stud, Vector2.ONE * stud * 2.0))
@@ -128,6 +131,8 @@ func _sync_retained() -> void:
 		_source_valid = false
 		return
 	_source_valid = true
+	if game.has_method("refresh_map") and game.process_mode != Node.PROCESS_MODE_DISABLED:
+		game.refresh_map()
 	var center := size / 2.0
 	var layout_changed := center != _paint_center
 	if layout_changed:
@@ -185,9 +190,14 @@ func _draw_backdrop() -> void:
 
 
 func _arrow_points() -> PackedVector2Array:
-	return PackedVector2Array([Vector2(radius * 0.09, 0),
-		Vector2.from_angle(2.5) * radius * 0.055, Vector2(-2.0, 0),
-		Vector2.from_angle(-2.5) * radius * 0.055])
+	return PackedVector2Array(
+		[
+			Vector2(radius * 0.09, 0),
+			Vector2.from_angle(2.5) * radius * 0.055,
+			Vector2(-2.0, 0),
+			Vector2.from_angle(-2.5) * radius * 0.055
+		]
+	)
 
 
 func _draw_player_arrow() -> void:
@@ -226,17 +236,27 @@ func _cache_shape(poly: PackedVector2Array, color: Color, origin: Vector2) -> vo
 ## Reuse the clipped terrain until movement would shift it by a quarter of a map pixel.
 ## Markers and the player arrow still use their current positions on every rendered frame.
 func _update_geometry(origin: Vector2) -> void:
+	var fingerprint: int = game.map_shapes.hash()
 	var tolerance := WORLD_RADIUS / radius * 0.25
-	if is_same(game.map_shapes, _geometry_source) and game.map_shapes.size() == _geometry_count and is_equal_approx(radius, _geometry_radius) and origin.distance_squared_to(_geometry_origin) < tolerance * tolerance:
+	if (
+		fingerprint == _geometry_hash
+		and is_same(game.map_shapes, _geometry_source)
+		and game.map_shapes.size() == _geometry_count
+		and is_equal_approx(radius, _geometry_radius)
+		and origin.distance_squared_to(_geometry_origin) < tolerance * tolerance
+	):
 		return
 	_geometry_source = game.map_shapes
 	_geometry_count = game.map_shapes.size()
+	_geometry_hash = fingerprint
 	_geometry_origin = origin
 	_geometry_radius = radius
 	geometry_rebuilds += 1
 	_circle = _circle_poly(content_radius())
 	_geometry.clear()
 	for shape in game.map_shapes:
+		if (shape["poly"] as PackedVector2Array).size() < 3:
+			continue
 		var bounds: Rect2 = shape["bounds"]
 		if bounds.grow(WORLD_RADIUS).has_point(origin):
 			_cache_shape(shape["poly"], shape["color"], origin)
@@ -246,34 +266,9 @@ func _update_geometry(origin: Vector2) -> void:
 ## One persistent canvas mesh keeps the original clipped polygon order and colors.
 ## Replacing draw_colored_polygon calls avoids fresh GPU polygon buffers every frame.
 func _build_geometry_mesh() -> void:
-	var vertices := PackedVector2Array()
-	var colors := PackedColorArray()
-	var indices := PackedInt32Array()
 	var pieces: Array[Dictionary] = [{"poly": _circle, "color": PARCHMENT}]
 	pieces.append_array(_geometry)
-	for piece: Dictionary in pieces:
-		var polygon: PackedVector2Array = piece["poly"]
-		var triangles := Geometry2D.triangulate_polygon(polygon)
-		if triangles.is_empty():
-			push_error("Cannot triangulate cached minimap terrain")
-			continue
-		var first := vertices.size()
-		var color: Color = piece["color"]
-		for point: Vector2 in polygon:
-			vertices.append(point)
-			colors.append(color)
-		for index: int in triangles:
-			indices.append(first + index)
-	var arrays := []
-	arrays.resize(Mesh.ARRAY_MAX)
-	arrays[Mesh.ARRAY_VERTEX] = vertices
-	arrays[Mesh.ARRAY_COLOR] = colors
-	arrays[Mesh.ARRAY_INDEX] = indices
-	if _geometry_mesh == null:
-		_geometry_mesh = ArrayMesh.new()
-	else:
-		_geometry_mesh.clear_surfaces()
-	_geometry_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	_geometry_mesh = MapMesh.update(pieces, _geometry_mesh)
 
 
 func _draw() -> void:
@@ -288,12 +283,28 @@ func _draw() -> void:
 func _draw_bezel() -> void:
 	# The same decoration stays above terrain, markers and the player arrow.
 	var u := radius / 64.0
-	_bezel.draw_arc(Vector2(0, 1.0) * u, radius + 0.25 * u, 0, TAU, 80, Color(0.01, 0.015, 0.01, 0.75), 2.5 * u, true)
+	_bezel.draw_arc(
+		Vector2(0, 1.0) * u,
+		radius + 0.25 * u,
+		0,
+		TAU,
+		80,
+		Color(0.01, 0.015, 0.01, 0.75),
+		2.5 * u,
+		true
+	)
 	PresentationArt.draw_ui(_bezel, "map", Vector2.ZERO, rim_radius(), Color(0.9, 0.86, 0.76))
 	var compass := COMPASS_OFFSET * radius
 	_bezel.draw_circle(compass, COMPASS_RADIUS * u, Color("201d17"))
 	_bezel.draw_arc(compass, COMPASS_RADIUS * u, 0, TAU, 40, Color("a28b5b"), 1.1 * u, true)
-	var arrow := PackedVector2Array([compass + Vector2(5.3, -0.7) * u, compass + Vector2(-4.5, -4.0) * u, compass + Vector2(-2.5, 1.0) * u, compass + Vector2(-4.0, 5.0) * u])
+	var arrow := PackedVector2Array(
+		[
+			compass + Vector2(5.3, -0.7) * u,
+			compass + Vector2(-4.5, -4.0) * u,
+			compass + Vector2(-2.5, 1.0) * u,
+			compass + Vector2(-4.0, 5.0) * u
+		]
+	)
 	_bezel.draw_colored_polygon(arrow, Color("c6b17c"))
 
 
