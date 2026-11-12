@@ -8,7 +8,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def check_workflows(root: Path = ROOT) -> None:
     automatic = []
-    for path in sorted((root / ".github/workflows").glob("*.yml")):
+    for path in sorted((root / ".github/workflows").iterdir()):
+        if path.suffix not in {".yml", ".yaml"}:
+            continue
         # YAML 1.1의 on→bool 변환을 피하고 GitHub와 같은 문자열 키를 읽는다.
         data = yaml.load(path.read_text(), Loader=yaml.BaseLoader)
         events = data.get("on", {})

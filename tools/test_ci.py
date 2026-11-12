@@ -24,9 +24,13 @@ class WorkflowPolicyTest(unittest.TestCase):
             diagnostic.write_text('on:\n  workflow_dispatch:\n')
             with redirect_stdout(io.StringIO()):
                 check_workflows(root)
-            diagnostic.write_text('on:\n  push:\n  workflow_dispatch:\n')
-            with self.assertRaises(AssertionError):
-                check_workflows(root)
+            for extension in ['.yml', '.yaml']:
+                alternate = folder / ('diagnostic' + extension)
+                diagnostic.rename(alternate)
+                diagnostic = alternate
+                diagnostic.write_text('on:\n  push:\n  workflow_dispatch:\n')
+                with self.subTest(extension=extension), self.assertRaises(AssertionError):
+                    check_workflows(root)
 
 
 class LocalEntryTest(unittest.TestCase):
