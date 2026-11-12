@@ -116,6 +116,7 @@ func run() -> void:
 			and triangles < 7500
 		)
 	)
+	_check_canopy_frame(game)
 	var light_energy: float = game.world_renderer.sunlight.light_energy
 	game.player.position = game.dungeon.entry_point()
 	check("garden does not prevent entering the cave", game.dungeon.enter())
@@ -144,3 +145,129 @@ func run() -> void:
 	)
 	game.queue_free()
 	await _frames(2)
+
+
+## 실제 채택된 나뭇잎 메시를 기준 인물 발치에 상대 투영한다. 루트 AABB 교차와 구별한다.
+func _check_canopy_frame(game: Node) -> void:
+	game._place_at_chapel_reference()
+	game.spatial_world.teleport_source_actor(game.player, game.player.position, Player.RADIUS)
+	var hero: Vector3 = game.spatial_world.actor_foot(game.player)
+	var report: Dictionary = game.world_renderer._trees.get_meta("native_tree_report")
+	var frames := {}
+	for tree: Dictionary in report["trees"]:
+		var source: IsoSprite = tree["source"].get_ref()
+		var role := str(source.get_meta("chapel_canopy_role", ""))
+		if not role.is_empty():
+			frames[role] = _leaf_bounds(tree, hero)
+	check(
+		"three actual canopy layers replace raw placement candidates",
+		frames.size() == 3,
+		JSON.stringify(frames)
+	)
+	if frames.size() != 3:
+		return
+	var right: Rect2 = frames["right_frame"]
+	var front: Rect2 = frames["left_frame"]
+	var rear: Rect2 = frames["left_rear_frame"]
+	check(
+		"right leaves frame the edge without covering the hero",
+		(
+			right.position.x > .35
+			and right.position.x < 2.7
+			and right.position.y < -.5
+			and right.end.y > -.8
+		)
+	)
+	check(
+		"left middle canopy leaves the central hero and door clear",
+		front.end.x < -.6 and front.end.x > -2.5 and front.position.y < -2.5 and front.end.y > -1.4
+	)
+	check(
+		"tall rear canopy creates a substantial upper-left forest frame",
+		(
+			rear.end.x < -.75
+			and rear.end.x > -2.0
+			and rear.position.y < -5.0
+			and rear.end.y > -1.0
+			and rear.size.y > 4.8
+		)
+	)
+	_check_island_access(game, report)
+	print("ART_AUDIT CHAPEL_CANOPY_RELATIVE ", JSON.stringify(frames))
+
+
+func _leaf_bounds(tree: Dictionary, hero: Vector3) -> Rect2:
+	var batch: MultiMeshInstance3D = tree["batch"]
+	var pose: Transform3D = tree["transform"]
+	var bounds := Rect2()
+	var first := true
+	for surface in batch.multimesh.mesh.get_surface_count():
+		var ink := batch.multimesh.mesh.surface_get_material(surface) as StandardMaterial3D
+		if ink.transparency == BaseMaterial3D.TRANSPARENCY_DISABLED:
+			continue
+		var arrays := batch.multimesh.mesh.surface_get_arrays(surface)
+		var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		for vertex: Vector3 in vertices:
+			var relative := pose * vertex - hero
+			var projected := Vector2(
+				TreeGeometry3D.CAMERA_RIGHT.dot(relative), -TreeGeometry3D.CAMERA_UP.dot(relative)
+			)
+			bounds = Rect2(projected, Vector2.ZERO) if first else bounds.expand(projected)
+			first = false
+	return bounds
+
+
+func _check_island_access(game: Node, report: Dictionary) -> void:
+	var village: Village = game.village
+	var spatial: SpatialWorld3D = game.spatial_world
+	var island := ChapelGardenPlan3D.island_polygon(village)
+	var projected_island := PackedVector2Array()
+	for point: Vector2 in island:
+		projected_island.append(Iso.project(point * 65))
+	var mapped := false
+	for shape: Dictionary in game.map_shapes:
+		if shape["id"] == "garden:chapel":
+			mapped = shape["poly"] == projected_island
+	check("the minimap uses the actual planting-island polygon", mapped)
+	var notch := true
+	for stone: Dictionary in ChapelGardenPlan3D.pavers(village):
+		notch = notch and Geometry2D.intersect_polygons(stone["polygon"], island).is_empty()
+	check("the planting island cuts a real notch in native stone caps", notch)
+	var fountain := village.fountain.atlas_polygon(village.data["frames"]["pool"]["ground"])
+	for index in fountain.size():
+		fountain[index] = Iso.unproject(fountain[index]) / 65
+	var ring: PackedVector2Array = (
+		Geometry2D.offset_polygon(fountain, .28, Geometry2D.JOIN_ROUND)[0]
+	)
+	var clear := true
+	var walked := true
+	for tree: Dictionary in report["trees"]:
+		var source: IsoSprite = tree["source"].get_ref()
+		if not str(source.get_meta("chapel_canopy_role", "")) in ["left_frame", "left_rear_frame"]:
+			continue
+		var at := Iso.unproject(source.position) / 65
+		clear = (
+			clear
+			and ChapelGardenPlan3D.island_tree_clear(village, at)
+			and spatial.blocked(source.position, Player.RADIUS)
+			and absf(spatial.height_at(source.position)) < .001
+		)
+		var closest := 0
+		for index in ring.size():
+			if ring[index].distance_to(at) < ring[closest].distance_to(at):
+				closest = index
+		var start := Iso.project(ring[posmod(closest - 2, ring.size())] * 65)
+		spatial.teleport_source_actor(game.player, start, Player.RADIUS)
+		for offset in range(-1, 3):
+			var target := Iso.project(ring[posmod(closest + offset, ring.size())] * 65)
+			for step in 180:
+				if game.player.position.distance_to(target) < 3:
+					break
+				spatial.move_source_actor(
+					game.player,
+					game.player.position + (target - game.player.position).limit_length(3),
+					Player.RADIUS
+				)
+			walked = walked and game.player.position.distance_to(target) < 8
+	check("island trunks retain the measured fountain and stair clearance", clear)
+	check("hero walks the fountain perimeter beside both new trunks", walked)

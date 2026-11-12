@@ -40,6 +40,10 @@ static func build(village: Village) -> Array[Dictionary]:
 				)
 			)
 		shapes.append(shape("cave_trail:%d" % shapes.size(), "road", projected, Color("8c8064")))
+	var island := PackedVector2Array()
+	for point: Vector2 in ChapelGardenPlan3D.island_polygon(village):
+		island.append(Iso.project(point * WorldSpace3D.GROUND_UNITS_PER_METER))
+	shapes.append(shape("garden:chapel", "ground", island, Color("4e6045")))
 	shapes.append(shape("bridge", "bridge", village.bridge.deck_polygon(), Color("b3a17c")))
 	for index in village.wall_footprints.size():
 		shapes.append(
@@ -63,8 +67,7 @@ static func build(village: Village) -> Array[Dictionary]:
 		if key == "chapel":
 			polygon = SpatialWorld3D._native_chapel(village)["building"]
 		else:
-			var building: IsoSprite = village.buildings[key]
-			polygon = building.atlas_polygon(village.data["frames"][key]["ground"])
+			polygon = TownPlazaPlan3D.house_footprint(village, key)
 		shapes.append(shape("building:" + key, "building", polygon, Color("c0aa7d")))
 	for id: String in TownPlazaPlan3D.SERVICES:
 		shapes.append(shape("building:" + id, "building", TownPlazaPlan3D.footprint(id), Color("c0aa7d")))

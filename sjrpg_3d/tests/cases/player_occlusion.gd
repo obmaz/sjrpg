@@ -57,6 +57,18 @@ func run() -> void:
 	NativePlayerOcclusion.mark_object(hollow)
 	fixture.add_child(hollow)
 	hollow.global_position = object.global_position
+	# 마을 배치가 달라져도 활성 가림이 캐시 예산보다 많은 상황을 실제 메시로 만든다.
+	var pressure: Array[Node3D] = []
+	for index in NativePlayerOcclusion.CACHE_INACTIVE_OBJECTS + 1:
+		var cover := Node3D.new()
+		NativePlayerOcclusion.mark_object(cover)
+		fixture.add_child(cover)
+		cover.global_position = foot + renderer.camera.global_basis.z * (4.0 + index * .02)
+		var part := MeshInstance3D.new()
+		part.mesh = box
+		part.material_override = original
+		cover.add_child(part)
+		pressure.append(cover)
 	fade._register(fixture)
 	fade.sync(0.1)
 	check(
@@ -108,6 +120,10 @@ func run() -> void:
 		)
 	)
 	var wall_ink: Material = wall.material_override
+	check(
+		"active occluders exceed the allowance for cached inactive objects",
+		fade._fades.size() > NativePlayerOcclusion.CACHE_INACTIVE_OBJECTS
+	)
 	var builds := fade.material_builds
 	var triangles := fade.triangle_builds
 	object.global_position += renderer.camera.global_basis.x * 20.0
@@ -124,7 +140,11 @@ func run() -> void:
 			wall.material_override == wall_ink
 			and fade.material_builds == builds
 			and fade.triangle_builds == triangles
-		)
+		),
+		"material_same=%s materials=%d/%d triangles=%d/%d active_groups=%d recent=%d" % [
+			wall.material_override == wall_ink, fade.material_builds, builds,
+			fade.triangle_builds, triangles, fade._fades.size(), fade._recent.size()
+		]
 	)
 	object.global_position = foot - renderer.camera.global_basis.z * 4.0
 	fade.sync(0.25)
@@ -182,7 +202,23 @@ func run() -> void:
 			and fade.instance_builds == instances
 			and fade.material_builds == builds
 			and draws.all(_is_visible)
-		)
+		),
+		"draws_same=%s instances=%d/%d materials=%d/%d visible=%s active_groups=%d recent=%d" % [
+			batch.get_children() == draws, fade.instance_builds, instances,
+			fade.material_builds, builds, draws.all(_is_visible), fade._fades.size(), fade._recent.size()
+		]
+	)
+	for cover in pressure:
+		cover.global_position = foot - renderer.camera.global_basis.z * 4.0
+	fade.sync(.25)
+	var inactive_groups := 0
+	for group: String in fade._recent:
+		if not fade._fades.has(group):
+			inactive_groups += 1
+	check(
+		"cache pressure retains at most sixteen inactive groups in addition to active cover",
+		inactive_groups <= NativePlayerOcclusion.CACHE_INACTIVE_OBJECTS
+		and fade._recent.size() <= fade._fades.size() + NativePlayerOcclusion.CACHE_INACTIVE_OBJECTS
 	)
 	var wall_key := "%s:-1" % wall.get_instance_id()
 	fixture.queue_free()

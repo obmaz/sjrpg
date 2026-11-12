@@ -25,7 +25,7 @@
     },
     {
       "path": "scripts/world/geometry/town_plaza_plan_3d.gd",
-      "sha256": "e4e5843cf497f103556c1a82f798494fe0f8b1eabff546028c5a29ccea6341b7"
+      "sha256": "b4384f6a2171c89472fae6631bf130bc5908701d77d40eadacc6c293e0227050"
     },
     {
       "path": "assets/models/architecture/shared/house_plan.gd",
@@ -103,5 +103,10 @@
   ],
   "units": "metres; +Y up; +Z front; ground origin",
   "materialPolicy": "Shared village textures plus generated 4x4 workshop atlas. GLB neutral slots; Godot scene material bindings.",
-  "collisionPolicy": "TownPlazaPlan3D blockers/posts shared with model and SpatialWorld3D; open smithy floor traversable"
+  "collisionPolicy": "TownPlazaPlan3D blockers/posts shared with model and SpatialWorld3D; open smithy floor traversable",
+  "placementCompatibility": {
+    "reason": "Shared metre poses rotate nw/ne/sw +90 degrees and spread village courtyards. Original local GLB geometry, layout, metre dimensions, pivot, collision ownership and scene are unchanged; shop selects the existing blue-grey slate cell through its material resource.",
+    "modelGeometryChanged": false,
+    "placementPlan": "scripts/world/geometry/town_plaza_plan_3d.gd"
+  }
 }

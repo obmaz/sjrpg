@@ -33,7 +33,7 @@ static func build(
 	tool.index()
 	var material := ShaderMaterial.new()
 	material.shader = preload("res://assets/materials/chapel_garden/stone.gdshader")
-	material.set_shader_parameter("atlas", load(NativeVillageSurfaces.ROOT + "masonry.png"))
+	material.set_shader_parameter("atlas", load("res://assets/materials/village_ground/albedo.png"))
 	var paving := MeshInstance3D.new()
 	paving.name = "IrregularFlagstones"
 	paving.mesh = tool.commit()
@@ -56,14 +56,17 @@ static func build(
 		multi.instance_count = selected.size()
 		for i in selected.size():
 			var item: Dictionary = selected[i]
+			var stretch: Vector3 = item.get("stretch", Vector3.ONE)
 			multi.set_instance_transform(
 				i,
 				Transform3D(
-					Basis(Vector3.UP, item["yaw"]).scaled(Vector3.ONE * float(item["scale"])),
+					Basis(Vector3.UP, item["yaw"]).scaled(stretch * float(item["scale"])),
 					item["at"]
 				)
 			)
-			multi.set_instance_color(i, Color(.64, .77, .61))
+			multi.set_instance_color(
+				i, item.get("tint", Color(.88, .90, .81) if kind > 1 else Color(.64, .77, .61))
+			)
 		var batch := MultiMeshInstance3D.new()
 		batch.name = "Groundcover" + str(kind)
 		batch.multimesh = multi
@@ -110,16 +113,7 @@ static func _leaves() -> Array[ArrayMesh]:
 				var coords: Array[Vector2] = []
 				for corner: Vector2 in [Vector2(0, a), Vector2(1, a), Vector2(1, b), Vector2(0, b)]:
 					var v := corner.y
-					points.append(
-						(
-							basis
-							* Vector3(
-								(corner.x - .5) * .44,
-								v * (.53 if kind < 2 else .48) - sin(v * PI) * .13,
-								v * .44
-							)
-						)
-					)
+					points.append(basis * _plant_point(kind, corner))
 					var uv := Vector2(corner.x, 1.0 - v)
 					coords.append((Vector2(kind % 2, kind / 2) + Vector2(.03, .03) + uv * .94) * .5)
 				var normal := (points[1] - points[0]).cross(points[3] - points[0]).normalized()
@@ -133,3 +127,13 @@ static func _leaves() -> Array[ArrayMesh]:
 		mesh.surface_set_material(0, _leaf_material)
 		_leaf_meshes.append(mesh)
 	return _leaf_meshes
+
+
+## 담쟁이는 바닥을 덮고 꽃대는 곧게 올라간다. 고사리의 방사형 부피와 섞지 않는다.
+static func _plant_point(kind: int, uv: Vector2) -> Vector3:
+	var along := uv.y
+	if kind == 1:
+		return Vector3((uv.x - .5) * .48, .025 + sin(along * PI) * .09, along * .58)
+	if kind > 1:
+		return Vector3((uv.x - .5) * .38, along * .66, sin(along * PI) * .09)
+	return Vector3((uv.x - .5) * .44, along * .53 - sin(along * PI) * .13, along * .44)

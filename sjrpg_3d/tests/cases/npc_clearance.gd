@@ -13,7 +13,19 @@ func _native_head_clear(game: Node, npc: Villager) -> bool:
 		if (circle["point"] as Vector2).is_equal_approx(npc.position):
 			excluded.append((circle["body"] as StaticBody3D).get_rid())
 	query.exclude = excluded
-	return spatial.get_world_3d().direct_space_state.intersect_ray(query).is_empty()
+	var hit := spatial.get_world_3d().direct_space_state.intersect_ray(query)
+	if not hit.is_empty():
+		print(
+			"ART_AUDIT NPC_HEAD_OCCLUDED ",
+			npc.display_name,
+			" head=",
+			head,
+			" hit=",
+			hit["position"],
+			" collider=",
+			hit["collider"].get_path()
+		)
+	return hit.is_empty()
 
 
 func run() -> void:

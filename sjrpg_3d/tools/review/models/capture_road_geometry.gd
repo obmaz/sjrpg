@@ -1,6 +1,8 @@
 extends Node
 ## 실제 마을 생성기가 사용하는 길의 미터 좌표를 데이터 마스크 제작에 전달한다.
 func _ready() -> void:
+	DirAccess.make_dir_recursive_absolute("user://tests")
+	GameState.save_path = "user://tests/road_geometry_capture.json"
 	GameState.new_game("mage")
 	var ground := Node2D.new()
 	var world := Node2D.new()
@@ -48,4 +50,5 @@ func _ready() -> void:
 	world.queue_free()
 	await get_tree().process_frame
 	await get_tree().process_frame
+	DirAccess.remove_absolute(GameState.save_path)
 	get_tree().quit()

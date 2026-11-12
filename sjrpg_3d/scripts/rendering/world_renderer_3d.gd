@@ -225,8 +225,8 @@ func _setup_light() -> void:
 	sunlight.shadow_bias = 0.025
 	sunlight.shadow_normal_bias = 0.35
 	stage.add_child(sunlight)
-	var projected := Iso.unproject(Vector2(0.72, 0.48)).normalized()
-	var ray := Vector3(projected.x, -tan(deg_to_rad(47.0)), projected.y)
+	# 두 가시 석조면은 주광을 받고, 건물 뒤 수관은 실제 그림자 속에 남긴다.
+	var ray := Vector3(-.55, -tan(deg_to_rad(47.0)), -.80)
 	sunlight.look_at(ray, Vector3.UP)
 	# Soft reflected daylight keeps the door and carved front stone readable.
 	# Only the main sun casts a shadow, so contact direction remains unambiguous.
@@ -377,6 +377,7 @@ func _build_house(key: String) -> void:
 	if chapel:
 		ChapelRenderer3D.build(self, root, width, depth, height)
 		return
+	root.transform = TownPlazaPlan3D.frame(key)
 	_houses[key] = HouseRenderer3D.build(self, root, key, width, depth, height)
 
 func _build_residents() -> void:

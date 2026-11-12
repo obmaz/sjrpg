@@ -44,15 +44,15 @@ static func decorate(village: Village, world: Node2D) -> Array[IsoSprite]:
 	_border(village, world, garden, 72.0, 1.0, rng, placed, "chapel_ground", CHAPEL_BUDGET)
 	_understory(village, world, rng, placed)
 	# The new doorway path needs its own edge budget before the long field roads.
-	var path_index := village.map_roads.size() - 1
-	_border(village, world, village.map_roads[path_index], 72.0, 0.94, rng, placed, "path_edge", mini(MAX_FLORA, placed.size() + 80))
-	for index in path_index:
-		_border(village, world, village.map_roads[index], 110.0, 0.72, rng, placed)
+	var entry_path: PackedVector2Array = ChapelGardenPlan3D.surface(village)["top"]
+	_border(village, world, entry_path, 72.0, 0.94, rng, placed, "path_edge", mini(MAX_FLORA, placed.size() + 80))
+	for road: PackedVector2Array in village.map_roads:
+		_border(village, world, road, 110.0, 0.72, rng, placed)
 	for key in village.buildings:
 		if key == "chapel":
 			continue
 		var building: IsoSprite = village.buildings[key]
-		_border(village, world, building.atlas_polygon(village.data["frames"][key]["ground"]), 85.0, 0.8, rng, placed, "building_edge")
+		_border(village, world, TownPlazaPlan3D.house_footprint(village,key), 85.0, 0.8, rng, placed, "building_edge")
 	return placed
 
 

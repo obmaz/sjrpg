@@ -3,7 +3,7 @@ extends RefCounted
 ## 시각 전용. 충돌·배칭 원본·공유 재질은 보존하고 가리는 인스턴스만 잠시 분리한다.
 const MIN_OPACITY := 0.20
 const INTERVAL := 0.10
-const CACHE_OBJECTS := 16
+const CACHE_INACTIVE_OBJECTS := 16
 var renderer: WorldRenderer3D
 var material_builds := 0
 var instance_builds := 0
@@ -441,14 +441,18 @@ func _restore(state: Dictionary) -> void:
 			draw.set_surface_override_material(surface, state["overrides"][surface])
 
 
-## 지나간 모델은 제한된 수만 재사용한다. 큰 건물도 부품 단위로 쪼개 퇴출하지 않는다.
+## 활성 객체와 별도로 지나간16개를 재사용한다. 밀집 가림이 최근 객체를 즉시 퇴출하지 않게 한다.
 func _trim_cache() -> void:
 	for key in _prepared.keys():
 		if not is_instance_valid(_prepared[key]["source"]):
 			_prepared.erase(key)
+	var inactive_count := 0
+	for group in _recent:
+		if not _fades.has(group):
+			inactive_count += 1
 	var remove: Array[String] = []
 	for group in _recent:
-		if _recent.size() - remove.size() <= CACHE_OBJECTS:
+		if inactive_count - remove.size() <= CACHE_INACTIVE_OBJECTS:
 			break
 		if not _fades.has(group):
 			remove.append(group)

@@ -11,7 +11,7 @@
   "tileMetres": 2.56,
   "roughness": 0.94,
   "fullFacade": true,
-  "roofCell": 1.0,
+  "roofCell": 0,
   "infillOnly": true,
   "model": "model.glb",
   "scene": "visual.tscn",

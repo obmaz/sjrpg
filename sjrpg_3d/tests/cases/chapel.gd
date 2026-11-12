@@ -62,8 +62,19 @@ func run() -> void:
 	# Preserve the source street connection, then walk the actual native+Z door
 	# ramp. The old illustration's step coordinates are a different doorway.
 	var steps := v.chapel_steps
-	var path: PackedVector2Array = v.map_roads[v.map_roads.size() - 1]
-	check("the actual doorway connects to the paved town street", Geometry2D.is_point_in_polygon(steps[0], path) and not Geometry2D.intersect_polygons(path, v.map_roads[0]).is_empty())
+	var plaza := TownPlazaPlan3D.project(
+		ChapelPlan3D.polygon(TownPlazaPlan3D.PLAZA), Transform3D.IDENTITY
+	)
+	var street_connected := false
+	# 주택 골목도 같은 목록에 들어가므로 순서 대신 실제 접점과 광장 연결을 찾는다.
+	for path: PackedVector2Array in v.map_roads:
+		if (
+			Geometry2D.is_point_in_polygon(steps[0], path)
+			and not Geometry2D.intersect_polygons(path, plaza).is_empty()
+		):
+			street_connected = true
+			break
+	check("chapel approach connects to the paved town street", street_connected)
 	var native_surface: Dictionary = SpatialWorld3D.terrain_surfaces(v)[0]
 	var native_building: PackedVector2Array = native_surface["building"]
 	var native_bottom: Vector2 = native_surface["bottom"]

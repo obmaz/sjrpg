@@ -12,6 +12,7 @@
 - [Android APK](android.md)
 - [웹 성능과 메모리](web-performance.md)
 - [실제 화면 검수](native-style-review.md)
+- [마을 구현자·검증자 비교](village-art-review.md)
 
 ## 게임과 UI
 

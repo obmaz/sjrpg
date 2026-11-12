@@ -40,7 +40,9 @@ func run() -> void:
 			and ground.find_children("*", "CollisionObject3D", true, false).is_empty()
 		)
 	)
-	var record: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(GroundRenderer3D.FIELD))
+	var record: Dictionary = JSON.parse_string(
+		FileAccess.get_file_as_string(GroundRenderer3D.FIELD)
+	)
 	var field_path := "res://" + str(record["field"])
 	check(
 		"distance data retains the baked original hash",
@@ -102,6 +104,16 @@ func run() -> void:
 	var sources: Dictionary = JSON.parse_string(
 		FileAccess.get_file_as_string("res://assets/source/materials/paving/provenance.json")
 	)
+	var paving := NativeTerrainSurfaces.layers("paving")
+	check(
+		"six paving images share a single cached sampler array",
+		(
+			paving.get_layers() == 6
+			and material.get_shader_parameter("paving_layers") == paving
+			and NativeTerrainSurfaces.layers("paving") == paving
+		)
+	)
+	var all_layers_match := true
 	for variant in 6:
 		var path := "res://assets/materials/paving/paving-%d.png" % variant
 		var texture := load(path) as Texture2D
@@ -112,11 +124,22 @@ func run() -> void:
 			(
 				texture.get_width() == 1254
 				and texture.get_height() == 1254
-				and material.get_shader_parameter("paving_%d" % variant) == texture
+				and material.get_shader_parameter("paving_layers") == paving
 				and sources["images"][variant]["sha256"] == hash
 				and is_equal_approx(float(report["paving_tile_metres"]), 3.2)
 			)
 		)
+		var imported := texture.get_image()
+		all_layers_match = (
+			all_layers_match
+			and paving.get_format() == imported.get_format()
+			and paving.get_width() == imported.get_width()
+			and paving.get_height() == imported.get_height()
+			and paving.has_mipmaps() == imported.has_mipmaps()
+		)
+	check(
+		"paving array retains the imported dimensions, GPU format and mip chain", all_layers_match
+	)
 	check("six paving images are distinct authored arrangements", hashes.size() == 6)
 	var grass := NativeTerrainSurfaces.layers("grass")
 	var water := NativeTerrainSurfaces.layers("water")

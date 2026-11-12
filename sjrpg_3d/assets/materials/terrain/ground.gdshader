@@ -2,6 +2,7 @@ shader_type spatial;
 render_mode cull_back;
 uniform sampler2D distance_field : filter_linear, repeat_disable;
 uniform vec4 town_bounds;
+uniform sampler2D woodland_atlas : source_color, filter_linear_mipmap_anisotropic, repeat_disable;
 #include "res://assets/materials/grass/variety.gdshaderinc"
 
 uniform sampler2D shore_field : filter_linear, repeat_disable;
@@ -41,6 +42,20 @@ float ground_noise(vec2 p) {
 vec2 mirrored(vec2 uv) {
 	return 1.0 - abs(fract(uv * 0.5) * 2.0 - 1.0);
 }
+vec3 woodland(vec2 world,vec2 cell,float metres) {
+	vec2 uv = mirrored(world/metres);
+	return texture(woodland_atlas,(cell+mix(vec2(.025),vec2(.975),uv))*.5).rgb;
+}
+// 판석 사이 흙은 직사각 매트가 아니라 둥근 마모 자국으로 이어진다.
+float path_wear(vec2 world, vec4 bounds, float detail) {
+	vec2 half_size = (bounds.zw-bounds.xy)*.5;
+	vec2 offset = abs(world-(bounds.xy+bounds.zw)*.5);
+	float radius = min(half_size.x,half_size.y);
+	float segment = abs(half_size.x-half_size.y);
+	vec2 closest = half_size.x > half_size.y ? vec2(max(0.0,offset.x-segment),offset.y) : vec2(offset.x,max(0.0,offset.y-segment));
+	return 1.0-smoothstep(-.15,.30,length(closest)-radius+(detail-.5)*.16);
+}
+
 #include "res://assets/materials/paving/surface.gdshaderinc"
 void vertex() {
 	ground_world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xz;
@@ -56,12 +71,17 @@ void fragment() {
 	}
 	vec2 uv = ground_world / 2.56;
 	vec3 grass = grass_surface(ground_world,0.0);
+	vec2 town_edge = min(ground_world-town_bounds.xy,town_bounds.zw-ground_world);
+	float settled = smoothstep(-1.5,1.0,min(town_edge.x,town_edge.y));
+	vec3 woodland_grass = woodland(ground_world,vec2(1.0),2.1);
+	grass = mix(grass,woodland_grass,mix(.48,.72,ground_noise(ground_world/4.0))*settled);
 	vec3 color = grass;
 	float paving_relief = 0.0;
 	if (d < 1.5) {
 		vec2 town_edge = min(ground_world-town_bounds.xy,town_bounds.zw-ground_world);
 		float town = smoothstep(-0.8,1.2,min(town_edge.x,town_edge.y));
 		vec3 paving = paving_surface(ground_world,town);
+		paving = mix(paving,woodland(ground_world,vec2(0.0),1.2),town*.95);
 		float irregular = (ground_noise(ground_world*1.65)-.5)*mix(1.55,.48,town);
 		float edge_d = d+irregular;
 		float feather = mix(.85,.32,town);
@@ -136,12 +156,11 @@ void fragment() {
 			float radius = length((ground_world-chapel_beds[i].xy)/chapel_beds[i].zw);
 			bed_cover = max(bed_cover,1.0-smoothstep(.70,1.3,radius+broken_edge));
 		}
-		vec2 path_edge = min(ground_world-chapel_path.xy,chapel_path.zw-ground_world);
-		float path_cover = smoothstep(-.12,.10,min(path_edge.x,path_edge.y));
-		vec3 soil = texture(earth_texture,ground_world/2.56).rgb;
+		float path_cover = path_wear(ground_world,chapel_path,ground_noise(ground_world*3.8));
+		vec3 soil = woodland(ground_world,vec2(0.0,1.0),2.1);
 		vec3 garden_floor = mix(soil,grass,0.65+ground_noise(ground_world*2.0)*.22);
 		color = mix(color,garden_floor,bed_cover*.96);
-		color = mix(color,mix(soil,grass,.22),path_cover*.95);
+		color = mix(color,mix(soil,grass,.40),path_cover*.78);
 		paving_relief *= 1.0-max(bed_cover,path_cover);
 	}
 	// 건물 구역 안에서만 화단·작업 마당을 계산하며 먼 필드에는 적용하지 않는다.
@@ -157,17 +176,16 @@ void fragment() {
 					bed = max(bed,1.0-smoothstep(.70,1.25,radius+(noise-.5)*.27));
 				}
 				vec4 path = courtyard_paths[i];
-				vec2 path_edge = min(ground_world-path.xy,path.zw-ground_world);
-				float path_cover = smoothstep(-.20,.10,min(path_edge.x,path_edge.y)+(noise-.5)*.10);
+				float path_cover = path_wear(ground_world,path,noise);
 				vec4 apron = courtyard_aprons[i];
 				float apron_radius = length((ground_world-apron.xy)/apron.zw);
 				float worn = (1.0-smoothstep(.68,1.25,apron_radius+(noise-.5)*.18))*courtyard_themes[i];
-				vec3 soil = texture(earth_texture,ground_world/2.56).rgb;
+				vec3 soil = woodland(ground_world,vec2(0.0,1.0),2.1);
 				vec3 gravel = texture(rock_texture,ground_world/2.56).rgb;
 				vec3 working = mix(soil,gravel,.46)*vec3(.77,.77,.72);
 				color = mix(color,working,worn*.80);
 				color = mix(color,mix(soil,grass,.78),bed*.95);
-				color = mix(color,mix(soil,grass,mix(.27,.08,courtyard_themes[i])),path_cover*.92);
+				color = mix(color,mix(soil,grass,mix(.27,.08,courtyard_themes[i])),path_cover*.78);
 				paving_relief *= 1.0-max(bed,path_cover);
 			}
 		}

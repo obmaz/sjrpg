@@ -113,6 +113,21 @@ def check_surface_families():
         print(f'ASSET_PACKAGE_PASS {family} {count} unmodified generated originals')
 
 
+def check_village_ground():
+    source = ROOT / 'assets/source/materials/village_ground'
+    proof = json.loads((source / 'provenance.json').read_text())
+    atlas = ROOT / proof['source']
+    assert atlas == ROOT / 'assets/materials/village_ground/albedo.png'
+    assert hashlib.sha256(atlas.read_bytes()).hexdigest() == proof['sha256']
+    assert hashlib.sha256((source / proof['prompt']).read_bytes()).hexdigest() == proof['prompt_sha256']
+    with Image.open(atlas) as image:
+        assert image.size == tuple(proof['dimensions']) == (1254, 1254) and image.mode == 'RGB'
+    assert len(proof['cells']) == 4 and proof['cell_metres'] == [1.2, 1.3, 2.1, 2.1]
+    for reference in proof['references']:
+        assert hashlib.sha256((ROOT / reference['path']).read_bytes()).hexdigest() == reference['sha256']
+    print('ASSET_PACKAGE_PASS village_ground unmodified generated atlas')
+
+
 def check_world_sources():
     record = json.loads((ROOT / 'assets/source/environment/world_refinement/provenance.json').read_text())
     for source in record['implementation']:
@@ -138,6 +153,7 @@ def main():
     if not args.asset:
         check_craft()
         check_surface_families()
+        check_village_ground()
         from check_enemy_assets import check_all
         check_all()
         check_world_sources()

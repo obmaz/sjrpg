@@ -1,26 +1,39 @@
 class_name TownPlazaPlan3D
 extends RefCounted
-## 미터 단위 마을 설계. 기존 주택의 치수/모델은 유지하고 중심만 옮긴다.
+## 미터 단위 마을 배치. 표시·충돌·주민·마당은 같은 중심과 Y 회전을 공유한다.
 ## 성벽 안쪽 보행 범위. 가장자리로 옮긴 주민도 마을 안전 구역에 포함한다.
 const TOWN_INTERIOR := Rect2(-21.0, -19.2, 41.0, 36.2)
 const PLAZA := Rect2(-7.2, -7.0, 14.4, 14.5)
 const LEGACY_CENTERS := {
-	"nw": Vector2(-15.0, 8.0),
-	"ne": Vector2(-12.0, -15.0),
-	"sw": Vector2(6.2, 10.0),
-	"se": Vector2(15.0, 8.0),
+	"nw": Vector2(-15.0, 9.0),
+	"ne": Vector2(-6.0, -12.6),
+	"sw": Vector2(3.8, 12.4),
+	"se": Vector2(14.8, 11.7),
 }
+## +90°는 로컬 +Z 정면을 월드 +X, 즉 화면 우하단으로 돌린다.
+const LEGACY_YAWS := {"nw": PI * .5, "ne": PI * .5, "sw": PI * .5, "se": 0.0}
+## 길을 가로막지 않는 뒤쪽 수관 군락. 건물과 길 사이의 숲 층을 만든다.
+const WOODLAND_TREES := [
+	Vector2(-16.5, -15.2),
+	Vector2(-12.0, -17.3),
+	Vector2(-11.4, -12.7),
+	Vector2(3.1, -16.4),
+	Vector2(6.9, -17.0),
+	Vector2(10.5, -16.0),
+	Vector2(-18.1, 13.1),
+	Vector2(10.2, 14.7)
+]
 const SERVICES := {
 	"market_shop":
 	{
-		"center": Vector2(-12.0, -6.6),
+		"center": Vector2(-14.3, -6.6),
 		"size": Vector2(8.0, 8.0),
 		"npc": "상인",
 		"approach": Vector2(-0.6, 4.65)
 	},
 	"open_smithy":
 	{
-		"center": Vector2(14.0, -6.6),
+		"center": Vector2(14.2, -5.2),
 		"size": Vector2(8.0, 8.0),
 		"npc": "대장장이",
 		"approach": Vector2(0.7, 4.65)
@@ -29,8 +42,42 @@ const SERVICES := {
 
 
 static func frame(id: String) -> Transform3D:
-	var center: Vector2 = SERVICES[id]["center"]
-	return Transform3D(Basis.IDENTITY, Vector3(center.x, 0, center.y))
+	var legacy := LEGACY_CENTERS.has(id)
+	var center: Vector2 = LEGACY_CENTERS[id] if legacy else SERVICES[id]["center"]
+	var yaw: float = LEGACY_YAWS[id] if legacy else float(SERVICES[id].get("yaw", 0.0))
+	return Transform3D(Basis(Vector3.UP, yaw), Vector3(center.x, 0, center.y))
+
+
+static func house_size(village: Village, key: String) -> Vector2:
+	var size: Vector2 = village.buildings[key].get_meta("native_source_size")
+	return Vector2(maxf(3.5, size.x), maxf(3.0, size.y))
+
+
+static func house_footprint(village: Village, key: String) -> PackedVector2Array:
+	var size := house_size(village, key)
+	return project(ChapelPlan3D.polygon(Rect2(-size * .5, size)), frame(key))
+
+
+## 호환 원화의 배치 점을 해당 건물의 실제 월드 포즈로 옮긴다.
+static func source_point(key: String, point: Vector2) -> Vector2:
+	var pose := frame(key)
+	var flat := Iso.unproject(point) / WorldSpace3D.GROUND_UNITS_PER_METER
+	var local := flat - Vector2(pose.origin.x, pose.origin.z)
+	return WorldSpace3D.world_to_projected(pose * Vector3(local.x, 0, local.y))
+
+
+## 주민은 예전 그림의 먼 마당 좌표 대신 실제 GLB 문 접근 구역 바깥에 선다.
+static func house_approach(key: String) -> Vector2:
+	var identity: String = NativeHousePlan.STYLES[key]["wall"]
+	var layout := (
+		load(ArchitectureSceneLibrary.ARCHITECTURE_SCENE_ROOT + identity + "/layout.tres")
+		as Resource
+	)
+	var report: Dictionary = layout.get_meta("report")
+	var doorway: Rect2 = report["door_approach"]
+	return WorldSpace3D.world_to_projected(
+		frame(key) * Vector3(doorway.get_center().x, 0, doorway.end.y + .15)
+	)
 
 
 static func approach(id: String) -> Vector2:

@@ -108,17 +108,27 @@ func build(ground_layer: Node2D, world: Node2D) -> void:
 	# 직립 워프문은 마을의 실제 이동 지점에만 둔다. 파수꾼은 지도/도전 안내를 사용한다.
 	_build_buildings(world)
 	_build_chapel_path(ground_layer)
+	_build_residential_lanes()
 	_build_plaza(world)
 	_build_sanctuaries(world)
+	_build_chest_points()
 	_build_trees(world, ground_layer)
 	_build_npcs(world)
+	var corners := ChapelPlan3D.polygon(TownPlazaPlan3D.TOWN_INTERIOR)
+	safe_zone = PackedVector2Array()
+	for c in corners:
+		safe_zone.append(Iso.project(c * WorldSpace3D.GROUND_UNITS_PER_METER))
+
+
+## 상자를 먼저 확정해 식재가 옮기기 전 원본 좌표의 빈 공간을 잘못 피하지 않게 한다.
+func _build_chest_points() -> void:
 	var garden_path: Rect2 = ChapelGardenPlan3D.layout(self)["path"]
 	for c in data["chest_uv"]:
 		var at := point(Vector2(c[0], c[1]))
 		var metres := Iso.unproject(at) / WorldSpace3D.GROUND_UNITS_PER_METER
 		# 상자 순서/보상 ID는 유지하고 새 진입로를 가리는 상자만 옆으로 옮긴다.
 		if garden_path.grow(.5).has_point(metres):
-			metres = Vector2(garden_path.end.x + 1.2, garden_path.position.y + 1.25)
+			metres = ChapelGardenPlan3D.layout(self)["chest_point"]
 			at = Iso.project(metres * WorldSpace3D.GROUND_UNITS_PER_METER)
 		chest_points.append(at)
 	# The waterfall chest is above the measured dry path; memory IDs 5–7 stay stable.
@@ -126,10 +136,6 @@ func build(ground_layer: Node2D, world: Node2D) -> void:
 		chest_points.append(Iso.project(g))
 		clear_rects.append(Rect2(Iso.project(g) - Vector2(80, 80), Vector2(160, 160)))
 	chest_points.append(landmarks[3]._pt(Vector2(215, 472)))
-	var corners := ChapelPlan3D.polygon(TownPlazaPlan3D.TOWN_INTERIOR)
-	safe_zone = PackedVector2Array()
-	for c in corners:
-		safe_zone.append(Iso.project(c * WorldSpace3D.GROUND_UNITS_PER_METER))
 
 
 # ───────── ground ─────────
@@ -412,9 +418,10 @@ func _build_buildings(world: Node2D) -> void:
 			flat.append(Iso.unproject(p) / WorldSpace3D.GROUND_UNITS_PER_METER)
 		var center: Vector2 = TownPlazaPlan3D.LEGACY_CENTERS[key]
 		s.position += Iso.project((center - Iso.poly_bounds(flat).get_center()) * WorldSpace3D.GROUND_UNITS_PER_METER)
+		s.set_meta("native_source_size", Iso.poly_bounds(flat).size)
 		world.add_child(s)
 		buildings[key] = s
-		solids.append(s.atlas_polygon(data["frames"][key]["ground"]))
+		solids.append(TownPlazaPlan3D.house_footprint(self, key))
 	_build_chapel(world)
 
 
@@ -512,12 +519,26 @@ func _build_chapel_path(layer: Node2D) -> void:
 	map_roads.append(_project_polygon(left))
 
 
+## 낮은 골목은 기존 지면 위의 길이다. 지도와 바닥 거리장도 같은 다각형을 읽는다.
+func _build_residential_lanes() -> void:
+	for lane: Dictionary in VillageCourtyardPlan3D.lanes(self):
+		var projected := PackedVector2Array()
+		for point: Vector2 in lane["polygon"]:
+			projected.append(Iso.project(point * WorldSpace3D.GROUND_UNITS_PER_METER))
+		map_roads.append(projected)
+
+
 func _build_trees(world: Node2D, ground_layer: Node2D) -> void:
 	# Build a wooded middle/background around the real chapel and service houses.
 	# Trunk positions stay off the actual structures, roads and stair approach.
 	for key in ["chapel", "nw", "ne", "sw", "se"]:
 		var building: IsoSprite = buildings[key]
-		var bounds := Iso.poly_bounds(building.atlas_polygon(data["frames"][key]["ground"]))
+		var ground := (
+			building.atlas_polygon(data["frames"][key]["ground"])
+			if key == "chapel"
+			else TownPlazaPlan3D.house_footprint(self, key)
+		)
+		var bounds := Iso.poly_bounds(ground)
 		var points: Array[Vector2] = [
 			Vector2(bounds.position.x - 60.0, bounds.position.y - 65.0),
 			Vector2(bounds.end.x + 65.0, bounds.position.y + 25.0),
@@ -544,19 +565,40 @@ func _build_trees(world: Node2D, ground_layer: Node2D) -> void:
 			world.add_child(extra)
 			town_trees.append(extra)
 			circles.append([at, 18.0])
-	# 후경 수관을 한 군락으로 묶어 예배당 뒤의 비어 있는 지면을 정돈한다.
-	for at: Vector2 in ChapelGardenPlan3D.layout(self)["background_trees"]:
+	# 실제 시선 안의 옆쪽 수관과 뒤쪽 숲을 나누고 문·주민·길을 비운다.
+	for tree: Dictionary in ChapelGardenPlan3D.layout(self)["background_trees"]:
+		var at: Vector2 = tree["at"]
 		var projected := Iso.project(at * WorldSpace3D.GROUND_UNITS_PER_METER)
 		if not _grove_clear(projected):
 			continue
 		var definition: Dictionary = data["sprites"]["tree-2"]
-		var extra := IsoSprite.new().setup(definition, 590.0)
+		var extra := IsoSprite.new().setup(definition, float(tree["height"]))
 		extra.position = projected
-		extra.modulate_color = Color(.72, .79, .68)
-		extra.set_meta("native_tree_variant", 0)
+		if _canopy_blocks_service(extra):
+			extra.free()
+			continue
+		extra.modulate_color = tree.get("tint", Color(.62, .72, .62))
+		extra.set_meta("native_tree_variant", int(tree.get("variant", 0)))
+		if tree.has("role"):
+			extra.set_meta("chapel_canopy_role", tree["role"])
 		world.add_child(extra)
 		town_trees.append(extra)
 		circles.append([projected, 18.0])
+	# 건물 뒤의 큰 수관으로 바닥-낮은 식생-숲의 높이 층을 만든다.
+	for point: Vector2 in TownPlazaPlan3D.WOODLAND_TREES:
+		var at := Iso.project(point * WorldSpace3D.GROUND_UNITS_PER_METER)
+		if not _grove_clear(at):
+			continue
+		var extra := IsoSprite.new().setup(data["sprites"]["tree-2"], 550.0)
+		extra.position = at
+		if _canopy_blocks_service(extra):
+			extra.free()
+			continue
+		extra.modulate_color = Color(.68, .76, .68)
+		extra.set_meta("native_tree_variant", 0)
+		world.add_child(extra)
+		town_trees.append(extra)
+		circles.append([at, 18.0])
 	# Prioritize the new chapel grove. These flat-ground casters use their own alpha,
 	# never a repeating dark patch painted into the grass material.
 	var casters := town_trees.duplicate()
@@ -572,9 +614,7 @@ func _canopy_blocks_service(tree: IsoSprite) -> bool:
 	var src: Array = tree.def["source"]
 	var bounds := Iso.poly_bounds(tree.atlas_polygon([[src[0], src[1]], [src[0] + src[2], src[1]], [src[0] + src[2], src[1] + src[3]], [src[0], src[1] + src[3]]]))
 	for service in NPCS:
-		var key: String = service[0]
-		var approach: Array = data["approaches"][key]
-		var npc: Vector2 = buildings[key].native_point(Vector2(approach[0], approach[1]))
+		var npc := _resident_position(service)
 		var readable := NpcArt.readability_rect(str(service[1]), Villager.BODY_HEIGHT)
 		readable.position += npc
 		if tree.position.y > npc.y + 4.0 and bounds.intersects(readable):
@@ -586,16 +626,21 @@ func _grove_clear(at: Vector2) -> bool:
 	if near_water(Iso.unproject(at), 30.0):
 		return false
 	var flat := Iso.unproject(at) / WorldSpace3D.GROUND_UNITS_PER_METER
-	if TownPlazaPlan3D.PLAZA.grow(.5).has_point(flat):
+	var planting_island := ChapelGardenPlan3D.planned_island_tree(self, flat)
+	if planting_island and not ChapelGardenPlan3D.island_tree_clear(self, flat):
+		return false
+	if not planting_island and TownPlazaPlan3D.PLAZA.grow(.5).has_point(flat):
 		return false
 	for id: String in TownPlazaPlan3D.SERVICES:
-		if Iso.poly_bounds(TownPlazaPlan3D.footprint(id)).grow(75.0).has_point(at):
+		var local := TownPlazaPlan3D.frame(id).affine_inverse() * Vector3(flat.x, 0, flat.y)
+		var size: Vector2 = TownPlazaPlan3D.SERVICES[id]["size"]
+		if Rect2(-size * .5, size).grow(1.15).has_point(Vector2(local.x, local.z)):
 			return false
 	for solid in solids:
 		if Geometry2D.is_point_in_polygon(at, solid):
 			return false
 	for road in map_roads:
-		if Geometry2D.is_point_in_polygon(at, road):
+		if not planting_island and Geometry2D.is_point_in_polygon(at, road):
 			return false
 	for step in chapel_steps:
 		if at.distance_to(step) < 95.0:
@@ -606,27 +651,32 @@ func _grove_clear(at: Vector2) -> bool:
 	for gate in gate_points:
 		if at.distance_to(gate) < 160.0:
 			return false
-	for uv in data["chest_uv"]:
-		if at.distance_to(point(Vector2(uv[0], uv[1]))) < 85.0:
+	for chest: Vector2 in chest_points:
+		if at.distance_to(chest) < 85.0:
 			return false
 	for key in ["nw", "ne", "sw", "se"]:
 		var building: IsoSprite = buildings[key]
 		var approach: Array = data["approaches"][key]
-		if at.distance_to(building.native_point(Vector2(approach[0], approach[1]))) < 85.0:
+		var door := TownPlazaPlan3D.source_point(
+			key, building.native_point(Vector2(approach[0], approach[1]))
+		)
+		if at.distance_to(door) < 85.0 or at.distance_to(TownPlazaPlan3D.house_approach(key)) < 85.0:
 			return false
 	return true
 
 
+func _resident_position(definition: Array) -> Vector2:
+	for id: String in TownPlazaPlan3D.SERVICES:
+		if TownPlazaPlan3D.SERVICES[id]["npc"] == definition[1]:
+			return TownPlazaPlan3D.approach(id)
+	return TownPlazaPlan3D.house_approach(str(definition[0]))
+
+
 func _build_npcs(world: Node2D) -> void:
 	for n in NPCS:
-		var b: IsoSprite = buildings[n[0]]
-		var a: Array = data["approaches"][n[0]]
 		var npc := Villager.new()
 		npc.setup(n[2], n[1])
-		npc.position = b.native_point(Vector2(a[0], a[1]))
-		for id: String in TownPlazaPlan3D.SERVICES:
-			if TownPlazaPlan3D.SERVICES[id]["npc"] == n[1]:
-				npc.position = TownPlazaPlan3D.approach(id)
+		npc.position = _resident_position(n)
 		var nm: String = n[1]
 		npc.marker = func(): return Quests.marker_for(nm)
 		npc_points[n[1]] = npc.position

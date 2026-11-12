@@ -4,7 +4,9 @@ extends RefCounted
 const MAX_HEIGHT := .045
 
 
-static func generate(path: Rect2, random_seed: int, columns := 4, rows := 8) -> Array[Dictionary]:
+static func generate(
+	path: Rect2, random_seed: int, columns := 4, rows := 8, irregular_edges := false
+) -> Array[Dictionary]:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = random_seed
 	var result: Array[Dictionary] = []
@@ -18,14 +20,18 @@ static func generate(path: Rect2, random_seed: int, columns := 4, rows := 8) -> 
 				path.position
 				+ Vector2(column * path.size.x / float(columns), row * path.size.y / float(rows))
 			)
-			if column > 0 and column < columns:
+			if irregular_edges or (column > 0 and column < columns):
 				point.x += rng.randf_range(-.12, .12)
-			if row > 0 and row < rows:
+			if irregular_edges or (row > 0 and row < rows):
 				point.y += rng.randf_range(-.12, .12)
 			line.append(point)
 		grid.append(line)
 	for row in rows:
 		for column in columns:
+			if irregular_edges and row == rows - 1 and column in [0, columns - 1]:
+				continue
+			if irregular_edges and row == rows - 2 and column == columns - 1 and rng.randf() < .65:
+				continue
 			var corners := PackedVector2Array(
 				[
 					grid[row][column],
@@ -62,6 +68,13 @@ static func generate(path: Rect2, random_seed: int, columns := 4, rows := 8) -> 
 				}
 			)
 	return result
+
+
+static func bounds(stones: Array) -> Rect2:
+	var points := PackedVector2Array()
+	for stone: Dictionary in stones:
+		points.append_array(stone["polygon"])
+	return Iso.poly_bounds(points)
 
 
 static func cap_polygon(stone: Dictionary) -> PackedVector2Array:

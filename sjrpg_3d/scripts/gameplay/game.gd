@@ -235,7 +235,7 @@ func _update_render_quality() -> void:
 
 
 ## Web debug: ?zoom=0.4 multiplies the selected relative view (used for layout screenshots).
-## ?zoom=1 keeps the new 0.75 baseline; it does not restore the former default framing.
+## ?zoom=1 keeps Prefs.WORLD_ZOOM_BASE and the player's selected view size.
 var _debug_zoom := 1.0
 var _encounter_audit := false
 
@@ -357,6 +357,8 @@ func _read_debug_params() -> void:
 			review.start.call_deferred(self)
 		elif kv.size() == 2 and kv[0] == "reward_preview" and kv[1] in ["1", "levelup"]:
 			_reward_preview.call_deferred(kv[1])
+		elif kv.size() == 2 and kv[0] == "village_review" and kv[1] == "1":
+			VillageReviewSnapshot.publish.call_deferred(self)
 		elif kv.size() == 2 and kv[0] == "gold":
 			GameState.gold = int(kv[1])
 		elif kv.size() == 2 and kv[0] == "chests":
@@ -426,10 +428,7 @@ func _read_debug_params() -> void:
 				"chapel_reference":
 					_place_at_chapel_reference()
 				"house_nw", "house_ne", "house_sw", "house_se":
-					var bounds := world_renderer._building_bounds(kv[1].trim_prefix("house_"))
-					var middle := bounds.get_center()
-					spatial_world.teleport_source_actor(player,Iso.project((middle+Vector2(0,bounds.size.y*0.5+1.2))*65.0),Player.RADIUS)
-					_fx_review_focus = Iso.project(middle*65.0)-Vector2(0,100)
+					_place_at_house_review(kv[1].trim_prefix("house_"))
 				"plaza_detail":
 					var outline := village.fountain.atlas_polygon(village.data["frames"]["pool"]["ground"])
 					var middle := Vector2.ZERO
@@ -452,6 +451,20 @@ func _read_debug_params() -> void:
 	# Debug zoom is parsed after initial camera setup. Apply it independent of
 	# query ordering or whether a quality setting happens to emit a resize.
 	_update_zoom()
+
+
+func _place_at_house_review(key: String) -> void:
+	var id: String = NativeHousePlan.STYLES[key]["wall"]
+	var layout := (
+		load(ArchitectureSceneLibrary.ARCHITECTURE_SCENE_ROOT + id + "/layout.tres") as Resource
+	)
+	var report: Dictionary = layout.get_meta("report")
+	var entry: Rect2 = report["door_approach"]
+	var pose := TownPlazaPlan3D.frame(key)
+	var at := pose * Vector3(entry.get_center().x, 0, entry.position.y + 1.2)
+	spatial_world.teleport_source_actor(player, WorldSpace3D.world_to_projected(at), Player.RADIUS)
+	# 정상 플레이의 인물 추적으로 문 앞 가독성과 UI 겹침을 함께 검수한다.
+	_fx_review_focus = Vector2.ZERO
 
 
 func _place_at_chapel_reference() -> void:

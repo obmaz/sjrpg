@@ -79,15 +79,15 @@
     },
     {
       "path": "scripts/world/village.gd",
-      "sha256": "7a9ea2ea83d9dbccd0e5781757fb2df82131a9a8e4418fa17ade5f36041a56fd"
+      "sha256": "016a6d0f751f5c415a4a40f289357b0d29338b42fee96a39f87087718c098695"
     },
     {
       "path": "assets/materials/terrain/ground.gdshader",
-      "sha256": "60363505aa6a6e12689704128a6f0ffdf3fb33990226dd7fdc25743f86a00bc8"
+      "sha256": "75e78eb41fd47a0c7e40991f46809b95b1ea48cf550f6d459bbae9a50533ddea"
     },
     {
       "path": "scripts/rendering/terrain/ground_renderer_3d.gd",
-      "sha256": "232b77da67aaa40636400acb82325877c722e20a30fb8ea9383622a1efc2d477"
+      "sha256": "b182fd4eec1d069d1acc310a2964db11b613135d251c16600df0a329a368f904"
     },
     {
       "path": "assets/materials/water/river.gdshader",
@@ -119,7 +119,7 @@
     },
     {
       "path": "assets/materials/terrain/surfaces.gd",
-      "sha256": "a7a58d5d8c724bb4d6514f0476473f4616e6a7c8af7c2a94ec73d4ce9b78c46b"
+      "sha256": "3941774237b336470f29058c5d257f05dcc185cb6bb5cbda83af61f9aee9962e"
     },
     {
       "path": "tools/assets/architecture/house_builder.gd",
@@ -131,19 +131,19 @@
     },
     {
       "path": "scripts/world/geometry/garden_path_3d.gd",
-      "sha256": "f28328db20bbdddf8f6f72f56cd9b4ad1d4c5da4e7708cf991acad8915bffa59"
+      "sha256": "3023764179313f523e711b6f82e18268aa57c87d458736edb9d2b3c5b52d8d95"
     },
     {
       "path": "scripts/world/geometry/village_courtyard_plan_3d.gd",
-      "sha256": "603ac9768c30787e991474151d463e3339da9fafdec14fc74e165c5854cf2198"
+      "sha256": "44272d78fd52063a7fc126efd7d8c7b6bcc248eca4b58b917f19abbdfa3659e4"
     },
     {
       "path": "scripts/rendering/vegetation/garden_detail_renderer_3d.gd",
-      "sha256": "0593bedb6a7f598fe59fcda1a1c67c524c409b35f932b9b2338c4b190e2f4401"
+      "sha256": "2b96b620a4f180e4448d7f20e900a8169ea02dfad2f76c229ed2eed36ebce792"
     },
     {
       "path": "scripts/world/geometry/chapel_garden_plan_3d.gd",
-      "sha256": "9dc576da438cb3de4895b61d231274271fef7f38033c6e58a7b5dd7fbffeeadc"
+      "sha256": "4856cb142e69d158dd24084d65a9caf155d27dbb6d3f9647db90df969bc5350a"
     },
     {
       "path": "scripts/rendering/vegetation/chapel_garden_3d.gd",
@@ -152,6 +152,10 @@
     {
       "path": "scripts/rendering/vegetation/forest_flora_renderer_3d.gd",
       "sha256": "c7ed479acb7af7b468276ecda1e2d5084c0a2dfe67919507a38619d402c70d44"
+    },
+    {
+      "path": "scripts/world/geometry/town_plaza_plan_3d.gd",
+      "sha256": "b4384f6a2171c89472fae6631bf130bc5908701d77d40eadacc6c293e0227050"
     }
   ],
   "fortress_surface_provenance": "assets/source/environment/fortress/provenance.json",
@@ -206,8 +210,20 @@
       "open_smithy"
     ],
     "max_additional_static_draws": 5,
-    "additional_textures": 0,
+    "additional_textures": 1,
     "new_lights": 0,
-    "physical_device_tested": false
+    "physical_device_tested": false,
+    "ground_material_provenance": "assets/source/materials/village_ground/provenance.json",
+    "shared_pose": "scripts/world/geometry/town_plaza_plan_3d.gd",
+    "rotation": "nw/ne/sw +90° around Y, local +Z front→world +X; NPCs, native SOLID footprints, minimap and local paver/plant positions follow the same frame.",
+    "path_edges": "Broken outer grid vertices, tapered end cells and capsule-shaped soil wear; house4×6 and chapel4×8 pavers share their actual FLOOR polygons.",
+    "npc_approach": "Actual GLB door_approach end +0.15m for preserved houses, dedicated facility approach for traders; old far-forecourt pixels do not place residents under wall walks.",
+    "plant_layers": "Ground ivy has a .025–.115m curved mesh; upright .66m flower stems and .53m arched fern fronds use species-specific geometry and instance scale. Taller ferns are kept back from path edges.",
+    "paving": "Six original paving images share one cached Texture2DArray; GPU blocks/mip chains remain unchanged and the ground shader uses nine user samplers.",
+    "lanes": "Two shared 1.8m ground-level ribbon polygons connect northwest pavers and southeast/southwest pavers to the plaza. Village.map_roads owns the polygons; roads.json and the single signed-distance texture are baked from those exact paths. Existing native ground owns FLOOR.",
+    "canopy": "One explicit 1.5×2m elliptical planting island joins a tall existing dark_fir350 rear canopy, a220px oak middle canopy and dark .95–1.40-scale fern/ivy undergrowth. Source tree transforms, native trunk collision, source-exclusion checks, soil bed, native paver notch and minimap use the same plan. Actual accepted leaf vertices are tested relative to the reference hero; paired browser captures judge final architectural visibility.",
+    "chest": "The existing chapel-forecourt chest keeps its index, scale and contents and moves to the right roadside using the chapel plan chest_point.",
+    "planting_island": "Generic plaza/road exclusion is replaced only for the two exact planned island tree points by native body/step clearance, at least .85m fountain-boundary distance, existing solid/water/NPC/gate checks, and a real garden/stone notch. The native hero walks the fountain perimeter beside both trunks.",
+    "chest_placement_order": "Chest positions are resolved before tree placement; exclusions use their actual relocated positions, preserving saved chest IDs and scale."
   }
 }

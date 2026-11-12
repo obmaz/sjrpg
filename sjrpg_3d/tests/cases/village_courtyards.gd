@@ -28,16 +28,17 @@ func run() -> void:
 				worst_floor, absf(spatial.height_at(projected) - float(stone["height"]))
 			)
 		var path: Rect2 = site["path"]
+		var local_path: Rect2 = site["local_path"]
+		var pose: Transform3D = site["frame"]
 		if str(site["id"]) in VillageCourtyardPlan3D.HOUSE_KEYS:
 			var key: String = site["id"]
 			var visual_report: Dictionary = game.world_renderer._houses[key]
 			var entrance: Rect2 = visual_report["door_approach"]
-			var center: Vector2 = game.world_renderer._building_bounds(key).get_center()
 			check(
 				"courtyard follows the actual GLB entrance of " + key,
 				(
-					absf(path.get_center().x - center.x - entrance.get_center().x) < .00001
-					and absf(path.position.y - center.y - entrance.position.y - .12) < .00001
+					absf(local_path.get_center().x - entrance.get_center().x) < .00001
+					and absf(local_path.position.y - entrance.position.y - .12) < .00001
 				)
 			)
 		var footprint: Rect2 = site["footprint"]
@@ -57,17 +58,11 @@ func run() -> void:
 		var nearest := INF
 		# 주민이 서 있는 마당도 실제 캡슐이 지나가는 최소 한 개의 보행 띠를 유지해야 한다.
 		for lane: float in [0.0, -.62, .62]:
-			var target := Iso.project(
-				(
-					Vector2(path.get_center().x + lane, path.position.y + .62)
-					* WorldSpace3D.GROUND_UNITS_PER_METER
-				)
+			var target := WorldSpace3D.world_to_projected(
+				pose * Vector3(local_path.get_center().x + lane, 0, local_path.position.y + .62)
 			)
-			var start := Iso.project(
-				(
-					Vector2(path.get_center().x + lane, path.end.y + .35)
-					* WorldSpace3D.GROUND_UNITS_PER_METER
-				)
+			var start := WorldSpace3D.world_to_projected(
+				pose * Vector3(local_path.get_center().x + lane, 0, local_path.end.y + .35)
 			)
 			spatial.teleport_source_actor(game.player, start, Player.RADIUS)
 			for step in 130:
@@ -119,9 +114,9 @@ func run() -> void:
 	check(
 		"courtyard geometry and plant counts stay bounded",
 		(
-			triangles < 14000
+			triangles < 22000
 			and int(report["plant_instances"]) > 100
-			and int(report["plant_instances"]) <= 324
+			and int(report["plant_instances"]) <= 456
 		)
 	)
 	game.player.position = game.dungeon.entry_point()

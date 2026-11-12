@@ -33,11 +33,11 @@ static func build(renderer: Node) -> MeshInstance3D:
 	var extent: Array = record["extent"]
 	var material := ShaderMaterial.new()
 	material.shader = _shader
+	material.set_shader_parameter(
+		"woodland_atlas", load("res://assets/materials/village_ground/albedo.png")
+	)
 	material.set_shader_parameter("grass_layers", NativeTerrainSurfaces.layers("grass"))
-	for variant in 6:
-		material.set_shader_parameter(
-			"paving_%d" % variant, load("res://assets/materials/paving/paving-%d.png" % variant)
-		)
+	material.set_shader_parameter("paving_layers", NativeTerrainSurfaces.layers("paving"))
 	var town := PackedVector2Array()
 	for point: Vector2 in renderer.game.village.safe_zone:
 		town.append(Iso.unproject(point) / WorldSpace3D.GROUND_UNITS_PER_METER)

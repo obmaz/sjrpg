@@ -1,22 +1,23 @@
 class_name NativeTerrainSurfaces
 extends RefCounted
-## 가져온 GPU 압축 데이터를 그대로 묶어 열 가지 그림을 한 샘플러로 공유한다.
-const COUNT := 10
+## 가져온 GPU 압축 데이터를 그대로 묶어 재료 패밀리당 한 샘플러로 공유한다.
+const LAYER_COUNTS := {"grass": 10, "water": 10, "paving": 6}
 static var _arrays: Dictionary = {}
 
 
 static func layers(kind: String) -> Texture2DArray:
-	assert(kind in ["grass", "water"])
+	assert(LAYER_COUNTS.has(kind))
 	if _arrays.has(kind):
 		return _arrays[kind]
 	var images: Array[Image] = []
-	for index in COUNT:
+	var count: int = LAYER_COUNTS[kind]
+	for index in count:
 		var path := "res://assets/materials/%s/%s-%d.png" % [kind, kind, index]
 		images.append(_imported_image(path))
 	var texture := Texture2DArray.new()
 	var error := texture.create_from_images(images)
 	assert(error == OK, "표면 배열 생성 실패: %s (%s)" % [kind, error])
-	texture.resource_name = "Native%s10" % kind.capitalize()
+	texture.resource_name = "Native%s%d" % [kind.capitalize(), count]
 	_arrays[kind] = texture
 	return texture
 

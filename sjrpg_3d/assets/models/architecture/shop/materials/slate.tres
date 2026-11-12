@@ -7,5 +7,5 @@
 render_priority = 0
 shader = ExtResource("1_lg722")
 shader_parameter/atlas = ExtResource("2_qeetc")
-shader_parameter/cell = 1
+shader_parameter/cell = 0
 shader_parameter/tint = Color(1, 1, 1, 1)

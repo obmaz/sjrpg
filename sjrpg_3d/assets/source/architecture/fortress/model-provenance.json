@@ -29,7 +29,7 @@
     },
     {
       "path": "scripts/world/village.gd",
-      "sha256": "7a9ea2ea83d9dbccd0e5781757fb2df82131a9a8e4418fa17ade5f36041a56fd"
+      "sha256": "016a6d0f751f5c415a4a40f289357b0d29338b42fee96a39f87087718c098695"
     },
     {
       "path": "scripts/world/forest_region.gd",
@@ -90,7 +90,8 @@
   "materialPolicy": "GLB contains neutral PBR slots; visual.tscn binds original Godot shaders and shared textures without image copies.",
   "collisionPolicy": "existing Native plans and SpatialWorld3D own collision; visual asset contains no physics bodies",
   "placementCompatibility": {
-    "reason": "Runtime village placement and garden trees changed; the local GLB geometry, layout and scene remain byte-identical. Chapel facade art is tracked separately in its texture provenance.",
-    "previousVillageSha256": "c102923d8ed1925af76328e76291839ec1173a454c53fdf5b1f06db820e6c483"
+    "reason": "Shared metre poses rotate nw/ne/sw +90 degrees and spread village courtyards. Original local GLB geometry, layout, metre dimensions, pivot, collision ownership and scene are unchanged; shop selects the existing blue-grey slate cell through its material resource.",
+    "modelGeometryChanged": false,
+    "placementPlan": "scripts/world/geometry/town_plaza_plan_3d.gd"
   }
 }

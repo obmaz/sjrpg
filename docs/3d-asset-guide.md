@@ -211,7 +211,7 @@ validation: <tests, actual paired browser captures, remaining asset gaps>
 
 ## Web·Android 텍스처 전달
 
-3D판의 현재 GPU 압축 대상은 `sjrpg_3d/assets/data/texture_policy.json`의 불투명 월드56장입니다. `mode=2`, `high_quality=false`로 S3TC/ETC2를 생성하고 두 플랫폼에 필요한 변형을 실제 패키지에서 확인합니다. UI·효과·알파 잎·작은 얼굴/눈·유리에는 기존 `mode=1`과 알파·밉맵 설정을 유지합니다. 새로운 에셋도 먼저 보호 대상으로 시작하고 실제 양 코덱의 품질을 검수해 허용 목록을 갱신합니다.
+3D판의 현재 GPU 압축 대상은 `sjrpg_3d/assets/data/texture_policy.json`의 불투명 월드57장입니다. `mode=2`, `high_quality=false`로 S3TC/ETC2를 생성하고 두 플랫폼에 필요한 변형을 실제 패키지에서 확인합니다. UI·효과·알파 잎·작은 얼굴/눈·유리에는 기존 `mode=1`과 알파·밉맵 설정을 유지합니다. 새로운 에셋도 먼저 보호 대상으로 시작하고 실제 양 코덱의 품질을 검수해 허용 목록을 갱신합니다.
 
 이미지를 다시 만들거나 해상도를 낮추는 작업과 GPU 압축을 구분합니다. 파일 해시·논리 해상도는 유지하며 코덱의 저장 블록 정렬은 별도로 기록합니다. 임포트 설정은 `tools/import_project.sh`를 통해 적용하고 기존 UID를 임의 재작성하지 않습니다. [플랫폼 설정과 실제 검수](../sjrpg_3d/docs/platform-exports.md)에 Web PCK·Android APK 검증과 메모리 수치의 범위를 기록합니다.
 

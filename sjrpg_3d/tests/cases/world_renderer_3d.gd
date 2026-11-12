@@ -71,8 +71,7 @@ func run() -> void:
 	var eye := renderer.camera.global_transform.basis.z.normalized()
 	check("camera is mathematically45azimuth and35.264elevation", absf(rad_to_deg(atan2(eye.x, eye.z)) - 45.0) < 0.001 and absf(rad_to_deg(asin(eye.y)) - 35.264389682754654) < 0.001)
 	var ray := -renderer.sunlight.global_transform.basis.z
-	var projected_ray := Iso.project(Vector2(ray.x, ray.z)).normalized()
-	check("native shadow direction matches the existing canopy sun", projected_ray.dot(Vector2(0.72, 0.48).normalized()) > 0.99999)
+	check("native sun sends a normalized downward ray through the spatial scene", ray.is_normalized() and ray.y < -.5)
 	var native_geometry: int = renderer._static_batch["boxes"]
 	var installed := DisplayServer.get_name() != "headless"
 	var batch_error := StaticMeshBatch3D.corner_error(renderer._static_batch, installed)

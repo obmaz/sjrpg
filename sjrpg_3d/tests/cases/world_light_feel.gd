@@ -19,6 +19,8 @@ func run() -> void:
 			world_environment = child
 	var outdoor_fill := world_environment.environment.ambient_light_energy
 	check("native sun casts real geometry shadows with a separate softer fill", renderer.sunlight.visible and renderer.sunlight.shadow_enabled and renderer.sunlight.light_energy > bounce.light_energy and bounce.visible and not bounce.shadow_enabled)
+	var incoming := renderer.sunlight.global_basis.z
+	check("both camera-facing stone axes receive the spatial key light", incoming.dot(Vector3.RIGHT) > .15 and incoming.dot(Vector3.BACK) > .15)
 	check("hidden Canvas lighting cannot double-tint native bodies", not WorldLighting.is_enabled() and WorldLighting.color_at(game.player.position) == Color.WHITE and not game.field_root.is_visible_in_tree())
 	var grass: ShaderMaterial = renderer._materials["grass"]
 	check("native grass keeps its approved albedo and receives spatial lighting", grass.get_shader_parameter("surface_tint") == Color.WHITE and grass.get_shader_parameter("grass_layers") == NativeTerrainSurfaces.layers("grass") and not grass.shader.code.contains("unshaded"))

@@ -236,6 +236,10 @@
     {
       "path": "assets/materials/water/water-9.png",
       "usage": "Native water generated surface 10/10; shared compressed Texture2DArray"
+    },
+    {
+      "path": "assets/materials/village_ground/albedo.png",
+      "usage": "Opaque shared village paving, plain stone and woodland ground atlas; unmodified generated original"
     }
   ],
   "protected_rule": "Every other imported art texture keeps its current mipmap, alpha, quality and size settings. UI, effects, cutouts, actor sheets and extracted GLB textures stay in mode 1; automatic 3D conversion is disabled."

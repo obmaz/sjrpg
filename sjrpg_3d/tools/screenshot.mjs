@@ -5,6 +5,8 @@
 // 필요: `npm i -D playwright` 또는 전역 playwright, 그리고 tools/serve.sh 로 띄운 build/web.
 // 장면은 게임의 디버그 쿼리(README의 "디버그 쿼리")로 열립니다.
 import { createRequire } from 'node:module';
+import {mkdirSync, writeFileSync} from 'node:fs';
+import {dirname, resolve} from 'node:path';
 const require = createRequire(import.meta.url);
 const { chromium, devices } = require('playwright');
 
@@ -150,6 +152,8 @@ const captureTimeout = Number(args['capture-timeout'] ?? 30000);
 if (!Number.isFinite(captureTimeout) || captureTimeout < 1000 || captureTimeout > 120000) throw new Error('Invalid capture timeout');
 const capture = options => page.screenshot({...options, timeout: captureTimeout});
 const logs = [];
+const pckUrls = [];
+page.on('response', response => {if (/\/index-[0-9a-f]+\.pck(?:\?|$)/.test(response.url())) pckUrls.push(response.url());});
 page.on('console', (m) => logs.push(`${m.type()}: ${m.text()}`));
 page.on('pageerror', (e) => logs.push(`pageerror: ${e.message}`));
 const diagnosticLog = await ctx.newCDPSession(page);
@@ -162,7 +166,7 @@ diagnosticLog.on('Log.entryAdded', ({entry}) => {
 });
 const launchURL = new URL(base);
 for (const [key, value] of new URLSearchParams(SCENES[scene])) launchURL.searchParams.set(key, value);
-for (const key of ['quality', 'zoom', 'lighting', 'at', 'atmosphere', 'preview3d']) {
+for (const key of ['quality', 'zoom', 'lighting', 'at', 'atmosphere', 'preview3d', 'village_review']) {
     if (args[key]) launchURL.searchParams.set(key, args[key]);
 }
 let releaseDownload;
@@ -273,6 +277,10 @@ if (true) {
     await page.waitForFunction(() => window.__sjrpg3dReady === true && window.__sjrpg3dProbe?.simulation === '3d' && window.__sjrpg3dProbe?.physics_ticks > 0 && window.__sjrpg3dProbe?.native_active === true && window.__sjrpg3dProbe?.shadow_primitives > 0 && window.__sjrpg3dProbe?.batch_corner_error_m < 0.0001, null, {timeout: 60000});
     console.log('Native3D world:', await page.evaluate(() => window.__sjrpg3dProbe));
 }
+// Native simulation can be ready while the entry overlay still awaits its final paint.
+await page.waitForFunction(() => window.__sjrpgEntryLoading?.visible === false &&
+    window.__sjrpgEntryLoading?.result === 'ready' &&
+    !document.getElementById('sjrpg-entry-loading'), null, {timeout: 90000});
 if (scene === 'background') await page.evaluate(() => document.querySelector('canvas').blur());
 if (scene === 'defender') {
     await page.waitForFunction(() => window.__sjrpgDefenderReview === true, null, {timeout: 60000});
@@ -583,6 +591,17 @@ if (args.rotate === '1') {
     console.log('Live native adventure rotation and return passed');
 }
 const errors = logs.filter((l) => /error/i.test(l));
+if (args['state-out']) {
+    const path = resolve(args['state-out']);
+    mkdirSync(dirname(path), {recursive:true});
+    const state = await page.evaluate(() => {
+        const canvas = document.getElementById('canvas');
+        const gl = canvas?.getContext('webgl2');
+        const gpu = gl ? {fragmentTextureUnits:gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS),combinedTextureUnits:gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS),version:gl.getParameter(gl.VERSION)} : null;
+        return {probe:window.__sjrpg3dProbe,village:window.__sjrpgVillageReview,window:[innerWidth,innerHeight],gpu,entryLoading:window.__sjrpgEntryLoading,loadingOverlayVisible:Boolean(document.getElementById('sjrpg-entry-loading'))};
+    });
+    writeFileSync(path, JSON.stringify({...state,launchUrl:launchURL.href,pckUrls,errors},null,2)+'\n');
+}
 console.log(`저장: ${out}${errors.length ? `\n콘솔 오류 ${errors.length}건:\n${errors.slice(0, 5).join('\n')}` : ''}`);
 await browser.close();
 process.exit(errors.length ? 1 : 0);

@@ -75,14 +75,17 @@ func run() -> void:
 	for service in Village.NPCS:
 		var npc: Vector2 = game.village.npc_points[service[1]]
 		var native := WorldSpace3D.projected_to_world(npc)
-		var front: float = game.world_renderer._building_bounds(service[0]).end.y
+		var pose := TownPlazaPlan3D.frame(service[0])
+		var front := TownPlazaPlan3D.house_size(game.village, service[0]).y * .5
 		for id: String in TownPlazaPlan3D.SERVICES:
 			if TownPlazaPlan3D.SERVICES[id]["npc"] == service[1]:
 				var size: Vector2 = TownPlazaPlan3D.SERVICES[id]["size"]
-				front = TownPlazaPlan3D.frame(id).origin.z + size.y * .5
+				pose = TownPlazaPlan3D.frame(id)
+				front = size.y * .5
+		var local := pose.affine_inverse() * native
 		check(
 			"service resident stands in front of its actual native facility: " + service[1],
-			native.z > front
+			local.z > front
 		)
 		var clear := true
 		for solid in game.village.solids:
