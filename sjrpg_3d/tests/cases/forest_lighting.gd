@@ -37,7 +37,7 @@ func run() -> void:
 	check("cave entry culls the forest receivers and disables their shared light", game.dungeon.enter() and game.field_root.visibility_layer == 0 and not WorldLighting.is_enabled())
 	game.dungeon.leave("")
 	await _frames(2)
-	check("returning restores native forest lighting while keeping source receivers culled", game.ortho_preview._world_environment.forest.visible and game.ortho_preview.sunlight.visible and game.field_root.visibility_layer == 0 and not WorldLighting.is_enabled() and lighting.openings.size() == 2)
+	check("returning restores native forest lighting while keeping source receivers culled", game.world_renderer._world_environment.forest.visible and game.world_renderer.sunlight.visible and game.field_root.visibility_layer == 0 and not WorldLighting.is_enabled() and lighting.openings.size() == 2)
 	Prefs.set_low_resolution(previous)
 	game.queue_free()
 	await _frames(2)

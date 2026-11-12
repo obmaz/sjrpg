@@ -11,9 +11,9 @@ func run() -> void:
 	for other: Enemy in game.enemies:
 		other.set_process(false)
 		other._state = "idle"
-	var preview: Ortho3DPreview = game.ortho_preview
-	preview.set_process(false)
-	var feedback: NativeEnemyFeedback3D = preview._enemy_feedback
+	var renderer: WorldRenderer3D = game.world_renderer
+	renderer.set_process(false)
+	var feedback: EnemyHitFeedback3D = renderer._enemy_feedback
 	var foe := Enemy.new()
 	foe.setup(game, "wolf", 1)
 	foe.position = game.player.position + Vector2(40, 0)
@@ -47,12 +47,12 @@ func run() -> void:
 		"the bar reads the real attack timer",
 		ratios.distance_to(Vector2.ONE * .25) < .0001 and material.get_shader_parameter("preparing")
 	)
-	var factor := Ortho3DPreview.GROUND_PER_METER * Ortho3DPreview.PROJECTION_FACTOR
+	var factor := WorldRenderer3D.GROUND_PER_METER * WorldRenderer3D.PROJECTION_FACTOR
 	var anchor := (
-		preview.actor_foot(foe)
+		renderer.actor_foot(foe)
 		+ (
-			preview.camera.global_basis.y
-			* ((foe.sprite.body_height + NativeEnemyFeedback3D.PREPARATION_LIFT) / factor)
+			renderer.camera.global_basis.y
+			* ((foe.sprite.body_height + EnemyHitFeedback3D.PREPARATION_LIFT) / factor)
 		)
 	)
 	check(
@@ -143,7 +143,7 @@ func run() -> void:
 	game.camera.position = game.player.position
 	game.camera.reset_smoothing()
 	game.camera.force_update_scroll()
-	preview._sync_camera()
+	renderer._sync_camera()
 	var jumper := Enemy.new()
 	jumper.setup(game, "skeleton", 1)
 	jumper.position = foe.position + Vector2(-60, 0)
@@ -154,11 +154,11 @@ func run() -> void:
 	jumper._windup_duration = .55
 	jumper._timer = .55 * .35
 	jumper.take_damage(1, null)
-	var old_camera_size := preview.camera.size
-	preview.camera.size = 2.0
-	preview._enemy_models.sync(0)
+	var old_camera_size := renderer.camera.size
+	renderer.camera.size = 2.0
+	renderer._enemy_models.sync(0)
 	# 도약의 크기를 특정 납품 클립에 고정하지 않고 실제 골격 입력으로 가장자리를 검사한다.
-	var jumping_model: Dictionary = preview._enemy_models.entries[jumper.get_instance_id()]
+	var jumping_model: Dictionary = renderer._enemy_models.entries[jumper.get_instance_id()]
 	var visual: NativeEnemyVisual = jumping_model["visual"]
 	var hips := visual.skeleton.find_bone("ORG-hips")
 	visual.skeleton.set_bone_pose_position(
@@ -169,19 +169,19 @@ func run() -> void:
 	var jumping_entry: Dictionary = feedback.entries[jumper.get_instance_id()]
 	var above: MeshInstance3D = jumping_entry["preparation"]
 	var health: MeshInstance3D = jumping_entry["bar"]
-	var screen := preview.camera.unproject_position(above.global_position)
-	var health_screen := preview.camera.unproject_position(health.global_position)
-	check("an animated leap exposes its actual rise", preview.enemy_pose_lift(jumper) > 1.0)
+	var screen := renderer.camera.unproject_position(above.global_position)
+	var health_screen := renderer.camera.unproject_position(health.global_position)
+	check("an animated leap exposes its actual rise", renderer.enemy_pose_lift(jumper) > 1.0)
 	check(
 		"visual lift never moves the physical actor",
 		game.spatial_world.actor_foot(jumper).distance_to(physical_foot) < .0001
 	)
 	check(
 		"a visible jumping enemy keeps its warning within the camera",
-		screen.y >= 0 and screen.y < preview.viewport.size.y
+		screen.y >= 0 and screen.y < renderer.viewport.size.y
 	)
 	check("health and preparation remain separate at the top edge", health_screen.y > screen.y + 1)
-	preview.camera.size = old_camera_size
+	renderer.camera.size = old_camera_size
 	Prefs.set_reduce_motion(reduced)
 	game.queue_free()
 	await _frames(2)

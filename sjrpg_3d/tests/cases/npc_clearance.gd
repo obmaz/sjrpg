@@ -64,7 +64,7 @@ func run() -> void:
 	check("town and field use eight named service/quest residents", residents.size() == 8)
 	var painted_hero_heights: Array[float] = []
 	for key in ["warrior", "mage"]:
-		var metadata: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/art/actors/" + key + ".json"))
+		var metadata: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/sprites/actors/" + key + ".json"))
 		var texture := ActorAtlas.get_atlas(key).texture
 		var pixels := texture.get_image()
 		var region: Array = metadata["frames"][0]

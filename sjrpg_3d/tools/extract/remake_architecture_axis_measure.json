@@ -14,7 +14,7 @@
     1254,
     1254
    ],
-   "render_file": "assets/art/village/town.webp",
+   "render_file": "assets/sprites/village/town.webp",
    "space": "native",
    "source_sha256": "d75434ed6c1a692e177ffd528c84818a7a01dffe1458c7bbe2c84c01922a7707",
    "edges": [
@@ -212,7 +212,7 @@
     1536,
     1024
    ],
-   "render_file": "assets/art/village/town.webp",
+   "render_file": "assets/sprites/village/town.webp",
    "space": "native",
    "source_sha256": "879907b9e0c66c31905ec002a48d09e0099f152716017d167578b977896d9618",
    "edges": [
@@ -397,7 +397,7 @@
     1536,
     1024
    ],
-   "render_file": "assets/art/village/town.webp",
+   "render_file": "assets/sprites/village/town.webp",
    "space": "native",
    "source_sha256": "8f29d82f55782ce2efae9441f90e7aaf2793db7967c4bdf523869aec8044a7b1",
    "edges": [
@@ -582,7 +582,7 @@
     1254,
     1254
    ],
-   "render_file": "assets/art/village/town.webp",
+   "render_file": "assets/sprites/village/town.webp",
    "space": "native",
    "source_sha256": "7f963dcf60cf7bd4b10c7b6d50024877865bb4e9bb83130d7eb0ca262ef583d0",
    "edges": [
@@ -780,7 +780,7 @@
     1254,
     1254
    ],
-   "render_file": "assets/art/village/town.webp",
+   "render_file": "assets/sprites/village/town.webp",
    "space": "native",
    "source_sha256": "e197ff7e23687a692fa02e4b9371c82998fefe51ceb6e47a9b5ab07681317171",
    "edges": [

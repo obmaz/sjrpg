@@ -4,12 +4,12 @@ extends TestCase
 ## 생성 원화와 길 합집합 데이터의 실제 연결·밀도·높이를 검증한다.
 func run() -> void:
 	var game := await make_game("mage")
-	var preview: Ortho3DPreview = game.ortho_preview
+	var renderer: WorldRenderer3D = game.world_renderer
 	check(
 		"ground field still matches every actual road endpoint",
-		NativeGround3D.roads_match(game.village.map_roads)
+		GroundRenderer3D.roads_match(game.village.map_roads)
 	)
-	var ground := preview._forest_stage.get_node("NativeNaturalGround") as MeshInstance3D
+	var ground := renderer._forest_stage.get_node("NativeNaturalGround") as MeshInstance3D
 	var report: Dictionary = ground.get_meta("native_ground")
 	check(
 		"one lit surface supplies six coherent generated paving variations",
@@ -40,7 +40,7 @@ func run() -> void:
 			and ground.find_children("*", "CollisionObject3D", true, false).is_empty()
 		)
 	)
-	var record: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(NativeGround3D.FIELD))
+	var record: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(GroundRenderer3D.FIELD))
 	var field_path := "res://" + str(record["field"])
 	check(
 		"distance data retains the baked original hash",
@@ -103,7 +103,7 @@ func run() -> void:
 		FileAccess.get_file_as_string("res://assets/source/materials/paving/provenance.json")
 	)
 	for variant in 6:
-		var path := "res://assets/models/materials/paving/paving-%d.png" % variant
+		var path := "res://assets/materials/paving/paving-%d.png" % variant
 		var texture := load(path) as Texture2D
 		var hash := FileAccess.get_sha256(path)
 		hashes[hash] = true
@@ -128,7 +128,7 @@ func run() -> void:
 			and grass == NativeTerrainSurfaces.layers("grass")
 			and (
 				water
-				== preview._world_environment._water_material.get_shader_parameter("water_layers")
+				== renderer._world_environment._water_material.get_shader_parameter("water_layers")
 			)
 		)
 	)
@@ -165,7 +165,7 @@ func run() -> void:
 			"%s binds ten distinct originals at the imported array dimensions and format" % kind,
 			intact and unique.size() == 10
 		)
-	var environment: Ortho3DEnvironment = preview._world_environment
+	var environment: EnvironmentRenderer3D = renderer._world_environment
 	var held: float = environment._water_material.get_shader_parameter("phase")
 	get_tree().paused = true
 	await _frames(3)

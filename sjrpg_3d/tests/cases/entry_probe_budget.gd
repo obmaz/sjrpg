@@ -4,7 +4,7 @@ func run() -> void:
 	var view := SubViewport.new()
 	view.size = Vector2i(720, 1280)
 	add_child(view)
-	var select := preload("res://scripts/class_select.gd").new()
+	var select := preload("res://scripts/ui/screens/class_select.gd").new()
 	view.add_child(select)
 	select.show_slots()
 	await _frames(10)

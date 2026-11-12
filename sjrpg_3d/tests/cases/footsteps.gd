@@ -47,8 +47,8 @@ func run() -> void:
 		"the actual bridge uses its stone deck",
 		PlayerFootsteps.surface_at(game, game.village.bridge.axis_point(0.5)) == "stone"
 	)
-	var trail := NativeCaveTrail.points(game.village)
-	var frame := NativeCaveTrail.frame(game.village)
+	var trail := CaveTrailPlan3D.points(game.village)
+	var frame := CaveTrailPlan3D.frame(game.village)
 	var midpoint := trail[3].lerp(trail[4], 0.5)
 	var point := SpatialWorld3D.projected(frame * Vector3(midpoint.x, 0, midpoint.y))
 	check(

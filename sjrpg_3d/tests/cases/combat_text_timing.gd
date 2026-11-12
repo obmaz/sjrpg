@@ -21,9 +21,9 @@ func run() -> void:
 		immediate = immediate and is_equal_approx(enemy.hp, 990.0 - index)
 		labels.append(game.cosmetic_effects.back())
 	check("all simultaneous victims lose their exact HP immediately", immediate)
-	var preview: Ortho3DPreview = game.ortho_preview
-	preview._sync_cards()
-	var first_only := preview._labels.has(labels[0].get_instance_id())
+	var renderer: WorldRenderer3D = game.world_renderer
+	renderer._sync_cards()
+	var first_only := renderer._labels.has(labels[0].get_instance_id())
 	var bounded := true
 	var ordered := true
 	var schedule: Array[int] = []
@@ -34,7 +34,7 @@ func run() -> void:
 		if index > 0:
 			ordered = ordered and label.age < labels[index - 1].age
 			first_only = (
-				first_only and label.age < 0.0 and not preview._labels.has(label.get_instance_id())
+				first_only and label.age < 0.0 and not renderer._labels.has(label.get_instance_id())
 			)
 	check("only the first damage number is drawn on the contact frame", first_only)
 	check("a dense group never delays any number beyond 200 ms", bounded)
@@ -46,20 +46,20 @@ func run() -> void:
 	var second := labels[1]
 	var before := second.position
 	second._process(0.02)
-	preview._sync_cards()
+	renderer._sync_cards()
 	check(
 		"a waiting number follows its anchor without rising or rendering",
 		(
 			second.age < 0.0
 			and second.position == before
-			and not preview._labels.has(second.get_instance_id())
+			and not renderer._labels.has(second.get_instance_id())
 		)
 	)
 	second._process(0.02)
-	preview._sync_cards()
+	renderer._sync_cards()
 	check(
 		"the second number starts its full pop after 40 ms",
-		second.age == 0.0 and preview._labels.has(second.get_instance_id())
+		second.age == 0.0 and renderer._labels.has(second.get_instance_id())
 	)
 	var third := labels[2]
 	third.process_mode = Node.PROCESS_MODE_PAUSABLE
@@ -80,21 +80,21 @@ func run() -> void:
 	check("a later hit cannot restart or extend older numbers' waiting time", never_postponed)
 	for label in labels:
 		label._process(Effect.TEXT_STAGGER_MAX)
-	preview._sync_cards()
+	renderer._sync_cards()
 	var released := true
 	for label in labels:
 		released = (
 			released
 			and label.age >= 0.0
-			and (preview._labels[label.get_instance_id()]["node"] as Label3D).visible
+			and (renderer._labels[label.get_instance_id()]["node"] as Label3D).visible
 		)
 	check("all bounded damage numbers are visible by the delay limit", released)
 	for label in labels:
 		label._process(label.life)
-	preview._sync_cards()
+	renderer._sync_cards()
 	var retired := true
 	for label in labels:
-		retired = retired and not preview._labels.has(label.get_instance_id())
+		retired = retired and not renderer._labels.has(label.get_instance_id())
 	check("released numbers retain their lifetime and retire their native labels", retired)
 	var forest_pending: Effect = game.cosmetic_effects.back()
 	var forest_age := forest_pending.age
@@ -103,10 +103,10 @@ func run() -> void:
 	var cave_target: Enemy = game.enemies[0]
 	cave_target.take_damage(1.0, null)
 	var cave_first: Effect = game.cosmetic_effects.back()
-	preview._sync_cards()
+	renderer._sync_cards()
 	check(
 		"the cave starts an independent immediate number without the frozen forest queue",
-		cave_first.age == 0.0 and preview._labels.has(cave_first.get_instance_id())
+		cave_first.age == 0.0 and renderer._labels.has(cave_first.get_instance_id())
 	)
 	for index in 8:
 		cave_target.take_damage(1.0, null)

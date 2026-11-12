@@ -53,4 +53,4 @@ sjrpg_3d/tools/export_android.sh --release
 
 APK는 GitHub Actions에서 만들지 않고, 사용자 명시 요청 시에만 로컬에서 빌드·서명·패키지 검증 후 Dropbox로 전달합니다([Android 문서](android.md)). 푸시·PR·웹 배포에서는 APK를 생성하지 않습니다. `Review Web and Android texture compression`은 임포트와 실제 GPU 촬영을, `Compose verified GPU texture review`는 같은 런타임 소스의 촬영 자료만 재사용해 비교를 만듭니다. 정상 웹 배포는 전체 테스트와 저장·로딩·패드·음악 브라우저 검사를 유지합니다.
 
-독립 에셋의 `assets/models/` 이미지에도 `assets/art/`와 같은 임포트 정책을 적용합니다. 건물·다리 전용 생성 원화6장은 mode=1·밉맵을 사용하고, 원본1254px를 보존합니다. GPU 압축 허용 목록은 이 작업에서 늘리지 않습니다. `tools/perf/asset_budget.py`는 독립 에셋의 이미지와 GLB도 전체 비용에 포함합니다.
+독립 에셋의 `assets/models/` 이미지에도 공용 재질·UI·스프라이트와 같은 임포트 정책을 적용합니다. 건물·다리 전용 생성 원화6장은 mode=1·밉맵을 사용하고, 원본1254px를 보존합니다. GPU 압축 허용 목록은 이 작업에서 늘리지 않습니다. `tools/perf/asset_budget.py`는 독립 에셋의 이미지와 GLB도 전체 비용에 포함합니다.

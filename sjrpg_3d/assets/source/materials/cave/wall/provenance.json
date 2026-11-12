@@ -3,7 +3,7 @@
   "tile_metres": 2.6,
   "images": [
     {
-      "path": "assets/models/materials/cave/wall/wall-0.png",
+      "path": "assets/materials/cave/wall/wall-0.png",
       "sha256": "190ffbb3b14841ee3f2464536d6d7451ec08777a04cdb4beef83cfa39effdc4f",
       "bytes": 2753937,
       "original": "original-0.png",
@@ -20,7 +20,7 @@
       ]
     },
     {
-      "path": "assets/models/materials/cave/wall/wall-1.png",
+      "path": "assets/materials/cave/wall/wall-1.png",
       "sha256": "410e5dc2b7afbce96e45c9d7a5457562f63171680c05979af66e6182b42be848",
       "bytes": 2595515,
       "original": "original-1.png",
@@ -33,7 +33,7 @@
       ]
     },
     {
-      "path": "assets/models/materials/cave/wall/wall-2.png",
+      "path": "assets/materials/cave/wall/wall-2.png",
       "sha256": "5338af2b36eb84ce2b48857d239b911e45a9642e9a7ebc2a5fa67eb5aa6ed0bd",
       "bytes": 2518191,
       "original": "original-2.png",
@@ -46,7 +46,7 @@
       ]
     },
     {
-      "path": "assets/models/materials/cave/wall/wall-3.png",
+      "path": "assets/materials/cave/wall/wall-3.png",
       "sha256": "3e91c78371db82d1ca0f5e5d6803dd88408baa15cbb22ad946cef3981a7b227e",
       "bytes": 2514212,
       "original": "original-3.png",
@@ -59,7 +59,7 @@
       ]
     },
     {
-      "path": "assets/models/materials/cave/wall/wall-4.png",
+      "path": "assets/materials/cave/wall/wall-4.png",
       "sha256": "c81d9733faad99dd20d36bbfc63d40903937f972d2a54750be74c73c1e89d7cd",
       "bytes": 2768431,
       "original": "original-4.png",
@@ -72,7 +72,7 @@
       ]
     },
     {
-      "path": "assets/models/materials/cave/wall/wall-5.png",
+      "path": "assets/materials/cave/wall/wall-5.png",
       "sha256": "c31a01e63d7aeaa4777488b1f863a0feb96ed9c2ad2e12101553c2906b8216e9",
       "bytes": 2836807,
       "original": "original-5.png",

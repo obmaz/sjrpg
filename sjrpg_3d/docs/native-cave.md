@@ -4,7 +4,7 @@
 
 ## 기하와 소유권
 
-`Ortho3DCaveRock`은 `DungeonArt.boundary_segments`의 원래 방/통로 합집합 경계를 사용합니다. 귀환문 같은 독립 소품 충돌을 새 절벽으로 바꾸지 않습니다. `DungeonRelief`의 합집합 바닥과 경사·벽 부피를 렌더링과 `SpatialWorld3D`가 공유하며 배우 캡슐로 보행합니다.
+`CaveWallGeometry3D`은 `DungeonArt.boundary_segments`의 원래 방/통로 합집합 경계를 사용합니다. 귀환문 같은 독립 소품 충돌을 새 절벽으로 바꾸지 않습니다. `DungeonRelief`의 합집합 바닥과 경사·벽 부피를 렌더링과 `SpatialWorld3D`가 공유하며 배우 캡슐로 보행합니다.
 
 좌표는`+Y` 위·지면`XZ`,65지면 단위/m입니다. 안쪽 발치는 실제 경계 충돌의 반두께와 같은4cm 안쪽이고, 바깥 암반은 약1.05m 부피를 갖습니다. 바닥·안쪽 경사·능선·뒤쪽·하부 삼각형이 닫힌 부피를 구성합니다. 앞쪽 절단면은 낮고 뒤쪽 벽은 실제 높이를 유지합니다.
 
@@ -30,7 +30,7 @@
 
 한 번 발동하면 각 대상은 한 번만 피해를 받습니다. 플레이어는 최대 체력의18%를 기존 방어·보호막·회피 규칙으로 처리하고, 일반 적은22%, 우두머리는5%를 받습니다. 적을 유인하는 전술을 허용하면서 우두머리를 장치만으로 빠르게 처치하지 않도록 정한3D판 규칙입니다. 출구·시작 위치는 안전하며 사망·이탈 시 판정과 HUD를 함께 정리합니다.
 
-장치별 GLB와 씬은 `assets/models/environment/traps/{spikes,flame_vent}/`에 있습니다. `tools/dungeon_art/bake_traps.tscn`으로 오프라인 제작하며 `asset.json`에 생성기·모델 해시를 기록합니다. Y-up·미터·바닥 원점·+Z 분출 방향을 지키고 가시의 `Spikes` 노드만 수직 이동합니다. 모델은848/264삼각형이며 석재 이미지는 기존 동굴 재질을 공유합니다. 화염은 기존 생성형 효과 아틀라스와 분출구당8개 고정 MultiMesh 입자를 재사용합니다. 새 광원·전투별 입자 노드 생성을 추가하지 않습니다.
+장치별 GLB와 씬은 `assets/models/environment/traps/{spikes,flame_vent}/`에 있습니다. `tools/assets/dungeon/bake_traps.tscn`으로 오프라인 제작하며 `asset.json`에 생성기·모델 해시를 기록합니다. Y-up·미터·바닥 원점·+Z 분출 방향을 지키고 가시의 `Spikes` 노드만 수직 이동합니다. 모델은848/264삼각형이며 석재 이미지는 기존 동굴 재질을 공유합니다. 화염은 기존 생성형 효과 아틀라스와 분출구당8개 고정 MultiMesh 입자를 재사용합니다. 새 광원·전투별 입자 노드 생성을 추가하지 않습니다.
 
 `dungeon_relief`는 실제 경사 보행·빈 공간·바닥 비활성화를, `dungeon_hazards`는 예고·중복 피해·회피·적 유인·죽음/귀환 수명을, `native_dungeon_traps`는 실제 GLB의 법선·UV·감기·해시·기하 예산을 검사합니다.
 

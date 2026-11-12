@@ -6,13 +6,13 @@
 
 사람형 NPC/전사의 다음 재사용 출발점은 **현재 마법사와 같은 Quaternius 성인형 가족의 이미 확보·기록된 FREE Standard 파일**입니다. 현재 마법사도 이미 무료 에셋을 쓰고 있습니다. KayKit의 큰 머리·짧은 팔다리나 Kenney의 단순한 건물을 이름값만 보고 기존 회화풍 세계에 섞지 않습니다. 이들의 CC0 허용 여부와 우리 게임의 스타일 적합 여부는 별개의 판단입니다.
 
-첫 적용은 같은 Quaternius 성인 계열의 **상인 한 명**입니다. 실제 공식 다운로드에서 기록된21개 파일과 CC0 라이선스의 해시를 재검증했고, 변환된 모델·동작·원문은 [상인 provenance](../sjrpg_3d/assets/source/native-residents/merchant/provenance.json)와 같은 폴더의 LICENSE 파일에 남깁니다. [주민 제작 안내](../sjrpg_3d/docs/native-residents.md)에 실제 적용 범위·동작 변환·검수 방법을 기록합니다. 아래 다른 팩은 계속 후보이며 도입된 것으로 표시하지 않습니다.
+첫 적용은 같은 Quaternius 성인 계열의 **상인 한 명**입니다. 실제 공식 다운로드에서 기록된21개 파일과 CC0 라이선스의 해시를 재검증했고, 변환된 모델·동작·원문은 [상인 provenance](../sjrpg_3d/assets/source/residents/cc0/merchant/provenance.json)와 같은 폴더의 LICENSE 파일에 남깁니다. [주민 제작 안내](../sjrpg_3d/docs/native-residents.md)에 실제 적용 범위·동작 변환·검수 방법을 기록합니다. 아래 다른 팩은 계속 후보이며 도입된 것으로 표시하지 않습니다.
 
-다음 적용은 보급원 미라의 실제 FREE Standard `Female_Ranger`와 여성 기본 머리입니다. [공식 원본 디자인](https://quaternius.itch.io/modular-character-outfits-fantasy)을 볼 수 있으며, 무료 ZIP에서 확인한 의상은 남녀 Peasant/Ranger 네 가지입니다. 미라는 두 glTF 해시와 패키지 CC0 원문을 먼저 대조하고 신규9개 파일의 바이트·SHA-256을 별도 [주민 소스 잠금](../sjrpg_3d/tools/hero_art/resident-source-provenance.json)에 기록합니다. 상인과 다른 후드·장구 실루엣을 사용하며 얼굴·손을 보존한 채 의상만 단순화합니다. [미라의 실제 모델·재현 기록](../sjrpg_3d/docs/native-residents.md#미라-구별되는-무료-여성-ranger)에 런타임 수치와 라이선스 경로가 있습니다.
+다음 적용은 보급원 미라의 실제 FREE Standard `Female_Ranger`와 여성 기본 머리입니다. [공식 원본 디자인](https://quaternius.itch.io/modular-character-outfits-fantasy)을 볼 수 있으며, 무료 ZIP에서 확인한 의상은 남녀 Peasant/Ranger 네 가지입니다. 미라는 두 glTF 해시와 패키지 CC0 원문을 먼저 대조하고 신규9개 파일의 바이트·SHA-256을 별도 [주민 소스 잠금](../sjrpg_3d/tools/assets/heroes/resident-source-provenance.json)에 기록합니다. 상인과 다른 후드·장구 실루엣을 사용하며 얼굴·손을 보존한 채 의상만 단순화합니다. [미라의 실제 모델·재현 기록](../sjrpg_3d/docs/native-residents.md#미라-구별되는-무료-여성-ranger)에 런타임 수치와 라이선스 경로가 있습니다.
 
 ## 현재 마법사의 실제 출처와 확보 증거
 
-저작자: **Quaternius**. 보존된 각 팩 라이선스는 **CC0 1.0 Universal**입니다. 실제 원문과 SHA-256은 [CC0_SOURCES.txt](../sjrpg_3d/tools/hero_art/CC0_SOURCES.txt), 파일별 바이트/해시는 [source-provenance.json](../sjrpg_3d/tools/hero_art/source-provenance.json)에 있습니다.
+저작자: **Quaternius**. 보존된 각 팩 라이선스는 **CC0 1.0 Universal**입니다. 실제 원문과 SHA-256은 [CC0_SOURCES.txt](../sjrpg_3d/tools/assets/heroes/CC0_SOURCES.txt), 파일별 바이트/해시는 [source-provenance.json](../sjrpg_3d/tools/assets/heroes/source-provenance.json)에 있습니다.
 
 | 기존 FREE Standard 팩 | 공식 원문/다운로드 진입점 | 기존 취득 upload ID | 라이선스 파일 SHA-256 |
 | --- | --- | --- | --- |
@@ -23,7 +23,7 @@
 
 보존 원문의 라이선스 표기는 “CC0 1.0 Universal (CC0 1.0) / Public Domain Dedication”입니다. [CC0 법률 원문](https://creativecommons.org/publicdomain/zero/1.0/legalcode.en)의 포기·대체 허락에 따라 수정·게임 이용이 가능하며, 저작자/취득/수정 기록은 프로젝트에 계속 보존합니다.
 
-현재 마법사는 Male_Peasant의 발·다리, Male_Ranger의 옷/팔/후드, Universal Base의 머리·눈과 UAL 동작을 조합하고 원래의 지팡이·로브를 추가했습니다. 배포물의 실제 65관절·idle/run/cast·포함 메시/재질 기록은 [mage-manifest.json](../sjrpg_3d/assets/art/preview3d/mage-manifest.json)에 있습니다. 기존 바인딩·root transform을 새 모델에 추측으로 복사하지 않습니다.
+현재 마법사는 Male_Peasant의 발·다리, Male_Ranger의 옷/팔/후드, Universal Base의 머리·눈과 UAL 동작을 조합하고 원래의 지팡이·로브를 추가했습니다. 배포물의 실제 65관절·idle/run/cast·포함 메시/재질 기록은 [mage-manifest.json](../sjrpg_3d/assets/models/heroes/mage/asset.json)에 있습니다. 기존 바인딩·root transform을 새 모델에 추측으로 복사하지 않습니다.
 
 ## 라이선스가 바뀐 신규 팩을 CC0로 잘못 분류하지 않기
 
@@ -50,7 +50,7 @@ KayKit 1.0 기록을 현재 itch의 Adventurers **2.0** 무료5종 설명과 섞
 
 첫 상인은 이미 확보 증거가 있는 **Male_Peasant 원본**으로 제작하고 별도 검수 장면과 실제 마을에서 비교합니다. 기존 NPC 8종·전사·마법사를 일괄 바꾸지 않습니다. Male_Ranger는 다음 파일럿의 외투/후드/팔 구조 참고이며 기존 마법사와 같은 가족의 rig/재질 동작을 확인하는 기준입니다.
 
-기존 [fetch_sources.py](../sjrpg_3d/tools/hero_art/fetch_sources.py)는 공식 itch endpoint에 POST해 일회성 파일 URL을 받고 ZIP range로 승인 항목만 읽습니다. 다운로드 전체 ZIP fallback을 거부하며, 아래 정확한 파일과 라이선스 SHA-256이 다르면 중단합니다.
+기존 [fetch_sources.py](../sjrpg_3d/tools/assets/heroes/fetch_sources.py)는 공식 itch endpoint에 POST해 일회성 파일 URL을 받고 ZIP range로 승인 항목만 읽습니다. 다운로드 전체 ZIP fallback을 거부하며, 아래 정확한 파일과 라이선스 SHA-256이 다르면 중단합니다.
 
 | 로컬 source cache 상대 경로 | 바이트 | 기존 SHA-256 |
 | --- | ---: | --- |
@@ -59,7 +59,7 @@ KayKit 1.0 기록을 현재 itch의 Adventurers **2.0** 무료5종 설명과 섞
 | adult-source/Male_Ranger.gltf | 41447 | e1033a212332d84d98c19bc4927c621635478d0aa15d13c79da68d3ba9e0196f |
 | adult-source/Male_Ranger.bin | 1746884 | 5bbb0d42cb324c6c27ce00417e68a876d92978f07d161f83590f0d7c0570eff6 |
 
-준비 명령은 `python3 sjrpg_3d/tools/hero_art/fetch_sources.py`입니다. `SJRPG_CHARACTER_SOURCE_DIR`로 검수 캐시만 지정하며 런타임 경로를 바꾸지 않습니다. 새 모델 GLB를 배포하기 전에 다음 조건을 만족해야 합니다.
+준비 명령은 `python3 sjrpg_3d/tools/assets/heroes/fetch_sources.py`입니다. `SJRPG_CHARACTER_SOURCE_DIR`로 검수 캐시만 지정하며 런타임 경로를 바꾸지 않습니다. 새 모델 GLB를 배포하기 전에 다음 조건을 만족해야 합니다.
 
 1. 기존 라이선스와 실제 획득 파일 해시를 확인하고, 새 승인 원본·변환 도구·선택 메시·clip 명·수정분·GLB 해시를 기록합니다.
 2. glTF의 실제 index accessor로 삼각형을 계산하고 서피스·재질·텍스처·관절 수를 측정합니다. 소개 페이지의 low-poly 문구를 예산 검사로 대신하지 않습니다.

@@ -4,44 +4,44 @@
   "sourceType": "offline_native_mesh_bake",
   "inputs": [
     {
-      "path": "tools/architecture_art/bake.gd",
-      "sha256": "931f8f1526583c995a0f5af89f9172c54155de9455ddee238c6fa7ae131064eb"
+      "path": "tools/assets/architecture/bake.gd",
+      "sha256": "f4ca89e250a3158b6cefdfb452d7fbfe0439fd6f59937201df0fd5a4d84e5dc7"
     },
     {
-      "path": "tools/architecture_art/bridge_builder.gd",
-      "sha256": "0f012cb235453a9b111269d047642746bdadf31e1db514bb3c4dbae1dd256818"
+      "path": "tools/assets/architecture/bridge_builder.gd",
+      "sha256": "abd72a5f951ec6eea7bd62ccb3c03807651b7ba6b0e511787d335728ab946a5c"
     },
     {
-      "path": "tools/architecture_art/medieval_details.gd",
+      "path": "tools/assets/architecture/medieval_details.gd",
       "sha256": "5e4f5d3ecd4b74f72acee622f84bcab0b119c62b009f35d8550feb5abae8352b"
     },
     {
-      "path": "assets/models/materials/village_craft/surfaces.gd",
-      "sha256": "8aa72ffb1177ae1f91101f04a9bdcb34304e8d399fe975dd666d14a2dd9fe8af"
+      "path": "assets/materials/village_craft/surfaces.gd",
+      "sha256": "d65873251b691a43132daab4722bd0a8bbb7c7b2c5ffbf4212ab867363b7196d"
     },
     {
-      "path": "scripts/iso.gd",
+      "path": "scripts/core/iso.gd",
       "sha256": "2b727818d9bdf36c7aa6308d24c785ba9474aa217b10c82ba67c54c1a1404bfd"
     },
     {
-      "path": "scripts/village.gd",
-      "sha256": "b4bdba097b36659e9eb0c3eae87f0c1236a3229da7c1857a387ec166406cd59e"
+      "path": "scripts/world/village.gd",
+      "sha256": "a69c967119892ffcd86448d6413ef9edacb8554f760470e2ff2126b005e27f77"
     },
     {
-      "path": "scripts/forest_region.gd",
+      "path": "scripts/world/forest_region.gd",
       "sha256": "c1a0c16329081deff53d118b41f6ee1dd6f31d5b334c61a34eb2a924d5402e58"
     },
     {
       "path": "assets/data/village.json",
-      "sha256": "830c6b0125c090318b26482c151e789b12bf887164cd970246e2a0a093c88f72"
+      "sha256": "931f2f82be69ed860a2c122b949abcc0a5243e24b24fe818a34f2e5369a8fdff"
     },
     {
-      "path": "scripts/native_bridge_plan.gd",
-      "sha256": "f2b6563e0c55b384a04b5f225017cde7b56f6daafef36f13a4b3565cfc7ef51e"
+      "path": "scripts/world/geometry/bridge_plan_3d.gd",
+      "sha256": "e0c5b4b2d0062aed7b04456dcee9216a5697e0ffb60804dac323539411c3cf90"
     },
     {
-      "path": "scripts/native_scenery_props_3d.gd",
-      "sha256": "aea3362f57750fd41e59ff3b1b0e83834c7e7404c7ea23bb09cb908265c1999f"
+      "path": "scripts/rendering/environment/scenery_renderer_3d.gd",
+      "sha256": "ba210dc8824f62dc0ca8c9b1e80f15979b080a9d94aca9bc1e4da4307a9191bd"
     }
   ],
   "outputs": [
@@ -63,11 +63,11 @@
     },
     {
       "path": "materials/PierAndArchStone.tres",
-      "sha256": "9bfcbfa48ed0cee8bcfcc01b0a93403e01140bd0a1e6d3c0de89f6a995bc4e78"
+      "sha256": "2faa568dfcf9860ea5c4d596e4369a8e153f2ff86a40310ac0ed4c11bac4512e"
     },
     {
       "path": "materials/JointedCoping.tres",
-      "sha256": "a85cdc4ed3d66e63f12fc578e8b9888927a50a2520c2a1f9d96acb513b140318"
+      "sha256": "ae381d8831379260de6dfc9b803a3d9e372671607a3cf4f39ca9d532a28a21e2"
     },
     {
       "path": "materials/IronGrille.tres",
@@ -75,7 +75,7 @@
     },
     {
       "path": "materials/JointedPaving.tres",
-      "sha256": "542ab0c4dd876bc820c25a1409b3a22ef07552f5bea3d7836cd4dd4273b2251c"
+      "sha256": "f819e9722d100819ef4b324cfc856648b79ae7ab3a28307100c5f9243c749cf8"
     }
   ],
   "triangles": 4356,

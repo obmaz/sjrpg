@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def save(image, name):
-    target = ROOT / 'assets/art/hud' / (name + '.webp')
+    target = ROOT / 'assets/ui/hud' / (name + '.webp')
     temporary = target.with_suffix('.tmp')
     image.save(temporary, 'WEBP', quality=93, alpha_quality=100, method=6, exact=True)
     temporary.replace(target)
@@ -17,7 +17,7 @@ def save(image, name):
 
 def prepare_level_badge():
     # Reuse sjrpg's generated, number-free medallion; runtime text shows the real level.
-    image = Image.open(ROOT / 'assets/source/level-badge.png').convert('RGBA')
+    image = Image.open(ROOT / 'assets/source/ui/level-badge.png').convert('RGBA')
     if image.getchannel('A').getextrema() != (0, 255):
         raise ValueError('The level badge must retain its transparent background')
     image = image.crop(image.getchannel('A').getbbox())
@@ -31,7 +31,7 @@ def main():
         image = Image.open(ROOT / 'assets/source' / (name + '.png'))
         save(image.resize((512, 512), Image.Resampling.LANCZOS), name)
     # Keep the two generated vials at their natural aspect ratio; align their bases in equal 256px cells.
-    image = Image.open(ROOT / 'assets/source/potions.png').convert('RGBA')
+    image = Image.open(ROOT / 'assets/source/ui/potions.png').convert('RGBA')
     sheet = Image.new('RGBA', (512, 256))
     for i in range(2):
         cell = image.crop((i * image.width // 2, 0, (i + 1) * image.width // 2, image.height))

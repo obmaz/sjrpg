@@ -2,37 +2,37 @@
   "tool": "image_gen.imagegen",
   "images": [
     {
-      "path": "assets/models/materials/paving/paving-0.png",
+      "path": "assets/materials/paving/paving-0.png",
       "sha256": "2b4de2fe6e285e538d33a50c59fa7a83487627d40f2d3a8626e2132f9520d704",
       "original": "original-0.png",
       "prompt": "prompt-0.txt"
     },
     {
-      "path": "assets/models/materials/paving/paving-1.png",
+      "path": "assets/materials/paving/paving-1.png",
       "sha256": "8cf0f07179e569dea985371ed9a60bf3b88100b5515389cc9de2fd11d3924406",
       "original": "original-1.png",
       "prompt": "prompt-1.txt"
     },
     {
-      "path": "assets/models/materials/paving/paving-2.png",
+      "path": "assets/materials/paving/paving-2.png",
       "sha256": "db3d36e3fd6849b9086d00d4cc3fed8c398b4012de6eff5ac18a508540286b48",
       "original": "original-2.png",
       "prompt": "prompt-2.txt"
     },
     {
-      "path": "assets/models/materials/paving/paving-3.png",
+      "path": "assets/materials/paving/paving-3.png",
       "sha256": "55a17cd6e0746585f6ac8f840d41e35479e6864ba9932c813e86ae2b68b714d0",
       "original": "original-3.png",
       "prompt": "prompt-3.txt"
     },
     {
-      "path": "assets/models/materials/paving/paving-4.png",
+      "path": "assets/materials/paving/paving-4.png",
       "sha256": "6605cadb1e3206ced39c8bf1eeda3b6a146a680ec21a3a7c6b28f3a009da6dfd",
       "original": "original-4.png",
       "prompt": "prompt-4.txt"
     },
     {
-      "path": "assets/models/materials/paving/paving-5.png",
+      "path": "assets/materials/paving/paving-5.png",
       "sha256": "7351702d261b677e0471afa35c1d0ce6d4ac538b6f10d173ecf4f787dd3cb2a2",
       "original": "original-5.png",
       "prompt": "prompt-5.txt"
@@ -44,7 +44,7 @@
       "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
     },
     {
-      "path": "assets/art/preview3d/generated-ground-base.png",
+      "path": "assets/materials/terrain/ground_field_base.png",
       "sha256": "6ce98c643be077218cdb3bb8c0b606f0704521daedd7aafcc262e5174250a082"
     }
   ],

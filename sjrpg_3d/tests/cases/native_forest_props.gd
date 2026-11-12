@@ -1,9 +1,9 @@
 extends TestCase
 ## Actual native owners must replace individual source cards and keep native floors.
 func run() -> void:
-	var library := NativeForestFlora3D.mesh_library()
+	var library := ForestFloraRenderer3D.mesh_library()
 	check("plant family contains four distinct shared lit meshes", library.size() == 4)
-	for species: String in NativeForestFlora3D.SPECIES:
+	for species: String in ForestFloraRenderer3D.SPECIES:
 		var mesh: ArrayMesh = library[species]
 		var box := mesh.get_aabb()
 		var arrays := mesh.surface_get_arrays(0)
@@ -18,23 +18,23 @@ func run() -> void:
 		var material := mesh.surface_get_material(0) as StandardMaterial3D
 		check("plant receives actual scene light without a cutout texture " + species, material != null and material.shading_mode == BaseMaterial3D.SHADING_MODE_PER_PIXEL and material.albedo_texture == null)
 	var game := await make_game("mage")
-	if game.ortho_preview == null:
-		game._enable_ortho_preview()
+	if game.world_renderer == null:
+		game._create_world_renderer()
 	await _frames(3)
-	var preview: Ortho3DPreview = game.ortho_preview
-	var environment: Ortho3DEnvironment = preview._world_environment
+	var renderer: WorldRenderer3D = game.world_renderer
+	var environment: EnvironmentRenderer3D = renderer._world_environment
 	var flora: Node3D = environment.forest.get_node("NativeBorderFlora")
 	var report: Dictionary = flora.get_meta("native_flora_report")
 	var count := 0
 	for child in game.world.get_children():
-		if child is IsoSprite and NativeForestFlora3D.accepts(child):
+		if child is IsoSprite and ForestFloraRenderer3D.accepts(child):
 			count += 1
 			check("supported original flora is owned exactly once", report["owned_source_ids"].has(child.get_instance_id()))
 	check("native flora covers the scene while keeping the enlarged chapel steps clear", count > 200 and report["placements"].size() + report["suppressed_at_chapel"].size() == count and report["groups"] <= count)
 	for placement: Dictionary in report["placements"]:
 		var transform: Transform3D = placement["transform"]
 		var foot: Vector2 = placement["source_foot"]
-		check("plant roots use actual native height and preserve uniform scale", transform.origin.is_equal_approx(Ortho3DPreview.ground_position(foot, preview.surface_height(foot))) and is_equal_approx(transform.basis.x.length(), transform.basis.y.length()) and is_equal_approx(transform.basis.y.length(), transform.basis.z.length()))
+		check("plant roots use actual native height and preserve uniform scale", transform.origin.is_equal_approx(WorldRenderer3D.ground_position(foot, renderer.surface_height(foot))) and is_equal_approx(transform.basis.x.length(), transform.basis.y.length()) and is_equal_approx(transform.basis.y.length(), transform.basis.z.length()))
 	var native_landmarks: Node3D = environment.forest.get_node("NativeLandmarks")
 	var landmarks: Dictionary = native_landmarks.get_meta("native_landmark_report")
 	check("all four landmark art cards have native source owners", landmarks["entries"].size() == 4 and landmarks["owned_source_ids"].size() == 4)
@@ -87,7 +87,7 @@ func run() -> void:
 		var old_reduced := Prefs.reduce_motion
 		Prefs.reduce_motion = false
 		clock.phase = 12.5
-		NativeLandmarks3D.sync_water(environment.forest, game.village)
+		LandmarkRenderer3D.sync_water(environment.forest, game.village)
 		var follows_source := true
 		for material: ShaderMaterial in water_materials:
 			follows_source = follows_source and is_equal_approx(float(material.get_shader_parameter("phase")), clock.phase) and material.get_shader_parameter("source_water") != null
@@ -98,19 +98,19 @@ func run() -> void:
 			remains_paused = remains_paused and is_equal_approx(float(material.get_shader_parameter("phase")), 12.5)
 		check("paused environment delta cannot advance the shared water source", remains_paused)
 		Prefs.reduce_motion = true
-		NativeLandmarks3D.sync_water(environment.forest, game.village)
+		LandmarkRenderer3D.sync_water(environment.forest, game.village)
 		var reduced := true
 		for material: ShaderMaterial in water_materials:
 			reduced = reduced and is_zero_approx(float(material.get_shader_parameter("phase"))) and is_zero_approx(float(material.get_shader_parameter("motion")))
 		check("reduced motion freezes landmark waves and texture drift", reduced)
 		Prefs.reduce_motion = old_reduced
 		clock.phase = old_phase
-		NativeLandmarks3D.sync_water(environment.forest, game.village)
+		LandmarkRenderer3D.sync_water(environment.forest, game.village)
 	var waterfall := native_landmarks.get_node("Landmark3/FallingWater") as MeshInstance3D
 	var shores: Array = waterfall.get_meta("source_shores")
 	var waterfall_source: Landmark = game.village.landmarks[3]
-	var old_span := Ortho3DPreview.ground_position(Iso.poly_bounds(waterfall_source.water[0]).get_center()).distance_squared_to(Ortho3DPreview.ground_position(Iso.poly_bounds(waterfall_source.water[1]).get_center()))
-	var new_span := Ortho3DPreview.ground_position(shores[0]).distance_squared_to(Ortho3DPreview.ground_position(shores[1]))
+	var old_span := WorldRenderer3D.ground_position(Iso.poly_bounds(waterfall_source.water[0]).get_center()).distance_squared_to(WorldRenderer3D.ground_position(Iso.poly_bounds(waterfall_source.water[1]).get_center()))
+	var new_span := WorldRenderer3D.ground_position(shores[0]).distance_squared_to(WorldRenderer3D.ground_position(shores[1]))
 	check("cascade connects the actual nearest shores instead of crossing both pond centres", new_span < old_span)
 	var children := environment.forest.get_child_count()
 	environment.sync(0.0, true)
@@ -119,7 +119,7 @@ func run() -> void:
 	game.player.position = game.dungeon.entry_point()
 	await _frames(2)
 	if game.dungeon.enter():
-		preview._sync_scope()
+		renderer._sync_scope()
 		environment.sync(0.0, true)
 		var torches := environment.cave.get_node("NativeCaveLanterns") as Node3D
 		var shared_torches := torches.get_child_count() == 4

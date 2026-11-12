@@ -1,122 +1,122 @@
 {
- "sources": [
-  {
-   "path": "assets/source/hud-trim.png",
-   "sha256": "08d28abe805643791da0ed72118837f587673278b6a2aaad7f271a563b29bc26"
+  "sources": [
+    {
+      "path": "assets/source/ui/hud-trim.png",
+      "sha256": "08d28abe805643791da0ed72118837f587673278b6a2aaad7f271a563b29bc26"
+    },
+    {
+      "path": "assets/source/ui/map-rim.png",
+      "sha256": "16a2aa5eba9db73d1b7204a8634390c7ee57c0ffec4ab7e5d4a0d23086578d3b"
+    },
+    {
+      "path": "assets/source/effects/combat/combat-frames.png",
+      "sha256": "66dc56de7bf051e0b1d9a224a4d357a29c83aeca894d6bc2e7b713ae206d7aa9"
+    }
+  ],
+  "reference": {
+    "path": "assets/source/style/approved-game-reference.jpg",
+    "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
   },
-  {
-   "path": "assets/source/map-rim.png",
-   "sha256": "16a2aa5eba9db73d1b7204a8634390c7ee57c0ffec4ab7e5d4a0d23086578d3b"
+  "generation": {
+    "path": "tools/extract/presentation_generation.json",
+    "sha256": "f1f42d6da6c157209b31b452a371c24714083f6d39450d0ca9b71980684500dd"
   },
-  {
-   "path": "assets/source/combat-frames.png",
-   "sha256": "66dc56de7bf051e0b1d9a224a4d357a29c83aeca894d6bc2e7b713ae206d7aa9"
+  "ui": {
+    "path": "assets/ui/hud/generated-trim.webp",
+    "sha256": "a613634c05a62d57b2e06ea650a19d1398162a0e993a0c922b0a25086b801baa",
+    "size": [
+      512,
+      512
+    ],
+    "frames": {
+      "active": {
+        "source": [
+          0,
+          0,
+          256,
+          256
+        ],
+        "paint_half": 122.0,
+        "source_roi": [
+          50,
+          48,
+          524,
+          524
+        ],
+        "source_path": "assets/source/ui/hud-trim.png"
+      },
+      "empty": {
+        "source": [
+          256,
+          0,
+          256,
+          256
+        ],
+        "paint_half": 123.0,
+        "source_roi": [
+          663,
+          49,
+          524,
+          524
+        ],
+        "source_path": "assets/source/ui/hud-trim.png"
+      },
+      "map": {
+        "source": [
+          0,
+          256,
+          256,
+          256
+        ],
+        "paint_half": 124.0,
+        "source_roi": [
+          108,
+          114,
+          1026,
+          1026
+        ],
+        "source_path": "assets/source/ui/map-rim.png"
+      },
+      "corner": {
+        "source": [
+          256,
+          256,
+          256,
+          256
+        ],
+        "paint_half": 122.0,
+        "source_roi": [
+          731,
+          701,
+          387,
+          387
+        ],
+        "source_path": "assets/source/ui/hud-trim.png"
+      }
+    }
+  },
+  "impact": {
+    "path": "assets/effects/textures/combat-frames.webp",
+    "sha256": "d65442de4777f648e3712c999a2d50fab42889d6657b44840f87ed75c14c53c4",
+    "size": [
+      1024,
+      1024
+    ],
+    "cell": 256,
+    "rows": 4,
+    "columns": 4,
+    "elements": [
+      "physical",
+      "fire",
+      "lightning",
+      "frost"
+    ],
+    "blend": "add",
+    "phases": [
+      "contact",
+      "peak",
+      "fragments",
+      "tail"
+    ]
   }
- ],
- "reference": {
-  "path": "assets/source/style/approved-game-reference.jpg",
-  "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
- },
- "generation": {
-  "path": "tools/extract/presentation_generation.json",
-  "sha256": "e9a6817f9e737f801bac068bc670e759ca5a99d7d9cb0095d81f6587d35e813c"
- },
- "ui": {
-  "path": "assets/art/hud/generated-trim.webp",
-  "sha256": "a613634c05a62d57b2e06ea650a19d1398162a0e993a0c922b0a25086b801baa",
-  "size": [
-   512,
-   512
-  ],
-  "frames": {
-   "active": {
-    "source": [
-     0,
-     0,
-     256,
-     256
-    ],
-    "paint_half": 122.0,
-    "source_roi": [
-     50,
-     48,
-     524,
-     524
-    ],
-    "source_path": "assets/source/hud-trim.png"
-   },
-   "empty": {
-    "source": [
-     256,
-     0,
-     256,
-     256
-    ],
-    "paint_half": 123.0,
-    "source_roi": [
-     663,
-     49,
-     524,
-     524
-    ],
-    "source_path": "assets/source/hud-trim.png"
-   },
-   "map": {
-    "source": [
-     0,
-     256,
-     256,
-     256
-    ],
-    "paint_half": 124.0,
-    "source_roi": [
-     108,
-     114,
-     1026,
-     1026
-    ],
-    "source_path": "assets/source/map-rim.png"
-   },
-   "corner": {
-    "source": [
-     256,
-     256,
-     256,
-     256
-    ],
-    "paint_half": 122.0,
-    "source_roi": [
-     731,
-     701,
-     387,
-     387
-    ],
-    "source_path": "assets/source/hud-trim.png"
-   }
-  }
- },
- "impact": {
-  "path": "assets/art/effects/combat-frames.webp",
-  "sha256": "d65442de4777f648e3712c999a2d50fab42889d6657b44840f87ed75c14c53c4",
-  "size": [
-   1024,
-   1024
-  ],
-  "cell": 256,
-  "rows": 4,
-  "columns": 4,
-  "elements": [
-   "physical",
-   "fire",
-   "lightning",
-   "frost"
-  ],
-  "blend": "add",
-  "phases": [
-   "contact",
-   "peak",
-   "fragments",
-   "tail"
-  ]
- }
 }

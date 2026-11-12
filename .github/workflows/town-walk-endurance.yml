@@ -52,17 +52,17 @@ jobs:
                   git fetch --no-tags --depth=1 origin "$SJRPG_WALK_SHA"
                   mkdir -p "$RUNNER_TEMP/endurance-game"
                   git archive "$SJRPG_WALK_SHA" | tar -x -C "$RUNNER_TEMP/endurance-game"
-                  cp sjrpg_3d/scripts/walking_resource_review.gd "$RUNNER_TEMP/endurance-game/sjrpg_3d/scripts/walking_resource_review.gd"
+                  cp sjrpg_3d/scripts/inspection/walking_resource_review.gd "$RUNNER_TEMP/endurance-game/sjrpg_3d/scripts/inspection/walking_resource_review.gd"
                   cp sjrpg_3d/tools/check_town_walking.mjs sjrpg_3d/tools/resource_telemetry.mjs sjrpg_3d/tools/walking_resource_telemetry.mjs "$RUNNER_TEMP/endurance-game/sjrpg_3d/tools/"
                   python3 - <<'PY'
                   import os
                   from pathlib import Path
-                  main=Path(os.environ["RUNNER_TEMP"])/"endurance-game/sjrpg_3d/scripts/main.gd"
+                  main=Path(os.environ["RUNNER_TEMP"])/"endurance-game/sjrpg_3d/scripts/app/main.gd"
                   text=main.read_text()
                   needle="\tshow_title()\n"
-                  hook='\tif OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get(\'walking_profile\')", true)) == "1":\n\t\tadd_child(load("res://scripts/walking_resource_review.gd").new().setup(self))\n'
+                  hook='\tif OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get(\'walking_profile\')", true)) == "1":\n\t\tadd_child(load("res://scripts/inspection/walking_resource_review.gd").new().setup(self))\n'
                   assert needle in text
-                  assert 'res://scripts/walking_resource_review.gd' not in text
+                  assert 'res://scripts/inspection/walking_resource_review.gd' not in text
                   main.write_text(text.replace(needle,needle+hook,1))
                   PY
                   python3 sjrpg_3d/tools/perf/prepare_walk_endurance.py

@@ -1,11 +1,11 @@
 {
  "id": "encounter-stone",
- "source": "assets/source/encounter-stone.png",
+ "source": "assets/source/environment/encounter_stone/encounter-stone.png",
  "source_sha256": "65ba8098b86194dd2ee59ef2ccaf54e6ac855483499c94d9cdabf2502ba62009",
- "render": "assets/art/village/encounter-stone.webp",
+ "render": "assets/sprites/village/encounter-stone.webp",
  "render_sha256": "97f4e85f17662634680764cb3f4fec5a3e4ac47ff964ac876559848643edc3e7",
  "sprite": {
-  "sheet": "res://assets/art/village/encounter-stone.webp",
+  "sheet": "res://assets/sprites/village/encounter-stone.webp",
   "source": [
    4,
    4,

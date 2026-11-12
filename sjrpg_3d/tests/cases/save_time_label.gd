@@ -32,7 +32,7 @@ func run() -> void:
 	var bytes := FileAccess.get_file_as_bytes(path)
 	var hero_before := GameState.hero_class
 	var gold_before := GameState.gold
-	var screen := preload("res://scripts/class_select.gd").new()
+	var screen := preload("res://scripts/ui/screens/class_select.gd").new()
 	add_child(screen)
 	await _frames(2)
 	var expected := SaveTimeLabel.for_device(year_edge)

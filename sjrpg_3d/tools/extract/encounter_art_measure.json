@@ -1,8 +1,8 @@
 {
  "id": "encounter-stone",
- "source": "assets/source/encounter-stone.png",
+ "source": "assets/source/environment/encounter_stone/encounter-stone.png",
  "source_sha256": "65ba8098b86194dd2ee59ef2ccaf54e6ac855483499c94d9cdabf2502ba62009",
- "render": "assets/art/village/encounter-stone.webp",
+ "render": "assets/sprites/village/encounter-stone.webp",
  "world_height": 112,
  "foot": [
   155,

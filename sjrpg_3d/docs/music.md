@@ -29,7 +29,7 @@ tools/check.sh --project=3d --only=music  # 재생기 테스트
 
 ## 게임 안에서
 
-- `MusicDirector`(`scripts/music_director.gd`)가 `Game`의 자식으로 있고, 0.25초마다 위치를 봅니다.
+- `MusicDirector`(`scripts/audio/music_director.gd`)가 `Game`의 자식으로 있고, 0.25초마다 위치를 봅니다.
   동굴 안이면 `dungeon`, 마을 안전 구역이면 `town`, 그 밖은 `field`입니다.
 - 곡이 바뀌면 1.6초 동안 크로스페이드합니다. 메뉴로 게임이 일시정지돼도 페이드는 계속되고, 앱이 포커스를 잃으면 음악만 멈췄다가 돌아오면 이어집니다.
 - 설정의 **배경 음악** 토글(`Prefs.music_enabled`, 기기에 저장)로 끄고 켭니다. 전투 효과음 설정과는 별개입니다.

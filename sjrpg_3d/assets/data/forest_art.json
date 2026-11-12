@@ -1,184 +1,184 @@
 {
- "sources": [
-  {
-   "path": "assets/source/remake/ground.png",
-   "sha256": "621cf0f8b577a3f53baf2f0d7692269e24f8a8a61cd1eb6287abb00b871032c1"
-  },
-  {
-   "path": "assets/source/remake/flora.png",
-   "sha256": "de2a9e35439abcb546f34d0fc37f8dee0406b3df9737e41560e6f2944202cdb9"
-  },
-  {
-   "path": "assets/source/remake/grass-v2.png",
-   "sha256": "f044aae41ad0d83478a3843cea1f9d29be3c8308d6e06f20c37f618a95150b37"
-  },
-  {
-   "path": "assets/source/lighting/ground-materials.png",
-   "sha256": "b774f93948e83c08580fe49649e5fc1d80d65e238392e8bf203b2757c47db9d7"
-  },
-  {
-   "path": "assets/source/lighting/forest-floor-soft-v2.png",
-   "sha256": "f38a46802fc08c34f3563ce3e71be704b3b8b52196cf341e802391f1f53fea88"
-  }
- ],
- "camera": {
-  "ground_material_projection": "orthographic top-down; the runtime Iso ground transform provides the camera",
-  "flora_projection": "authored elevated quarter view",
-  "target_ground_axes_degrees": [
-   -30,
-   30
+  "sources": [
+    {
+      "path": "assets/source/remake/ground.png",
+      "sha256": "621cf0f8b577a3f53baf2f0d7692269e24f8a8a61cd1eb6287abb00b871032c1"
+    },
+    {
+      "path": "assets/source/remake/flora.png",
+      "sha256": "de2a9e35439abcb546f34d0fc37f8dee0406b3df9737e41560e6f2944202cdb9"
+    },
+    {
+      "path": "assets/source/remake/grass-v2.png",
+      "sha256": "f044aae41ad0d83478a3843cea1f9d29be3c8308d6e06f20c37f618a95150b37"
+    },
+    {
+      "path": "assets/source/lighting/ground-materials.png",
+      "sha256": "b774f93948e83c08580fe49649e5fc1d80d65e238392e8bf203b2757c47db9d7"
+    },
+    {
+      "path": "assets/source/lighting/forest-floor-soft-v2.png",
+      "sha256": "f38a46802fc08c34f3563ce3e71be704b3b8b52196cf341e802391f1f53fea88"
+    }
   ],
-  "target_azimuth_degrees": 45,
-  "target_elevation_degrees": 35.264
- },
- "review": "Ground material review uses the authoritative approved-game-reference.jpg. Paving retains the measured883-square left panel of lighting/ground-materials.png: pale warm-neutral limestone with flat worn faces and restrained earth/moss joints. Earth and flora retain their existing source cells and contacts. The earlier ground sheet grass and first forest-floor-soft.png candidate were rejected: respectively wiry moss and long dry diagonal soil bands. Grass now uses the full untouched forest-floor-soft-v2.png after root comparison in actual portrait and landscape scenes, not separate user approval: lusher quiet olive/moss cover with smaller disconnected earth glimpses, fewer wiry strands and lower saturation than the previous grass-v2.png carpet. Exact prompt, actual references, hashes and rejection history are in forest_floor_soft_v2_generation.json. Distinct leaf groups and broad repeating motifs remain; actual-scale chapel portrait and courtyard landscape were compared; broad repetition remains a known limitation and final reference mood is not claimed. All ground sources are opaque orthographic top-down diffuse materials without baked canopy cast shadows, sun patches or isometric perspective; runtime supplies the120-degree ground projection and owner-linked shade. Previously reviewed flora pixels and alpha remain unchanged; no rigid-edge angles are invented for natural clumps.",
- "textures": {
-  "grass": {
-   "path": "assets/art/forest/grass.webp",
-   "sha256": "5fa133204811b3e6603416280109f5fbdbe75da1d0dab964828b6731e71bffc7",
-   "size": [
-    512,
-    512
-   ]
+  "camera": {
+    "ground_material_projection": "orthographic top-down; the runtime Iso ground transform provides the camera",
+    "flora_projection": "authored elevated quarter view",
+    "target_ground_axes_degrees": [
+      -30,
+      30
+    ],
+    "target_azimuth_degrees": 45,
+    "target_elevation_degrees": 35.264
   },
-  "paving": {
-   "path": "assets/art/forest/paving.webp",
-   "sha256": "293bb740e1c277bf7e6cd566c8c9f6a05105e5e7ca0e8960e041ad23e2b2d9ef",
-   "size": [
-    512,
-    512
-   ]
+  "review": "Ground material review uses the authoritative approved-game-reference.jpg. Paving retains the measured883-square left panel of lighting/ground-materials.png: pale warm-neutral limestone with flat worn faces and restrained earth/moss joints. Earth and flora retain their existing source cells and contacts. The earlier ground sheet grass and first forest-floor-soft.png candidate were rejected: respectively wiry moss and long dry diagonal soil bands. Grass now uses the full untouched forest-floor-soft-v2.png after root comparison in actual portrait and landscape scenes, not separate user approval: lusher quiet olive/moss cover with smaller disconnected earth glimpses, fewer wiry strands and lower saturation than the previous grass-v2.png carpet. Exact prompt, actual references, hashes and rejection history are in forest_floor_soft_v2_generation.json. Distinct leaf groups and broad repeating motifs remain; actual-scale chapel portrait and courtyard landscape were compared; broad repetition remains a known limitation and final reference mood is not claimed. All ground sources are opaque orthographic top-down diffuse materials without baked canopy cast shadows, sun patches or isometric perspective; runtime supplies the120-degree ground projection and owner-linked shade. Previously reviewed flora pixels and alpha remain unchanged; no rigid-edge angles are invented for natural clumps.",
+  "textures": {
+    "grass": {
+      "path": "assets/materials/terrain/grass_base.webp",
+      "sha256": "5fa133204811b3e6603416280109f5fbdbe75da1d0dab964828b6731e71bffc7",
+      "size": [
+        512,
+        512
+      ]
+    },
+    "paving": {
+      "path": "assets/materials/terrain/paving_base.webp",
+      "sha256": "293bb740e1c277bf7e6cd566c8c9f6a05105e5e7ca0e8960e041ad23e2b2d9ef",
+      "size": [
+        512,
+        512
+      ]
+    },
+    "earth": {
+      "path": "assets/sprites/forest/earth.webp",
+      "sha256": "379f9866399c0e0e5265adfea05c3779fc7e6723cc42626226c7275157e4a17c",
+      "size": [
+        512,
+        512
+      ]
+    },
+    "flora": {
+      "path": "assets/sprites/forest/flora.webp",
+      "sha256": "90e95fcb25c3163ed7840d9d25077a68d69769b79afc452b139c9234c72487ea",
+      "size": [
+        1024,
+        1024
+      ]
+    }
   },
-  "earth": {
-   "path": "assets/art/forest/earth.webp",
-   "sha256": "379f9866399c0e0e5265adfea05c3779fc7e6723cc42626226c7275157e4a17c",
-   "size": [
-    512,
-    512
-   ]
+  "frames": {
+    "flowers_white": {
+      "sheet": "res://assets/sprites/forest/flora.webp",
+      "source": [
+        8,
+        110,
+        496,
+        394
+      ],
+      "foot": [
+        275.99313893653516,
+        475.8319039451115
+      ],
+      "height": 365.8319039451115,
+      "origin": [
+        83,
+        14
+      ],
+      "packing": 0.8507718696397941,
+      "gvs": 1,
+      "gvk": 0,
+      "world_height": 22,
+      "body": null,
+      "review": "Ground-contact centre at the converging lower flower stems under the central leaf rosette. Foreground leaves remain beyond the contact; this is not the lowest petal or silhouette pixel."
+    },
+    "flowers_warm": {
+      "sheet": "res://assets/sprites/forest/flora.webp",
+      "source": [
+        520,
+        129,
+        496,
+        375
+      ],
+      "foot": [
+        760.2115702479339,
+        466.77190082644626
+      ],
+      "height": 337.77190082644626,
+      "origin": [
+        832,
+        17
+      ],
+      "packing": 0.8198347107438017,
+      "gvs": 1,
+      "gvk": 0,
+      "world_height": 20,
+      "body": null,
+      "review": "Shared rooted centre beneath the warm flower stems and grass rosettes. The thin forward blades retain depth below the anchor."
+    },
+    "fern": {
+      "sheet": "res://assets/sprites/forest/flora.webp",
+      "source": [
+        8,
+        645,
+        496,
+        371
+      ],
+      "foot": [
+        234.71947194719473,
+        951.1122112211222
+      ],
+      "height": 306.11221122112215,
+      "origin": [
+        78,
+        550
+      ],
+      "packing": 0.8184818481848185,
+      "gvs": 1,
+      "gvk": 0,
+      "world_height": 24,
+      "body": null,
+      "review": "Ground contact under the fern petiole crown and overlapping low leaves. Rear stems and forward fronds retain their natural occlusion and spread."
+    },
+    "grass": {
+      "sheet": "res://assets/sprites/forest/flora.webp",
+      "source": [
+        520,
+        672,
+        496,
+        344
+      ],
+      "foot": [
+        740.6315789473684,
+        968.421052631579
+      ],
+      "height": 296.42105263157896,
+      "origin": [
+        851,
+        581
+      ],
+      "packing": 0.8421052631578947,
+      "gvs": 1,
+      "gvk": 0,
+      "world_height": 12,
+      "body": null,
+      "review": "Contact under the dense central grass bases and low leaf rosettes. Tall blades do not determine the anchor, and foreground leaves remain visible below it."
+    }
   },
-  "flora": {
-   "path": "assets/art/forest/flora.webp",
-   "sha256": "90e95fcb25c3163ed7840d9d25077a68d69769b79afc452b139c9234c72487ea",
-   "size": [
-    1024,
-    1024
-   ]
-  }
- },
- "frames": {
-  "flowers_white": {
-   "sheet": "res://assets/art/forest/flora.webp",
-   "source": [
-    8,
-    110,
-    496,
-    394
-   ],
-   "foot": [
-    275.99313893653516,
-    475.8319039451115
-   ],
-   "height": 365.8319039451115,
-   "origin": [
-    83,
-    14
-   ],
-   "packing": 0.8507718696397941,
-   "gvs": 1,
-   "gvk": 0,
-   "world_height": 22,
-   "body": null,
-   "review": "Ground-contact centre at the converging lower flower stems under the central leaf rosette. Foreground leaves remain beyond the contact; this is not the lowest petal or silhouette pixel."
-  },
-  "flowers_warm": {
-   "sheet": "res://assets/art/forest/flora.webp",
-   "source": [
-    520,
-    129,
-    496,
-    375
-   ],
-   "foot": [
-    760.2115702479339,
-    466.77190082644626
-   ],
-   "height": 337.77190082644626,
-   "origin": [
-    832,
-    17
-   ],
-   "packing": 0.8198347107438017,
-   "gvs": 1,
-   "gvk": 0,
-   "world_height": 20,
-   "body": null,
-   "review": "Shared rooted centre beneath the warm flower stems and grass rosettes. The thin forward blades retain depth below the anchor."
-  },
-  "fern": {
-   "sheet": "res://assets/art/forest/flora.webp",
-   "source": [
-    8,
-    645,
-    496,
-    371
-   ],
-   "foot": [
-    234.71947194719473,
-    951.1122112211222
-   ],
-   "height": 306.11221122112215,
-   "origin": [
-    78,
-    550
-   ],
-   "packing": 0.8184818481848185,
-   "gvs": 1,
-   "gvk": 0,
-   "world_height": 24,
-   "body": null,
-   "review": "Ground contact under the fern petiole crown and overlapping low leaves. Rear stems and forward fronds retain their natural occlusion and spread."
-  },
-  "grass": {
-   "sheet": "res://assets/art/forest/flora.webp",
-   "source": [
-    520,
-    672,
-    496,
-    344
-   ],
-   "foot": [
-    740.6315789473684,
-    968.421052631579
-   ],
-   "height": 296.42105263157896,
-   "origin": [
-    851,
-    581
-   ],
-   "packing": 0.8421052631578947,
-   "gvs": 1,
-   "gvk": 0,
-   "world_height": 12,
-   "body": null,
-   "review": "Contact under the dense central grass bases and low leaf rosettes. Tall blades do not determine the anchor, and foreground leaves remain visible below it."
-  }
- },
- "references": [
-  {
-   "path": "assets/source/style/approved-game-reference.jpg",
-   "role": "authoritative user reference supplied to generation",
-   "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
-  },
-  {
-   "path": "assets/source/remake/town-master-scene.png",
-   "role": "supplementary environment material/mood concept supplied to generation; not a replacement for the user reference",
-   "sha256": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389"
-  },
-  {
-   "path": "tools/extract/forest_floor_soft_v2_generation.json",
-   "role": "exact prompt, actual generation references and provisional technical-adoption history; actual scene review pending",
-   "sha256": "af9d9a473bfcaca3a0ddf0af05782c0678a01c2ab831f85dd5ae1f07f05eaa21"
-  }
- ]
+  "references": [
+    {
+      "path": "assets/source/style/approved-game-reference.jpg",
+      "role": "authoritative user reference supplied to generation",
+      "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+    },
+    {
+      "path": "assets/source/remake/town-master-scene.png",
+      "role": "supplementary environment material/mood concept supplied to generation; not a replacement for the user reference",
+      "sha256": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389"
+    },
+    {
+      "path": "tools/extract/forest_floor_soft_v2_generation.json",
+      "role": "exact prompt, actual generation references and provisional technical-adoption history; actual scene review pending",
+      "sha256": "65693124eee318a83c7e2d4c91d3843849f8fb0bc09de17a574701a88aec0c82"
+    }
+  ]
 }

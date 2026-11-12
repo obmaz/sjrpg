@@ -4,7 +4,7 @@ extends TestCase
 
 func run() -> void:
 	for id: String in ["spikes", "flame_vent"]:
-		var folder: String = NativeDungeonHazards.ROOT + id + "/"
+		var folder: String = DungeonHazardRenderer3D.ROOT + id + "/"
 		var spec: Dictionary = JSON.parse_string(
 			FileAccess.get_file_as_string(folder + "asset.json")
 		)

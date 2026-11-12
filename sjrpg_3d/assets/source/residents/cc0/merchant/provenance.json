@@ -1,0 +1,487 @@
+{
+  "bind_proof": {
+    "target_rig": "CC0MerchantRig",
+    "source_rig": "Armature.002",
+    "joints": 65,
+    "parents_equal": true,
+    "max_world_rest_head_error_m": 0.08402500241583609,
+    "max_world_rest_rotation_error": 0.1921631209552288,
+    "target_world_scale": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "source_world_scale": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "action_bones": [
+      "Head",
+      "ball_l",
+      "ball_leaf_l",
+      "ball_leaf_r",
+      "ball_r",
+      "calf_l",
+      "calf_r",
+      "clavicle_l",
+      "clavicle_r",
+      "foot_l",
+      "foot_r",
+      "hand_l",
+      "hand_r",
+      "index_01_l",
+      "index_01_r",
+      "index_02_l",
+      "index_02_r",
+      "index_03_l",
+      "index_03_r",
+      "index_04_leaf_l",
+      "index_04_leaf_r",
+      "lowerarm_l",
+      "lowerarm_r",
+      "middle_01_l",
+      "middle_01_r",
+      "middle_02_l",
+      "middle_02_r",
+      "middle_03_l",
+      "middle_03_r",
+      "middle_04_leaf_l",
+      "middle_04_leaf_r",
+      "neck_01",
+      "pelvis",
+      "pinky_01_l",
+      "pinky_01_r",
+      "pinky_02_l",
+      "pinky_02_r",
+      "pinky_03_l",
+      "pinky_03_r",
+      "pinky_04_leaf_l",
+      "pinky_04_leaf_r",
+      "ring_01_l",
+      "ring_01_r",
+      "ring_02_l",
+      "ring_02_r",
+      "ring_03_l",
+      "ring_03_r",
+      "ring_04_leaf_l",
+      "ring_04_leaf_r",
+      "root",
+      "spine_01",
+      "spine_02",
+      "spine_03",
+      "thigh_l",
+      "thigh_r",
+      "thumb_01_l",
+      "thumb_01_r",
+      "thumb_02_l",
+      "thumb_02_r",
+      "thumb_03_l",
+      "thumb_03_r",
+      "thumb_04_leaf_l",
+      "thumb_04_leaf_r",
+      "upperarm_l",
+      "upperarm_r"
+    ],
+    "object_tracks": [],
+    "action": "Idle_Loop_Armature.002",
+    "translation_unit": "UAL world uniform scale",
+    "binding_mode": "world-rotation-delta FK; target rest offsets; root/pelvis translation deltas",
+    "retarget": {
+      "fps": 30,
+      "baked_frames": 76,
+      "source_fps": 30.0,
+      "duration_seconds": 2.5,
+      "max_discarded_nonpelvis_translation_m": 7.109355924389698e-07,
+      "max_source_scale_error": 1.1920928955078125e-06,
+      "max_posed_bone_length_error_m": 3.7498288607551444e-07,
+      "translated_bones": [
+        "root",
+        "pelvis"
+      ],
+      "quaternion_sign_continuity": true,
+      "rest_mismatch_handled_explicitly": true
+    }
+  },
+  "pose_proof": {
+    "samples": [
+      {
+        "phase": 0.0,
+        "mesh_min_z": -0.002511629369109869,
+        "mesh_max_z": 1.7430419921875,
+        "feet_min_z": -0.002511629369109869,
+        "root_xy": [
+          -1.4317689075015057e-17,
+          -0.08585812896490097
+        ],
+        "source_root_xy": [
+          0.0,
+          0.0
+        ],
+        "head_z": 1.539979100227356,
+        "foot_bones_z": [
+          0.08625785261392593,
+          0.0881289467215538
+        ]
+      },
+      {
+        "phase": 0.25,
+        "mesh_min_z": 2.250329271191731e-05,
+        "mesh_max_z": 1.733654260635376,
+        "feet_min_z": 2.250329271191731e-05,
+        "root_xy": [
+          -1.4317689075015057e-17,
+          -0.08585812896490097
+        ],
+        "source_root_xy": [
+          0.0,
+          0.0
+        ],
+        "head_z": 1.5294005870819092,
+        "foot_bones_z": [
+          0.08879193663597107,
+          0.09105134010314941
+        ]
+      },
+      {
+        "phase": 0.5,
+        "mesh_min_z": -0.002594516146928072,
+        "mesh_max_z": 1.7429606914520264,
+        "feet_min_z": -0.002594516146928072,
+        "root_xy": [
+          -1.4317689075015057e-17,
+          -0.08585812896490097
+        ],
+        "source_root_xy": [
+          0.0,
+          0.0
+        ],
+        "head_z": 1.539988398551941,
+        "foot_bones_z": [
+          0.08617494255304337,
+          0.0883718729019165
+        ]
+      },
+      {
+        "phase": 0.75,
+        "mesh_min_z": -2.0483961634454317e-05,
+        "mesh_max_z": 1.7337020635604858,
+        "feet_min_z": -2.0483961634454317e-05,
+        "root_xy": [
+          -1.4317689075015057e-17,
+          -0.08585812896490097
+        ],
+        "source_root_xy": [
+          0.0,
+          0.0
+        ],
+        "head_z": 1.5293827056884766,
+        "foot_bones_z": [
+          0.088748998939991,
+          0.09101186692714691
+        ]
+      },
+      {
+        "phase": 1.0,
+        "mesh_min_z": -0.0024247036781162024,
+        "mesh_max_z": 1.7428756952285767,
+        "feet_min_z": -0.0024247036781162024,
+        "root_xy": [
+          -1.4317689075015057e-17,
+          -0.08585812896490097
+        ],
+        "source_root_xy": [
+          0.0,
+          0.0
+        ],
+        "head_z": 1.5399956703186035,
+        "foot_bones_z": [
+          0.08634480088949203,
+          0.08822642266750336
+        ]
+      }
+    ],
+    "target_root_planar_drift_m": 0.0,
+    "source_root_planar_drift_m": 0.0,
+    "feet_vertical_drift_m": 0.0026170194396399893
+  },
+  "asset": "merchant",
+  "runtime_path": "assets/models/residents/merchant/model.glb",
+  "creator": "Quaternius",
+  "license": "CC0-1.0",
+  "license_records": {
+    "LICENSE-Outfits.txt": {
+      "bytes": 728,
+      "sha256": "2202cc2f608c4210790b112e5f121bc2e7f8dced7b5b1c7f4be6203461bdebbb"
+    },
+    "LICENSE-Base.txt": {
+      "bytes": 806,
+      "sha256": "0f4beaf0fe360a7732e58bbe3dbf60a2422367fbea60cb9ea4add968f383268e"
+    },
+    "LICENSE-Animations.txt": {
+      "bytes": 332,
+      "sha256": "6d01f55c6e4c49a2c9963e147e561945ae2c83958c8ca667d90a6bffdbfac061"
+    }
+  },
+  "sources": [
+    {
+      "pack": "Modular Character Outfits - Fantasy Standard",
+      "url": "https://quaternius.com/packs/modularcharacteroutfitsfantasy.html",
+      "itchUploadID": "16289385"
+    },
+    {
+      "pack": "Universal Base Characters Standard",
+      "url": "https://quaternius.com/packs/universalbasecharacters.html",
+      "itchUploadID": "15861669"
+    },
+    {
+      "pack": "Universal Animation Library Standard",
+      "url": "https://quaternius.com/packs/universalanimationlibrary.html",
+      "itchUploadID": "17958403"
+    }
+  ],
+  "verified_source_files": {
+    "adult-source/Animation-License.txt": {
+      "bytes": 332,
+      "sha256": "6d01f55c6e4c49a2c9963e147e561945ae2c83958c8ca667d90a6bffdbfac061"
+    },
+    "adult-source/Animation-README.txt": {
+      "bytes": 702,
+      "sha256": "ccd02718886b5a57f10f0a8911a38cfe10c36880e1d6dfa3445923fba32d2a72"
+    },
+    "adult-source/License_Standard.txt": {
+      "bytes": 728,
+      "sha256": "2202cc2f608c4210790b112e5f121bc2e7f8dced7b5b1c7f4be6203461bdebbb"
+    },
+    "adult-source/Male_Ranger.bin": {
+      "bytes": 1746884,
+      "sha256": "5bbb0d42cb324c6c27ce00417e68a876d92978f07d161f83590f0d7c0570eff6"
+    },
+    "adult-source/Male_Ranger.gltf": {
+      "bytes": 41447,
+      "sha256": "e1033a212332d84d98c19bc4927c621635478d0aa15d13c79da68d3ba9e0196f"
+    },
+    "adult-source/Readme.txt": {
+      "bytes": 311,
+      "sha256": "2f87579c277cde1e1ddbd4b8d823bed618728781cb6597b4dee3978c589ff5c4"
+    },
+    "adult-source/T_Ranger_BaseColor.png": {
+      "bytes": 6630927,
+      "sha256": "846ef2170b04ee584ad83bb8a1e86dab57a9a43b1193204505912c274d949925"
+    },
+    "adult-source/T_Regular_Male_Dark_BaseColor.png": {
+      "bytes": 1316151,
+      "sha256": "b4dcc0f4139aab548d7c070c4655bd2080ef16caeaaabee6c4aeb693c524e802"
+    },
+    "adult-source/UAL1_Standard.glb": {
+      "bytes": 7618436,
+      "sha256": "69591853d817488edaa8fd9bf8fc1d821eaeaf789f8627b3cd23b41c4ed67997"
+    },
+    "adult-source/UAL2-License.txt": {
+      "bytes": 332,
+      "sha256": "6d01f55c6e4c49a2c9963e147e561945ae2c83958c8ca667d90a6bffdbfac061"
+    },
+    "adult-source/UAL2_Standard.glb": {
+      "bytes": 8091444,
+      "sha256": "8cee20ab1bc55130092447e810e26df22dd2803eccc54f52137a7d54d7ab88a8"
+    },
+    "adult-source/base/License_Standard.txt": {
+      "bytes": 806,
+      "sha256": "0f4beaf0fe360a7732e58bbe3dbf60a2422367fbea60cb9ea4add968f383268e"
+    },
+    "adult-source/base/Superhero_Male_FullBody.bin": {
+      "bytes": 720076,
+      "sha256": "459003f9745853ae562a85506a2b94dd56515c1f37728f9fa3d2ce1a3e4cd92f"
+    },
+    "adult-source/base/Superhero_Male_FullBody.gltf": {
+      "bytes": 30989,
+      "sha256": "e7fcea214ecf8855afbf910b50de6f9c7d1decfb71ca28bad8a4481452dafeb4"
+    },
+    "adult-source/base/T_Eye_Brown.png": {
+      "bytes": 35958,
+      "sha256": "d08e3356a83211bc6ca21fe3a8e39f4b5c1a3b8f85457fc2c0fb57be09935025"
+    },
+    "adult-source/base/T_Hair_1_BaseColor.png": {
+      "bytes": 1570376,
+      "sha256": "bc7aa863bd22ab0a995cd838cceb4d3a5186ee54ee2fb0108fad85d20c057e6e"
+    },
+    "adult-source/base/T_Superhero_Male_Dark.png": {
+      "bytes": 1384380,
+      "sha256": "df680cbc1967a61e85998bfafb8f7bc0a36dd604bb3266486c4b06b1a184bb45"
+    },
+    "adult-source/mage/Male_Peasant.bin": {
+      "bytes": 674764,
+      "sha256": "e46bde795f7b69b351d322d7a5628e07131cfb48ed0afe366293f1b3f530433c"
+    },
+    "adult-source/mage/Male_Peasant.gltf": {
+      "bytes": 32681,
+      "sha256": "8f5a6cf6c1cf96e0a0f8e1a861b4245d42b7f88d44e5076da3d48f3fc52f4e76"
+    },
+    "adult-source/mage/T_Peasant_BaseColor.png": {
+      "bytes": 5055760,
+      "sha256": "a43635628d95571cd62fd4db0cc3a6ea32778b2bc02f242dda224c89d07f1ade"
+    },
+    "adult-source/mage/T_Regular_Male_Dark_BaseColor.png": {
+      "bytes": 1316151,
+      "sha256": "b4dcc0f4139aab548d7c070c4655bd2080ef16caeaaabee6c4aeb693c524e802"
+    }
+  },
+  "generator": {
+    "path": "tools/assets/heroes/export_cc0_merchant.py",
+    "sha256": "ad268126d531e839f166513ece15c2519ba7f727c8361424a360a98cea71294e",
+    "blender": "4.0.2"
+  },
+  "constructor": {
+    "path": "tools/assets/heroes/render_mage_pilot.py",
+    "sha256": "5e5de47e715861aea4097624e26da8305b7121bd1941d8e9577985aeebb32dae",
+    "scope": "clean imported outfit/base-head constructor only; no mage weapon/robe/render"
+  },
+  "selected_meshes": [
+    "Male_Peasant_Arms",
+    "Male_Peasant_Body",
+    "Male_Peasant_Feet",
+    "Male_Peasant_Legs",
+    "Eyebrows",
+    "Eyes",
+    "SuperHero_Male"
+  ],
+  "skin_joints": 65,
+  "clips": [
+    "idle"
+  ],
+  "triangles": 17612,
+  "surfaces": 8,
+  "up": "+Y",
+  "forward": "+Z",
+  "rest_height_m": 1.7800000937860005,
+  "rest_bounds_min": [
+    -0.8825351595878601,
+    -3.1869404892859166e-09,
+    -0.09515698254108429
+  ],
+  "rest_bounds_max": [
+    0.8825353384017944,
+    1.78000009059906,
+    0.25025469064712524
+  ],
+  "root_scale": [
+    1,
+    1,
+    1
+  ],
+  "uniform_bake_factor": 0.9812327987788692,
+  "action_translation_bake_factor": 0.9812327987788692,
+  "material_policy": "original CC0 UV/color images at max1024; roughness.95, metal0, plain glTF PBR",
+  "sha256": "85212ab8c6622f6b1839154335fbd17932e603b412c8d568eab0893fa0bd122b",
+  "bytes": 3846200,
+  "validation": "Actual GLB inspected for one65-joint skin, idle, triangle/surface/byte budgets and no camera. Godot import, actual posed feet, flash and four-face/mobile visual review still required.",
+  "acquisition_verification": {
+    "verified_at_utc": "2026-11-07T09:40:38.728585+00:00",
+    "source_manifest": "sjrpg_3d/tools/assets/heroes/source-provenance.json",
+    "verified_files": {
+      "adult-source/Animation-License.txt": {
+        "bytes": 332,
+        "sha256": "6d01f55c6e4c49a2c9963e147e561945ae2c83958c8ca667d90a6bffdbfac061"
+      },
+      "adult-source/Animation-README.txt": {
+        "bytes": 702,
+        "sha256": "ccd02718886b5a57f10f0a8911a38cfe10c36880e1d6dfa3445923fba32d2a72"
+      },
+      "adult-source/License_Standard.txt": {
+        "bytes": 728,
+        "sha256": "2202cc2f608c4210790b112e5f121bc2e7f8dced7b5b1c7f4be6203461bdebbb"
+      },
+      "adult-source/Male_Ranger.bin": {
+        "bytes": 1746884,
+        "sha256": "5bbb0d42cb324c6c27ce00417e68a876d92978f07d161f83590f0d7c0570eff6"
+      },
+      "adult-source/Male_Ranger.gltf": {
+        "bytes": 41447,
+        "sha256": "e1033a212332d84d98c19bc4927c621635478d0aa15d13c79da68d3ba9e0196f"
+      },
+      "adult-source/Readme.txt": {
+        "bytes": 311,
+        "sha256": "2f87579c277cde1e1ddbd4b8d823bed618728781cb6597b4dee3978c589ff5c4"
+      },
+      "adult-source/T_Ranger_BaseColor.png": {
+        "bytes": 6630927,
+        "sha256": "846ef2170b04ee584ad83bb8a1e86dab57a9a43b1193204505912c274d949925"
+      },
+      "adult-source/T_Regular_Male_Dark_BaseColor.png": {
+        "bytes": 1316151,
+        "sha256": "b4dcc0f4139aab548d7c070c4655bd2080ef16caeaaabee6c4aeb693c524e802"
+      },
+      "adult-source/UAL1_Standard.glb": {
+        "bytes": 7618436,
+        "sha256": "69591853d817488edaa8fd9bf8fc1d821eaeaf789f8627b3cd23b41c4ed67997"
+      },
+      "adult-source/UAL2-License.txt": {
+        "bytes": 332,
+        "sha256": "6d01f55c6e4c49a2c9963e147e561945ae2c83958c8ca667d90a6bffdbfac061"
+      },
+      "adult-source/UAL2_Standard.glb": {
+        "bytes": 8091444,
+        "sha256": "8cee20ab1bc55130092447e810e26df22dd2803eccc54f52137a7d54d7ab88a8"
+      },
+      "adult-source/base/License_Standard.txt": {
+        "bytes": 806,
+        "sha256": "0f4beaf0fe360a7732e58bbe3dbf60a2422367fbea60cb9ea4add968f383268e"
+      },
+      "adult-source/base/Superhero_Male_FullBody.bin": {
+        "bytes": 720076,
+        "sha256": "459003f9745853ae562a85506a2b94dd56515c1f37728f9fa3d2ce1a3e4cd92f"
+      },
+      "adult-source/base/Superhero_Male_FullBody.gltf": {
+        "bytes": 30989,
+        "sha256": "e7fcea214ecf8855afbf910b50de6f9c7d1decfb71ca28bad8a4481452dafeb4"
+      },
+      "adult-source/base/T_Eye_Brown.png": {
+        "bytes": 35958,
+        "sha256": "d08e3356a83211bc6ca21fe3a8e39f4b5c1a3b8f85457fc2c0fb57be09935025"
+      },
+      "adult-source/base/T_Hair_1_BaseColor.png": {
+        "bytes": 1570376,
+        "sha256": "bc7aa863bd22ab0a995cd838cceb4d3a5186ee54ee2fb0108fad85d20c057e6e"
+      },
+      "adult-source/base/T_Superhero_Male_Dark.png": {
+        "bytes": 1384380,
+        "sha256": "df680cbc1967a61e85998bfafb8f7bc0a36dd604bb3266486c4b06b1a184bb45"
+      },
+      "adult-source/mage/Male_Peasant.bin": {
+        "bytes": 674764,
+        "sha256": "e46bde795f7b69b351d322d7a5628e07131cfb48ed0afe366293f1b3f530433c"
+      },
+      "adult-source/mage/Male_Peasant.gltf": {
+        "bytes": 32681,
+        "sha256": "8f5a6cf6c1cf96e0a0f8e1a861b4245d42b7f88d44e5076da3d48f3fc52f4e76"
+      },
+      "adult-source/mage/T_Peasant_BaseColor.png": {
+        "bytes": 5055760,
+        "sha256": "a43635628d95571cd62fd4db0cc3a6ea32778b2bc02f242dda224c89d07f1ade"
+      },
+      "adult-source/mage/T_Regular_Male_Dark_BaseColor.png": {
+        "bytes": 1316151,
+        "sha256": "b4dcc0f4139aab548d7c070c4655bd2080ef16caeaaabee6c4aeb693c524e802"
+      }
+    },
+    "exact_license_files": {
+      "LICENSE-Outfits.txt": {
+        "bytes": 728,
+        "sha256": "2202cc2f608c4210790b112e5f121bc2e7f8dced7b5b1c7f4be6203461bdebbb"
+      },
+      "LICENSE-Base.txt": {
+        "bytes": 806,
+        "sha256": "0f4beaf0fe360a7732e58bbe3dbf60a2422367fbea60cb9ea4add968f383268e"
+      },
+      "LICENSE-Animations.txt": {
+        "bytes": 332,
+        "sha256": "6d01f55c6e4c49a2c9963e147e561945ae2c83958c8ca667d90a6bffdbfac061"
+      }
+    },
+    "runtime_glb_sha256": "85212ab8c6622f6b1839154335fbd17932e603b412c8d568eab0893fa0bd122b",
+    "runtime_glb_bytes": 3846200,
+    "actual_gltf_triangles": 17612,
+    "commercial_use_and_modification": "CC0 1.0 Universal; exact packaged license files verified",
+    "import": "Godot pinned version, same resource paths; extracted PNG imports use lossy mode 1"
+  }
+}

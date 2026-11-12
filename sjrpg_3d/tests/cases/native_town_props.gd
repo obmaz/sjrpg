@@ -43,10 +43,10 @@ func _check_geometry(entry: Dictionary, expected_triangles: int, expected_surfac
 
 
 func _preview_material(key: String) -> Material:
-	return (_current_preview._town_props as NativeTownProps3D)._materials[key]
+	return (_current_preview._town_props as TownPropRenderer3D)._materials[key]
 
 
-var _current_preview: Ortho3DPreview
+var _current_preview: WorldRenderer3D
 
 
 func run() -> void:
@@ -56,32 +56,32 @@ func run() -> void:
 	game.set_process(false)
 	game.player.set_process(false)
 	game.encounters.set_process(false)
-	var preview: Ortho3DPreview = game.ortho_preview
-	_current_preview = preview
-	var props: NativeTownProps3D = preview._town_props
+	var renderer: WorldRenderer3D = game.world_renderer
+	_current_preview = renderer
+	var props: TownPropRenderer3D = renderer._town_props
 	props.sync()
 	var fountain: IsoSprite = game.village.fountain
 	var fountain_polygon := fountain.atlas_polygon(game.village.data["frames"]["pool"]["ground"])
 	var footprint_before := fountain_polygon.duplicate()
 	check("native fountain and every forest warp role replace their own source only", props.owns(fountain) and props._entries.size() == game.village.portal_sprites.size() + 1)
 	var fountain_entry: Dictionary = props._entries[fountain.get_instance_id()]
-	_check_geometry(fountain_entry, 3932, 3, NativeTownProps3D.FOUNTAIN_SIZE)
+	_check_geometry(fountain_entry, 3932, 3, TownPropRenderer3D.FOUNTAIN_SIZE)
 	var portal: IsoSprite = game.village.portal_sprites["town"]
 	var portal_entry: Dictionary = props._entries[portal.get_instance_id()]
-	_check_geometry(portal_entry, 1883, 4, NativeTownProps3D.PORTAL_SIZE)
+	_check_geometry(portal_entry, 1883, 4, TownPropRenderer3D.PORTAL_SIZE)
 	var mote: MultiMeshInstance3D = portal_entry["motes"]
-	check("portal uses one bounded shared mote mesh", mote.multimesh.instance_count == NativeTownProps3D.MOTE_COUNT and mote.multimesh.mesh == props._mote_mesh)
+	check("portal uses one bounded shared mote mesh", mote.multimesh.instance_count == TownPropRenderer3D.MOTE_COUNT and mote.multimesh.mesh == props._mote_mesh)
 	var centre := _centre(fountain_polygon)
-	var expected := Ortho3DPreview.ground_position(centre, preview.surface_height(centre))
-	check("fountain uses measured base centre rather than its front source-foot pivot", (fountain_entry["root"] as Node3D).position.is_equal_approx(expected) and not expected.is_equal_approx(Ortho3DPreview.ground_position(fountain.position)))
-	preview._affordances.sync()
+	var expected := WorldRenderer3D.ground_position(centre, renderer.surface_height(centre))
+	check("fountain uses measured base centre rather than its front source-foot pivot", (fountain_entry["root"] as Node3D).position.is_equal_approx(expected) and not expected.is_equal_approx(WorldRenderer3D.ground_position(fountain.position)))
+	renderer._affordances.sync()
 	for source in game.village.portal_sprites.values():
-		check("a native gate has no duplicate fallback art card", props.owns(source) and not preview._affordances._art.has(source.get_instance_id()))
+		check("a native gate has no duplicate fallback art card", props.owns(source) and not renderer._affordances._art.has(source.get_instance_id()))
 	var clock := _phase(fountain)
 	clock._process(0.2)
 	props.sync()
 	var ink: ShaderMaterial = fountain_entry["fluid"]
-	check("fountain water reuses the actual original 2D fountain pixels",ink.get_shader_parameter("legacy_water")==load("res://assets/art/village/remake-pool.webp"))
+	check("fountain water reuses the actual original 2D fountain pixels",ink.get_shader_parameter("legacy_water")==load("res://assets/sprites/village/remake-pool.webp"))
 	var region: Vector4 = ink.get_shader_parameter("water_region")
 	check("water UVs sample only a bounded portion of the original image",region.x>0.0 and region.y>0.0 and region.z>0.0 and region.w>0.0 and region.z<0.2 and region.w<0.2 and region.x+region.z<1.0 and region.y+region.w<1.0)
 	check("native water follows the original source clock", is_equal_approx(float(ink.get_shader_parameter("phase")), clock.phase))

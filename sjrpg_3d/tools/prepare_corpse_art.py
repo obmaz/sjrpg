@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
-    image = Image.open(ROOT / 'assets/source/corpses.png').convert('RGBA')
+    image = Image.open(ROOT / 'assets/source/effects/corpses/corpses.png').convert('RGBA')
     atlas = Image.new('RGBA', (1280, 256))
     for index in range(5):
         cell = image.crop((index * image.width // 5, 0,
@@ -20,7 +20,7 @@ def main():
         body.thumbnail((232, 210), Image.Resampling.LANCZOS)
         atlas.paste(body.convert('RGBA'), (index * 256 + (256 - body.width) // 2,
                                         (256 - body.height) // 2))
-    target = ROOT / 'assets/art/actors/corpses.webp'
+    target = ROOT / 'assets/sprites/actors/corpses.webp'
     temporary = target.with_suffix('.tmp')
     atlas.save(temporary, 'WEBP', quality=94, alpha_quality=100, exact=True)
     temporary.replace(target)

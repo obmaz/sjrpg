@@ -7,8 +7,8 @@ func run() -> void:
 	game.player.set_process(false)
 	game.encounters.set_process(false)
 	game._spawn_timer = 1000000.0
-	var frame := NativeCaveTrail.frame(game.village)
-	var points := NativeCaveTrail.points(game.village)
+	var frame := CaveTrailPlan3D.frame(game.village)
+	var points := CaveTrailPlan3D.points(game.village)
 	var start: Vector2 = game.village.sanctuary_points["cave"]
 	var expected := SpatialWorld3D.projected(frame * Vector3(points[5].x, 0, points[5].y))
 	check(
@@ -35,11 +35,11 @@ func run() -> void:
 	check(
 		"four actual signs guide both the field route and waypoint approach",
 		(
-			NativeCaveTrail.signs(game.village).size() == 4
+			CaveTrailPlan3D.signs(game.village).size() == 4
 			and (
 				(
 					game
-					. ortho_preview
+					. world_renderer
 					. _world_environment
 					. forest
 					. find_children("CaveTrailSign*", "Node3D", true, false)
@@ -84,7 +84,7 @@ func run() -> void:
 			and game.spatial_world.height_at(game.player.position) < -3.0
 		)
 	)
-	var ground: MeshInstance3D = game.ortho_preview._forest_stage.find_child(
+	var ground: MeshInstance3D = game.world_renderer._forest_stage.find_child(
 		"NativeNaturalGround", true, false
 	)
 	check(

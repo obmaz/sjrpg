@@ -42,9 +42,9 @@ jobs:
                   report = json.loads(Path("build/texture-compression-review/after/texture-compression.json").read_text())
                   ref = report["ref"]
                   paths = ["sjrpg_3d/scripts", "sjrpg_3d/scenes", "sjrpg_3d/project.godot", "sjrpg_3d/export_presets.cfg",
-                           "sjrpg_3d/assets/data", "sjrpg_3d/assets/art", "sjrpg_3d/tools/texture_policy.py",
+                           "sjrpg_3d/assets/data", "sjrpg_3d/assets/models", "sjrpg_3d/assets/materials", "sjrpg_3d/assets/ui", "sjrpg_3d/assets/sprites", "sjrpg_3d/assets/effects", "sjrpg_3d/tools/texture_policy.py",
                            "sjrpg_3d/tools/check_texture_compression.mjs", "sjrpg_3d/tools/review/texture_compression_observer.gd",
-                           ":(exclude,glob)sjrpg_3d/assets/art/**/*.import"]
+                           ":(exclude,glob)sjrpg_3d/assets/**/*.import"]
                   subprocess.run(["git","diff","--exit-code",ref,"HEAD","--",*paths],check=True)
                   print("TEXTURE_CAPTURE_SOURCE_MATCH " + ref)
                   PY

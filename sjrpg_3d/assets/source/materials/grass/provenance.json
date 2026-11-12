@@ -3,7 +3,7 @@
   "tile_metres": 2.56,
   "images": [
     {
-      "path": "assets/models/materials/grass/grass-0.png",
+      "path": "assets/materials/grass/grass-0.png",
       "sha256": "961b0bbe0defa1fb2571148cb68c1f8cd8269012ddb15841b1a4446c3e72abab",
       "bytes": 3371717,
       "original": "original-0.png",
@@ -16,7 +16,7 @@
       ]
     },
     {
-      "path": "assets/models/materials/grass/grass-1.png",
+      "path": "assets/materials/grass/grass-1.png",
       "sha256": "dcab5de2ad4595bd1f0782701ad72939de4fceb804e3ddca9185bc8b2a55a90b",
       "bytes": 3511257,
       "original": "original-1.png",
@@ -29,7 +29,7 @@
       ]
     },
     {
-      "path": "assets/models/materials/grass/grass-2.png",
+      "path": "assets/materials/grass/grass-2.png",
       "sha256": "2035d84422a21b4921793390b264a0fb903cc8b27a7d685dee01bbacdefb9bff",
       "bytes": 3495855,
       "original": "original-2.png",
@@ -42,7 +42,7 @@
       ]
     },
     {
-      "path": "assets/models/materials/grass/grass-3.png",
+      "path": "assets/materials/grass/grass-3.png",
       "sha256": "1d18263511e507cdc4eda46ff2f8031a1b397243f6f89ead414f11d2a4a677a0",
       "bytes": 3470121,
       "original": "original-3.png",
@@ -55,7 +55,7 @@
       ]
     },
     {
-      "path": "assets/models/materials/grass/grass-4.png",
+      "path": "assets/materials/grass/grass-4.png",
       "sha256": "27092681bbed6fcb47b2ddce03fd2f41accaf31fbe7753ca99ae4408ba4aee59",
       "bytes": 3011501,
       "original": "original-4.png",
@@ -68,7 +68,7 @@
       ]
     },
     {
-      "path": "assets/models/materials/grass/grass-5.png",
+      "path": "assets/materials/grass/grass-5.png",
       "sha256": "bb752ff4ce7d9d1fa1e3b015db7063d146d0bbe34c21492f90d359cc8dc92f7c",
       "bytes": 3717651,
       "original": "original-5.png",
@@ -81,7 +81,7 @@
       ]
     },
     {
-      "path": "assets/models/materials/grass/grass-6.png",
+      "path": "assets/materials/grass/grass-6.png",
       "sha256": "a16e4ac798d1be1cd2dc56cdb7db8c2a2986e83717aff9e2ac658eb509031a4f",
       "bytes": 3442699,
       "original": "original-6.png",
@@ -94,7 +94,7 @@
       ]
     },
     {
-      "path": "assets/models/materials/grass/grass-7.png",
+      "path": "assets/materials/grass/grass-7.png",
       "sha256": "f64cc5601ad41660a35fd962b3d90bfc52fba976dfcde3cbcdc9625ccd4b79b2",
       "bytes": 3570758,
       "original": "original-7.png",
@@ -107,7 +107,7 @@
       ]
     },
     {
-      "path": "assets/models/materials/grass/grass-8.png",
+      "path": "assets/materials/grass/grass-8.png",
       "sha256": "f3e85e9f2394f4582b220482a726a50ead983272c8184e4bf52cf9c078043f33",
       "bytes": 3589532,
       "original": "original-8.png",
@@ -120,7 +120,7 @@
       ]
     },
     {
-      "path": "assets/models/materials/grass/grass-9.png",
+      "path": "assets/materials/grass/grass-9.png",
       "sha256": "a5ac2183329bb1793e76496c6f030c05f7aa0573c36b558bc17e07abf6f4f9f0",
       "bytes": 3366161,
       "original": "original-9.png",

@@ -27,7 +27,7 @@
   }
  ],
  "texture": {
-  "path": "assets/art/village/portcullis.webp",
+  "path": "assets/sprites/village/portcullis.webp",
   "sha256": "f76cf0ea7674901d82f646499be693e725cf2fe8cfe1b92fd0c1a47b42e08719",
   "size": [
    512,

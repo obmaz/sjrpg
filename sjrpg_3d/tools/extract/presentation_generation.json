@@ -8,13 +8,13 @@
    "original": "/workspace/generated_images/exec-30a838bd-9bde-404c-9f1f-f1c99266f587.png",
    "references": [
     "assets/source/style/approved-game-reference.jpg",
-    "assets/art/hud/reference-buttons.webp"
+    "assets/ui/hud/reference-buttons.webp"
    ],
    "transparent_background": true,
    "prompt": "Create a production HUD trim atlas for the supplied realistic forest-fantasy RPG reference. The FIRST image is the authoritative game UI style: refined, restrained antique bronze and very thin cool silver/blue-white skill bezels. The SECOND image shows the existing physical materials and menu finish. Match them as one coherent family, do not redesign the screen layout.\nONE SQUARE ATLAS, exact 2x2 equal cell grid, four separated isolated elements on real transparent alpha. NO labels/text/numbers/UI mockup, no background, no gridlines, no full screen. All cells have generous clear margins; never bleed across cells.\nTOP LEFT: perfectly round active-skill metal bezel, front orthographic view, delicate layered brushed silver rim, inner dark gunmetal edge and faint ice-blue light trapped along the metal. A THIN physical ring, thickness about4percent of its outside diameter, no crown/spikes/gems. Center hole completely transparent, exterior transparent, almost no outside halo. Outer diameter about82percent of cell width, centered precisely.\nTOP RIGHT: perfectly round EMPTY SKILL socket rim in dark oxidized bronze, fine quiet leaf/rune etching, thin double bevel, same centered diameter82percent, transparent center hole, transparent outside. No plus sign or central symbol. It will overlay a separate translucent dark disc, so do not paint the middle.\nBOTTOM LEFT: perfectly round MINIMAP ring of softly aged muted bronze, finely chamfered lit edge with shallow engraved tiny ticks, understated realistic metal, thin physical band about3percent of outer diameter, centereddiameter82percent. Center and exterior transparent. No compass needle, no symbols protruding beyond circle.\nBOTTOM RIGHT: a single small TOP-LEFT panel corner bracket made from the SAME softly aged bronze. L-shaped fine metal strip with restrained leaf engraving and one small rivet. No full frame or plate; interior/background transparent. It will be mirrored to the other3corners. Keep its shape confined to a compact centeredsquare withclear margins; fine understated detail, no giant baroque filigree.\nGame-ready alpha edges, crisp detail readable when reduced to80–180pixels. No broad glow, no flat yellow/gold border, no thick cartoon outline. Soft neutral highlights on metal only. No black shadowplate. Do not include game scene/HUD text or phone navigation fromreference. Do not render black centers; all holes must be truly transparent."
   },
   {
-   "output": "assets/source/hud-trim.png",
+   "output": "assets/source/ui/hud-trim.png",
    "original": "/workspace/generated_images/exec-6c617ff7-3860-4bff-927c-78a0b3d8aa0b.png",
    "references": [
     "assets/source/style/hud-trim-design.png",
@@ -28,7 +28,7 @@
    "original": "/workspace/generated_images/exec-d7205cbd-cc28-46da-a841-045e586b5aca.png",
    "references": [
     "assets/source/style/approved-game-reference.jpg",
-    "assets/source/impact-atlas.png"
+    "assets/source/effects/combat/impact-atlas.png"
    ],
    "transparent_background": true,
    "prompt": "Production ANIMATED COMBAT EFFECT SPRITE ATLAS, matching the supplied realistic forest-fantasy RPG reference and existing elemental impact family. FIRST reference is authoritative mood and delicate white-blue/golden magic style; SECOND reference existing four-element contacts. Improve their texture and temporal shape, avoid opaque round smoke clouds. Preserve readable target silhouettes.\nONE SQUARE IMAGE divided into a PRECISE4columns x4rows equal cell grid with NO visible borders/labels. Each cell holds one isolated effect on genuine transparent alpha; large consistent clear gutters. All animation cells perfectly center-registered at their own cell center, same scale/camera across the row, no character/terrain/UI.\nROWS TOP TO BOTTOM:\nRow1 PHYSICAL: compact directional silver-steel crescent contact and tiny warm gold sparks, crisp restrained slash chips, no blood, no full circular blast.\nRow2 FIRE: bright small white-hot amber core, sculpted curling orange flame wisps and separated embers, no brown opaque smoke or black cloud.\nRow3 LIGHTNING: brilliant fine blue-white branching electrical arcs with tiny warm white-gold glints; no purple fog or opaque colored background.\nRow4 FROST: sharp transparent icy silver-blue splinters, small snow crystals, clean fine cold wisps, no solid cloudy disc.\nCOLUMNS LEFT TO RIGHT are4 successive frames of the SAME row's event:1 immediate compact bright contact (~40percentcellwidth),2 energetic peak branching/crescent/flame/shards (~75percentwidth),3 expanding separated fragments (~80percentwidth) and receding core,4 sparse fading small embers/glints/crystals (~65percentwidth). Frame4 still has enough fine visible particles to read when scaled down. No looping back to peak. Each frame differs naturally in structure; do not repeat static identical blobs. Same contactcenter in everyframe, no sliding around the atlas. Lighting self-emissive, cinematic material realism with restrained fine details, elegant magic like the gameplayreference. No big neon rings, no flat geometric symbols, no diffuse square glow plate, no stars scattered outsidecells. Leave outer10percentpaddingeachcellfullyclear topreventtexturebleeding. No words, no logos, no UI/buttons, no phone navigation. This will be played at0.22–0.28seconds for real hits; use crisp momentarybrightcore and fine disappearing motion rather than a full-screen flash."
@@ -39,27 +39,27 @@
    "references": [
     "assets/source/style/combat-frames-design.png",
     "assets/source/style/approved-game-reference.jpg",
-    "assets/source/impact-atlas.png"
+    "assets/source/effects/combat/impact-atlas.png"
    ],
    "transparent_background": true,
    "prompt": "REMOVE BACKGROUND from FIRST IMAGE ONLY. Preserve the existing precise4x4animatedeffectgrid andtheexistingphysical/fire/lightning/frostspritesinsideeachcell. Currentimagehasawhite/graysemi-opaquecloudymattethroughouttheentirecanvas. This is NOT partofthespells. EraseALLofthatbackgroundsoemptyareasareGENUINEFULLYTRANSPARENTALPHA0. Retainonlythesharpactualsteelcrescent/sparks, amberflamesandembers, blue-whiteelectricalarcs, icysplintersandsnowcrystals. Keepverysmalllocalizedself-emissiononlyonthevisibleparticles. NO diffusegraysmokecloud, NO squarecellglow, NOopaqueplate, NO milkywhite haze. IntransparentregionsbetweenallparticlesandalongEVERYcellborder,alphaMUSTbe0. Do not repainteffectshapesorchangegrid/registration/colors/canvas; performcleanprecisealphamattingonly. Secondimageoriginalgameartreferenceandthirdexistingfamilyforcolor/stylecontext. Outputonlysame4x4spritesasrealtransparentPNG, nopaintedcheckerboardorwhite/blackbackground."
   },
   {
-   "output": "assets/source/combat-frames.png",
+   "output": "assets/source/effects/combat/combat-frames.png",
    "original": "/workspace/generated_images/exec-c8f94d17-fba2-49ec-a9a3-08cfbe2aa80f.png",
    "references": [
     "assets/source/style/combat-frames-matte.png",
     "assets/source/style/approved-game-reference.jpg",
-    "assets/source/impact-atlas.png"
+    "assets/source/effects/combat/impact-atlas.png"
    ],
    "transparent_background": false,
    "prompt": "Production VFX BACKGROUND CORRECTION ONLY on FIRSTIMAGE. Preserve the exact4x4grid, all sixteen existing effect shapes, registration and colors. Replace ALL white/gray cloudy matte with PERFECTLY UNIFORM PURE BLACK RGB(0,0,0), fullyopaque. This is a standard additive-blend game sprite atlas: pureblack means no emittedlight; ANY gray background creates an unwanted luminous rectangular plate. So everyemptyspacebetweenparticles, every cell's outerpadding, everycanvascorner andborder MUST be absolutelyblack, no grayhaze, no gradient, no filmgrain/noise. Keep ONLY theexisting luminous contactcrescent/sparks, fireflames/embers, blue-whiteelectricalarcs, icecrystals from FIRSTimage on thatblack. No smoke clouds or diffusefullcellglow. Keep fine short glowslocalizedonparticlesonly. Do NOT addblackshadowsaroundparticles; the entireemptybackgroundisflatblack. Do NOT changegrid/pose/scale/colors, doNOTcopyscene/HUD fromSECONDreference. Thirdoldfamilyreferenceformaterial. Outputone4x4ATLAS onpureblackbackground, noalpha-matteestimation, no labels/frame. Allblackareaswillbecomeinvisibleatadditivecompositing."
   },
   {
-   "output": "assets/source/map-rim.png",
+   "output": "assets/source/ui/map-rim.png",
    "original": "/workspace/generated_images/exec-139bacf4-0cea-4359-bbf9-62274ad9c288.png",
    "references": [
-    "assets/source/hud-trim.png",
+    "assets/source/ui/hud-trim.png",
     "assets/source/style/approved-game-reference.jpg"
    ],
    "transparent_background": true,

@@ -110,7 +110,7 @@ def main():
         edges = [{**edge, 'axis': edge['render_axis']} for edge in record['actual_source_segments']]
         axis_records.append(dict(id=key, kind='sprite', key=key, source_file=record['gate']['png'],
                                  source_rect=None, source_size=record['source_size'],
-                                 render_file='assets/art/village/gates.webp', space='native',
+                                 render_file='assets/sprites/village/gates.webp', space='native',
                                  edges=edges, baked_warp=key))
     for direction in ('a', 'b'):
         edges = []
@@ -119,7 +119,7 @@ def main():
             edges.append({**edge, 'axis': -expected if direction == 'b' and expected != 90 else expected})
         axis_records.append(dict(id='wall-' + direction, kind='wall', key=direction,
                                  source_file=wall['output'], source_rect=None, source_size=[width, height],
-                                 render_file='assets/art/village/walls.webp', space='native', edges=edges,
+                                 render_file='assets/sprites/village/walls.webp', space='native', edges=edges,
                                  baked_warp='wall-a', mirror_x=direction == 'b'))
     join = dict(_doc='Independent new-source wing base/coping/front lower bevel measurements. '
                     'Collision/passages are preserved separately; opposite cap planes are distinct.',

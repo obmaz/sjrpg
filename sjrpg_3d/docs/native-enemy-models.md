@@ -26,7 +26,7 @@
 
 ## 게임과 표시의 연결
 
-`NativeEnemyModels`는 게임 상태를 읽는 표시 어댑터입니다. `NativeEnemyAssets`는 종별 `visual.tscn`을 캐시하며 `NativeEnemyVisual`이 GLB의 `AnimationPlayer`를 수동 시계로 샘플링합니다. `asset.json`은 실제 클립 이름·길이·타격 시각·높이·사망 접지·몸통 기준 뼈·공격 기준 뼈를 보관합니다. 존재하지 않는 제어 뼈 이름을 런타임 마커로 쓰지 않습니다.
+`EnemyRenderer3D`는 게임 상태를 읽는 표시 어댑터입니다. `NativeEnemyAssets`는 종별 `visual.tscn`을 캐시하며 `NativeEnemyVisual`이 GLB의 `AnimationPlayer`를 수동 시계로 샘플링합니다. `asset.json`은 실제 클립 이름·길이·타격 시각·높이·사망 접지·몸통 기준 뼈·공격 기준 뼈를 보관합니다. 존재하지 않는 제어 뼈 이름을 런타임 마커로 쓰지 않습니다.
 
 기존 준비/회복 진행도0.60이 실제 피해 판정 시점입니다. 표시기는 클립별 `contact_time`을 이 시점에 맞추고 마지막에 같은 idle로 돌아갑니다. 보행은 `Enemy._run_distance_m`의 실제 자력 이동 XZ 거리를 모델별 `locomotion.distance_curve`로 역보간해 GLB 시각에 연결합니다. 한 클립 평균 보폭만 맞추지 않고 접지 중 발의 속도 변화까지 반영합니다. 화면 픽셀 거리와 무관하며 보스의 균일 확대는 보폭도 늘립니다. 밀침·순간이동은 보폭에 더하지 않고 벽에 막히거나 일시정지하면 진행하지 않습니다. root motion으로 물리를 이동시키지 않습니다. idle은 전달된 delta로 진행하고 일시정지·개별 hitstop 때 고정합니다. 화면 밖 모델은 포즈·색·그림자 갱신을 생략합니다. 피격은 씬의 `HitPivot` 전체에 적용하며 실제 캡슐·발 위치는 옮기지 않습니다.
 
@@ -43,11 +43,11 @@ Blender4.3.2로 원본의 실제 월드 변화를 미터/FK 골격에 구워30fp
 저장소 루트에서 실행합니다. Blender와 스켈레톤용 변환기를 설치한 뒤에는 재현 과정에 네트워크나 유료 서비스가 필요하지 않습니다.
 
 ```sh
-python3 sjrpg_3d/tools/enemy_art/rebuild.py --kind boar
-python3 sjrpg_3d/tools/enemy_art/rebuild.py --kind golem
-python3 sjrpg_3d/tools/enemy_art/rebuild.py --kind cave_crawler
-SJRPG_FBX2GLTF=/absolute/path/FBX2glTF python3 sjrpg_3d/tools/enemy_art/rebuild.py --kind skeleton
-sjrpg_3d/tools/godot.sh --headless res://tools/enemy_art/measure_stride.tscn -- --write
+python3 sjrpg_3d/tools/assets/enemies/rebuild.py --kind boar
+python3 sjrpg_3d/tools/assets/enemies/rebuild.py --kind golem
+python3 sjrpg_3d/tools/assets/enemies/rebuild.py --kind cave_crawler
+SJRPG_FBX2GLTF=/absolute/path/FBX2glTF python3 sjrpg_3d/tools/assets/enemies/rebuild.py --kind skeleton
+sjrpg_3d/tools/godot.sh --headless res://tools/assets/enemies/measure_stride.tscn -- --write
 python3 sjrpg_3d/tools/check_enemy_assets.py
 ```
 
@@ -65,9 +65,9 @@ python3 sjrpg_3d/tools/check_enemy_assets.py
 
 다른 AI/제작자는 자기 종 폴더의 GLB·씬·manifest와 대응 소스만 교체합니다. 게임 코드의 종 등록과 전투 규칙은 통합 담당자가 다룹니다. 새 렌더 계약이나 클립 역할을 바꿀 때만 공용 표시기를 함께 수정합니다.
 
-`tools/preview3d/render_enemy_pilot.tscn`은 종별 네 방향과 idle/run/attack/death를 같은 광원·직교 카메라로 촬영합니다. `--kinds=boar,skeleton,golem,cave_crawler --label=after`로 범위를 고를 수 있습니다. 실제 브라우저 가로/세로·타격·지역 전환도 확인하며 일회성 비교·측정은 루트 `build/`에 둡니다. 격리된 렌더나 헤드리스 검사만으로 스타일·실기기 성능이 승인됐다고 판단하지 않습니다.
+`tools/review/models/render_enemy_pilot.tscn`은 종별 네 방향과 idle/run/attack/death를 같은 광원·직교 카메라로 촬영합니다. `--kinds=boar,skeleton,golem,cave_crawler --label=after`로 범위를 고를 수 있습니다. 실제 브라우저 가로/세로·타격·지역 전환도 확인하며 일회성 비교·측정은 루트 `build/`에 둡니다. 격리된 렌더나 헤드리스 검사만으로 스타일·실기기 성능이 승인됐다고 판단하지 않습니다.
 
-보행 측정은 `tools/godot.sh --headless res://tools/enemy_art/measure_stride.tscn -- --write --kinds=boar,cave_crawler`처럼 종을 지정할 수 있습니다. 지정하지 않으면 전체를 측정하며 독립 모델 교체에서는 자기 종만 갱신합니다.
+보행 측정은 `tools/godot.sh --headless res://tools/assets/enemies/measure_stride.tscn -- --write --kinds=boar,cave_crawler`처럼 종을 지정할 수 있습니다. 지정하지 않으면 전체를 측정하며 독립 모델 교체에서는 자기 종만 갱신합니다.
 
 일반 적의 공격 준비는 실제 타이머를 읽는 작은 황금색 게이지로 표시합니다. 로컬 검수는 `tools/screenshot.mjs --scene enemy_wolf|enemy_goblin|enemy_skeleton`으로 실제 AI의 준비 순간을 확인합니다. 표시·중단·일시정지와 자원 재사용 계약은 [타격감](juice.md)을 따릅니다.
 

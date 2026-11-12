@@ -37,10 +37,10 @@ func run() -> void:
 		"native cave retains the actual guide generator and reused albedo provenance", sources_match
 	)
 	var game := await make_game("mage")
-	var preview: Ortho3DPreview = game.ortho_preview
-	var environment: Ortho3DEnvironment = preview._world_environment
+	var renderer: WorldRenderer3D = game.world_renderer
+	var environment: EnvironmentRenderer3D = renderer._world_environment
 	var settings: Environment
-	for child in preview.stage.get_children():
+	for child in renderer.stage.get_children():
 		if child is WorldEnvironment:
 			settings = (child as WorldEnvironment).environment
 	var outdoor_energy := settings.ambient_light_energy
@@ -105,7 +105,7 @@ func run() -> void:
 		"return portal retains its original anchor and native source ownership",
 		(
 			metadata["native_props"].has(return_portal.get_instance_id())
-			and preview._town_props.owns(return_portal)
+			and renderer._town_props.owns(return_portal)
 			and not metadata["retained"].has(return_portal.get_instance_id())
 			and not metadata["replaced"].has(return_portal.get_instance_id())
 			and return_portal.position.is_equal_approx(portal_anchor)
@@ -143,7 +143,7 @@ func run() -> void:
 			var surface_material := node.mesh.surface_get_material(surface)
 			var inner := surface_material == material
 			valid = valid and (inner or surface_material == outer_material)
-			var tile := Ortho3DCaveRock.TILE_METRES if inner else Ortho3DCaveRock.OUTER_TILE_METRES
+			var tile := CaveWallGeometry3D.TILE_METRES if inner else CaveWallGeometry3D.OUTER_TILE_METRES
 			var arrays := node.mesh.surface_get_arrays(surface)
 			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 			var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
@@ -243,7 +243,7 @@ func run() -> void:
 	check("real rock toes and shared corners meet the native collision inset", toes_match)
 	check(
 		"front cutaways keep combat readable while rear walls retain real volume",
-		int(rock["front_cutaways"]) > 0 and Ortho3DCaveRock.OUTER_DEPTH >= 1.0
+		int(rock["front_cutaways"]) > 0 and CaveWallGeometry3D.OUTER_DEPTH >= 1.0
 	)
 	game.player.set_process(false)
 	game.spatial_world.sync_scope()
@@ -263,7 +263,7 @@ func run() -> void:
 		var stopped: Vector2 = game.spatial_world.move_actor(from, to, Player.RADIUS)
 		var native := Iso.unproject(stopped) / SpatialWorld3D.UNITS
 		var limit := (
-			-SpatialWorld3D.radius_metres(Player.RADIUS) - Ortho3DCaveRock.COLLISION_INSET + 0.015
+			-SpatialWorld3D.radius_metres(Player.RADIUS) - CaveWallGeometry3D.COLLISION_INSET + 0.015
 		)
 		collision_match = collision_match and (native - middle).dot(outward) <= limit
 		# A missing floor alone also stops the motor. Independently hit the
@@ -292,7 +292,7 @@ func run() -> void:
 					absf(
 						(
 							(Vector2(position.x, position.z) - middle).dot(outward)
-							+ Ortho3DCaveRock.COLLISION_INSET
+							+ CaveWallGeometry3D.COLLISION_INSET
 						)
 					)
 					< 0.01
@@ -316,7 +316,7 @@ func run() -> void:
 	check(
 		"cave lighting gives the entry its own neutral support",
 		(
-			is_equal_approx(settings.ambient_light_energy, Ortho3DEnvironment.CAVE_AMBIENT)
+			is_equal_approx(settings.ambient_light_energy, EnvironmentRenderer3D.CAVE_AMBIENT)
 			and environment._cave_entry_light.position.distance_to(Vector3(0, 2.3, 0)) < 1.0
 		)
 	)
@@ -345,7 +345,7 @@ func run() -> void:
 	await _frames(2)
 
 
-func _check_floor_surfaces(environment: Ortho3DEnvironment, layout: DungeonLayout) -> void:
+func _check_floor_surfaces(environment: EnvironmentRenderer3D, layout: DungeonLayout) -> void:
 	var node := environment.cave.get_node_or_null("CaveFloor") as MeshInstance3D
 	check("cave floor is one cached union mesh", node != null and node.mesh == layout.relief.mesh())
 	if node == null:
@@ -373,7 +373,7 @@ func _check_floor_surfaces(environment: Ortho3DEnvironment, layout: DungeonLayou
 	check(
 		"walkable floor remains lit without emission and retains its existing shader entry point",
 		(
-			shared.shader.resource_path == "res://scripts/native_cave_floor.gdshader"
+			shared.shader.resource_path == "res://assets/materials/cave/floor.gdshader"
 			and not shared.shader.code.contains("unshaded")
 			and not shared.shader.code.contains("EMISSION")
 		)
@@ -390,7 +390,7 @@ func _check_variants(material: ShaderMaterial, kind: String) -> void:
 	)
 	for index in 6:
 		var texture: Texture2D = material.get_shader_parameter("surface_%d" % index)
-		var path := "res://assets/models/materials/cave/" + kind + "/" + kind + "-%d.png" % index
+		var path := "res://assets/materials/cave/" + kind + "/" + kind + "-%d.png" % index
 		var hash := FileAccess.get_sha256(path)
 		hashes[hash] = true
 		valid = (

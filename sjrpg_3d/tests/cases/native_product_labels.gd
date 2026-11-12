@@ -19,7 +19,7 @@ func _technical_text(node: Node) -> PackedStringArray:
 
 func run() -> void:
 	var game := await make_game("mage")
-	var preview: Ortho3DPreview = game.ortho_preview
+	var renderer: WorldRenderer3D = game.world_renderer
 	check(
 		"forest gameplay has no renderer or current-edition product label",
 		_technical_text(game).is_empty()
@@ -57,13 +57,13 @@ func run() -> void:
 	var entered: bool = game.dungeon.enter()
 	check("cave entry remains available after label removal", entered)
 	if entered:
-		preview._sync_scope()
-		preview._world_environment.sync(0.0, true)
+		renderer._sync_scope()
+		renderer._world_environment.sync(0.0, true)
 		check(
 			"cave keeps its actual realm without a renderer badge",
 			(
-				preview._world_environment.cave.visible
-				and not preview._world_environment.forest.visible
+				renderer._world_environment.cave.visible
+				and not renderer._world_environment.forest.visible
 				and _technical_text(game).is_empty()
 			)
 		)
@@ -75,11 +75,11 @@ func run() -> void:
 		)
 		game.hud.close_panel()
 		game.dungeon.leave("")
-		preview._sync_scope()
-		preview._world_environment.sync(0.0, true)
+		renderer._sync_scope()
+		renderer._world_environment.sync(0.0, true)
 		check(
 			"forest return does not recreate a renderer label",
-			preview._world_environment.forest.visible and _technical_text(game).is_empty()
+			renderer._world_environment.forest.visible and _technical_text(game).is_empty()
 		)
 	game.queue_free()
 	await _frames(2)

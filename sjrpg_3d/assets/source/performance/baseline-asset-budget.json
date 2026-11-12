@@ -34,7 +34,7 @@
   "source_runtime_references": [],
   "largest_pack_entries": [
     {
-      "path": "assets/art/native-actors/surface-atlas.bin",
+      "path": "assets/materials/actors/surface_atlas.bin",
       "bytes": 3137948,
       "offset": 28143088,
       "md5": "2a89f948a3f8d928708c81897363fc2a",
@@ -597,7 +597,7 @@
   "source_pack_entries": [],
   "images": [
     {
-      "path": "assets/art/village/town.webp",
+      "path": "assets/sprites/village/town.webp",
       "encoded_bytes": 1269090,
       "sha256": "f501f67e6ce5807733d86619c222f1066af7aa26c6a385516d022c83a0b01bb6",
       "source_dimensions": [
@@ -627,7 +627,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/actors/wolf.webp",
+      "path": "assets/sprites/actors/wolf.webp",
       "encoded_bytes": 1892202,
       "sha256": "fdbad640405338531dc95c7eb1193b53747a9d8736ea6da30b0e0bd2cf9ada37",
       "source_dimensions": [
@@ -657,7 +657,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/actors/boar.webp",
+      "path": "assets/sprites/actors/boar.webp",
       "encoded_bytes": 1874538,
       "sha256": "e928dac467593b2185bacb1bdc04e5e4645a50d2a1629b80d945fdc56b4d1f44",
       "source_dimensions": [
@@ -687,7 +687,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/actors/mage-cast.webp",
+      "path": "assets/sprites/actors/mage-cast.webp",
       "encoded_bytes": 1563474,
       "sha256": "447a6b0da16a3724bf780e49e9953e465d1b1b9b6729a4d587d2deb525eb2ba9",
       "source_dimensions": [
@@ -717,7 +717,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/actors/mage.png",
+      "path": "assets/sprites/actors/mage.png",
       "encoded_bytes": 2394518,
       "sha256": "be63cbdf32b188bae9532f70c725e118d5a85143cb2ca997b7249043ce357b51",
       "source_dimensions": [
@@ -747,7 +747,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/actors/warrior-attack.webp",
+      "path": "assets/sprites/actors/warrior-attack.webp",
       "encoded_bytes": 1736334,
       "sha256": "debbffb32cb697ea84ac6a5e7565dc7b8a0b04b1b53492db3577afa4b8396f83",
       "source_dimensions": [
@@ -777,7 +777,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/actors/warrior.webp",
+      "path": "assets/sprites/actors/warrior.webp",
       "encoded_bytes": 1873576,
       "sha256": "477aae3fc2a57ef5fca9eea1555c2cb3e908e7c50e21d51b7c94514e0768855c",
       "source_dimensions": [
@@ -807,7 +807,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/source/hero-materials/baseline/mage-cast.webp",
+      "path": "assets/source/heroes/mage/materials/baseline/mage-cast.webp",
       "encoded_bytes": 1563474,
       "sha256": "447a6b0da16a3724bf780e49e9953e465d1b1b9b6729a4d587d2deb525eb2ba9",
       "source_dimensions": [
@@ -827,7 +827,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/hero-materials/baseline/mage.png",
+      "path": "assets/source/heroes/mage/materials/baseline/mage.png",
       "encoded_bytes": 2394518,
       "sha256": "be63cbdf32b188bae9532f70c725e118d5a85143cb2ca997b7249043ce357b51",
       "source_dimensions": [
@@ -847,7 +847,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/art/actors/golem.webp",
+      "path": "assets/sprites/actors/golem.webp",
       "encoded_bytes": 1832504,
       "sha256": "47b6f0b22c6b0b6eeae37c672fbe66cc4cea675d5d74be287d8e29b3a462b4a0",
       "source_dimensions": [
@@ -877,7 +877,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/effects/reference-skills.webp",
+      "path": "assets/effects/textures/reference-skills.webp",
       "encoded_bytes": 151896,
       "sha256": "ad99bb8d59c11d95128cac905be40d595fa3eced10528c99e2a949a9d978e71f",
       "source_dimensions": [
@@ -907,7 +907,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/actors/skeleton.webp",
+      "path": "assets/sprites/actors/skeleton.webp",
       "encoded_bytes": 1474658,
       "sha256": "db979abe09edc5718884c7c0cbef6619f8238e3dc648580aebd6cded72855c36",
       "source_dimensions": [
@@ -937,7 +937,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/actors/goblin.webp",
+      "path": "assets/sprites/actors/goblin.webp",
       "encoded_bytes": 1429192,
       "sha256": "e40ac941794cd424ac78126f382698406802bb724add1daaa9823ed5192446d5",
       "source_dimensions": [
@@ -967,7 +967,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/village/props.webp",
+      "path": "assets/sprites/village/props.webp",
       "encoded_bytes": 843984,
       "sha256": "597311244a6b422dae9d20852f912249a86815f7124d71e9a3c99e4b36fbf666",
       "source_dimensions": [
@@ -997,7 +997,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/village/landmarks.webp",
+      "path": "assets/sprites/village/landmarks.webp",
       "encoded_bytes": 745838,
       "sha256": "804e09842fb1cbd94be28bc6026093604710f8cf598f6cdcc236a8e8d2890b6e",
       "source_dimensions": [
@@ -1027,7 +1027,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/village/trees.webp",
+      "path": "assets/sprites/village/trees.webp",
       "encoded_bytes": 659286,
       "sha256": "1114952d3c6bce0955be22e528c639450ba67df3557029e68570a9bfa7051e8d",
       "source_dimensions": [
@@ -1057,7 +1057,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/hud/woodland-icons.png",
+      "path": "assets/ui/hud/woodland-icons.png",
       "encoded_bytes": 2582653,
       "sha256": "24c192d57c54030b682e03b6bb19791c72d6e32a4234db3bb87c88fe57eaca14",
       "source_dimensions": [
@@ -1087,7 +1087,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/hud/woodland-portraits.png",
+      "path": "assets/ui/hud/woodland-portraits.png",
       "encoded_bytes": 1745162,
       "sha256": "42a7a6566c48c4067984780a6753930296ee87ad7db40d8d01f55e388aac4899",
       "source_dimensions": [
@@ -1117,7 +1117,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/source/cave-design.png",
+      "path": "assets/source/environment/cave_entrance/concepts/cave-design.png",
       "encoded_bytes": 2576983,
       "sha256": "6b95c81daf51edf5f78c442863c5125f810fef639f0f9c0e6f44d13057052979",
       "source_dimensions": [
@@ -1157,7 +1157,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/potions.png",
+      "path": "assets/source/ui/potions.png",
       "encoded_bytes": 806994,
       "sha256": "4e397a06daed165db0dcbc81056a0b0ca27cced18d8c2ef174b749b15bb72738",
       "source_dimensions": [
@@ -1217,7 +1217,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/art/ui/select-scene.png",
+      "path": "assets/ui/selection/select-scene.png",
       "encoded_bytes": 2740532,
       "sha256": "682cdd80f91fb882add395ea0e2aee42ba98b5c86c219144a91e67ecbc000893",
       "source_dimensions": [
@@ -1247,7 +1247,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/ui/selection-forest.webp",
+      "path": "assets/ui/selection/selection-forest.webp",
       "encoded_bytes": 53660,
       "sha256": "71d9d71bda1cd1530b8ac94ded2a89c76f8d89df27f115ab866f9d2611fac833",
       "source_dimensions": [
@@ -1277,7 +1277,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/source/selection-forest.png",
+      "path": "assets/source/ui/selection-forest.png",
       "encoded_bytes": 1542167,
       "sha256": "4ee51dec80b79654bfa76f0c26626f5b648424f6f170e031bc444176dd20eafc",
       "source_dimensions": [
@@ -1297,7 +1297,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/art/skills/warrior-skills.webp",
+      "path": "assets/ui/skills/warrior-skills.webp",
       "encoded_bytes": 670044,
       "sha256": "679d882b3102142a088c7db7afeaced51ca7ba20b60f31a41e54a405ebf021ea",
       "source_dimensions": [
@@ -1367,7 +1367,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/art/entry/mage.webp",
+      "path": "assets/ui/entry/mage.webp",
       "encoded_bytes": 228152,
       "sha256": "c5584f5b5d6ee1d500fc0fd2dfdd66bd3597178ec8f5c2935882f39a3e100898",
       "source_dimensions": [
@@ -1397,7 +1397,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/entry/start-background.webp",
+      "path": "assets/ui/entry/start-background.webp",
       "encoded_bytes": 240184,
       "sha256": "2cbc314340c85228cef04ccfddbbbce235fa407e02d30e0acb6840fa12491aca",
       "source_dimensions": [
@@ -1427,7 +1427,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/entry/warrior.webp",
+      "path": "assets/ui/entry/warrior.webp",
       "encoded_bytes": 208914,
       "sha256": "d7429d2f665c6c66ca95c2bfc9ad946ee125e89a176d5eddca735676160564c5",
       "source_dimensions": [
@@ -1457,7 +1457,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/hud/gear-icons.png",
+      "path": "assets/ui/hud/gear-icons.png",
       "encoded_bytes": 2742164,
       "sha256": "8d30b0c8eeb6d2c8a29641152749435f4935329b9a9ef5f32b59ec8a9c38d397",
       "source_dimensions": [
@@ -1487,7 +1487,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/source/bridge-new.png",
+      "path": "assets/source/architecture/bridge/concepts/bridge-new.png",
       "encoded_bytes": 2352962,
       "sha256": "0cdfc991d6cc71dc51e5246b0e27859bdb2877d72fd4ed7061a7e8be292cc1ca",
       "source_dimensions": [
@@ -1507,7 +1507,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/cave-kit.png",
+      "path": "assets/source/dungeon/concepts/cave-kit.png",
       "encoded_bytes": 2696893,
       "sha256": "5f6c799d5040c9f1def0db7b5f46cde63e821acb52916e857ff9307633b8d5b8",
       "source_dimensions": [
@@ -1547,7 +1547,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/forest-flora.png",
+      "path": "assets/source/vegetation/concepts/forest-flora.png",
       "encoded_bytes": 2090318,
       "sha256": "3c37f76a6cfeb274ae3bb310f08d95b53bf8add0e788a1cb9369c380b3533af6",
       "source_dimensions": [
@@ -1567,7 +1567,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/hero-selection.png",
+      "path": "assets/source/ui/hero-selection.png",
       "encoded_bytes": 2469804,
       "sha256": "8c2a909faef5497bc858655270c507ce193c8e16cd2e185d3f21868b35a48153",
       "source_dimensions": [
@@ -1587,7 +1587,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/native-actors/surface-atlas.png",
+      "path": "assets/source/materials/actors/surface-atlas.png",
       "encoded_bytes": 3137948,
       "sha256": "afa4c79db59673849c25a8eb54ba3587215e9de10fc91429133474677810125f",
       "source_dimensions": [
@@ -1727,7 +1727,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/town-ne.png",
+      "path": "assets/source/architecture/houses/concepts/town-ne.png",
       "encoded_bytes": 2553937,
       "sha256": "800939381ee413eea82c574138c7ac57405ddd2e1309791f4142a52e081c6603",
       "source_dimensions": [
@@ -1747,7 +1747,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/town-sw.png",
+      "path": "assets/source/architecture/houses/concepts/town-sw.png",
       "encoded_bytes": 2635281,
       "sha256": "809adcf34048c51dc098eadf01d7f6d837dee9afdd9784f0c0026bcb835d91e4",
       "source_dimensions": [
@@ -1767,7 +1767,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/art/entry/selection-forest.webp",
+      "path": "assets/ui/entry/selection-forest.webp",
       "encoded_bytes": 126750,
       "sha256": "9eead40fe7d6c9894431965d2cb804ad11af029b3749b0acfde16a2b0c320da3",
       "source_dimensions": [
@@ -1797,7 +1797,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/entry/selection-mage.webp",
+      "path": "assets/ui/entry/selection-mage.webp",
       "encoded_bytes": 196904,
       "sha256": "c3785de5765547f3cee86a3c64778c376431066f81507191400fba74f79c90cb",
       "source_dimensions": [
@@ -1827,7 +1827,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/entry/selection-warrior.webp",
+      "path": "assets/ui/entry/selection-warrior.webp",
       "encoded_bytes": 267774,
       "sha256": "54742d2b7a26b29466b8e21c73b6977e0984f8fc1655180cfae4a85e296d6fe0",
       "source_dimensions": [
@@ -1857,7 +1857,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/source/cave-arches.png",
+      "path": "assets/source/dungeon/concepts/cave-arches.png",
       "encoded_bytes": 1917817,
       "sha256": "454b7087b843a9e82fca6b2ada318c11ff554abdd1db63c1ba3e9969425a7e6a",
       "source_dimensions": [
@@ -1877,7 +1877,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/cave-ledges.png",
+      "path": "assets/source/dungeon/concepts/cave-ledges.png",
       "encoded_bytes": 793818,
       "sha256": "2b75eac7dbe044a3e1bf66ae94356da10fae78b2741ddc86610058680a6f04af",
       "source_dimensions": [
@@ -1897,7 +1897,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/corpses.png",
+      "path": "assets/source/effects/corpses/corpses.png",
       "encoded_bytes": 870341,
       "sha256": "a4b1b6e5fc5568b763f7aaf1e77ac5396acd41aa28f270a6c67207879eee73e0",
       "source_dimensions": [
@@ -1977,7 +1977,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/forest-ground.png",
+      "path": "assets/source/terrain/ground/forest-ground.png",
       "encoded_bytes": 3726159,
       "sha256": "6c2216184f0d54e325128fd876e2ae12f1846042464144aac50af5d5ed60b3c0",
       "source_dimensions": [
@@ -1997,7 +1997,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/impact-atlas.png",
+      "path": "assets/source/effects/combat/impact-atlas.png",
       "encoded_bytes": 1710459,
       "sha256": "9da7b2773ef0de3f2cd6a4fe6147a451717a7ad62b698ec86127793c3493c835",
       "source_dimensions": [
@@ -2177,7 +2177,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/reward-atlas.png",
+      "path": "assets/source/effects/rewards/reward-atlas.png",
       "encoded_bytes": 970931,
       "sha256": "17d537221feb5f783c57413cf3b6e7b9fb67ce4279d984bab747b8e3aeb99ee2",
       "source_dimensions": [
@@ -2217,7 +2217,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/art/village/bridge.webp",
+      "path": "assets/sprites/village/bridge.webp",
       "encoded_bytes": 271314,
       "sha256": "602b0209ca4ea4ab10ea654b0e9d748a62df871a51e2c52a572bcbdb46fccac8",
       "source_dimensions": [
@@ -2267,7 +2267,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/chapel-new.png",
+      "path": "assets/source/architecture/chapel/concepts/chapel-new.png",
       "encoded_bytes": 2125988,
       "sha256": "abe084c4975b3d371051dbeb29b344b41516760d942b4c7eef71c80e991493b9",
       "source_dimensions": [
@@ -2287,7 +2287,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/combat-frames.png",
+      "path": "assets/source/effects/combat/combat-frames.png",
       "encoded_bytes": 1343668,
       "sha256": "66dc56de7bf051e0b1d9a224a4d357a29c83aeca894d6bc2e7b713ae206d7aa9",
       "source_dimensions": [
@@ -2307,7 +2307,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/forest-trees.png",
+      "path": "assets/source/vegetation/concepts/forest-trees.png",
       "encoded_bytes": 2109278,
       "sha256": "d3139c012d9b9312250603737c5144ab2a3b1e0a6bcf94e50b1ab352845e745a",
       "source_dimensions": [
@@ -2327,7 +2327,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/garden-new.png",
+      "path": "assets/source/environment/landmarks/garden-new.png",
       "encoded_bytes": 1676859,
       "sha256": "d4b04ec662fdd1031b81bc6e8fb05c0f9e5c9004bf1bbe50227ac875a9a19ad2",
       "source_dimensions": [
@@ -2347,7 +2347,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/gate-cohesive-a.png",
+      "path": "assets/source/architecture/fortress/concepts/gate-cohesive-a.png",
       "encoded_bytes": 1904189,
       "sha256": "2abd38a31c555e1cc379c91c645a99775104aeb0e64cb79697896b1ae9e27983",
       "source_dimensions": [
@@ -2367,7 +2367,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/gate-cohesive-b.png",
+      "path": "assets/source/architecture/fortress/concepts/gate-cohesive-b.png",
       "encoded_bytes": 2301180,
       "sha256": "8a18435aba7826469ef2d477cafeb6223ed5fbfa4d017e25b68caa56dd032e5b",
       "source_dimensions": [
@@ -2387,7 +2387,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/hero-materials/navy-cloth.png",
+      "path": "assets/source/heroes/mage/materials/navy-cloth.png",
       "encoded_bytes": 2986344,
       "sha256": "77a198751703c4a4e7b614bc03f634d929db5b3ff8f7b3f10efa990b7fa5de4f",
       "source_dimensions": [
@@ -2407,7 +2407,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/hill-new.png",
+      "path": "assets/source/environment/landmarks/hill-new.png",
       "encoded_bytes": 1434365,
       "sha256": "0130abe1cac1dcab50b399a8d5efeb138a54b58a80c0594adb7b04f6869c22b3",
       "source_dimensions": [
@@ -2427,7 +2427,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/hud-trim.png",
+      "path": "assets/source/ui/hud-trim.png",
       "encoded_bytes": 768679,
       "sha256": "08d28abe805643791da0ed72118837f587673278b6a2aaad7f271a563b29bc26",
       "source_dimensions": [
@@ -2447,7 +2447,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/level-badge.png",
+      "path": "assets/source/ui/level-badge.png",
       "encoded_bytes": 2205609,
       "sha256": "95493791855ac608269ac26be38f307281648184201f80e8211243ac60a6030a",
       "source_dimensions": [
@@ -2507,7 +2507,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/map-rim.png",
+      "path": "assets/source/ui/map-rim.png",
       "encoded_bytes": 246898,
       "sha256": "16a2aa5eba9db73d1b7204a8634390c7ee57c0ffec4ab7e5d4a0d23086578d3b",
       "source_dimensions": [
@@ -2527,7 +2527,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/panel-leather.png",
+      "path": "assets/source/ui/panel-leather.png",
       "encoded_bytes": 2608502,
       "sha256": "68d313942fee1730f77f7977f4993acf7ff8f8002a7044f7e255e8eaea6abe05",
       "source_dimensions": [
@@ -2547,7 +2547,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/portrait-mage.png",
+      "path": "assets/source/ui/portrait-mage.png",
       "encoded_bytes": 2250102,
       "sha256": "3339314065803904b8fb08d743214546e3251bd87612a96d8cc784877788557f",
       "source_dimensions": [
@@ -2567,7 +2567,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/preview3d/trees/leaves-generated.png",
+      "path": "assets/source/vegetation/town_trees/leaves-generated.png",
       "encoded_bytes": 1572378,
       "sha256": "3b20c751f90d2c4669d8d8b20da7210952057307028c6c50cece85ab444bcca7",
       "source_dimensions": [
@@ -2587,7 +2587,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/preview3d/village-materials.png",
+      "path": "assets/source/materials/shared/village_materials.png",
       "encoded_bytes": 3518002,
       "sha256": "0ab9f5bc5e5357abf9f5a81a5ddd38f4ea8ef1bc3cef87ebc72e261a112f3591",
       "source_dimensions": [
@@ -2887,7 +2887,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/selection-trim.png",
+      "path": "assets/source/ui/selection-trim.png",
       "encoded_bytes": 668895,
       "sha256": "4ff6cab1f8c0890b9ba3f3f901e24f0ad4f3521aa9fe9c07b425bbc191bce4ba",
       "source_dimensions": [
@@ -2967,7 +2967,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/town-nw.png",
+      "path": "assets/source/architecture/houses/concepts/town-nw.png",
       "encoded_bytes": 2615750,
       "sha256": "14446d5ab2a77d87b19faf51dd2985302c143ce279de51a466b0676bef37664e",
       "source_dimensions": [
@@ -2987,7 +2987,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/town-se.png",
+      "path": "assets/source/architecture/houses/concepts/town-se.png",
       "encoded_bytes": 2841129,
       "sha256": "c0c11850aec11ab8d32ec3676cfa9e6120101393438b2ed1423e547434d4a572",
       "source_dimensions": [
@@ -3027,7 +3027,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/wall-cohesive.png",
+      "path": "assets/source/architecture/fortress/concepts/wall-cohesive.png",
       "encoded_bytes": 2701100,
       "sha256": "ba962901574e297343ee6d3ce2351ec79183a2a206bc95108b3dcf561e950635",
       "source_dimensions": [
@@ -3067,7 +3067,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/art/skills/mage-skills.webp",
+      "path": "assets/ui/skills/mage-skills.webp",
       "encoded_bytes": 701268,
       "sha256": "6605f2fd401d3a3343e729dbcb6c3fdddb22389afa5bbd3c7f84488703a7c37d",
       "source_dimensions": [
@@ -3097,7 +3097,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/native_residents/merchant_merchant-texture-1.png",
+      "path": "assets/models/residents/merchant/model_merchant-texture-1.png",
       "encoded_bytes": 617233,
       "sha256": "a8839796d4ccabb6f1353230773eaa975c09f530297a9b9d083a8bd94e9e1d3f",
       "source_dimensions": [
@@ -3127,7 +3127,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/native_residents/merchant_merchant-texture-4.png",
+      "path": "assets/models/residents/merchant/model_merchant-texture-4.png",
       "encoded_bytes": 814803,
       "sha256": "dadf544a4d266af442e7f8e1ea31529676469ca1f5341d3122e6c148bcc89bfa",
       "source_dimensions": [
@@ -3157,7 +3157,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/native_residents/merchant_merchant-texture-5.png",
+      "path": "assets/models/residents/merchant/model_merchant-texture-5.png",
       "encoded_bytes": 791659,
       "sha256": "2421f802cdd2a0bcd0a802d2b24ec4ae12cb06a5fbc436ed6d91705587d91bba",
       "source_dimensions": [
@@ -3187,7 +3187,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/native_residents/merchant_merchant-texture-7.png",
+      "path": "assets/models/residents/merchant/model_merchant-texture-7.png",
       "encoded_bytes": 650528,
       "sha256": "b15d91005ef535b81a14975239caad6be8a9b424f99b67717457370687d893f1",
       "source_dimensions": [
@@ -3217,7 +3217,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/preview3d/mage_source-0.png",
+      "path": "assets/models/heroes/mage/model_source-0.png",
       "encoded_bytes": 812473,
       "sha256": "2c732250c852641de3ec7c16d3d631d4c13a42dd15e8d2b9fae9d8003e424715",
       "source_dimensions": [
@@ -3247,7 +3247,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/preview3d/mage_source-1.png",
+      "path": "assets/models/heroes/mage/model_source-1.png",
       "encoded_bytes": 617233,
       "sha256": "a8839796d4ccabb6f1353230773eaa975c09f530297a9b9d083a8bd94e9e1d3f",
       "source_dimensions": [
@@ -3277,7 +3277,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/preview3d/mage_source-2.png",
+      "path": "assets/models/heroes/mage/model_source-2.png",
       "encoded_bytes": 791659,
       "sha256": "2421f802cdd2a0bcd0a802d2b24ec4ae12cb06a5fbc436ed6d91705587d91bba",
       "source_dimensions": [
@@ -3307,7 +3307,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/preview3d/mage_source-3.png",
+      "path": "assets/models/heroes/mage/model_source-3.png",
       "encoded_bytes": 650528,
       "sha256": "b15d91005ef535b81a14975239caad6be8a9b424f99b67717457370687d893f1",
       "source_dimensions": [
@@ -3337,7 +3337,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/preview3d/tree-leaves.webp",
+      "path": "assets/materials/shared/tree_leaves.webp",
       "encoded_bytes": 311614,
       "sha256": "7368d8e4b3123fb2b2efb4778ad1843bd5d4409a438fb60874b1cc47017dbdbb",
       "source_dimensions": [
@@ -3367,7 +3367,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/cave/props.webp",
+      "path": "assets/sprites/dungeon/props.webp",
       "encoded_bytes": 244386,
       "sha256": "4a5d1bd94000ad886ce54c77742d9cb661f74ca0d49d576440cc6026b336aa69",
       "source_dimensions": [
@@ -3397,7 +3397,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/effects/combat-frames.webp",
+      "path": "assets/effects/textures/combat-frames.webp",
       "encoded_bytes": 162416,
       "sha256": "d65442de4777f648e3712c999a2d50fab42889d6657b44840f87ed75c14c53c4",
       "source_dimensions": [
@@ -3427,7 +3427,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/forest/flora.webp",
+      "path": "assets/sprites/forest/flora.webp",
       "encoded_bytes": 511924,
       "sha256": "90e95fcb25c3163ed7840d9d25077a68d69769b79afc452b139c9234c72487ea",
       "source_dimensions": [
@@ -3457,7 +3457,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/village/remake-pool.webp",
+      "path": "assets/sprites/village/remake-pool.webp",
       "encoded_bytes": 276438,
       "sha256": "736d492ff9797a1a6850ce1f4526216d663bcca72c1ab97e32656d9b7ef7e100",
       "source_dimensions": [
@@ -3487,7 +3487,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/village/remake-portal.webp",
+      "path": "assets/sprites/village/remake-portal.webp",
       "encoded_bytes": 322082,
       "sha256": "27ed6f2de2f404ae021105bcb99860f40cca222cebbdc04f1f2e2fa80b702381",
       "source_dimensions": [
@@ -3517,7 +3517,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/source/gate-new-a.png",
+      "path": "assets/source/architecture/fortress/concepts/gate-new-a.png",
       "encoded_bytes": 1191849,
       "sha256": "2f8d7044e57457cc50a11320de6750a46a6374bc37efaadc40869b1f7b3d1b25",
       "source_dimensions": [
@@ -3537,7 +3537,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/gate-new-b.png",
+      "path": "assets/source/architecture/fortress/concepts/gate-new-b.png",
       "encoded_bytes": 1308015,
       "sha256": "1ff4f39732ace0fbd123b5474bdb931ee00512f4454ad96c52791bb580336e68",
       "source_dimensions": [
@@ -3577,7 +3577,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/hero-materials/game-before.png",
+      "path": "assets/source/heroes/mage/materials/game-before.png",
       "encoded_bytes": 1603452,
       "sha256": "9e8ab55e5c7e8190b0f7c52bbff925b9551457dc3d0c3a7c6f2a9e30ae1e5857",
       "source_dimensions": [
@@ -3637,7 +3637,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/art/village/gates.webp",
+      "path": "assets/sprites/village/gates.webp",
       "encoded_bytes": 285378,
       "sha256": "2d7e7cb7fa82a237929c67d61a1dda1590cf72a4c2d4c0f6a7c479a10eda246a",
       "source_dimensions": [
@@ -3667,7 +3667,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/cave/arches.webp",
+      "path": "assets/sprites/dungeon/arches.webp",
       "encoded_bytes": 291164,
       "sha256": "93deb00d475df8122015cc1d25d38fa5455a89bd774c46872a6e2d5adda24088",
       "source_dimensions": [
@@ -3697,7 +3697,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/hud/icons.webp",
+      "path": "assets/ui/hud/icons.webp",
       "encoded_bytes": 949662,
       "sha256": "4612bece51d80d131cdc5b39e3701dcf26cec2cec4ea91c13f401a93f3f4e498",
       "source_dimensions": [
@@ -3727,7 +3727,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/ui/hero-mage.webp",
+      "path": "assets/ui/selection/hero-mage.webp",
       "encoded_bytes": 134610,
       "sha256": "09562f650be59e2e278782d38f47b83ae9f7d433df3297a3721221d4d0240801",
       "source_dimensions": [
@@ -3757,7 +3757,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/ui/hero-warrior.webp",
+      "path": "assets/ui/selection/hero-warrior.webp",
       "encoded_bytes": 185140,
       "sha256": "cbe9a8eb03044a1df6320ee1426a54c212371850dd585684283a43be4d3a4b23",
       "source_dimensions": [
@@ -3787,7 +3787,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/ui/selection-trim.webp",
+      "path": "assets/ui/selection/selection-trim.webp",
       "encoded_bytes": 132742,
       "sha256": "08b1045013d8220fd6c65497e7e0848d7b43f886cc81e4de9ac0f24a49774039",
       "source_dimensions": [
@@ -3817,7 +3817,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/effects/forest-atmosphere.webp",
+      "path": "assets/effects/textures/forest-atmosphere.webp",
       "encoded_bytes": 8566,
       "sha256": "0d194d3d3bcaf23ea81544961e4a8d695d3491c7a9f4215bc960d321e91c14e6",
       "source_dimensions": [
@@ -3847,7 +3847,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/effects/frost-low.webp",
+      "path": "assets/effects/textures/frost-low.webp",
       "encoded_bytes": 47472,
       "sha256": "f9e54c89b027e8f31c111d813e0be04f92a97463690bbf7bf619a7ccb168a842",
       "source_dimensions": [
@@ -3877,7 +3877,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/source/landmark-tree.png",
+      "path": "assets/source/vegetation/concepts/landmark-tree.png",
       "encoded_bytes": 741421,
       "sha256": "0cceb5893685dd57cc1e32bf60598145a1749e42041a7fbc9e9ed2032a77ca0b",
       "source_dimensions": [
@@ -3897,7 +3897,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/landmark-waterfall.png",
+      "path": "assets/source/environment/landmarks/landmark-waterfall.png",
       "encoded_bytes": 668002,
       "sha256": "efdfd0cc2701f962843c87a046c985eb6bdb1f5b990e48f3de17e202d453b11e",
       "source_dimensions": [
@@ -3917,7 +3917,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/art/village/undergrowth.webp",
+      "path": "assets/sprites/village/undergrowth.webp",
       "encoded_bytes": 294988,
       "sha256": "51e8a7c58d0be9b3d70f86a77eec7e2d1297e4f7b95974030458feb433a236ab",
       "source_dimensions": [
@@ -3947,7 +3947,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/actors/npcs.webp",
+      "path": "assets/sprites/actors/npcs.webp",
       "encoded_bytes": 142532,
       "sha256": "831ffd08f84a7eb058e3a44452d7d37df701668d4428460eed7a745d2a8614d4",
       "source_dimensions": [
@@ -3997,7 +3997,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/art/cave/ledges.webp",
+      "path": "assets/sprites/dungeon/ledges.webp",
       "encoded_bytes": 69124,
       "sha256": "f9a2f9d890a468d8396bfabac33a1edd0ff44804e3374acd29d6771a80a3c3ee",
       "source_dimensions": [
@@ -4087,7 +4087,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/art/preview3d/bark.webp",
+      "path": "assets/materials/shared/bark.webp",
       "encoded_bytes": 204322,
       "sha256": "ca8532c220bb6dcb78a2b14a8dc4a78439885e0ee4f061ff92dee58007af7736",
       "source_dimensions": [
@@ -4117,7 +4117,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/preview3d/limestone.webp",
+      "path": "assets/materials/shared/limestone.webp",
       "encoded_bytes": 192976,
       "sha256": "8e71b8336aa7a8f6a1ec3ee272eda58296d52b7f5677a207aabf0cec7142c9e5",
       "source_dimensions": [
@@ -4147,7 +4147,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/preview3d/slate.webp",
+      "path": "assets/materials/shared/slate.webp",
       "encoded_bytes": 133156,
       "sha256": "98b2683713f318f4f2bdf78adb12148ef44efaf3efbc7ae63ba0396fbc00c5c8",
       "source_dimensions": [
@@ -4177,7 +4177,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/preview3d/timber.webp",
+      "path": "assets/materials/shared/timber.webp",
       "encoded_bytes": 164210,
       "sha256": "4cac472a9fb54db9e89bdaf1577db846bd49f936e759dca7b10101175f7dcb1c",
       "source_dimensions": [
@@ -4207,7 +4207,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/preview3d/mage_cloth-0.png",
+      "path": "assets/models/heroes/mage/model_cloth-0.png",
       "encoded_bytes": 51069,
       "sha256": "187f974f7201c3427aa4ef815a1d99aeb0ea51351917fcecf3409f0a1490a047",
       "source_dimensions": [
@@ -4237,7 +4237,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/preview3d/mage_cloth-1.png",
+      "path": "assets/models/heroes/mage/model_cloth-1.png",
       "encoded_bytes": 32705,
       "sha256": "42a75a427c48dc2927b0bb635f8cc2e905548961271a0b38b8d87a59f5e3f8e1",
       "source_dimensions": [
@@ -4267,7 +4267,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/preview3d/mage_cloth-2.png",
+      "path": "assets/models/heroes/mage/model_cloth-2.png",
       "encoded_bytes": 161031,
       "sha256": "2ec5048e0548509e1f8cabaf4f751cfd59c4460526b96c0e80753d322c9bc90a",
       "source_dimensions": [
@@ -4297,7 +4297,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/preview3d/mage_cloth-3.png",
+      "path": "assets/models/heroes/mage/model_cloth-3.png",
       "encoded_bytes": 62041,
       "sha256": "61292ff28fc4e11f06e3ed5b894e93791cbcef62ab2e6e4a1e8010e139869cee",
       "source_dimensions": [
@@ -4327,7 +4327,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/preview3d/mage_cloth-4.png",
+      "path": "assets/models/heroes/mage/model_cloth-4.png",
       "encoded_bytes": 96952,
       "sha256": "4c5f7266b02231868f06af1b213de4b9980950d9fcce116733800df728922219",
       "source_dimensions": [
@@ -4357,7 +4357,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/actors/corpses.webp",
+      "path": "assets/sprites/actors/corpses.webp",
       "encoded_bytes": 118478,
       "sha256": "5da2aeac330bc0958d0ff0a97cc35832017c1d0a4d4f1d1d50969d6f99cf5d98",
       "source_dimensions": [
@@ -4387,7 +4387,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/source/town-pool.png",
+      "path": "assets/source/environment/fountain/town-pool.png",
       "encoded_bytes": 494530,
       "sha256": "e56e1792ca6d894be69f5a0eb8ba4fa0e8787a21870f6e33a8126a04346ff80b",
       "source_dimensions": [
@@ -4407,7 +4407,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/art/cave/dark.webp",
+      "path": "assets/sprites/dungeon/dark.webp",
       "encoded_bytes": 121200,
       "sha256": "943feb5680f4ab46fb7a4aa658fbcb6f9d54848a762d350422fccfd1eb86bb84",
       "source_dimensions": [
@@ -4437,7 +4437,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/cave/floor.webp",
+      "path": "assets/sprites/dungeon/floor.webp",
       "encoded_bytes": 112968,
       "sha256": "2dcf79cdcc806c4c055c76fa0987870a903de753504c63740bc994e5fe185ef4",
       "source_dimensions": [
@@ -4467,7 +4467,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/forest/earth.webp",
+      "path": "assets/sprites/forest/earth.webp",
       "encoded_bytes": 139242,
       "sha256": "379f9866399c0e0e5265adfea05c3779fc7e6723cc42626226c7275157e4a17c",
       "source_dimensions": [
@@ -4497,7 +4497,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/forest/grass.webp",
+      "path": "assets/materials/terrain/grass_base.webp",
       "encoded_bytes": 122434,
       "sha256": "5fa133204811b3e6603416280109f5fbdbe75da1d0dab964828b6731e71bffc7",
       "source_dimensions": [
@@ -4527,7 +4527,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/forest/paving.webp",
+      "path": "assets/materials/terrain/paving_base.webp",
       "encoded_bytes": 99542,
       "sha256": "293bb740e1c277bf7e6cd566c8c9f6a05105e5e7ca0e8960e041ad23e2b2d9ef",
       "source_dimensions": [
@@ -4557,7 +4557,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/hud/generated-trim.webp",
+      "path": "assets/ui/hud/generated-trim.webp",
       "encoded_bytes": 70492,
       "sha256": "a613634c05a62d57b2e06ea650a19d1398162a0e993a0c922b0a25086b801baa",
       "source_dimensions": [
@@ -4587,7 +4587,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/hud/mobile-menu.webp",
+      "path": "assets/ui/hud/mobile-menu.webp",
       "encoded_bytes": 62388,
       "sha256": "4c611e6b7c84f0dfd497324158cc6a36f5cbab5662882de9cbc2fb43f3ac96d9",
       "source_dimensions": [
@@ -4617,7 +4617,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/hud/panel-leather.webp",
+      "path": "assets/ui/hud/panel-leather.webp",
       "encoded_bytes": 24354,
       "sha256": "f3161bf16605964b4c11d216fbe56396d43ad213d24e1e152714a2b9d882a162",
       "source_dimensions": [
@@ -4647,7 +4647,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/hud/portrait-mage.webp",
+      "path": "assets/ui/hud/portrait-mage.webp",
       "encoded_bytes": 53014,
       "sha256": "c6a4359904dbdfeb3a8792909476c8cd7f7288ad9d5045bb53eac35ca3b1d858",
       "source_dimensions": [
@@ -4677,7 +4677,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/hud/portrait-warrior.webp",
+      "path": "assets/ui/hud/portrait-warrior.webp",
       "encoded_bytes": 79844,
       "sha256": "bb92a4fa8c9a150f8b07527139ffe3b2dab66e30165b2efdcc1e4c92cba777ff",
       "source_dimensions": [
@@ -4707,7 +4707,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/hud/reference-buttons.webp",
+      "path": "assets/ui/hud/reference-buttons.webp",
       "encoded_bytes": 323126,
       "sha256": "949c3c3a0f6ead61f5893870f6bf728899d9410d0aef58fd54ca5edf6b6ec308",
       "source_dimensions": [
@@ -4737,7 +4737,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/village/dirt.webp",
+      "path": "assets/sprites/village/dirt.webp",
       "encoded_bytes": 139242,
       "sha256": "379f9866399c0e0e5265adfea05c3779fc7e6723cc42626226c7275157e4a17c",
       "source_dimensions": [
@@ -4767,7 +4767,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/village/portcullis.webp",
+      "path": "assets/sprites/village/portcullis.webp",
       "encoded_bytes": 115118,
       "sha256": "f76cf0ea7674901d82f646499be693e725cf2fe8cfe1b92fd0c1a47b42e08719",
       "source_dimensions": [
@@ -4797,7 +4797,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/village/remake-chest-broken.webp",
+      "path": "assets/sprites/village/remake-chest-broken.webp",
       "encoded_bytes": 80720,
       "sha256": "1fd53d1e6c9cc301d7b84c7938d90af407f4aff178bdbceaf75c7d29119b5e9d",
       "source_dimensions": [
@@ -4827,7 +4827,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/village/remake-chest.webp",
+      "path": "assets/sprites/village/remake-chest.webp",
       "encoded_bytes": 79710,
       "sha256": "3130cf5430236e5924811fa31d76cde3fbe48e231d459df99edc3a9e7caab4ce",
       "source_dimensions": [
@@ -4857,7 +4857,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/village/remake-rock.webp",
+      "path": "assets/sprites/village/remake-rock.webp",
       "encoded_bytes": 58578,
       "sha256": "15323f438ad4291f2cf2928c2eb1178a36b3c80bdcc6fbfb2c01d3f5aeb2ebf2",
       "source_dimensions": [
@@ -4887,7 +4887,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/village/rock.webp",
+      "path": "assets/materials/terrain/rock_base.webp",
       "encoded_bytes": 138704,
       "sha256": "28cb23eec83e30ae610ad1d46c48276a7174991b280bf47c5e32f17e33227738",
       "source_dimensions": [
@@ -4917,7 +4917,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/village/water.webp",
+      "path": "assets/sprites/village/water.webp",
       "encoded_bytes": 71102,
       "sha256": "918bcc547f934d27f7ef1528281e730950b06adb78aaed5af3a8bef06fa5ef21",
       "source_dimensions": [
@@ -4947,7 +4947,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/source/wall-seg-b.png",
+      "path": "assets/source/architecture/fortress/concepts/wall-seg-b.png",
       "encoded_bytes": 465167,
       "sha256": "1d29a2cd3eca86b917e3f826aab72466a75e1ac72a487fe804cc918980898593",
       "source_dimensions": [
@@ -4967,7 +4967,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/wall-seg-a.png",
+      "path": "assets/source/architecture/fortress/concepts/wall-seg-a.png",
       "encoded_bytes": 463722,
       "sha256": "7f97043493aff20a93640377ab6f5a25343f5a31c825c7e0e50ed351b3f8f307",
       "source_dimensions": [
@@ -4987,7 +4987,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/art/effects/reward-atlas.webp",
+      "path": "assets/effects/textures/reward-atlas.webp",
       "encoded_bytes": 84544,
       "sha256": "da37ee6744f6ede524299c7ceb5d8818676f91412f2640551a7280c36082012b",
       "source_dimensions": [
@@ -5017,7 +5017,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/village/meadow-a.webp",
+      "path": "assets/sprites/village/meadow-a.webp",
       "encoded_bytes": 131952,
       "sha256": "75213b0aef570a0a971adb19ae94675b83fa5041db7f3b0d0dfadc5029f42210",
       "source_dimensions": [
@@ -5047,7 +5047,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/village/meadow-b.webp",
+      "path": "assets/sprites/village/meadow-b.webp",
       "encoded_bytes": 129112,
       "sha256": "da80e0910abc57e17444d239f224f9ad31723b37129d2f15a5db0eae7073af86",
       "source_dimensions": [
@@ -5077,7 +5077,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/village/meadow-c.webp",
+      "path": "assets/sprites/village/meadow-c.webp",
       "encoded_bytes": 128856,
       "sha256": "e4e40cd1799d8dc3d4c021e7be654d4448d616a9056270dd3075b94eccc29bf8",
       "source_dimensions": [
@@ -5107,7 +5107,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/village/meadow-d.webp",
+      "path": "assets/sprites/village/meadow-d.webp",
       "encoded_bytes": 128684,
       "sha256": "dd7e813f23945a9fad2f0dc3b13383f06105235b261db59115ad4824c886f7ba",
       "source_dimensions": [
@@ -5137,7 +5137,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/village/paving.webp",
+      "path": "assets/sprites/village/paving.webp",
       "encoded_bytes": 119192,
       "sha256": "66ca4549c4376266dd8a351148448a4f0e1099c0e183218f6822d15cc6921166",
       "source_dimensions": [
@@ -5167,7 +5167,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/village/encounter-stone.webp",
+      "path": "assets/sprites/village/encounter-stone.webp",
       "encoded_bytes": 63704,
       "sha256": "97f4e85f17662634680764cb3f4fec5a3e4ac47ff964ac876559848643edc3e7",
       "source_dimensions": [
@@ -5197,7 +5197,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/source/encounter-stone.png",
+      "path": "assets/source/environment/encounter_stone/encounter-stone.png",
       "encoded_bytes": 292291,
       "sha256": "65ba8098b86194dd2ee59ef2ccaf54e6ac855483499c94d9cdabf2502ba62009",
       "source_dimensions": [
@@ -5217,7 +5217,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/art/hud/potions.webp",
+      "path": "assets/ui/hud/potions.webp",
       "encoded_bytes": 27458,
       "sha256": "b265e121c5f69c989c29f6d14276ff649df848820c7e5ff978e2963e3b06f6c1",
       "source_dimensions": [
@@ -5247,7 +5247,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/preview3d/chapel-glass.webp",
+      "path": "assets/materials/shared/chapel-glass.webp",
       "encoded_bytes": 10524,
       "sha256": "07fcea6475236e54b4cc73a561aa16509ff8bca6108214f3ab64b98d7ffb09f3",
       "source_dimensions": [
@@ -5277,7 +5277,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/native_residents/merchant_merchant-texture-6.png",
+      "path": "assets/models/residents/merchant/model_merchant-texture-6.png",
       "encoded_bytes": 48297,
       "sha256": "39fb618bafbb6878b749a4b94b923322b58fe48af077c433ea6b98149a28d89b",
       "source_dimensions": [
@@ -5307,7 +5307,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/preview3d/mage_T_Eye_Brown.png",
+      "path": "assets/models/heroes/mage/model_T_Eye_Brown.png",
       "encoded_bytes": 35958,
       "sha256": "d08e3356a83211bc6ca21fe3a8e39f4b5c1a3b8f85457fc2c0fb57be09935025",
       "source_dimensions": [
@@ -5337,7 +5337,7 @@
       "ignored_ancestor": false
     },
     {
-      "path": "assets/art/village/walls.webp",
+      "path": "assets/sprites/village/walls.webp",
       "encoded_bytes": 26740,
       "sha256": "9e2f4375744c3dcb0b9de0e7a92f91e476fb8bdc111ffd500fdffd0c4de689c2",
       "source_dimensions": [
@@ -5387,7 +5387,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/source/wall-from-gate.png",
+      "path": "assets/source/architecture/fortress/concepts/wall-from-gate.png",
       "encoded_bytes": 63960,
       "sha256": "5fa421880b7020c7fe45a037ddf527db878cb42c3dcc31c8f8ebffbd2d6ec943",
       "source_dimensions": [
@@ -5407,7 +5407,7 @@
       "ignored_ancestor": true
     },
     {
-      "path": "assets/art/hud/level-badge.webp",
+      "path": "assets/ui/hud/level-badge.webp",
       "encoded_bytes": 10470,
       "sha256": "794290f1f2c6589102eb98890136b96e8884dce0d47007f405c76ee7bc94a843",
       "source_dimensions": [
@@ -5441,49 +5441,49 @@
     {
       "sha256": "447a6b0da16a3724bf780e49e9953e465d1b1b9b6729a4d587d2deb525eb2ba9",
       "paths": [
-        "assets/art/actors/mage-cast.webp",
-        "assets/source/hero-materials/baseline/mage-cast.webp"
+        "assets/sprites/actors/mage-cast.webp",
+        "assets/source/heroes/mage/materials/baseline/mage-cast.webp"
       ]
     },
     {
       "sha256": "be63cbdf32b188bae9532f70c725e118d5a85143cb2ca997b7249043ce357b51",
       "paths": [
-        "assets/art/actors/mage.png",
-        "assets/source/hero-materials/baseline/mage.png"
+        "assets/sprites/actors/mage.png",
+        "assets/source/heroes/mage/materials/baseline/mage.png"
       ]
     },
     {
       "sha256": "379f9866399c0e0e5265adfea05c3779fc7e6723cc42626226c7275157e4a17c",
       "paths": [
-        "assets/art/forest/earth.webp",
-        "assets/art/village/dirt.webp"
+        "assets/sprites/forest/earth.webp",
+        "assets/sprites/village/dirt.webp"
       ]
     },
     {
       "sha256": "a8839796d4ccabb6f1353230773eaa975c09f530297a9b9d083a8bd94e9e1d3f",
       "paths": [
-        "assets/art/native_residents/merchant_merchant-texture-1.png",
-        "assets/art/preview3d/mage_source-1.png"
+        "assets/models/residents/merchant/model_merchant-texture-1.png",
+        "assets/models/heroes/mage/model_source-1.png"
       ]
     },
     {
       "sha256": "2421f802cdd2a0bcd0a802d2b24ec4ae12cb06a5fbc436ed6d91705587d91bba",
       "paths": [
-        "assets/art/native_residents/merchant_merchant-texture-5.png",
-        "assets/art/preview3d/mage_source-2.png"
+        "assets/models/residents/merchant/model_merchant-texture-5.png",
+        "assets/models/heroes/mage/model_source-2.png"
       ]
     },
     {
       "sha256": "b15d91005ef535b81a14975239caad6be8a9b424f99b67717457370687d893f1",
       "paths": [
-        "assets/art/native_residents/merchant_merchant-texture-7.png",
-        "assets/art/preview3d/mage_source-3.png"
+        "assets/models/residents/merchant/model_merchant-texture-7.png",
+        "assets/models/heroes/mage/model_source-3.png"
       ]
     }
   ],
   "meshes": [
     {
-      "path": "assets/art/preview3d/mage.glb",
+      "path": "assets/models/heroes/mage/model.glb",
       "encoded_bytes": 4546560,
       "sha256": "40f5cc5fc77aa35d934c7c764cdcd0f9b9fa8b5012def66ab638b0c4f910fe48",
       "vertices_in_primitives": 12806,
@@ -5502,7 +5502,7 @@
       "materials": 12
     },
     {
-      "path": "assets/art/native_residents/merchant.glb",
+      "path": "assets/models/residents/merchant/model.glb",
       "encoded_bytes": 3846200,
       "sha256": "85212ab8c6622f6b1839154335fbd17932e603b412c8d568eab0893fa0bd122b",
       "vertices_in_primitives": 11707,
@@ -5519,7 +5519,7 @@
       "materials": 5
     },
     {
-      "path": "assets/art/preview3d/town-oak-0.glb",
+      "path": "assets/models/vegetation/town_oak_0/model.glb",
       "encoded_bytes": 188064,
       "sha256": "762e1a1ae051dd66a05ac88cfa78586bba86b9bddda65dfcd88714f57113ead4",
       "vertices_in_primitives": 4992,
@@ -5532,7 +5532,7 @@
       "materials": 2
     },
     {
-      "path": "assets/art/preview3d/town-oak-1.glb",
+      "path": "assets/models/vegetation/town_oak_1/model.glb",
       "encoded_bytes": 187812,
       "sha256": "163faf1cdb15c0fee6d6e81be9ffa12f06e0796ac24f08e0b1da86ea8f2663e4",
       "vertices_in_primitives": 4984,
@@ -5545,7 +5545,7 @@
       "materials": 2
     },
     {
-      "path": "assets/art/preview3d/native-fountain.glb",
+      "path": "assets/models/environment/fountain/model.glb",
       "encoded_bytes": 270920,
       "sha256": "7375cb11df09d6e950c57ad8aa01ecb06bf99494a35138b32a234936f6af25f2",
       "vertices_in_primitives": 7687,
@@ -5558,7 +5558,7 @@
       "materials": 3
     },
     {
-      "path": "assets/art/preview3d/native-warp-gate.glb",
+      "path": "assets/models/environment/warp_gate/model.glb",
       "encoded_bytes": 145760,
       "sha256": "b9a594a0d1a417e3a3d8183aac3c5d13dd12468d4a073baafe5605caae51d2a6",
       "vertices_in_primitives": 4089,
@@ -6329,798 +6329,798 @@
       "flags": 0
     },
     {
-      "path": "assets/art/actors/boar.json",
+      "path": "assets/sprites/actors/boar.json",
       "bytes": 3995,
       "offset": 112,
       "md5": "d2e8661864a98fdb386290a3b2c92bec",
       "flags": 0
     },
     {
-      "path": "assets/art/actors/boar.webp.import",
+      "path": "assets/sprites/actors/boar.webp.import",
       "bytes": 194,
       "offset": 1532432,
       "md5": "8b53329f002d878963d1a1422c366844",
       "flags": 0
     },
     {
-      "path": "assets/art/actors/corpses.webp.import",
+      "path": "assets/sprites/actors/corpses.webp.import",
       "bytes": 197,
       "offset": 1624384,
       "md5": "82075052a00ec581da4abf3a4cc37fa1",
       "flags": 0
     },
     {
-      "path": "assets/art/actors/goblin.json",
+      "path": "assets/sprites/actors/goblin.json",
       "bytes": 3968,
       "offset": 1624592,
       "md5": "6bd4d208404efb6a1b516ae50b781128",
       "flags": 0
     },
     {
-      "path": "assets/art/actors/goblin.webp.import",
+      "path": "assets/sprites/actors/goblin.webp.import",
       "bytes": 196,
       "offset": 2796864,
       "md5": "219ecd29843c8862d621be72a4ee3c6c",
       "flags": 0
     },
     {
-      "path": "assets/art/actors/golem.json",
+      "path": "assets/sprites/actors/golem.json",
       "bytes": 4005,
       "offset": 2797072,
       "md5": "005b12553d77acf683bd875372962aba",
       "flags": 0
     },
     {
-      "path": "assets/art/actors/golem.webp.import",
+      "path": "assets/sprites/actors/golem.webp.import",
       "bytes": 195,
       "offset": 4342400,
       "md5": "67d7d7f30081ffd711e647bbb59741a9",
       "flags": 0
     },
     {
-      "path": "assets/art/actors/mage-cast.json",
+      "path": "assets/sprites/actors/mage-cast.json",
       "bytes": 5886,
       "offset": 4342608,
       "md5": "f2cf80c4ecb64a6b9aed2617503da1a8",
       "flags": 0
     },
     {
-      "path": "assets/art/actors/mage-cast.webp.import",
+      "path": "assets/sprites/actors/mage-cast.webp.import",
       "bytes": 198,
       "offset": 4883776,
       "md5": "6eaacbbd3d5c87a4f26975f6d11b25b7",
       "flags": 0
     },
     {
-      "path": "assets/art/actors/mage.json",
+      "path": "assets/sprites/actors/mage.json",
       "bytes": 6669,
       "offset": 4883984,
       "md5": "1ea04b310d80dff79f4a98ea1ab5ae79",
       "flags": 0
     },
     {
-      "path": "assets/art/actors/mage.png.import",
+      "path": "assets/sprites/actors/mage.png.import",
       "bytes": 192,
       "offset": 5421232,
       "md5": "fdd26c0f0bd39ca47dedd27d1fddd949",
       "flags": 0
     },
     {
-      "path": "assets/art/actors/npcs.webp.import",
+      "path": "assets/sprites/actors/npcs.webp.import",
       "bytes": 194,
       "offset": 5515472,
       "md5": "cb2d97db7fa9933ecd698e3193a68280",
       "flags": 0
     },
     {
-      "path": "assets/art/actors/skeleton.json",
+      "path": "assets/sprites/actors/skeleton.json",
       "bytes": 3949,
       "offset": 5515680,
       "md5": "b683a9b2fe23fc77ff9e796717f2891b",
       "flags": 0
     },
     {
-      "path": "assets/art/actors/skeleton.webp.import",
+      "path": "assets/sprites/actors/skeleton.webp.import",
       "bytes": 198,
       "offset": 6772048,
       "md5": "597954c76e925c6361c6762dfcb7ded6",
       "flags": 0
     },
     {
-      "path": "assets/art/actors/warrior-attack.json",
+      "path": "assets/sprites/actors/warrior-attack.json",
       "bytes": 5958,
       "offset": 6772256,
       "md5": "dc97613e2030834f5cba38df25b8f200",
       "flags": 0
     },
     {
-      "path": "assets/art/actors/warrior-attack.webp.import",
+      "path": "assets/sprites/actors/warrior-attack.webp.import",
       "bytes": 204,
       "offset": 7332048,
       "md5": "d136797317e6b1400e40975e00b0aba4",
       "flags": 0
     },
     {
-      "path": "assets/art/actors/warrior.json",
+      "path": "assets/sprites/actors/warrior.json",
       "bytes": 6730,
       "offset": 7332256,
       "md5": "c9c76286d74f5f6c22b4dac7255e62d1",
       "flags": 0
     },
     {
-      "path": "assets/art/actors/warrior.webp.import",
+      "path": "assets/sprites/actors/warrior.webp.import",
       "bytes": 197,
       "offset": 7912496,
       "md5": "db93bba51d6b3f24f5375bb832b5255b",
       "flags": 0
     },
     {
-      "path": "assets/art/actors/wolf.json",
+      "path": "assets/sprites/actors/wolf.json",
       "bytes": 4005,
       "offset": 7912704,
       "md5": "8df58acc5bd98401d2bbfcfa1c62f9a1",
       "flags": 0
     },
     {
-      "path": "assets/art/actors/wolf.webp.import",
+      "path": "assets/sprites/actors/wolf.webp.import",
       "bytes": 193,
       "offset": 9471712,
       "md5": "cbe00808610db62722b5a6695e4e4147",
       "flags": 0
     },
     {
-      "path": "assets/art/cave/arches.webp.import",
+      "path": "assets/sprites/dungeon/arches.webp.import",
       "bytes": 196,
       "offset": 9693088,
       "md5": "af639a59673c0d2a3d84df9e58787a7f",
       "flags": 0
     },
     {
-      "path": "assets/art/cave/dark.webp.import",
+      "path": "assets/sprites/dungeon/dark.webp.import",
       "bytes": 194,
       "offset": 9768736,
       "md5": "108d3bf64cc90d77ad6bc571b5f01412",
       "flags": 0
     },
     {
-      "path": "assets/art/cave/floor.webp.import",
+      "path": "assets/sprites/dungeon/floor.webp.import",
       "bytes": 194,
       "offset": 9840256,
       "md5": "420d21df3f1a4874a103474d924b56da",
       "flags": 0
     },
     {
-      "path": "assets/art/cave/ledges.webp.import",
+      "path": "assets/sprites/dungeon/ledges.webp.import",
       "bytes": 196,
       "offset": 9894992,
       "md5": "1067ada990fabcb536132b09adea845a",
       "flags": 0
     },
     {
-      "path": "assets/art/cave/props.webp.import",
+      "path": "assets/sprites/dungeon/props.webp.import",
       "bytes": 195,
       "offset": 10085200,
       "md5": "2eca31641b4eda5552adc972dc748d5d",
       "flags": 0
     },
     {
-      "path": "assets/art/effects/combat-frames.webp.import",
+      "path": "assets/effects/textures/combat-frames.webp.import",
       "bytes": 202,
       "offset": 10165904,
       "md5": "a54f9193a9d19f7a6fe9ea13deb1abc7",
       "flags": 0
     },
     {
-      "path": "assets/art/effects/forest-atmosphere.webp.import",
+      "path": "assets/effects/textures/forest-atmosphere.webp.import",
       "bytes": 207,
       "offset": 10169888,
       "md5": "46217ec75a34b30800308f119a791d4e",
       "flags": 0
     },
     {
-      "path": "assets/art/effects/frost-low.webp.import",
+      "path": "assets/effects/textures/frost-low.webp.import",
       "bytes": 199,
       "offset": 10192112,
       "md5": "d8b366529038b6343bf6501795eca6ad",
       "flags": 0
     },
     {
-      "path": "assets/art/effects/reference-skills.webp.import",
+      "path": "assets/effects/textures/reference-skills.webp.import",
       "bytes": 206,
       "offset": 10256592,
       "md5": "e9e36fc90ec016a44939a5121e385afe",
       "flags": 0
     },
     {
-      "path": "assets/art/effects/reward-atlas.webp.import",
+      "path": "assets/effects/textures/reward-atlas.webp.import",
       "bytes": 202,
       "offset": 10307376,
       "md5": "03e4eb7ebd83bb616abfbb98a38947e9",
       "flags": 0
     },
     {
-      "path": "assets/art/entry/mage.webp.import",
+      "path": "assets/ui/entry/mage.webp.import",
       "bytes": 194,
       "offset": 10490384,
       "md5": "2385d57c05bb76d7cc2f02c3f9841348",
       "flags": 0
     },
     {
-      "path": "assets/art/entry/selection-forest.webp.import",
+      "path": "assets/ui/entry/selection-forest.webp.import",
       "bytes": 205,
       "offset": 10548336,
       "md5": "0d1eca91577ae21beb4c209cbb091b9a",
       "flags": 0
     },
     {
-      "path": "assets/art/entry/selection-mage.webp.import",
+      "path": "assets/ui/entry/selection-mage.webp.import",
       "bytes": 204,
       "offset": 10644272,
       "md5": "e6c189fe30ae1885a64135dfc515a12f",
       "flags": 0
     },
     {
-      "path": "assets/art/entry/selection-warrior.webp.import",
+      "path": "assets/ui/entry/selection-warrior.webp.import",
       "bytes": 207,
       "offset": 10780480,
       "md5": "cb440ff72d98a22a93dcd298b21fa9d2",
       "flags": 0
     },
     {
-      "path": "assets/art/entry/start-background.webp.import",
+      "path": "assets/ui/entry/start-background.webp.import",
       "bytes": 206,
       "offset": 10888048,
       "md5": "9cb8b2002b4c68a746e15b019b880cda",
       "flags": 0
     },
     {
-      "path": "assets/art/entry/warrior.webp.import",
+      "path": "assets/ui/entry/warrior.webp.import",
       "bytes": 197,
       "offset": 11031312,
       "md5": "c9f7b9682fff9798d6c055fd1a46b3d1",
       "flags": 0
     },
     {
-      "path": "assets/art/forest/earth.webp.import",
+      "path": "assets/sprites/forest/earth.webp.import",
       "bytes": 195,
       "offset": 11121712,
       "md5": "d80c28fbe5923c05c918c5d920c5d196",
       "flags": 0
     },
     {
-      "path": "assets/art/forest/flora.webp.import",
+      "path": "assets/sprites/forest/flora.webp.import",
       "bytes": 193,
       "offset": 11523536,
       "md5": "6f13f697697c38e2b6818f5f6bc4076d",
       "flags": 0
     },
     {
-      "path": "assets/art/forest/grass.webp.import",
+      "path": "assets/materials/terrain/grass_base.webp.import",
       "bytes": 195,
       "offset": 11600208,
       "md5": "45bc560f00bc30cc1abf3d8c487fb2af",
       "flags": 0
     },
     {
-      "path": "assets/art/forest/paving.webp.import",
+      "path": "assets/materials/terrain/paving_base.webp.import",
       "bytes": 196,
       "offset": 11659472,
       "md5": "746160c2cb480bdb5334b1fd3f38e1c3",
       "flags": 0
     },
     {
-      "path": "assets/art/hud/gear-icons.png.import",
+      "path": "assets/ui/hud/gear-icons.png.import",
       "bytes": 198,
       "offset": 12241232,
       "md5": "49063644203ca83f46737af69d39e916",
       "flags": 0
     },
     {
-      "path": "assets/art/hud/generated-trim.webp.import",
+      "path": "assets/ui/hud/generated-trim.webp.import",
       "bytes": 204,
       "offset": 12287040,
       "md5": "53d40392a7d6c9a6e0c247a0ee8d145f",
       "flags": 0
     },
     {
-      "path": "assets/art/hud/icons.webp.import",
+      "path": "assets/ui/hud/icons.webp.import",
       "bytes": 195,
       "offset": 12549360,
       "md5": "01d6193bf4032cc68b3ae3da23af352b",
       "flags": 0
     },
     {
-      "path": "assets/art/hud/level-badge.webp.import",
+      "path": "assets/ui/hud/level-badge.webp.import",
       "bytes": 201,
       "offset": 12556992,
       "md5": "33c35f757f6e2339dd0e5521277d0694",
       "flags": 0
     },
     {
-      "path": "assets/art/hud/mobile-menu.webp.import",
+      "path": "assets/ui/hud/mobile-menu.webp.import",
       "bytes": 201,
       "offset": 12591920,
       "md5": "6bf98f44faa6a18825ab131ea8f18f86",
       "flags": 0
     },
     {
-      "path": "assets/art/hud/panel-leather.webp.import",
+      "path": "assets/ui/hud/panel-leather.webp.import",
       "bytes": 203,
       "offset": 12593600,
       "md5": "0826c24dc70d8a6c33b4d4943de854f8",
       "flags": 0
     },
     {
-      "path": "assets/art/hud/portrait-mage.webp.import",
+      "path": "assets/ui/hud/portrait-mage.webp.import",
       "bytes": 203,
       "offset": 12612528,
       "md5": "690533f539681c9659496597e920d566",
       "flags": 0
     },
     {
-      "path": "assets/art/hud/portrait-warrior.webp.import",
+      "path": "assets/ui/hud/portrait-warrior.webp.import",
       "bytes": 205,
       "offset": 12676288,
       "md5": "fca73624c1e6b046e3fd25c356be23e9",
       "flags": 0
     },
     {
-      "path": "assets/art/hud/potions.webp.import",
+      "path": "assets/ui/hud/potions.webp.import",
       "bytes": 196,
       "offset": 12692784,
       "md5": "42ff906c48ef9f23acf3d91681f8a142",
       "flags": 0
     },
     {
-      "path": "assets/art/hud/reference-buttons.webp.import",
+      "path": "assets/ui/hud/reference-buttons.webp.import",
       "bytes": 205,
       "offset": 12763568,
       "md5": "07661ebee8f618fa55e031335af745a0",
       "flags": 0
     },
     {
-      "path": "assets/art/hud/woodland-icons.png.import",
+      "path": "assets/ui/hud/woodland-icons.png.import",
       "bytes": 203,
       "offset": 13222112,
       "md5": "55750175ad3cb44d0c951525b4810d14",
       "flags": 0
     },
     {
-      "path": "assets/art/hud/woodland-portraits.png.import",
+      "path": "assets/ui/hud/woodland-portraits.png.import",
       "bytes": 207,
       "offset": 13518720,
       "md5": "56fab91059053dbef47d626b37abd544",
       "flags": 0
     },
     {
-      "path": "assets/art/native-actors/surface-atlas.bin",
+      "path": "assets/materials/actors/surface_atlas.bin",
       "bytes": 3137948,
       "offset": 28143088,
       "md5": "2a89f948a3f8d928708c81897363fc2a",
       "flags": 0
     },
     {
-      "path": "assets/art/native_residents/merchant.glb.import",
+      "path": "assets/models/residents/merchant/model.glb.import",
       "bytes": 170,
       "offset": 14071632,
       "md5": "a1648ca77e6ddadfb4bc6b333475f889",
       "flags": 0
     },
     {
-      "path": "assets/art/native_residents/merchant_merchant-texture-1.png.import",
+      "path": "assets/models/residents/merchant/model_merchant-texture-1.png.import",
       "bytes": 283,
       "offset": 14099968,
       "md5": "c396cb8cc23b36578da6a3c89777d763",
       "flags": 0
     },
     {
-      "path": "assets/art/native_residents/merchant_merchant-texture-4.png.import",
+      "path": "assets/models/residents/merchant/model_merchant-texture-4.png.import",
       "bytes": 283,
       "offset": 14154976,
       "md5": "565428396603c0615e9d142496488bfc",
       "flags": 0
     },
     {
-      "path": "assets/art/native_residents/merchant_merchant-texture-5.png.import",
+      "path": "assets/models/residents/merchant/model_merchant-texture-5.png.import",
       "bytes": 283,
       "offset": 14197776,
       "md5": "c56a788bee5299a0070991947a921ce4",
       "flags": 0
     },
     {
-      "path": "assets/art/native_residents/merchant_merchant-texture-6.png.import",
+      "path": "assets/models/residents/merchant/model_merchant-texture-6.png.import",
       "bytes": 283,
       "offset": 14200928,
       "md5": "a54731b36d495b6fac3a08e4d8b1a88f",
       "flags": 0
     },
     {
-      "path": "assets/art/native_residents/merchant_merchant-texture-7.png.import",
+      "path": "assets/models/residents/merchant/model_merchant-texture-7.png.import",
       "bytes": 283,
       "offset": 14230320,
       "md5": "1741a3a6301ccdbd633d9c25f24c6467",
       "flags": 0
     },
     {
-      "path": "assets/art/preview3d/bark.webp.import",
+      "path": "assets/materials/shared/bark.webp.import",
       "bytes": 193,
       "offset": 14445008,
       "md5": "e4345acabb525e279d0c833f6a95fb41",
       "flags": 0
     },
     {
-      "path": "assets/art/preview3d/chapel-glass.json",
+      "path": "assets/materials/shared/chapel-glass.json",
       "bytes": 893,
       "offset": 14445216,
       "md5": "3e7fc5f135f13dd66b93a848ca8516a6",
       "flags": 0
     },
     {
-      "path": "assets/art/preview3d/chapel-glass.webp.import",
+      "path": "assets/materials/shared/chapel-glass.webp.import",
       "bytes": 202,
       "offset": 14462256,
       "md5": "d5693c32b8e2eefd2251e8b55a59cadc",
       "flags": 0
     },
     {
-      "path": "assets/art/preview3d/limestone.webp.import",
+      "path": "assets/materials/shared/limestone.webp.import",
       "bytes": 198,
       "offset": 14672016,
       "md5": "ffa31d2acb6041421436f26e464bd81b",
       "flags": 0
     },
     {
-      "path": "assets/art/preview3d/mage-manifest.json",
+      "path": "assets/models/heroes/mage/asset.json",
       "bytes": 5639,
       "offset": 14672224,
       "md5": "4413f8f03bd1611addf9bbb4c9e87773",
       "flags": 0
     },
     {
-      "path": "assets/art/preview3d/mage.glb.import",
+      "path": "assets/models/heroes/mage/model.glb.import",
       "bytes": 165,
       "offset": 15268528,
       "md5": "a125d8ab4385e5c5dd9a9dfa9e2b6658",
       "flags": 0
     },
     {
-      "path": "assets/art/preview3d/mage_T_Eye_Brown.png.import",
+      "path": "assets/models/heroes/mage/model_T_Eye_Brown.png.import",
       "bytes": 272,
       "offset": 15497552,
       "md5": "b85fe52b510c936315e12bdbdb7f86f7",
       "flags": 0
     },
     {
-      "path": "assets/art/preview3d/mage_cloth-0.png.import",
+      "path": "assets/models/heroes/mage/model_cloth-0.png.import",
       "bytes": 268,
       "offset": 15274608,
       "md5": "0e7f74e651f0126fa5934db117aefe85",
       "flags": 0
     },
     {
-      "path": "assets/art/preview3d/mage_cloth-1.png.import",
+      "path": "assets/models/heroes/mage/model_cloth-1.png.import",
       "bytes": 268,
       "offset": 15282240,
       "md5": "d501cbb6f3e0663f76224689a54e7d05",
       "flags": 0
     },
     {
-      "path": "assets/art/preview3d/mage_cloth-2.png.import",
+      "path": "assets/models/heroes/mage/model_cloth-2.png.import",
       "bytes": 268,
       "offset": 15321440,
       "md5": "f4caf2a8dccb4f15f65f6428d3a88175",
       "flags": 0
     },
     {
-      "path": "assets/art/preview3d/mage_cloth-3.png.import",
+      "path": "assets/models/heroes/mage/model_cloth-3.png.import",
       "bytes": 268,
       "offset": 15331904,
       "md5": "58f70b6478db2651a9610127727a296e",
       "flags": 0
     },
     {
-      "path": "assets/art/preview3d/mage_cloth-4.png.import",
+      "path": "assets/models/heroes/mage/model_cloth-4.png.import",
       "bytes": 268,
       "offset": 15338816,
       "md5": "6f075e7911912bd226898fc74046334b",
       "flags": 0
     },
     {
-      "path": "assets/art/preview3d/mage_source-0.png.import",
+      "path": "assets/models/heroes/mage/model_source-0.png.import",
       "bytes": 269,
       "offset": 15393824,
       "md5": "3de81b2be319c562dbe3329e1bd43ce9",
       "flags": 0
     },
     {
-      "path": "assets/art/preview3d/mage_source-1.png.import",
+      "path": "assets/models/heroes/mage/model_source-1.png.import",
       "bytes": 268,
       "offset": 15422256,
       "md5": "cfb768be0c8176aa6f81800a8f569e52",
       "flags": 0
     },
     {
-      "path": "assets/art/preview3d/mage_source-2.png.import",
+      "path": "assets/models/heroes/mage/model_source-2.png.import",
       "bytes": 269,
       "offset": 15465040,
       "md5": "4a485f8b36c263afb983b66ac2a0423d",
       "flags": 0
     },
     {
-      "path": "assets/art/preview3d/mage_source-3.png.import",
+      "path": "assets/models/heroes/mage/model_source-3.png.import",
       "bytes": 269,
       "offset": 15494416,
       "md5": "ecab4ac55949e5c4bf528b075a9a10cb",
       "flags": 0
     },
     {
-      "path": "assets/art/preview3d/materials.json",
+      "path": "assets/materials/shared/materials.json",
       "bytes": 2799,
       "offset": 15497824,
       "md5": "cfc007c41d2bf73f477d700f3c9f360f",
       "flags": 0
     },
     {
-      "path": "assets/art/preview3d/native-fountain.glb.import",
+      "path": "assets/models/environment/fountain/model.glb.import",
       "bytes": 177,
       "offset": 15593776,
       "md5": "d8d56136710ce1f9aae3bfac185e340c",
       "flags": 0
     },
     {
-      "path": "assets/art/preview3d/native-warp-gate.glb.import",
+      "path": "assets/models/environment/warp_gate/model.glb.import",
       "bytes": 178,
       "offset": 15637424,
       "md5": "04003cf247c5f5361dc7061ab7798bde",
       "flags": 0
     },
     {
-      "path": "assets/art/preview3d/slate.webp.import",
+      "path": "assets/materials/shared/slate.webp.import",
       "bytes": 195,
       "offset": 15781920,
       "md5": "5cc340bd8872ea6127e2c948f8d6121d",
       "flags": 0
     },
     {
-      "path": "assets/art/preview3d/timber.webp.import",
+      "path": "assets/materials/shared/timber.webp.import",
       "bytes": 195,
       "offset": 15952928,
       "md5": "31c5a272fa2d5f026779aed85c4462e5",
       "flags": 0
     },
     {
-      "path": "assets/art/preview3d/town-oak-0.glb.import",
+      "path": "assets/models/vegetation/town_oak_0/model.glb.import",
       "bytes": 172,
       "offset": 16091824,
       "md5": "9939e6fc288cf6864471940c3dc871c7",
       "flags": 0
     },
     {
-      "path": "assets/art/preview3d/town-oak-1.glb.import",
+      "path": "assets/models/vegetation/town_oak_1/model.glb.import",
       "bytes": 172,
       "offset": 16229008,
       "md5": "0a9a91bfd2faae5a5402e74958f64b7e",
       "flags": 0
     },
     {
-      "path": "assets/art/preview3d/town-trees.json",
+      "path": "assets/models/vegetation/shared/tree_profiles.json",
       "bytes": 2319,
       "offset": 16229184,
       "md5": "8f3c3543207de0b1ee366bb727675c89",
       "flags": 0
     },
     {
-      "path": "assets/art/preview3d/tree-leaves.webp.import",
+      "path": "assets/materials/shared/tree_leaves.webp.import",
       "bytes": 201,
       "offset": 16669584,
       "md5": "1da26da32d504180971ce37da7ac3046",
       "flags": 0
     },
     {
-      "path": "assets/art/skills/mage-skills.webp.import",
+      "path": "assets/ui/skills/mage-skills.webp.import",
       "bytes": 201,
       "offset": 17193008,
       "md5": "86981c81b196453667b304dbf4e0352c",
       "flags": 0
     },
     {
-      "path": "assets/art/skills/warrior-skills.webp.import",
+      "path": "assets/ui/skills/warrior-skills.webp.import",
       "bytes": 204,
       "offset": 17664544,
       "md5": "2bc66aec4147c462fd504f2f766563a5",
       "flags": 0
     },
     {
-      "path": "assets/art/ui/hero-mage.webp.import",
+      "path": "assets/ui/selection/hero-mage.webp.import",
       "bytes": 199,
       "offset": 17718032,
       "md5": "d136ed001d7e2772fe9c880c88e85df1",
       "flags": 0
     },
     {
-      "path": "assets/art/ui/hero-warrior.webp.import",
+      "path": "assets/ui/selection/hero-warrior.webp.import",
       "bytes": 200,
       "offset": 17796144,
       "md5": "05f26acfcaea9fc738e61542539f0969",
       "flags": 0
     },
     {
-      "path": "assets/art/ui/select-scene.png.import",
+      "path": "assets/ui/selection/select-scene.png.import",
       "bytes": 201,
       "offset": 18159456,
       "md5": "2c965ae348bff6b56ac799388b972ab6",
       "flags": 0
     },
     {
-      "path": "assets/art/ui/selection-forest.webp.import",
+      "path": "assets/ui/selection/selection-forest.webp.import",
       "bytes": 205,
       "offset": 18187824,
       "md5": "f520dd3cd248b276f331cca2670a6e58",
       "flags": 0
     },
     {
-      "path": "assets/art/ui/selection-trim.webp.import",
+      "path": "assets/ui/selection/selection-trim.webp.import",
       "bytes": 204,
       "offset": 18264496,
       "md5": "041f4fdfcd66bdb95583c44e32e2817b",
       "flags": 0
     },
     {
-      "path": "assets/art/village/bridge.webp.import",
+      "path": "assets/sprites/village/bridge.webp.import",
       "bytes": 196,
       "offset": 18450992,
       "md5": "47f81119032007ea7dcf3e1a5a82fc27",
       "flags": 0
     },
     {
-      "path": "assets/art/village/dirt.webp.import",
+      "path": "assets/sprites/village/dirt.webp.import",
       "bytes": 194,
       "offset": 18541392,
       "md5": "c44a7130f4c0ea42309c9451e16a1659",
       "flags": 0
     },
     {
-      "path": "assets/art/village/encounter-stone.webp.import",
+      "path": "assets/sprites/village/encounter-stone.webp.import",
       "bytes": 204,
       "offset": 18579696,
       "md5": "5683a4ba03a236e0d26af31702cc67e4",
       "flags": 0
     },
     {
-      "path": "assets/art/village/gates.webp.import",
+      "path": "assets/sprites/village/gates.webp.import",
       "bytes": 195,
       "offset": 18829904,
       "md5": "c929253facad1f0504cc7a7238e22143",
       "flags": 0
     },
     {
-      "path": "assets/art/village/landmarks.webp.import",
+      "path": "assets/sprites/village/landmarks.webp.import",
       "bytes": 199,
       "offset": 19412448,
       "md5": "d33d09418716ec3324721b43e73d370e",
       "flags": 0
     },
     {
-      "path": "assets/art/village/meadow-a.webp.import",
+      "path": "assets/sprites/village/meadow-a.webp.import",
       "bytes": 198,
       "offset": 19502576,
       "md5": "8176b22c03de76a613d31ab169db465b",
       "flags": 0
     },
     {
-      "path": "assets/art/village/meadow-b.webp.import",
+      "path": "assets/sprites/village/meadow-b.webp.import",
       "bytes": 198,
       "offset": 19592240,
       "md5": "1dcc2425cbe4871581c3d073d1da95b6",
       "flags": 0
     },
     {
-      "path": "assets/art/village/meadow-c.webp.import",
+      "path": "assets/sprites/village/meadow-c.webp.import",
       "bytes": 197,
       "offset": 19681616,
       "md5": "5fcc59117dfdac35f395d09ddb65e43b",
       "flags": 0
     },
     {
-      "path": "assets/art/village/meadow-d.webp.import",
+      "path": "assets/sprites/village/meadow-d.webp.import",
       "bytes": 198,
       "offset": 19771024,
       "md5": "dcd859102dec03c2fbe124649c12afeb",
       "flags": 0
     },
     {
-      "path": "assets/art/village/paving.webp.import",
+      "path": "assets/sprites/village/paving.webp.import",
       "bytes": 196,
       "offset": 19849568,
       "md5": "cad6d99bfb5be3ef36ff10bb0b9f92f2",
       "flags": 0
     },
     {
-      "path": "assets/art/village/portcullis.webp.import",
+      "path": "assets/sprites/village/portcullis.webp.import",
       "bytes": 200,
       "offset": 19912384,
       "md5": "7a1c95a0739a1f99adc805e8a84f8f04",
       "flags": 0
     },
     {
-      "path": "assets/art/village/props.webp.import",
+      "path": "assets/sprites/village/props.webp.import",
       "bytes": 195,
       "offset": 20522672,
       "md5": "d7bfeb7c5254c5a8473c9efdc58a1df0",
       "flags": 0
     },
     {
-      "path": "assets/art/village/remake-chest-broken.webp.import",
+      "path": "assets/sprites/village/remake-chest-broken.webp.import",
       "bytes": 209,
       "offset": 20570000,
       "md5": "f3e39261030dae2f0c95a43048e64dc7",
       "flags": 0
     },
     {
-      "path": "assets/art/village/remake-chest.webp.import",
+      "path": "assets/sprites/village/remake-chest.webp.import",
       "bytes": 202,
       "offset": 20614912,
       "md5": "47a09b40044200d71ebe2f29ef5c22a9",
       "flags": 0
     },
     {
-      "path": "assets/art/village/remake-pool.webp.import",
+      "path": "assets/sprites/village/remake-pool.webp.import",
       "bytes": 201,
       "offset": 20775584,
       "md5": "7ae41f6714d12f580ce2c1aa6f47597d",
       "flags": 0
     },
     {
-      "path": "assets/art/village/remake-portal.webp.import",
+      "path": "assets/sprites/village/remake-portal.webp.import",
       "bytes": 203,
       "offset": 20943632,
       "md5": "24f3a8275a878a969906d8bc73aecaa1",
       "flags": 0
     },
     {
-      "path": "assets/art/village/remake-rock.webp.import",
+      "path": "assets/sprites/village/remake-rock.webp.import",
       "bytes": 201,
       "offset": 20977424,
       "md5": "e1b44c3c458ff4630b97f607c00af458",
       "flags": 0
     },
     {
-      "path": "assets/art/village/rock.webp.import",
+      "path": "assets/materials/terrain/rock_base.webp.import",
       "bytes": 193,
       "offset": 21074480,
       "md5": "2cd44076ff8bc9ef2189e3b145faf41b",
       "flags": 0
     },
     {
-      "path": "assets/art/village/town.webp.import",
+      "path": "assets/sprites/village/town.webp.import",
       "bytes": 193,
       "offset": 21996112,
       "md5": "3464813c7cabaa92e2f3ff46136ac69d",
       "flags": 0
     },
     {
-      "path": "assets/art/village/trees.webp.import",
+      "path": "assets/sprites/village/trees.webp.import",
       "bytes": 195,
       "offset": 22515712,
       "md5": "097a44fd460c08073af77b3124190315",
       "flags": 0
     },
     {
-      "path": "assets/art/village/undergrowth.webp.import",
+      "path": "assets/sprites/village/undergrowth.webp.import",
       "bytes": 200,
       "offset": 22753984,
       "md5": "cb754f6779f9d13182faa20b1a96affb",
       "flags": 0
     },
     {
-      "path": "assets/art/village/walls.webp.import",
+      "path": "assets/sprites/village/walls.webp.import",
       "bytes": 194,
       "offset": 22780784,
       "md5": "a0fb291bbc868706c02dc5194a45e978",
       "flags": 0
     },
     {
-      "path": "assets/art/village/water.webp.import",
+      "path": "assets/sprites/village/water.webp.import",
       "bytes": 195,
       "offset": 22818864,
       "md5": "8445d9198211e4bb48291ac5ef51d3c1",
@@ -7351,763 +7351,763 @@
       "flags": 0
     },
     {
-      "path": "scripts/actor_atlas.gd.remap",
+      "path": "scripts/rendering/sprites/actor_atlas.gd.remap",
       "bytes": 46,
       "offset": 31281152,
       "md5": "0dcb142bcfc24241f591c0ab7c09f6ca",
       "flags": 0
     },
     {
-      "path": "scripts/actor_atlas.gdc",
+      "path": "scripts/rendering/sprites/actor_atlas.gdc",
       "bytes": 3037,
       "offset": 27278064,
       "md5": "466c31fd3b204a23025b510237db1af5",
       "flags": 0
     },
     {
-      "path": "scripts/actor_sprite.gd.remap",
+      "path": "scripts/rendering/sprites/actor_sprite.gd.remap",
       "bytes": 47,
       "offset": 31281200,
       "md5": "a648a0044245079ab40574e45b327835",
       "flags": 0
     },
     {
-      "path": "scripts/actor_sprite.gdc",
+      "path": "scripts/rendering/sprites/actor_sprite.gdc",
       "bytes": 3789,
       "offset": 27281104,
       "md5": "031ef09c5b570049d5fcb947d2d63bbc",
       "flags": 0
     },
     {
-      "path": "scripts/art_warp.gd.remap",
+      "path": "scripts/rendering/sprites/art_warp.gd.remap",
       "bytes": 43,
       "offset": 31281248,
       "md5": "b1abebfd10372bfba7ad719fb4fe8a5e",
       "flags": 0
     },
     {
-      "path": "scripts/art_warp.gdc",
+      "path": "scripts/rendering/sprites/art_warp.gdc",
       "bytes": 1143,
       "offset": 27284896,
       "md5": "951e84ee7a9b8ca655e506b272c2f919",
       "flags": 0
     },
     {
-      "path": "scripts/bag_panel.gd.remap",
+      "path": "scripts/ui/panels/bag_panel.gd.remap",
       "bytes": 44,
       "offset": 31281296,
       "md5": "0cae11c70cdf00e52e057f493ad2d0b2",
       "flags": 0
     },
     {
-      "path": "scripts/bag_panel.gdc",
+      "path": "scripts/ui/panels/bag_panel.gdc",
       "bytes": 16156,
       "offset": 27286048,
       "md5": "11be3e62ecd877a2ba865785b4b7696f",
       "flags": 0
     },
     {
-      "path": "scripts/blacksmith_panel.gd.remap",
+      "path": "scripts/ui/panels/blacksmith_panel.gd.remap",
       "bytes": 51,
       "offset": 31281344,
       "md5": "9f1fb26be5060f5e7c7f0e5a67d9a755",
       "flags": 0
     },
     {
-      "path": "scripts/blacksmith_panel.gdc",
+      "path": "scripts/ui/panels/blacksmith_panel.gdc",
       "bytes": 5192,
       "offset": 27302208,
       "md5": "e9987ffd98267d03cc576caa6a67a86a",
       "flags": 0
     },
     {
-      "path": "scripts/boss_panel.gd.remap",
+      "path": "scripts/ui/panels/boss_panel.gd.remap",
       "bytes": 45,
       "offset": 31281408,
       "md5": "ec4e8c48275dd5298660bc5ae3088a8f",
       "flags": 0
     },
     {
-      "path": "scripts/boss_panel.gdc",
+      "path": "scripts/ui/panels/boss_panel.gdc",
       "bytes": 904,
       "offset": 27307408,
       "md5": "9fcfd459315d3a6f87941ab46e1ae31c",
       "flags": 0
     },
     {
-      "path": "scripts/bridge.gd.remap",
+      "path": "scripts/world/bridge.gd.remap",
       "bytes": 41,
       "offset": 31281456,
       "md5": "fe96b3167fd43fa6db81770871d47870",
       "flags": 0
     },
     {
-      "path": "scripts/bridge.gdc",
+      "path": "scripts/world/bridge.gdc",
       "bytes": 3956,
       "offset": 27308320,
       "md5": "8fd04ec2bf7be1a2208d3660f3aa8364",
       "flags": 0
     },
     {
-      "path": "scripts/canopy_shade.gd.remap",
+      "path": "scripts/rendering/lighting/canopy_shade.gd.remap",
       "bytes": 47,
       "offset": 31281504,
       "md5": "45ad796c751c1d079b3aa8d02ded4c5f",
       "flags": 0
     },
     {
-      "path": "scripts/canopy_shade.gdc",
+      "path": "scripts/rendering/lighting/canopy_shade.gdc",
       "bytes": 4603,
       "offset": 27312288,
       "md5": "02df06291ade2992e24625ec26525e16",
       "flags": 0
     },
     {
-      "path": "scripts/chest.gd.remap",
+      "path": "scripts/gameplay/loot/chest.gd.remap",
       "bytes": 40,
       "offset": 31281552,
       "md5": "b2f969cd744e6852c07505f34b2caf28",
       "flags": 0
     },
     {
-      "path": "scripts/chest.gdc",
+      "path": "scripts/gameplay/loot/chest.gdc",
       "bytes": 1426,
       "offset": 27316896,
       "md5": "540054532dd347b33479f59f7feb187a",
       "flags": 0
     },
     {
-      "path": "scripts/class_select.gd.remap",
+      "path": "scripts/ui/screens/class_select.gd.remap",
       "bytes": 47,
       "offset": 31281600,
       "md5": "5447171f6b655b58a82a9871bf904177",
       "flags": 0
     },
     {
-      "path": "scripts/class_select.gdc",
+      "path": "scripts/ui/screens/class_select.gdc",
       "bytes": 30734,
       "offset": 27318336,
       "md5": "66b815eadc389caaa1f806a601cdc60c",
       "flags": 0
     },
     {
-      "path": "scripts/corpse_art.gd.remap",
+      "path": "scripts/rendering/sprites/corpse_art.gd.remap",
       "bytes": 45,
       "offset": 31281648,
       "md5": "4db42c28c67d5af7c56fc02c5d0bf662",
       "flags": 0
     },
     {
-      "path": "scripts/corpse_art.gdc",
+      "path": "scripts/rendering/sprites/corpse_art.gdc",
       "bytes": 1527,
       "offset": 27349072,
       "md5": "7fa7f638bd03fb11c553c6dd10151453",
       "flags": 0
     },
     {
-      "path": "scripts/dialogue_panel.gd.remap",
+      "path": "scripts/ui/panels/dialogue_panel.gd.remap",
       "bytes": 49,
       "offset": 31281696,
       "md5": "a79879a2c56ff1db17d9949e69b0b063",
       "flags": 0
     },
     {
-      "path": "scripts/dialogue_panel.gdc",
+      "path": "scripts/ui/panels/dialogue_panel.gdc",
       "bytes": 4659,
       "offset": 27350608,
       "md5": "d491a1648e26e11d996080c63e61357a",
       "flags": 0
     },
     {
-      "path": "scripts/dungeon_art.gd.remap",
+      "path": "scripts/rendering/sprites/dungeon_art.gd.remap",
       "bytes": 46,
       "offset": 31281760,
       "md5": "029c3cd622297f97a9521b11e2e469ab",
       "flags": 0
     },
     {
-      "path": "scripts/dungeon_art.gdc",
+      "path": "scripts/rendering/sprites/dungeon_art.gdc",
       "bytes": 8248,
       "offset": 27355280,
       "md5": "66eae8907ca3eec19c05206cb55c2220",
       "flags": 0
     },
     {
-      "path": "scripts/dungeon_layout.gd.remap",
+      "path": "scripts/gameplay/dungeon/dungeon_layout.gd.remap",
       "bytes": 49,
       "offset": 31281808,
       "md5": "f921a27eff8d53deccc05568450f55dc",
       "flags": 0
     },
     {
-      "path": "scripts/dungeon_layout.gdc",
+      "path": "scripts/gameplay/dungeon/dungeon_layout.gdc",
       "bytes": 2081,
       "offset": 27363536,
       "md5": "912612a7d547e2859d5cb1e8df3b5d17",
       "flags": 0
     },
     {
-      "path": "scripts/dungeon_panel.gd.remap",
+      "path": "scripts/ui/panels/dungeon_panel.gd.remap",
       "bytes": 48,
       "offset": 31281872,
       "md5": "c03d18ea46b42445fe48c59cb87db216",
       "flags": 0
     },
     {
-      "path": "scripts/dungeon_panel.gdc",
+      "path": "scripts/ui/panels/dungeon_panel.gdc",
       "bytes": 1764,
       "offset": 27365632,
       "md5": "fc5f90812883b3f13ec76cca53466129",
       "flags": 0
     },
     {
-      "path": "scripts/dungeon_runtime.gd.remap",
+      "path": "scripts/gameplay/dungeon/dungeon_runtime.gd.remap",
       "bytes": 50,
       "offset": 31281920,
       "md5": "a40cb06c610e954984738d68d977523e",
       "flags": 0
     },
     {
-      "path": "scripts/dungeon_runtime.gdc",
+      "path": "scripts/gameplay/dungeon/dungeon_runtime.gdc",
       "bytes": 5758,
       "offset": 27367408,
       "md5": "da7c853ae12d1b7762929aa22ffbec77",
       "flags": 0
     },
     {
-      "path": "scripts/edition_navigation.gd.remap",
+      "path": "scripts/app/edition_navigation.gd.remap",
       "bytes": 53,
       "offset": 31281984,
       "md5": "cf309b414b5e9a4b629db3114cc95857",
       "flags": 0
     },
     {
-      "path": "scripts/edition_navigation.gdc",
+      "path": "scripts/app/edition_navigation.gdc",
       "bytes": 812,
       "offset": 27373168,
       "md5": "5b8ef958188efae24400255e49f32aab",
       "flags": 0
     },
     {
-      "path": "scripts/effects.gd.remap",
+      "path": "scripts/gameplay/combat/effects.gd.remap",
       "bytes": 42,
       "offset": 31282048,
       "md5": "bd768ef8b63a30d447d54285dfa893d1",
       "flags": 0
     },
     {
-      "path": "scripts/effects.gdc",
+      "path": "scripts/gameplay/combat/effects.gdc",
       "bytes": 23072,
       "offset": 27373984,
       "md5": "2bce1f55ea7d7770282328326673770f",
       "flags": 0
     },
     {
-      "path": "scripts/encounter_runtime.gd.remap",
+      "path": "scripts/gameplay/quests/encounter_runtime.gd.remap",
       "bytes": 52,
       "offset": 31282096,
       "md5": "4c7fb3e265e08bdac85cc3b720f23201",
       "flags": 0
     },
     {
-      "path": "scripts/encounter_runtime.gdc",
+      "path": "scripts/gameplay/quests/encounter_runtime.gdc",
       "bytes": 8270,
       "offset": 27397056,
       "md5": "9e278c8f79b37513987b9f8e3ac4f875",
       "flags": 0
     },
     {
-      "path": "scripts/encounter_stone.gd.remap",
+      "path": "scripts/gameplay/quests/encounter_stone.gd.remap",
       "bytes": 50,
       "offset": 31282160,
       "md5": "9609d1c72515d4c7402218f57235db6d",
       "flags": 0
     },
     {
-      "path": "scripts/encounter_stone.gdc",
+      "path": "scripts/gameplay/quests/encounter_stone.gdc",
       "bytes": 2455,
       "offset": 27405328,
       "md5": "c0c85de76de67b108fdbf29ad04cb2cc",
       "flags": 0
     },
     {
-      "path": "scripts/enemy.gd.remap",
+      "path": "scripts/gameplay/actors/enemy.gd.remap",
       "bytes": 40,
       "offset": 31282224,
       "md5": "5a495e818d5987541d0ff40aadd5aff5",
       "flags": 0
     },
     {
-      "path": "scripts/enemy.gdc",
+      "path": "scripts/gameplay/actors/enemy.gdc",
       "bytes": 11576,
       "offset": 27407792,
       "md5": "a8ccedd08cd316e7633ee927dc4be109",
       "flags": 0
     },
     {
-      "path": "scripts/entry_loading.gd.remap",
+      "path": "scripts/ui/screens/entry_loading.gd.remap",
       "bytes": 48,
       "offset": 31282272,
       "md5": "76e00d57076794772eec5084258b1bb0",
       "flags": 0
     },
     {
-      "path": "scripts/entry_loading.gdc",
+      "path": "scripts/ui/screens/entry_loading.gdc",
       "bytes": 7593,
       "offset": 27419376,
       "md5": "2d6f599c1c6f25ca1e0534b21d7e5ac2",
       "flags": 0
     },
     {
-      "path": "scripts/entry_ui.gd.remap",
+      "path": "scripts/ui/style/entry_ui.gd.remap",
       "bytes": 43,
       "offset": 31282320,
       "md5": "8fbb76635f6b3ab98fa33221c8db2b9f",
       "flags": 0
     },
     {
-      "path": "scripts/entry_ui.gdc",
+      "path": "scripts/ui/style/entry_ui.gdc",
       "bytes": 2872,
       "offset": 27426976,
       "md5": "5f73396c8defe7dae9831ef9bf398a92",
       "flags": 0
     },
     {
-      "path": "scripts/exploration.gd.remap",
+      "path": "scripts/gameplay/travel/exploration.gd.remap",
       "bytes": 46,
       "offset": 31282368,
       "md5": "f8788f7e4a9973248b78f97749ea6ca9",
       "flags": 0
     },
     {
-      "path": "scripts/exploration.gdc",
+      "path": "scripts/gameplay/travel/exploration.gdc",
       "bytes": 4729,
       "offset": 27429856,
       "md5": "70678ec41fc345a537fc0dae04005796",
       "flags": 0
     },
     {
-      "path": "scripts/forest_art.gd.remap",
+      "path": "scripts/rendering/sprites/forest_art.gd.remap",
       "bytes": 45,
       "offset": 31282416,
       "md5": "cdb35afde38e2ee6ff7ad07d2407b553",
       "flags": 0
     },
     {
-      "path": "scripts/forest_art.gdc",
+      "path": "scripts/rendering/sprites/forest_art.gdc",
       "bytes": 5622,
       "offset": 27434592,
       "md5": "f5b8ad2018b654725d498103951ea33f",
       "flags": 0
     },
     {
-      "path": "scripts/forest_atmosphere.gd.remap",
+      "path": "scripts/rendering/effects/forest_atmosphere.gd.remap",
       "bytes": 52,
       "offset": 31282464,
       "md5": "e4e875ab19ffcc071c9fda108dcba897",
       "flags": 0
     },
     {
-      "path": "scripts/forest_atmosphere.gdc",
+      "path": "scripts/rendering/effects/forest_atmosphere.gdc",
       "bytes": 2304,
       "offset": 27440224,
       "md5": "c5faee470432eff286c250297ddc85b9",
       "flags": 0
     },
     {
-      "path": "scripts/forest_balance.gd.remap",
+      "path": "scripts/world/forest_balance.gd.remap",
       "bytes": 49,
       "offset": 31282528,
       "md5": "9f997168c15b76f23fee9c22ed148883",
       "flags": 0
     },
     {
-      "path": "scripts/forest_balance.gdc",
+      "path": "scripts/world/forest_balance.gdc",
       "bytes": 633,
       "offset": 27442528,
       "md5": "aad823d0fd1fa0b0a79110b51a364dda",
       "flags": 0
     },
     {
-      "path": "scripts/forest_lighting.gd.remap",
+      "path": "scripts/rendering/lighting/forest_lighting.gd.remap",
       "bytes": 50,
       "offset": 31282592,
       "md5": "b4851bcf578627952b4c65745cd12051",
       "flags": 0
     },
     {
-      "path": "scripts/forest_lighting.gdc",
+      "path": "scripts/rendering/lighting/forest_lighting.gdc",
       "bytes": 2390,
       "offset": 27443168,
       "md5": "520f590edd69f78f0b372dcf63003992",
       "flags": 0
     },
     {
-      "path": "scripts/game.gd.remap",
+      "path": "scripts/gameplay/game.gd.remap",
       "bytes": 39,
       "offset": 31282656,
       "md5": "d09d7499784225fd170969c0c7fc2cff",
       "flags": 0
     },
     {
-      "path": "scripts/game.gdc",
+      "path": "scripts/gameplay/game.gdc",
       "bytes": 44894,
       "offset": 27445568,
       "md5": "860f0c15bc3785e5b9620d5309363579",
       "flags": 0
     },
     {
-      "path": "scripts/game_state.gd.remap",
+      "path": "scripts/state/game_state.gd.remap",
       "bytes": 45,
       "offset": 31282880,
       "md5": "4ecea2492e0055dae9e44be83da14adf",
       "flags": 0
     },
     {
-      "path": "scripts/game_state.gdc",
+      "path": "scripts/state/game_state.gdc",
       "bytes": 21617,
       "offset": 27510880,
       "md5": "f6f455ca8759741a8943e9ec49443dbd",
       "flags": 0
     },
     {
-      "path": "scripts/game_tempo.gd.remap",
+      "path": "scripts/gameplay/game_tempo.gd.remap",
       "bytes": 45,
       "offset": 31282928,
       "md5": "996a6445656c4578b5f00881a6e9d6bc",
       "flags": 0
     },
     {
-      "path": "scripts/game_tempo.gdc",
+      "path": "scripts/gameplay/game_tempo.gdc",
       "bytes": 845,
       "offset": 27532512,
       "md5": "56bf0804b8bb6759a794b82c45cae112",
       "flags": 0
     },
     {
-      "path": "scripts/gamepad_input.gd.remap",
+      "path": "scripts/input/gamepad_input.gd.remap",
       "bytes": 48,
       "offset": 31282704,
       "md5": "25b73ad12a50018112c9f7895a6d11c3",
       "flags": 0
     },
     {
-      "path": "scripts/gamepad_input.gdc",
+      "path": "scripts/input/gamepad_input.gdc",
       "bytes": 6890,
       "offset": 27490464,
       "md5": "0b53783937a3839ebcb65ab37c6ab51b",
       "flags": 0
     },
     {
-      "path": "scripts/gamepad_navigation.gd.remap",
+      "path": "scripts/input/gamepad_navigation.gd.remap",
       "bytes": 53,
       "offset": 31282752,
       "md5": "c799e37da39b1da14de6aef36320be21",
       "flags": 0
     },
     {
-      "path": "scripts/gamepad_navigation.gdc",
+      "path": "scripts/input/gamepad_navigation.gdc",
       "bytes": 7468,
       "offset": 27497360,
       "md5": "9142b1499a21266d98daa9c819740f36",
       "flags": 0
     },
     {
-      "path": "scripts/gamepad_review.gd.remap",
+      "path": "scripts/inspection/gamepad_review.gd.remap",
       "bytes": 49,
       "offset": 31282816,
       "md5": "d723fdaf9338248fef81db6540242068",
       "flags": 0
     },
     {
-      "path": "scripts/gamepad_review.gdc",
+      "path": "scripts/inspection/gamepad_review.gdc",
       "bytes": 6033,
       "offset": 27504832,
       "md5": "b2b40cf6318144f6148302fe7df03ee8",
       "flags": 0
     },
     {
-      "path": "scripts/gear.gd.remap",
+      "path": "scripts/gameplay/loot/gear.gd.remap",
       "bytes": 39,
       "offset": 31282976,
       "md5": "15903f03771f75fc9066ee297789f94e",
       "flags": 0
     },
     {
-      "path": "scripts/gear.gdc",
+      "path": "scripts/gameplay/loot/gear.gdc",
       "bytes": 6716,
       "offset": 27533360,
       "md5": "24359d7ac942fe3ed911a9d03786d8b9",
       "flags": 0
     },
     {
-      "path": "scripts/gear_art.gd.remap",
+      "path": "scripts/ui/style/gear_art.gd.remap",
       "bytes": 43,
       "offset": 31283024,
       "md5": "bd0836984f1ab6c43054161b168fb6ba",
       "flags": 0
     },
     {
-      "path": "scripts/gear_art.gdc",
+      "path": "scripts/ui/style/gear_art.gdc",
       "bytes": 3727,
       "offset": 27540080,
       "md5": "5d3aa6b0fae749723dbbe2cf2bc09519",
       "flags": 0
     },
     {
-      "path": "scripts/ground_edges.gd.remap",
+      "path": "scripts/world/ground_edges.gd.remap",
       "bytes": 47,
       "offset": 31283072,
       "md5": "c77270e2e9c753b693572ff9871d7ffd",
       "flags": 0
     },
     {
-      "path": "scripts/ground_edges.gdc",
+      "path": "scripts/world/ground_edges.gdc",
       "bytes": 6042,
       "offset": 27543808,
       "md5": "c59771fd4497e9ba961df6635e8eb0c7",
       "flags": 0
     },
     {
-      "path": "scripts/hit_flash.gdshader",
+      "path": "assets/effects/shaders/hit_flash.gdshader",
       "bytes": 504,
       "offset": 27549856,
       "md5": "ad2f4880e61919a472f26aead8438172",
       "flags": 0
     },
     {
-      "path": "scripts/hit_tier.gd.remap",
+      "path": "scripts/gameplay/combat/hit_tier.gd.remap",
       "bytes": 43,
       "offset": 31283120,
       "md5": "798f4ad6884586146ad8c79680064e7e",
       "flags": 0
     },
     {
-      "path": "scripts/hit_tier.gdc",
+      "path": "scripts/gameplay/combat/hit_tier.gdc",
       "bytes": 1369,
       "offset": 27550368,
       "md5": "580696dfc9483e996c9666c110e4e3d1",
       "flags": 0
     },
     {
-      "path": "scripts/hud.gd.remap",
+      "path": "scripts/ui/hud/hud.gd.remap",
       "bytes": 38,
       "offset": 31283168,
       "md5": "8e02593165028c666aea3ccaa63ef591",
       "flags": 0
     },
     {
-      "path": "scripts/hud.gdc",
+      "path": "scripts/ui/hud/hud.gdc",
       "bytes": 23221,
       "offset": 27551744,
       "md5": "9ecf0cdfdce8f2ba6d59664672f052d8",
       "flags": 0
     },
     {
-      "path": "scripts/hud_art.gd.remap",
+      "path": "scripts/ui/style/hud_art.gd.remap",
       "bytes": 42,
       "offset": 31283216,
       "md5": "366b96609d24ed12b963da52016bdefc",
       "flags": 0
     },
     {
-      "path": "scripts/hud_art.gdc",
+      "path": "scripts/ui/style/hud_art.gdc",
       "bytes": 5953,
       "offset": 27574976,
       "md5": "5e61fbcefa085bf1537aaf2a32398ee0",
       "flags": 0
     },
     {
-      "path": "scripts/iso.gd.remap",
+      "path": "scripts/core/iso.gd.remap",
       "bytes": 38,
       "offset": 31283264,
       "md5": "a35d98bdeae4a8bd4242f593c883bd0d",
       "flags": 0
     },
     {
-      "path": "scripts/iso.gdc",
+      "path": "scripts/core/iso.gdc",
       "bytes": 1474,
       "offset": 27580944,
       "md5": "5bc286e7c02ac5461028c1e20a809210",
       "flags": 0
     },
     {
-      "path": "scripts/iso_sprite.gd.remap",
+      "path": "scripts/rendering/sprites/iso_sprite.gd.remap",
       "bytes": 45,
       "offset": 31283312,
       "md5": "9b741bcf3035e5b1137f5de43a4d81a3",
       "flags": 0
     },
     {
-      "path": "scripts/iso_sprite.gdc",
+      "path": "scripts/rendering/sprites/iso_sprite.gdc",
       "bytes": 4045,
       "offset": 27582432,
       "md5": "95d670a4a9ba201c65889368a54bd401",
       "flags": 0
     },
     {
-      "path": "scripts/journal_panel.gd.remap",
+      "path": "scripts/ui/panels/journal_panel.gd.remap",
       "bytes": 48,
       "offset": 31283360,
       "md5": "b5080e07c62987c067d677fbf74aeb29",
       "flags": 0
     },
     {
-      "path": "scripts/journal_panel.gdc",
+      "path": "scripts/ui/panels/journal_panel.gdc",
       "bytes": 3405,
       "offset": 27586480,
       "md5": "2318b4fd76877106130c6a87a73eae4c",
       "flags": 0
     },
     {
-      "path": "scripts/landmark.gd.remap",
+      "path": "scripts/world/landmark.gd.remap",
       "bytes": 43,
       "offset": 31283408,
       "md5": "0520e527d18ba289de7c90a731413c68",
       "flags": 0
     },
     {
-      "path": "scripts/landmark.gdc",
+      "path": "scripts/world/landmark.gdc",
       "bytes": 4049,
       "offset": 27589888,
       "md5": "be00fe01c08ee3e14b3a51ba9a0c40ba",
       "flags": 0
     },
     {
-      "path": "scripts/level_up_banner.gd.remap",
+      "path": "scripts/ui/hud/level_up_banner.gd.remap",
       "bytes": 50,
       "offset": 31283456,
       "md5": "be28645ba16cc37ef45267323855fa7b",
       "flags": 0
     },
     {
-      "path": "scripts/level_up_banner.gdc",
+      "path": "scripts/ui/hud/level_up_banner.gdc",
       "bytes": 2821,
       "offset": 27593952,
       "md5": "e112b081c8dca5bd2f76aba319089c7d",
       "flags": 0
     },
     {
-      "path": "scripts/main.gd.remap",
+      "path": "scripts/app/main.gd.remap",
       "bytes": 39,
       "offset": 31283520,
       "md5": "2b5c3955728b84207f9ad8272930fb6a",
       "flags": 0
     },
     {
-      "path": "scripts/main.gdc",
+      "path": "scripts/app/main.gdc",
       "bytes": 6466,
       "offset": 27596784,
       "md5": "2fee6233b920994e9e1562fbddb52a7b",
       "flags": 0
     },
     {
-      "path": "scripts/map_geometry.gd.remap",
+      "path": "scripts/world/map/map_geometry.gd.remap",
       "bytes": 47,
       "offset": 31283568,
       "md5": "d5b145369706116b2a0ce935caf1aaa9",
       "flags": 0
     },
     {
-      "path": "scripts/map_geometry.gdc",
+      "path": "scripts/world/map/map_geometry.gdc",
       "bytes": 2602,
       "offset": 27603264,
       "md5": "353077d42c68d9c94ee0a4f574f12301",
       "flags": 0
     },
     {
-      "path": "scripts/map_panel.gd.remap",
+      "path": "scripts/ui/panels/map_panel.gd.remap",
       "bytes": 44,
       "offset": 31283616,
       "md5": "c2c081e53f5ec6de4f1b92b3c2b7ca59",
       "flags": 0
     },
     {
-      "path": "scripts/map_panel.gdc",
+      "path": "scripts/ui/panels/map_panel.gdc",
       "bytes": 4266,
       "offset": 27605872,
       "md5": "2642cfb32714fab3c1fe150b06fd9444",
       "flags": 0
     },
     {
-      "path": "scripts/memory_panel.gd.remap",
+      "path": "scripts/ui/panels/memory_panel.gd.remap",
       "bytes": 47,
       "offset": 31283664,
       "md5": "4c299a87b25578cef61be1095a2529ec",
       "flags": 0
     },
     {
-      "path": "scripts/memory_panel.gdc",
+      "path": "scripts/ui/panels/memory_panel.gdc",
       "bytes": 1648,
       "offset": 27610144,
       "md5": "257052dbba3c453799653e6647601139",
       "flags": 0
     },
     {
-      "path": "scripts/minimap.gd.remap",
+      "path": "scripts/ui/hud/minimap.gd.remap",
       "bytes": 42,
       "offset": 31283712,
       "md5": "119bb628834f6e313bb04b2bea0f6c16",
       "flags": 0
     },
     {
-      "path": "scripts/minimap.gdc",
+      "path": "scripts/ui/hud/minimap.gdc",
       "bytes": 4869,
       "offset": 27611792,
       "md5": "31618f6b0ad38996bd8d9e4564027e97",
       "flags": 0
     },
     {
-      "path": "scripts/mobile_menu_art.gd.remap",
+      "path": "scripts/ui/style/mobile_menu_art.gd.remap",
       "bytes": 50,
       "offset": 31283760,
       "md5": "81470460449ca52037aa60ef765d1e7f",
       "flags": 0
     },
     {
-      "path": "scripts/mobile_menu_art.gdc",
+      "path": "scripts/ui/style/mobile_menu_art.gdc",
       "bytes": 806,
       "offset": 27616672,
       "md5": "6ac80193fd1d874e1326a27a0f43f1b5",
       "flags": 0
     },
     {
-      "path": "scripts/music_director.gd.remap",
+      "path": "scripts/audio/music_director.gd.remap",
       "bytes": 49,
       "offset": 31283824,
       "md5": "ece5e51e7f5595cf0d7db2941030f743",
       "flags": 0
     },
     {
-      "path": "scripts/music_director.gdc",
+      "path": "scripts/audio/music_director.gdc",
       "bytes": 2549,
       "offset": 27617488,
       "md5": "26fa839e04e8dafdf05913fb89531fb1",
       "flags": 0
     },
     {
-      "path": "scripts/native_actor_materials.gd.remap",
+      "path": "scripts/rendering/materials/actor_surface_materials.gd.remap",
       "bytes": 57,
       "offset": 31283888,
       "md5": "7cb86ac3efa2dc12947b7b030d2bae65",
       "flags": 0
     },
     {
-      "path": "scripts/native_actor_materials.gdc",
+      "path": "scripts/rendering/materials/actor_surface_materials.gdc",
       "bytes": 3089,
       "offset": 27620048,
       "md5": "bf0c05e5e07a653023e22b812d7b59e7",
       "flags": 0
     },
     {
-      "path": "scripts/native_actor_proportion_audit.gd.remap",
+      "path": "scripts/inspection/native_actor_proportion_audit.gd.remap",
       "bytes": 64,
       "offset": 31283952,
       "md5": "68df3f89bf9d7f7f076e06ea7efd3655",
       "flags": 0
     },
     {
-      "path": "scripts/native_actor_proportion_audit.gdc",
+      "path": "scripts/inspection/native_actor_proportion_audit.gdc",
       "bytes": 4748,
       "offset": 27623152,
       "md5": "376f5392c46e64c6b967e9ae1a0aecd2",
@@ -8128,987 +8128,987 @@
       "flags": 0
     },
     {
-      "path": "scripts/native_adventure.gd.remap",
+      "path": "scripts/app/adventure_3d.gd.remap",
       "bytes": 51,
       "offset": 31284080,
       "md5": "5b397fd92df633c665223a1d7f2375bf",
       "flags": 0
     },
     {
-      "path": "scripts/native_adventure.gdc",
+      "path": "scripts/app/adventure_3d.gdc",
       "bytes": 425,
       "offset": 27631840,
       "md5": "d4bd76af77db12f2f5f1696a30cc084e",
       "flags": 0
     },
     {
-      "path": "scripts/native_cave_lanterns_3d.gd.remap",
+      "path": "scripts/rendering/environment/cave_lantern_renderer_3d.gd.remap",
       "bytes": 58,
       "offset": 31284144,
       "md5": "0e01d6df5745bee692bcd0e3b55db892",
       "flags": 0
     },
     {
-      "path": "scripts/native_cave_lanterns_3d.gdc",
+      "path": "scripts/rendering/environment/cave_lantern_renderer_3d.gdc",
       "bytes": 2775,
       "offset": 27632272,
       "md5": "5eadb2869eef193eb29126900be09bd1",
       "flags": 0
     },
     {
-      "path": "scripts/native_chest_material.gdshader",
+      "path": "assets/materials/chests/chest.gdshader",
       "bytes": 791,
       "offset": 27635056,
       "md5": "b1151b0b1b4cb1a8c2b52c51022e1c2e",
       "flags": 0
     },
     {
-      "path": "scripts/native_combat_fx_3d.gd.remap",
+      "path": "scripts/rendering/effects/combat_effects_3d.gd.remap",
       "bytes": 54,
       "offset": 31284208,
       "md5": "76c8f5a3fa067cf54d1d875502fd1202",
       "flags": 0
     },
     {
-      "path": "scripts/native_combat_fx_3d.gdc",
+      "path": "scripts/rendering/effects/combat_effects_3d.gdc",
       "bytes": 4448,
       "offset": 27635856,
       "md5": "c9631a9f3658143b879952d8deb22bd0",
       "flags": 0
     },
     {
-      "path": "scripts/native_encounter_mesh_3d.gd.remap",
+      "path": "scripts/rendering/environment/encounter_geometry_3d.gd.remap",
       "bytes": 59,
       "offset": 31284272,
       "md5": "73ccd343c5c8c87fbe17fcc5dfa7a8ee",
       "flags": 0
     },
     {
-      "path": "scripts/native_encounter_mesh_3d.gdc",
+      "path": "scripts/rendering/environment/encounter_geometry_3d.gdc",
       "bytes": 7752,
       "offset": 27640304,
       "md5": "e9bafd72cb0a9bc83e967a0c9c866a90",
       "flags": 0
     },
     {
-      "path": "scripts/native_encounter_props_3d.gd.remap",
+      "path": "scripts/rendering/environment/encounter_prop_renderer_3d.gd.remap",
       "bytes": 60,
       "offset": 31284336,
       "md5": "78b815a04ffbe927ef69455ff7832fe5",
       "flags": 0
     },
     {
-      "path": "scripts/native_encounter_props_3d.gdc",
+      "path": "scripts/rendering/environment/encounter_prop_renderer_3d.gdc",
       "bytes": 7188,
       "offset": 27648064,
       "md5": "dabbf100c9c053a3d69dfaa066556066",
       "flags": 0
     },
     {
-      "path": "scripts/native_encounter_review.gd.remap",
+      "path": "scripts/inspection/native_encounter_review.gd.remap",
       "bytes": 58,
       "offset": 31284400,
       "md5": "a473f06c8b40ffea3ac31999e48aa89d",
       "flags": 0
     },
     {
-      "path": "scripts/native_encounter_review.gdc",
+      "path": "scripts/inspection/native_encounter_review.gdc",
       "bytes": 6902,
       "offset": 27655264,
       "md5": "aeef8544a44c8a5776de5f50f2717895",
       "flags": 0
     },
     {
-      "path": "scripts/native_enemy_models.gd.remap",
+      "path": "scripts/rendering/actors/enemy_renderer_3d.gd.remap",
       "bytes": 54,
       "offset": 31284464,
       "md5": "086963cd65433217e70b9a248dbcc8d4",
       "flags": 0
     },
     {
-      "path": "scripts/native_enemy_models.gdc",
+      "path": "scripts/rendering/actors/enemy_renderer_3d.gdc",
       "bytes": 18341,
       "offset": 27662176,
       "md5": "7a19a8e9f810560d36b3fd7c260f390f",
       "flags": 0
     },
     {
-      "path": "scripts/native_forest_flora_3d.gd.remap",
+      "path": "scripts/rendering/vegetation/forest_flora_renderer_3d.gd.remap",
       "bytes": 57,
       "offset": 31284528,
       "md5": "244c65e961edbc51c8314616e23f24e5",
       "flags": 0
     },
     {
-      "path": "scripts/native_forest_flora_3d.gdc",
+      "path": "scripts/rendering/vegetation/forest_flora_renderer_3d.gdc",
       "bytes": 6563,
       "offset": 27680528,
       "md5": "75a11d0967901ea9104c22b08b81fb56",
       "flags": 0
     },
     {
-      "path": "scripts/native_house_3d.gd.remap",
+      "path": "scripts/rendering/architecture/house_renderer_3d.gd.remap",
       "bytes": 50,
       "offset": 31284592,
       "md5": "54c8b31e8dce2be6124d811465215629",
       "flags": 0
     },
     {
-      "path": "scripts/native_house_3d.gdc",
+      "path": "scripts/rendering/architecture/house_renderer_3d.gdc",
       "bytes": 20571,
       "offset": 27687104,
       "md5": "7088bc208cbc68e45096a0747d344dc0",
       "flags": 0
     },
     {
-      "path": "scripts/native_landmark_water.gdshader",
+      "path": "assets/materials/water/landmark_water.gdshader",
       "bytes": 1041,
       "offset": 27721728,
       "md5": "4ab1a3a9e5c7a946ff2d79f898d2f4eb",
       "flags": 0
     },
     {
-      "path": "scripts/native_landmarks_3d.gd.remap",
+      "path": "scripts/rendering/environment/landmark_renderer_3d.gd.remap",
       "bytes": 54,
       "offset": 31284656,
       "md5": "1e5bc23cc6af8c3cf253dd463c7b71c3",
       "flags": 0
     },
     {
-      "path": "scripts/native_landmarks_3d.gdc",
+      "path": "scripts/rendering/environment/landmark_renderer_3d.gdc",
       "bytes": 14039,
       "offset": 27707680,
       "md5": "0e86758df668f794cf58526b9652fd6a",
       "flags": 0
     },
     {
-      "path": "scripts/native_model_gallery.gd.remap",
+      "path": "scripts/inspection/native_model_gallery.gd.remap",
       "bytes": 55,
       "offset": 31284720,
       "md5": "16bd1c41722419f53df4954a2953a277",
       "flags": 0
     },
     {
-      "path": "scripts/native_model_gallery.gdc",
+      "path": "scripts/inspection/native_model_gallery.gdc",
       "bytes": 9244,
       "offset": 27722784,
       "md5": "de215e7710bcb2130a3e926817638629",
       "flags": 0
     },
     {
-      "path": "scripts/native_prop_portal.gdshader",
+      "path": "assets/models/environment/warp_gate/surface.gdshader",
       "bytes": 740,
       "offset": 27732032,
       "md5": "72b0a0e7f255c258fceb84cbf8a1b08e",
       "flags": 0
     },
     {
-      "path": "scripts/native_prop_water.gdshader",
+      "path": "assets/models/environment/fountain/water.gdshader",
       "bytes": 813,
       "offset": 27732784,
       "md5": "d88bdc99c2a5f7aae85542285b8bfe2e",
       "flags": 0
     },
     {
-      "path": "scripts/native_residents_3d.gd.remap",
+      "path": "scripts/rendering/actors/resident_renderer_3d.gd.remap",
       "bytes": 54,
       "offset": 31284784,
       "md5": "509b08ba9c8bc9f1b588f2dd80510f18",
       "flags": 0
     },
     {
-      "path": "scripts/native_residents_3d.gdc",
+      "path": "scripts/rendering/actors/resident_renderer_3d.gdc",
       "bytes": 14719,
       "offset": 27733600,
       "md5": "7c8d487310b73627182c6655f9aa8bdd",
       "flags": 0
     },
     {
-      "path": "scripts/native_scale_review.gd.remap",
+      "path": "scripts/inspection/native_scale_review.gd.remap",
       "bytes": 54,
       "offset": 31284848,
       "md5": "010c9e315baff989c08a22ba4d17fe2c",
       "flags": 0
     },
     {
-      "path": "scripts/native_scale_review.gdc",
+      "path": "scripts/inspection/native_scale_review.gdc",
       "bytes": 8018,
       "offset": 27748320,
       "md5": "5e683207a013a1209efc1dcc69f399bb",
       "flags": 0
     },
     {
-      "path": "scripts/native_scenery_props_3d.gd.remap",
+      "path": "scripts/rendering/environment/scenery_renderer_3d.gd.remap",
       "bytes": 58,
       "offset": 31284912,
       "md5": "b23111779550e31a4c070183b0b203c2",
       "flags": 0
     },
     {
-      "path": "scripts/native_scenery_props_3d.gdc",
+      "path": "scripts/rendering/environment/scenery_renderer_3d.gdc",
       "bytes": 9237,
       "offset": 27756352,
       "md5": "67df24d9503928cfaa4773735a810f06",
       "flags": 0
     },
     {
-      "path": "scripts/native_style_review.gd.remap",
+      "path": "scripts/inspection/native_style_review.gd.remap",
       "bytes": 54,
       "offset": 31284976,
       "md5": "6de30467843d9a48a50585b907d33182",
       "flags": 0
     },
     {
-      "path": "scripts/native_style_review.gdc",
+      "path": "scripts/inspection/native_style_review.gdc",
       "bytes": 10687,
       "offset": 27765600,
       "md5": "c10a2a969d1b5f283d621e4f7f79cfe6",
       "flags": 0
     },
     {
-      "path": "scripts/native_town_props_3d.gd.remap",
+      "path": "scripts/rendering/environment/town_prop_renderer_3d.gd.remap",
       "bytes": 55,
       "offset": 31285040,
       "md5": "6f7e95ff33def720ffc74dc995474ddc",
       "flags": 0
     },
     {
-      "path": "scripts/native_town_props_3d.gdc",
+      "path": "scripts/rendering/environment/town_prop_renderer_3d.gdc",
       "bytes": 5979,
       "offset": 27776288,
       "md5": "a510c6562efe5ba572ef599cd3612b02",
       "flags": 0
     },
     {
-      "path": "scripts/native_warrior_3d.gd.remap",
+      "path": "scripts/rendering/actors/warrior_renderer_3d.gd.remap",
       "bytes": 52,
       "offset": 31285104,
       "md5": "dd67e9c487c1e7df935f5d3c42d0b8f4",
       "flags": 0
     },
     {
-      "path": "scripts/native_warrior_3d.gdc",
+      "path": "scripts/rendering/actors/warrior_renderer_3d.gdc",
       "bytes": 8154,
       "offset": 27782272,
       "md5": "9ea3090c915c75a370f9be7e896c0b62",
       "flags": 0
     },
     {
-      "path": "scripts/npc_art.gd.remap",
+      "path": "scripts/rendering/sprites/npc_art.gd.remap",
       "bytes": 42,
       "offset": 31285168,
       "md5": "88294239852f1583babacb3271e69350",
       "flags": 0
     },
     {
-      "path": "scripts/npc_art.gdc",
+      "path": "scripts/rendering/sprites/npc_art.gdc",
       "bytes": 1618,
       "offset": 27790432,
       "md5": "f2357145c484e436b6fb3ffb1cff4a31",
       "flags": 0
     },
     {
-      "path": "scripts/ortho_3d_affordances.gd.remap",
+      "path": "scripts/rendering/environment/sprite_fallbacks_3d.gd.remap",
       "bytes": 55,
       "offset": 31285216,
       "md5": "fa2f1b022ff34dfd3aabf926a4be94dd",
       "flags": 0
     },
     {
-      "path": "scripts/ortho_3d_affordances.gdc",
+      "path": "scripts/rendering/environment/sprite_fallbacks_3d.gdc",
       "bytes": 6958,
       "offset": 27792064,
       "md5": "c0d3770be762d1c92bfb97005ef9930b",
       "flags": 0
     },
     {
-      "path": "scripts/ortho_3d_cave_rock.gd.remap",
+      "path": "scripts/rendering/environment/cave_wall_geometry_3d.gd.remap",
       "bytes": 53,
       "offset": 31285280,
       "md5": "2440d901bb7c44fc07247cd7b9c081d1",
       "flags": 0
     },
     {
-      "path": "scripts/ortho_3d_cave_rock.gdc",
+      "path": "scripts/rendering/environment/cave_wall_geometry_3d.gdc",
       "bytes": 5430,
       "offset": 27799024,
       "md5": "f6f7558e3e95096ede51f287bc304e43",
       "flags": 0
     },
     {
-      "path": "scripts/ortho_3d_chapel.gd.remap",
+      "path": "scripts/rendering/architecture/chapel_renderer_3d.gd.remap",
       "bytes": 50,
       "offset": 31285344,
       "md5": "9e97ed585013c77dc500754a1d203367",
       "flags": 0
     },
     {
-      "path": "scripts/ortho_3d_chapel.gdc",
+      "path": "scripts/rendering/architecture/chapel_renderer_3d.gdc",
       "bytes": 20082,
       "offset": 27804464,
       "md5": "3b6859b813557b313904c1a18f3d9c6d",
       "flags": 0
     },
     {
-      "path": "scripts/ortho_3d_environment.gd.remap",
+      "path": "scripts/rendering/environment/environment_renderer_3d.gd.remap",
       "bytes": 55,
       "offset": 31285408,
       "md5": "4064c7cdff36370f9f0f048a3d091c5a",
       "flags": 0
     },
     {
-      "path": "scripts/ortho_3d_environment.gdc",
+      "path": "scripts/rendering/environment/environment_renderer_3d.gdc",
       "bytes": 17853,
       "offset": 27824560,
       "md5": "d0d5ed12de5a02046334d1be6f58aae8",
       "flags": 0
     },
     {
-      "path": "scripts/ortho_3d_forest_trees.gd.remap",
+      "path": "scripts/rendering/vegetation/forest_tree_renderer_3d.gd.remap",
       "bytes": 56,
       "offset": 31285472,
       "md5": "91159a9928cbb6613952fd0e63302258",
       "flags": 0
     },
     {
-      "path": "scripts/ortho_3d_forest_trees.gdc",
+      "path": "scripts/rendering/vegetation/forest_tree_renderer_3d.gdc",
       "bytes": 5711,
       "offset": 27842416,
       "md5": "0d72a56cca46bea82f893725556a148b",
       "flags": 0
     },
     {
-      "path": "scripts/ortho_3d_fortification.gd.remap",
+      "path": "scripts/rendering/architecture/fortification_renderer_3d.gd.remap",
       "bytes": 57,
       "offset": 31285536,
       "md5": "fd73bacf941a1cdef7618765b09d33f3",
       "flags": 0
     },
     {
-      "path": "scripts/ortho_3d_fortification.gdc",
+      "path": "scripts/rendering/architecture/fortification_renderer_3d.gdc",
       "bytes": 14270,
       "offset": 27848128,
       "md5": "5cebfc546104a699566d2c3c0a4ff94a",
       "flags": 0
     },
     {
-      "path": "scripts/ortho_3d_hero_motion.gd.remap",
+      "path": "scripts/rendering/actors/hero_animation_3d.gd.remap",
       "bytes": 55,
       "offset": 31285600,
       "md5": "77ff9ce36236f6db1e6e5302269b4861",
       "flags": 0
     },
     {
-      "path": "scripts/ortho_3d_hero_motion.gdc",
+      "path": "scripts/rendering/actors/hero_animation_3d.gdc",
       "bytes": 3266,
       "offset": 27862400,
       "md5": "80bc0f1947aa7488c4b97a3f1314c017",
       "flags": 0
     },
     {
-      "path": "scripts/ortho_3d_level_up.gd.remap",
+      "path": "scripts/rendering/effects/progression_effects_3d.gd.remap",
       "bytes": 52,
       "offset": 31285664,
       "md5": "fd8fafb5441d7f1b13bb171148646cb9",
       "flags": 0
     },
     {
-      "path": "scripts/ortho_3d_level_up.gdc",
+      "path": "scripts/rendering/effects/progression_effects_3d.gdc",
       "bytes": 4007,
       "offset": 27865680,
       "md5": "50ead2331601e22323367e906b56ebbd",
       "flags": 0
     },
     {
-      "path": "scripts/ortho_3d_preview.gd.remap",
+      "path": "scripts/rendering/world_renderer_3d.gd.remap",
       "bytes": 51,
       "offset": 31285728,
       "md5": "c505fb44624605371e4449e4d33ee47d",
       "flags": 0
     },
     {
-      "path": "scripts/ortho_3d_preview.gdc",
+      "path": "scripts/rendering/world_renderer_3d.gdc",
       "bytes": 23435,
       "offset": 27869696,
       "md5": "8262895df505884fc35642bff22275a6",
       "flags": 0
     },
     {
-      "path": "scripts/ortho_3d_static_batch.gd.remap",
+      "path": "scripts/rendering/static_mesh_batch_3d.gd.remap",
       "bytes": 56,
       "offset": 31285792,
       "md5": "0c55cefa39ad7e6febbbca4464fcdaf0",
       "flags": 0
     },
     {
-      "path": "scripts/ortho_3d_static_batch.gdc",
+      "path": "scripts/rendering/static_mesh_batch_3d.gdc",
       "bytes": 3143,
       "offset": 27893136,
       "md5": "d1d4268eb6cd1a5d64d663a9a025f339",
       "flags": 0
     },
     {
-      "path": "scripts/ortho_3d_trees.gd.remap",
+      "path": "scripts/rendering/vegetation/tree_geometry_3d.gd.remap",
       "bytes": 49,
       "offset": 31285856,
       "md5": "bc6fb28d4deca6192f11ce2e043b3e38",
       "flags": 0
     },
     {
-      "path": "scripts/ortho_3d_trees.gdc",
+      "path": "scripts/rendering/vegetation/tree_geometry_3d.gdc",
       "bytes": 5953,
       "offset": 27896288,
       "md5": "1062fc54cac37a7ef53d08c6df1b59a9",
       "flags": 0
     },
     {
-      "path": "scripts/panel_frame.gd.remap",
+      "path": "scripts/ui/panels/panel_frame.gd.remap",
       "bytes": 46,
       "offset": 31285920,
       "md5": "d56bf246b7750e66a9c04d725c91c30d",
       "flags": 0
     },
     {
-      "path": "scripts/panel_frame.gdc",
+      "path": "scripts/ui/panels/panel_frame.gdc",
       "bytes": 8180,
       "offset": 27902256,
       "md5": "335e061f758c1e3dc4d55899d208d757",
       "flags": 0
     },
     {
-      "path": "scripts/player.gd.remap",
+      "path": "scripts/gameplay/actors/player.gd.remap",
       "bytes": 41,
       "offset": 31285968,
       "md5": "f81b27b98ee7907504a70d34a65358fd",
       "flags": 0
     },
     {
-      "path": "scripts/player.gdc",
+      "path": "scripts/gameplay/actors/player.gdc",
       "bytes": 28101,
       "offset": 27910448,
       "md5": "49177d1ed6046cef57b557b4f3c78cbd",
       "flags": 0
     },
     {
-      "path": "scripts/plaza_water.gd.remap",
+      "path": "scripts/rendering/sprites/plaza_water.gd.remap",
       "bytes": 46,
       "offset": 31286016,
       "md5": "0ef423248b09f54a0c7085fac15d395e",
       "flags": 0
     },
     {
-      "path": "scripts/plaza_water.gdc",
+      "path": "scripts/rendering/sprites/plaza_water.gdc",
       "bytes": 1593,
       "offset": 27938560,
       "md5": "a784728b131d92ac1b34904c2ee44824",
       "flags": 0
     },
     {
-      "path": "scripts/plaza_water.gdshader",
+      "path": "assets/sprites/shaders/plaza_water.gdshader",
       "bytes": 3029,
       "offset": 27940160,
       "md5": "647bc278cf73c97973058e934f85f88b",
       "flags": 0
     },
     {
-      "path": "scripts/potion_art.gd.remap",
+      "path": "scripts/ui/style/potion_art.gd.remap",
       "bytes": 45,
       "offset": 31286064,
       "md5": "76cea9dc5eddba53d449d1c5c5fa9bd8",
       "flags": 0
     },
     {
-      "path": "scripts/potion_art.gdc",
+      "path": "scripts/ui/style/potion_art.gdc",
       "bytes": 2479,
       "offset": 27943200,
       "md5": "4f51959c518d391e365b57ec8af50d5b",
       "flags": 0
     },
     {
-      "path": "scripts/prefs.gd.remap",
+      "path": "scripts/state/prefs.gd.remap",
       "bytes": 40,
       "offset": 31286112,
       "md5": "5cb0c7eda036bbf4e4a65bfd805c02f8",
       "flags": 0
     },
     {
-      "path": "scripts/prefs.gdc",
+      "path": "scripts/state/prefs.gdc",
       "bytes": 3899,
       "offset": 27945680,
       "md5": "711a6d8c35c492f9061ff960ccb325e1",
       "flags": 0
     },
     {
-      "path": "scripts/presentation_art.gd.remap",
+      "path": "scripts/rendering/effects/presentation_art.gd.remap",
       "bytes": 51,
       "offset": 31286160,
       "md5": "e125b6ffb6d8f49e9fe51bde16ed2644",
       "flags": 0
     },
     {
-      "path": "scripts/presentation_art.gdc",
+      "path": "scripts/rendering/effects/presentation_art.gdc",
       "bytes": 1846,
       "offset": 27949584,
       "md5": "6bd6fc791c6b9e4e66fd32d0c23d8c03",
       "flags": 0
     },
     {
-      "path": "scripts/quest_runtime.gd.remap",
+      "path": "scripts/gameplay/quests/quest_runtime.gd.remap",
       "bytes": 48,
       "offset": 31286272,
       "md5": "4c8954788b7db37933b1b49b79b0d664",
       "flags": 0
     },
     {
-      "path": "scripts/quest_runtime.gdc",
+      "path": "scripts/gameplay/quests/quest_runtime.gdc",
       "bytes": 7566,
       "offset": 27955008,
       "md5": "e94b4673120e111dbcb0c54eba5ea209",
       "flags": 0
     },
     {
-      "path": "scripts/quests.gd.remap",
+      "path": "scripts/gameplay/quests/quests.gd.remap",
       "bytes": 41,
       "offset": 31286224,
       "md5": "6c1f9846d4a51dadb2b73af2bb904114",
       "flags": 0
     },
     {
-      "path": "scripts/quests.gdc",
+      "path": "scripts/gameplay/quests/quests.gdc",
       "bytes": 3555,
       "offset": 27951440,
       "md5": "9004c0024a6fd1c5e8f53be76872b502",
       "flags": 0
     },
     {
-      "path": "scripts/reference_fx_art.gd.remap",
+      "path": "scripts/rendering/effects/reference_fx_art.gd.remap",
       "bytes": 51,
       "offset": 31286320,
       "md5": "5288cc76790961ce3e0e1fd09b1b6594",
       "flags": 0
     },
     {
-      "path": "scripts/reference_fx_art.gdc",
+      "path": "scripts/rendering/effects/reference_fx_art.gdc",
       "bytes": 1824,
       "offset": 27962576,
       "md5": "a711725753c70fa09c0f1c7ffb5a2e46",
       "flags": 0
     },
     {
-      "path": "scripts/render_probe.gd.remap",
+      "path": "scripts/inspection/render_probe.gd.remap",
       "bytes": 47,
       "offset": 31286384,
       "md5": "3ba0b87feb713bec6b67c74c2b19b9aa",
       "flags": 0
     },
     {
-      "path": "scripts/render_probe.gdc",
+      "path": "scripts/inspection/render_probe.gdc",
       "bytes": 1134,
       "offset": 27964400,
       "md5": "95ddbf6a309457144a63cfad24f36b80",
       "flags": 0
     },
     {
-      "path": "scripts/reward_fx.gd.remap",
+      "path": "scripts/rendering/effects/reward_fx.gd.remap",
       "bytes": 44,
       "offset": 31286432,
       "md5": "6e9172e908fb394a746f90f4a3f3d0c9",
       "flags": 0
     },
     {
-      "path": "scripts/reward_fx.gdc",
+      "path": "scripts/rendering/effects/reward_fx.gdc",
       "bytes": 2270,
       "offset": 27965536,
       "md5": "d84469a9fe73fc56c768567645c44853",
       "flags": 0
     },
     {
-      "path": "scripts/river.gd.remap",
+      "path": "scripts/world/river.gd.remap",
       "bytes": 40,
       "offset": 31286480,
       "md5": "159d3117f64dc5dac888999c39927a2f",
       "flags": 0
     },
     {
-      "path": "scripts/river.gdc",
+      "path": "scripts/world/river.gdc",
       "bytes": 2318,
       "offset": 27967808,
       "md5": "bd34ae7be0b1d79f6c6f8e18bd38f19c",
       "flags": 0
     },
     {
-      "path": "scripts/river_flow.gdshader",
+      "path": "assets/sprites/shaders/river_flow.gdshader",
       "bytes": 224,
       "offset": 27970128,
       "md5": "45c233f6792bd1151b0be6df008345c7",
       "flags": 0
     },
     {
-      "path": "scripts/river_shimmer.gdshader",
+      "path": "assets/sprites/shaders/river_shimmer.gdshader",
       "bytes": 235,
       "offset": 27970352,
       "md5": "8255835831649b8bd1304b48d2842cac",
       "flags": 0
     },
     {
-      "path": "scripts/save_layout_review.gd.remap",
+      "path": "scripts/inspection/save_layout_review.gd.remap",
       "bytes": 53,
       "offset": 31286528,
       "md5": "dcb71aefeea84b24dfea0f7ca9da41c1",
       "flags": 0
     },
     {
-      "path": "scripts/save_layout_review.gdc",
+      "path": "scripts/inspection/save_layout_review.gdc",
       "bytes": 4840,
       "offset": 27970592,
       "md5": "74b5f9a5442026bc57a70ccce9c56e26",
       "flags": 0
     },
     {
-      "path": "scripts/save_store.gd.remap",
+      "path": "scripts/state/save_store.gd.remap",
       "bytes": 45,
       "offset": 31286592,
       "md5": "3272172630438464533cc68518119d5f",
       "flags": 0
     },
     {
-      "path": "scripts/save_store.gdc",
+      "path": "scripts/state/save_store.gdc",
       "bytes": 1364,
       "offset": 27975440,
       "md5": "16fb961aa9b28a894a7b87a9b48e6a71",
       "flags": 0
     },
     {
-      "path": "scripts/save_time_label.gd.remap",
+      "path": "scripts/ui/style/save_time_label.gd.remap",
       "bytes": 50,
       "offset": 31286640,
       "md5": "84e1b86f7594e7361ffc7d968a425c35",
       "flags": 0
     },
     {
-      "path": "scripts/save_time_label.gdc",
+      "path": "scripts/ui/style/save_time_label.gdc",
       "bytes": 998,
       "offset": 27976816,
       "md5": "7d70ac869a930e82cc8c8aab3b9c86ad",
       "flags": 0
     },
     {
-      "path": "scripts/selection_ui.gd.remap",
+      "path": "scripts/ui/style/selection_ui.gd.remap",
       "bytes": 47,
       "offset": 31286704,
       "md5": "fd803c12cc5765055ddb93afb277bdff",
       "flags": 0
     },
     {
-      "path": "scripts/selection_ui.gdc",
+      "path": "scripts/ui/style/selection_ui.gdc",
       "bytes": 2991,
       "offset": 27977824,
       "md5": "fd07f7f15e55918dd31bedd01ada5a95",
       "flags": 0
     },
     {
-      "path": "scripts/settings_panel.gd.remap",
+      "path": "scripts/ui/panels/settings_panel.gd.remap",
       "bytes": 49,
       "offset": 31286752,
       "md5": "a0ec924383e95994948d80a477352af7",
       "flags": 0
     },
     {
-      "path": "scripts/settings_panel.gdc",
+      "path": "scripts/ui/panels/settings_panel.gdc",
       "bytes": 11300,
       "offset": 27980816,
       "md5": "e8e070477a1fb899574b3787e94381d0",
       "flags": 0
     },
     {
-      "path": "scripts/skill_defs.gd.remap",
+      "path": "scripts/gameplay/combat/skill_defs.gd.remap",
       "bytes": 45,
       "offset": 31286816,
       "md5": "9f175df49b3a925f555050e99cf5f079",
       "flags": 0
     },
     {
-      "path": "scripts/skill_defs.gdc",
+      "path": "scripts/gameplay/combat/skill_defs.gdc",
       "bytes": 10819,
       "offset": 27992128,
       "md5": "25006ccb079e5bf52f1e41f7c9ea3fe8",
       "flags": 0
     },
     {
-      "path": "scripts/skill_icons.gd.remap",
+      "path": "scripts/ui/style/skill_icons.gd.remap",
       "bytes": 46,
       "offset": 31286864,
       "md5": "c7df1f87e541d45cceb57a400076fd55",
       "flags": 0
     },
     {
-      "path": "scripts/skill_icons.gdc",
+      "path": "scripts/ui/style/skill_icons.gdc",
       "bytes": 2025,
       "offset": 28002960,
       "md5": "1d32760dc23910750bc341842b478d20",
       "flags": 0
     },
     {
-      "path": "scripts/skill_tree_panel.gd.remap",
+      "path": "scripts/ui/panels/skill_tree_panel.gd.remap",
       "bytes": 51,
       "offset": 31286912,
       "md5": "68b0acd9d36549d4ac9d2e67fa95e32e",
       "flags": 0
     },
     {
-      "path": "scripts/skill_tree_panel.gdc",
+      "path": "scripts/ui/panels/skill_tree_panel.gdc",
       "bytes": 16457,
       "offset": 28004992,
       "md5": "086db845e868103a155886a6ec2b5437",
       "flags": 0
     },
     {
-      "path": "scripts/sound_fx.gd.remap",
+      "path": "scripts/audio/sound_fx.gd.remap",
       "bytes": 43,
       "offset": 31286976,
       "md5": "3defb85a43c29ff0a98c46e9a636033d",
       "flags": 0
     },
     {
-      "path": "scripts/sound_fx.gdc",
+      "path": "scripts/audio/sound_fx.gdc",
       "bytes": 4572,
       "offset": 28021456,
       "md5": "ec99a963f5adf95b857b906b16b85e99",
       "flags": 0
     },
     {
-      "path": "scripts/spatial_combat_3d.gd.remap",
+      "path": "scripts/gameplay/combat/spatial_combat_3d.gd.remap",
       "bytes": 52,
       "offset": 31287024,
       "md5": "4a1f8ffe9e2fffcbd183132d399a962b",
       "flags": 0
     },
     {
-      "path": "scripts/spatial_combat_3d.gdc",
+      "path": "scripts/gameplay/combat/spatial_combat_3d.gdc",
       "bytes": 5673,
       "offset": 28026032,
       "md5": "863da5588459bfe2fc612b48a67e8009",
       "flags": 0
     },
     {
-      "path": "scripts/spatial_world_3d.gd.remap",
+      "path": "scripts/world/physics/spatial_world_3d.gd.remap",
       "bytes": 51,
       "offset": 31287088,
       "md5": "08b97ada31b0f18966cba23d8f08496d",
       "flags": 0
     },
     {
-      "path": "scripts/spatial_world_3d.gdc",
+      "path": "scripts/world/physics/spatial_world_3d.gdc",
       "bytes": 23028,
       "offset": 28031712,
       "md5": "ee7adcd5a3295d01a82e7b0df5c51d2a",
       "flags": 0
     },
     {
-      "path": "scripts/terrain_levels.gd.remap",
+      "path": "scripts/world/terrain_levels.gd.remap",
       "bytes": 49,
       "offset": 31287152,
       "md5": "f9ac538fd6aecf887da3139d83ffadb8",
       "flags": 0
     },
     {
-      "path": "scripts/terrain_levels.gdc",
+      "path": "scripts/world/terrain_levels.gdc",
       "bytes": 4763,
       "offset": 28054752,
       "md5": "73a0353f7671f879144f69514b3895ea",
       "flags": 0
     },
     {
-      "path": "scripts/title_screen.gd.remap",
+      "path": "scripts/ui/screens/title_screen.gd.remap",
       "bytes": 47,
       "offset": 31287216,
       "md5": "eb42dfb48f1936e79adabac1e1d05604",
       "flags": 0
     },
     {
-      "path": "scripts/title_screen.gdc",
+      "path": "scripts/ui/screens/title_screen.gdc",
       "bytes": 3925,
       "offset": 28059520,
       "md5": "1ee0f4d93e7913672bbe3f7b345b4cc4",
       "flags": 0
     },
     {
-      "path": "scripts/touch_controls.gd.remap",
+      "path": "scripts/ui/hud/touch_controls.gd.remap",
       "bytes": 49,
       "offset": 31287264,
       "md5": "9c8368559dd654a0a0751f8589bd6c44",
       "flags": 0
     },
     {
-      "path": "scripts/touch_controls.gdc",
+      "path": "scripts/ui/hud/touch_controls.gdc",
       "bytes": 19009,
       "offset": 28063456,
       "md5": "978fbc5cca10a4ce75d1725edc47d5f3",
       "flags": 0
     },
     {
-      "path": "scripts/town_gate_runtime.gd.remap",
+      "path": "scripts/world/town_gate_runtime.gd.remap",
       "bytes": 52,
       "offset": 31287328,
       "md5": "77d8d22c0efc3f91c870ede4236761c9",
       "flags": 0
     },
     {
-      "path": "scripts/town_gate_runtime.gdc",
+      "path": "scripts/world/town_gate_runtime.gdc",
       "bytes": 8764,
       "offset": 28082480,
       "md5": "28b1b266b5d2ed55eb220b456584ced6",
       "flags": 0
     },
     {
-      "path": "scripts/ui_kit.gd.remap",
+      "path": "scripts/ui/style/ui_kit.gd.remap",
       "bytes": 41,
       "offset": 31287392,
       "md5": "4de2c1138acd7cfb3db1e0e601f8b442",
       "flags": 0
     },
     {
-      "path": "scripts/ui_kit.gdc",
+      "path": "scripts/ui/style/ui_kit.gdc",
       "bytes": 5447,
       "offset": 28091248,
       "md5": "cbf495f7cf189482db33690b193c74bb",
       "flags": 0
     },
     {
-      "path": "scripts/ui_tone_art.gd.remap",
+      "path": "scripts/ui/style/ui_tone_art.gd.remap",
       "bytes": 46,
       "offset": 31287440,
       "md5": "ff8e43f92600ed4a695d371cffc6712a",
       "flags": 0
     },
     {
-      "path": "scripts/ui_tone_art.gdc",
+      "path": "scripts/ui/style/ui_tone_art.gdc",
       "bytes": 1844,
       "offset": 28096704,
       "md5": "8bce4186a64ae15783831bc054a48ae1",
       "flags": 0
     },
     {
-      "path": "scripts/victory_panel.gd.remap",
+      "path": "scripts/ui/panels/victory_panel.gd.remap",
       "bytes": 48,
       "offset": 31287488,
       "md5": "eead4d31bb423cc9660d4dfea92cfe3d",
       "flags": 0
     },
     {
-      "path": "scripts/victory_panel.gdc",
+      "path": "scripts/ui/panels/victory_panel.gdc",
       "bytes": 1708,
       "offset": 28098560,
       "md5": "7403a826919dc87a0fd5e75d2d73311d",
       "flags": 0
     },
     {
-      "path": "scripts/village.gd.remap",
+      "path": "scripts/world/village.gd.remap",
       "bytes": 42,
       "offset": 31287536,
       "md5": "1bf101db68e57551c005693d8b02d815",
       "flags": 0
     },
     {
-      "path": "scripts/village.gdc",
+      "path": "scripts/world/village.gdc",
       "bytes": 21455,
       "offset": 28100272,
       "md5": "a037a7a439f9741888b6ace81bc74883",
       "flags": 0
     },
     {
-      "path": "scripts/villager.gd.remap",
+      "path": "scripts/gameplay/actors/villager.gd.remap",
       "bytes": 43,
       "offset": 31287584,
       "md5": "0575b4fc706891131949219a9f2a278c",
       "flags": 0
     },
     {
-      "path": "scripts/villager.gdc",
+      "path": "scripts/gameplay/actors/villager.gdc",
       "bytes": 3506,
       "offset": 28121728,
       "md5": "a5102073f594519ac47f26dbf4063065",
       "flags": 0
     },
     {
-      "path": "scripts/wall_piece.gd.remap",
+      "path": "scripts/rendering/sprites/wall_piece.gd.remap",
       "bytes": 45,
       "offset": 31287632,
       "md5": "a5eab4d8139d2a25a3041c3a1873630c",
       "flags": 0
     },
     {
-      "path": "scripts/wall_piece.gdc",
+      "path": "scripts/rendering/sprites/wall_piece.gdc",
       "bytes": 1714,
       "offset": 28125248,
       "md5": "d999d64a2c8a876e7baef4d30d1f9efe",
       "flags": 0
     },
     {
-      "path": "scripts/warp_gate_panel.gd.remap",
+      "path": "scripts/ui/panels/warp_gate_panel.gd.remap",
       "bytes": 50,
       "offset": 31287680,
       "md5": "a6989cdf985f7b0c8efc7d35b974785e",
       "flags": 0
     },
     {
-      "path": "scripts/warp_gate_panel.gdc",
+      "path": "scripts/ui/panels/warp_gate_panel.gdc",
       "bytes": 2866,
       "offset": 28126976,
       "md5": "a584c932efedcfcaae6e35ca2e88c20b",
       "flags": 0
     },
     {
-      "path": "scripts/world_daylight.gdshader",
+      "path": "assets/sprites/shaders/world_daylight.gdshader",
       "bytes": 418,
       "offset": 28129856,
       "md5": "ce68abae661d936f7d73303db84d581c",
       "flags": 0
     },
     {
-      "path": "scripts/world_daylight.gdshaderinc",
+      "path": "assets/sprites/shaders/world_daylight.gdshaderinc",
       "bytes": 1765,
       "offset": 28130288,
       "md5": "c91c121fce043ba84d7ef8f7a95c3181",
       "flags": 0
     },
     {
-      "path": "scripts/world_lighting.gd.remap",
+      "path": "scripts/rendering/lighting/world_lighting.gd.remap",
       "bytes": 49,
       "offset": 31287744,
       "md5": "5550cbcb3ce2f286ac3e7be118079623",
       "flags": 0
     },
     {
-      "path": "scripts/world_lighting.gdc",
+      "path": "scripts/rendering/lighting/world_lighting.gdc",
       "bytes": 8193,
       "offset": 28132064,
       "md5": "fe23370cf1913cbef4ea726b883dcb8a",
       "flags": 0
     },
     {
-      "path": "scripts/world_occlusion.gd.remap",
+      "path": "scripts/rendering/sprites/world_occlusion.gd.remap",
       "bytes": 50,
       "offset": 31287808,
       "md5": "579b882ff5515dd6c6bab058d69966bc",
       "flags": 0
     },
     {
-      "path": "scripts/world_occlusion.gdc",
+      "path": "scripts/rendering/sprites/world_occlusion.gdc",
       "bytes": 1874,
       "offset": 28140272,
       "md5": "821aa3ca0b7beddcd54daf7a8749203e",
       "flags": 0
     },
     {
-      "path": "scripts/world_occlusion.gdshader",
+      "path": "assets/sprites/shaders/world_occlusion.gdshader",
       "bytes": 472,
       "offset": 28142160,
       "md5": "23dff9f59b09b0577b906703652c2384",
       "flags": 0
     },
     {
-      "path": "scripts/world_occlusion.gdshaderinc",
+      "path": "assets/sprites/shaders/world_occlusion.gdshaderinc",
       "bytes": 439,
       "offset": 28142640,
       "md5": "0ea75b7084f5c0b8a51a81a3bfd8af6d",

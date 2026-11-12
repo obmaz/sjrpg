@@ -1,9 +1,9 @@
 {
- "concept": "assets/source/cave-design.png",
+ "concept": "assets/source/environment/cave_entrance/concepts/cave-design.png",
  "sources": {
-  "kit": "assets/source/cave-kit.png",
-  "ledges": "assets/source/cave-ledges.png",
-  "arches": "assets/source/cave-arches.png"
+  "kit": "assets/source/dungeon/concepts/cave-kit.png",
+  "ledges": "assets/source/dungeon/concepts/cave-ledges.png",
+  "arches": "assets/source/dungeon/concepts/cave-arches.png"
  },
  "camera": {
   "projection": "orthographic",

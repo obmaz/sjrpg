@@ -1,6 +1,6 @@
 [gd_resource type="ShaderMaterial" format=3]
 
-[ext_resource type="Shader" path="res://scripts/native_asset_surface.gdshader" id="1_8soc6"]
+[ext_resource type="Shader" path="res://assets/materials/shared/building_surface.gdshader" id="1_8soc6"]
 [ext_resource type="Texture2D" path="res://assets/models/architecture/chapel/albedo.png" id="2_ldvig"]
 
 [resource]

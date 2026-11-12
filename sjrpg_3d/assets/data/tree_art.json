@@ -1,7 +1,7 @@
 {
  "source": "assets/source/remake/trees-v2.png",
  "source_sha256": "8b906334b11c7051b7ede2788b8ee1a459d9ed44db2f4c9dcfed292236e47927",
- "render": "assets/art/village/trees.webp",
+ "render": "assets/sprites/village/trees.webp",
  "render_sha256": "1114952d3c6bce0955be22e528c639450ba67df3557029e68570a9bfa7051e8d",
  "camera": {
   "projection": "orthographic",
@@ -119,7 +119,7 @@
    "sha256": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389"
   },
   {
-   "path": "assets/source/forest-trees.png",
+   "path": "assets/source/vegetation/concepts/forest-trees.png",
    "role": "existing high-canopy and occluded-root camera reference supplied to regeneration",
    "sha256": "d3139c012d9b9312250603737c5144ab2a3b1e0a6bcf94e50b1ab352845e745a"
   }

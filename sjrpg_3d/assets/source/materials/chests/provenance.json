@@ -2,7 +2,7 @@
   "tool": "image_gen.imagegen",
   "source": "original.png",
   "prompt": "prompt.txt",
-  "runtime": "assets/models/materials/chests/albedo.png",
+  "runtime": "assets/materials/chests/albedo.png",
   "sha256": "7e31a1fd2740f40389da36888223ea0841cf226877a7d5f6330cadb0c90eabd2",
   "references": [
     {

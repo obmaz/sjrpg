@@ -14,12 +14,13 @@
 
 | 위치 | 현재 책임 |
 | --- | --- |
-| `sjrpg_3d/scripts/native_adventure.gd` | 독립 3D 모험 진입점 |
-| `scripts/ortho_3d_preview.gd` | 실제 직교 카메라·광원·입체 건축·배우 표시. `preview`라는 기존 파일명은 2D 전환 모드를 뜻하지 않음 |
-| `scripts/spatial_world_3d.gd` | 지속적인 `CharacterBody3D`, 실제 충돌·지형 높이·공격 차폐 |
-| `scripts/ortho_3d_environment.gd` | 마을 밖 숲과 동굴의 공간 표시, 공유 지형 표면 |
-| `scripts/ortho_3d_chapel.gd`, `scripts/ortho_3d_fortification.gd`, `scripts/ortho_3d_trees.gd` | 현재 건축·성문/벽·나무 패밀리 |
-| `assets/art/preview3d/`, `assets/source/preview3d/`, `tools/preview3d/` | 런타임 자산, 실제 생성 원본/기록, 재현 도구 |
+| `sjrpg_3d/scripts/app/adventure_3d.gd` | 독립 3D 모험 진입점 |
+| `scripts/rendering/world_renderer_3d.gd` | 운영 직교 카메라·광원·입체 건축·배우 표시 |
+| `scripts/world/physics/spatial_world_3d.gd` | 지속적인 `CharacterBody3D`, 실제 충돌·지형 높이·공격 차폐 |
+| `scripts/rendering/environment/environment_renderer_3d.gd` | 마을 밖 숲과 동굴의 공간 표시, 공유 지형 표면 |
+| `scripts/rendering/architecture/chapel_renderer_3d.gd`, `scripts/rendering/architecture/fortification_renderer_3d.gd`, `scripts/rendering/vegetation/tree_geometry_3d.gd` | 현재 건축·성문/벽·나무 패밀리 |
+| `assets/models/`, `assets/materials/` | 개별 입체 자산과 공용 표면 |
+| `assets/source/`, `tools/assets/`, `tools/review/models/` | 제작 원본/기록, 재현 도구, 렌더 검수 도구 |
 
 위 표의 첫 행 이후 경로는 `sjrpg_3d/` 기준입니다. 현재 `Game`의 `Node2D` 좌표는 UI·규칙과 기존 데이터의 어댑터이며 공간 판정의 기준은 `SpatialWorld3D`입니다. 마을 밖이나 동굴에서도 3D 표시를 유지합니다. 이전 비교 장면 문서의 ‘마을만 3D, 외부는 2D’ 설명은 현재 독립 3D판의 제작 계약이 아닙니다.
 
@@ -224,4 +225,4 @@ validation: <tests, actual paired browser captures, remaining asset gaps>
 
 신규 몬스터 교체는 GLB와 자산별 `.tscn`을 기본으로 합니다. 현재 고블린·늑대·멧돼지·스켈레톤·골렘·동굴 잠복자에 적용하며 [몬스터 제작/게임 연결 계약](../sjrpg_3d/docs/native-enemy-models.md)을 따릅니다. GLB는 형상·골격·클립, 씬은 조립/편집, 게임 코드는 물리·AI·피해·저장을 소유합니다. 이동 캡슐은 몸통 중심의 물리 기준이며 움직이는 발끝·꼬리·무기를 각각 충돌체로 등록하지 않습니다.
 
-건물은 [건물 GLB·씬 계약](../sjrpg_3d/docs/native-architecture-models.md)을 따릅니다. 주택 네 채·예배당·성곽/성문·다리는 GLB의 정점·UV·피벗을 개별 씬으로 불러오고, Godot 전용 표면과 기존 충돌 Plan은 분리합니다. 제작 생성기는 `tools/architecture_art/`에만 두고 앱에서 제외합니다. GLB 임포트의 정점/UV 압축과 자동 LOD로 기와 줄눈이나 얇은 면이 바뀌지 않게 현재 정밀도 설정을 보존하며 텍스처 압축 정책은 유지합니다.
+건물은 [건물 GLB·씬 계약](../sjrpg_3d/docs/native-architecture-models.md)을 따릅니다. 주택 네 채·예배당·성곽/성문·다리는 GLB의 정점·UV·피벗을 개별 씬으로 불러오고, Godot 전용 표면과 기존 충돌 Plan은 분리합니다. 제작 생성기는 `tools/assets/architecture/`에만 두고 앱에서 제외합니다. GLB 임포트의 정점/UV 압축과 자동 LOD로 기와 줄눈이나 얇은 면이 바뀌지 않게 현재 정밀도 설정을 보존하며 텍스처 압축 정책은 유지합니다.

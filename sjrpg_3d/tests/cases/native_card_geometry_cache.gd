@@ -3,7 +3,7 @@ extends TestCase
 
 
 func _corner_error(card: MeshInstance3D, basis: Basis, foot: Vector3, rect: Rect2) -> float:
-	var factor := Ortho3DPreview.GROUND_PER_METER * Ortho3DPreview.PROJECTION_FACTOR
+	var factor := WorldRenderer3D.GROUND_PER_METER * WorldRenderer3D.PROJECTION_FACTOR
 	var expected: Array[Vector3] = []
 	for point: Vector2 in [rect.position, rect.position + Vector2(rect.size.x, 0), rect.end, rect.position + Vector2(0, rect.size.y)]:
 		expected.append(foot + basis.x * (point.x / factor) - basis.y * (point.y / factor))
@@ -21,19 +21,19 @@ func _corner_error(card: MeshInstance3D, basis: Basis, foot: Vector3, rect: Rect
 
 func run() -> void:
 	# Keep the real card factory and placement path, without constructing gameplay.
-	var preview := Ortho3DPreview.new()
+	var renderer := WorldRenderer3D.new()
 	var stage := Node3D.new()
 	add_child(stage)
-	preview.stage = stage
+	renderer.stage = stage
 	var camera := Camera3D.new()
 	stage.add_child(camera)
 	camera.rotation = Vector3(-0.6154797, 0.7853982, 0.0)
-	preview.camera = camera
+	renderer.camera = camera
 	var image := Image.create(8, 8, false, Image.FORMAT_RGBA8)
 	image.fill(Color.WHITE)
 	var texture := ImageTexture.create_from_image(image)
 	var frame := Rect2(2, 1, 4, 3)
-	var card := preview._new_card(texture, frame, true)
+	var card := renderer._new_card(texture, frame, true)
 	var mesh := card.mesh as QuadMesh
 	var initial_size := mesh.size
 	var initial_rid := mesh.get_rid()
@@ -49,7 +49,7 @@ func run() -> void:
 		var rect := Rect2(Vector2(-width * 0.35, -height * 0.7), Vector2(width, height))
 		var angle := float(index) * 0.13
 		var foot := Vector3(float(index) * 0.03, 1.5 + float(index % 7) * 0.2, -3.0)
-		preview._place_card(card, Vector2(10, 20), rect, angle, foot)
+		renderer._place_card(card, Vector2(10, 20), rect, angle, foot)
 		var basis := camera.global_transform.basis * Basis(Vector3(0, 0, 1), -angle)
 		maximum_error = maxf(maximum_error, _corner_error(card, basis, foot, rect))
 	check("all animated billboard corners retain the original camera/angle/foot placement", maximum_error < 0.00002)
@@ -62,9 +62,9 @@ func run() -> void:
 	# Empty health fills remain valid collapsed geometry, without a zero-size mesh.
 	var empty := Rect2(Vector2(4, -9), Vector2(0, 5))
 	var empty_foot := Vector3(2, 3, 4)
-	preview._place_card(card, Vector2.ZERO, empty, 0.0, empty_foot)
+	renderer._place_card(card, Vector2.ZERO, empty, 0.0, empty_foot)
 	check("zero health width preserves its exact collapsed world corners",
 		_corner_error(card, camera.global_transform.basis, empty_foot, empty) < 0.00002
 		and mesh.size == initial_size and changes[0] == 0)
 	stage.free()
-	preview.free()
+	renderer.free()

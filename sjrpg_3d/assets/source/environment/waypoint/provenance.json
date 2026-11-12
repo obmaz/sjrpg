@@ -28,19 +28,19 @@
   "mapping": "whole circular top surface",
   "integrationInputs": [
     {
-      "path": "scripts/forest_region.gd",
+      "path": "scripts/world/forest_region.gd",
       "sha256": "c1a0c16329081deff53d118b41f6ee1dd6f31d5b334c61a34eb2a924d5402e58"
     },
     {
-      "path": "scripts/native_ground_relief.gd",
-      "sha256": "894ecf56b8c7d73efc83dd1af5fa5443ef859874616372f5380b37ac2047ad50"
+      "path": "scripts/world/geometry/ground_relief_3d.gd",
+      "sha256": "e7528044cd6d63b0d2dc876cb3be81816e1920681eaf91cd1cce6a49cd485095"
     },
     {
-      "path": "scripts/native_ground.gdshader",
+      "path": "assets/materials/terrain/ground.gdshader",
       "sha256": "40f058e41c7143993edb315cddf89342e95ace77326d96273bb2454998042135"
     },
     {
-      "path": "scripts/native_river.gdshader",
+      "path": "assets/materials/water/river.gdshader",
       "sha256": "5fd6a51de5aee5c5a84bed2b1ae8d9d382a1a478859d9f39175e4d5876b5556b"
     }
   ]

@@ -13,12 +13,12 @@ func run() -> void:
 	for id: String in ["dark_fir", "black_pine", "spire_cypress", "juniper", "thorn_bramble"]:
 		ids.append("vegetation/" + id)
 	for id: String in ids:
-		var a := NativePropAssets.create(id)
-		var b := NativePropAssets.create(id)
+		var a := ModelSceneLibrary.create(id)
+		var b := ModelSceneLibrary.create(id)
 		if not check("fixed asset has two editable scene instances " + id, a != null and b != null):
 			return
 		var proof: Dictionary = JSON.parse_string(
-			FileAccess.get_file_as_string(NativePropAssets.ROOT + id + "/geometry.json")
+			FileAccess.get_file_as_string(ModelSceneLibrary.ROOT + id + "/geometry.json")
 		)
 		var triangles := 0
 		var geometry := true
@@ -73,7 +73,7 @@ func run() -> void:
 		)
 		a.free()
 		b.free()
-	var first := NativePropAssets.mesh("environment/cave_entrance", "Body")
+	var first := ModelSceneLibrary.mesh("environment/cave_entrance", "Body")
 	check(
 		"cave render and physical collision use the same imported mesh",
 		first == NativeCaveEntrance3D.mesh(NativeCavePlan.HILL_HEIGHT, 1.0)

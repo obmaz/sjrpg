@@ -1,0 +1,83 @@
+{
+	"billboards": false,
+	"generator": "tools/assets/props/vegetation_builder.gd",
+	"generator_sha256": "292a49f0c84b1a78f879c6bf25a2d91e3435ba43bbecc9188b07a2ca28678ca7",
+	"original_geometry": true,
+	"variants": [
+		{
+			"authoring": {
+				"billboard": false,
+				"branches": 49,
+				"kind": 0,
+				"root": "(0.0, 0.0, 0.0)",
+				"sprays": 193
+			},
+			"bounds": "[P: (-2.403, 0.0, -2.157965), S: (4.792865, 5.88, 4.305486)]",
+			"path": "assets/models/vegetation/dark_fir/model.glb",
+			"scene": "assets/models/vegetation/dark_fir/visual.tscn",
+			"sha256": "67fa958b23eb14d8c3f0e27544213b5a568b4c79b69dacb64e141c2c61bca2de",
+			"surfaces": 2,
+			"triangles": 3320.0
+		},
+		{
+			"authoring": {
+				"billboard": false,
+				"branches": 49,
+				"kind": 1,
+				"root": "(0.0, 0.0, 0.0)",
+				"sprays": 193
+			},
+			"bounds": "[P: (-2.54325, 0.0, -2.283348), S: (5.072723, 5.04, 4.556665)]",
+			"path": "assets/models/vegetation/black_pine/model.glb",
+			"scene": "assets/models/vegetation/black_pine/visual.tscn",
+			"sha256": "f8ff54b2c1ec59dd483b2918c880cf1a3f789007ff7f62201cc42da14dd32ffa",
+			"surfaces": 2,
+			"triangles": 3320.0
+		},
+		{
+			"authoring": {
+				"billboard": false,
+				"branches": 41,
+				"kind": 2,
+				"root": "(0.0, 0.0, 0.0)",
+				"sprays": 161
+			},
+			"bounds": "[P: (-1.417215, 0.0, -1.497983), S: (3.000137, 6.51, 3.069256)]",
+			"path": "assets/models/vegetation/spire_cypress/model.glb",
+			"scene": "assets/models/vegetation/spire_cypress/visual.tscn",
+			"sha256": "fcaa8435851bfe7ae8ae79aaaa9565039f172b72e349e094a36e7dafe78c68e5",
+			"surfaces": 2,
+			"triangles": 2776.0
+		},
+		{
+			"authoring": {
+				"billboard": false,
+				"branches": 19,
+				"kind": 3,
+				"root": "(0.0, 0.0, 0.0)",
+				"sprays": 73
+			},
+			"bounds": "[P: (-1.000501, 0.0, -0.879353), S: (1.994284, 0.9975, 1.768913)]",
+			"path": "assets/models/vegetation/juniper/model.glb",
+			"scene": "assets/models/vegetation/juniper/visual.tscn",
+			"sha256": "8bee34e6a69bc9701ce68daa048028aaf79083efde64301124b4e4c352ccb3c7",
+			"surfaces": 2,
+			"triangles": 1280.0
+		},
+		{
+			"authoring": {
+				"billboard": false,
+				"branches": 91,
+				"kind": 4,
+				"root": "(0.0, 0.0, 0.0)",
+				"sprays": 37
+			},
+			"bounds": "[P: (-0.829138, 0.0, -0.750796), S: (1.686421, 0.9975, 1.49039)]",
+			"path": "assets/models/vegetation/thorn_bramble/model.glb",
+			"scene": "assets/models/vegetation/thorn_bramble/visual.tscn",
+			"sha256": "469d12cb68cdf0e04fca38fa92ecd4fbb38180d8ebc6464ebfa9297ba9c128b0",
+			"surfaces": 2,
+			"triangles": 2432.0
+		}
+	]
+}

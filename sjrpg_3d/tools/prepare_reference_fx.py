@@ -65,7 +65,7 @@ def main():
             effects[key] = dict(row=row, **definition, override=dict(**record(target), cell=CELL,
                                 row=0, columns=4, size=list(strip.size), blend='add'),
                                 legacy_base_row_retained=True)
-    output = ROOT / 'assets/art/effects/reference-skills.webp'
+    output = ROOT / 'assets/effects/textures/reference-skills.webp'
     output.parent.mkdir(parents=True, exist_ok=True)
     temp = output.with_suffix('.tmp')
     atlas.save(temp, 'WEBP', quality=94, method=6)
@@ -77,7 +77,7 @@ def main():
     data = dict(version=1,
                 sources=[record(path) for path in dict.fromkeys(sources)],
                 reference=record(ROOT / 'assets/source/style/approved-game-reference.jpg'),
-                family_reference=record(ROOT / 'assets/source/impact-atlas.png'),
+                family_reference=record(ROOT / 'assets/source/effects/combat/impact-atlas.png'),
                 generation=record(GENERATION), measure=record(MEASURE),
                 atlas=dict(**record(output), size=list(atlas.size), cell=CELL, columns=4, rows=6,
                            blend='add', phases=['onset', 'peak', 'fragments', 'tail']),

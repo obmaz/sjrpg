@@ -8,58 +8,58 @@
   },
   "source_art": [
     {
-      "path": "assets/art/village/encounter-stone.webp",
+      "path": "assets/sprites/village/encounter-stone.webp",
       "sha256": "97f4e85f17662634680764cb3f4fec5a3e4ac47ff964ac876559848643edc3e7",
       "bytes": 63704
     },
     {
-      "path": "assets/art/village/remake-chest.webp",
+      "path": "assets/sprites/village/remake-chest.webp",
       "sha256": "3130cf5430236e5924811fa31d76cde3fbe48e231d459df99edc3a9e7caab4ce",
       "bytes": 79710
     },
     {
-      "path": "assets/art/village/remake-chest-broken.webp",
+      "path": "assets/sprites/village/remake-chest-broken.webp",
       "sha256": "1fd53d1e6c9cc301d7b84c7938d90af407f4aff178bdbceaf75c7d29119b5e9d",
       "bytes": 80720
     }
   ],
   "shared_family_provenance": {
-    "path": "assets/art/preview3d/materials.json",
-    "sha256": "41d0e50e736fe486e95b75bb5bb6e5a82f71293de4dd1fe8cb2f0cc52282ee67",
+    "path": "assets/materials/shared/materials.json",
+    "sha256": "3919772e4442d793e56739dece8baf747c6b636a5b0b2681052f32c6548b7a0e",
     "bytes": 10199
   },
   "shared_textures": [
     {
-      "path": "assets/art/preview3d/limestone.webp",
+      "path": "assets/materials/shared/limestone.webp",
       "sha256": "2561c1be419f951bf0bce7b9fd5085c24a92600cf66424a4775e16cd37b58e6c",
       "bytes": 17806
     },
     {
-      "path": "assets/models/materials/chests/albedo.png",
+      "path": "assets/materials/chests/albedo.png",
       "sha256": "7e31a1fd2740f40389da36888223ea0841cf226877a7d5f6330cadb0c90eabd2",
       "bytes": 3127826
     }
   ],
   "metal_surface_provenance": {
     "path": "assets/source/materials/chests/provenance.json",
-    "sha256": "e288208d979cab6d1dc1c4eb87e59509e620fbc5a8fe9e8a4d75cb3f2396f21b",
+    "sha256": "053cb18e49c43a7913d5fb933bb30d661619530a86a05ffd81a91f2e602080fe",
     "bytes": 1046
   },
   "new_texture_bytes": 3127826,
   "new_binary_model_bytes": 184080,
   "generators": [
     {
-      "path": "tools/prop_art/encounter_builder.gd",
+      "path": "tools/assets/props/encounter_builder.gd",
       "sha256": "f908a22c9293fc32b82e355e8fa071243bc9656f4113a7d1511224b733c5f0ba",
       "bytes": 11547
     },
     {
-      "path": "scripts/native_encounter_props_3d.gd",
-      "sha256": "7945402395aedc491a1216be0dc76e132970e1162faf3053ef0911fc658f986f",
+      "path": "scripts/rendering/environment/encounter_prop_renderer_3d.gd",
+      "sha256": "4eaf12088e60eadfe0626cb89319484c5e4a435e3648e1642168b030cdd1de8e",
       "bytes": 9690
     },
     {
-      "path": "scripts/native_chest_material.gdshader",
+      "path": "assets/materials/chests/chest.gdshader",
       "sha256": "4097ea9ee6bb53d54cf300f08017f4c8fd5d1e7fca85d82e682bad0a20591181",
       "bytes": 1160
     }
@@ -184,8 +184,8 @@
     "headless": "native_encounter_props PASS; actual source strike/open, capsule collider release, hinge-volume check, hidden/cave/return/deletion ownership.",
     "gpu": "Pending coordinated actual browser captures; CPU metadata is not visual acceptance.",
     "review_fixture_source": {
-      "path": "scripts/native_encounter_review.gd",
-      "sha256": "8956760b66dbacf2a254038be5ccd1a3e81b1d0231b714d8c949fef45eabe7aa",
+      "path": "scripts/inspection/native_encounter_review.gd",
+      "sha256": "b440e8ce2cfbb51244ad8801f799968ccf93b133b984dba9055610bd5143e02a",
       "bytes": 8045
     },
     "review_fixture": "Explicit loot_review=1 in a fresh isolated browser profile only. Official create_slot binds a unique test session before original source state methods. Same source anchors and fixed120 camera; optional native-model rotation checks unseen faces, optional original-art cards provide same-world comparison."

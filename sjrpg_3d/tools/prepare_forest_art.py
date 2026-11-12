@@ -13,7 +13,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 MEASURE = ROOT / 'tools/extract/forest_art_measure.json'
-OUTPUT = ROOT / 'assets/art/forest'
+OUTPUT = ROOT / 'assets/sprites/forest'
 CELL = 512
 PADDING = 8
 
@@ -69,7 +69,7 @@ def main():
                 y + (frame['foot'][1] - native[1]) * packing]
         if not (x < foot[0] < x + size[0] and y < foot[1] < y + size[1]):
             raise ValueError(f'Flora ground contact falls outside the illustration: {key}')
-        result = dict(sheet='res://assets/art/forest/flora.webp',
+        result = dict(sheet='res://assets/sprites/forest/flora.webp',
                       source=[x, y, *size], foot=foot, height=foot[1] - y,
                       origin=native, packing=packing, gvs=1, gvk=0,
                       world_height=frame['world_height'], body=None)

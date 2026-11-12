@@ -3,19 +3,19 @@ extends TestCase
 
 func run() -> void:
 	var game := await make_game("mage")
-	var preview: Ortho3DPreview = game.ortho_preview
-	var fade := preview._occlusion
-	var foot := preview.actor_foot(game.player)
+	var renderer: WorldRenderer3D = game.world_renderer
+	var fade := renderer._occlusion
+	var foot := renderer.actor_foot(game.player)
 	check(
 		"loading prepares shared geometry and transparency variants",
 		fade.triangle_builds > 0 and not fade._templates.is_empty()
 	)
 	var fixture := Node3D.new()
-	preview.stage.add_child(fixture)
+	renderer.stage.add_child(fixture)
 	var object := Node3D.new()
 	NativePlayerOcclusion.mark_object(object)
 	fixture.add_child(object)
-	object.global_position = foot + preview.camera.global_basis.z * 4.0
+	object.global_position = foot + renderer.camera.global_basis.z * 4.0
 	var box := BoxMesh.new()
 	box.size = Vector3(2.5, 3.5, 2.5)
 	var original := StandardMaterial3D.new()
@@ -37,9 +37,9 @@ func run() -> void:
 	roof.mesh = box
 	roof.material_override = custom
 	object.add_child(roof)
-	roof.position = preview.camera.global_basis.x * 15.0
+	roof.position = renderer.camera.global_basis.x * 15.0
 	# 같은 등록 컨테이너의 실제 몬스터도 정적 모델로 표시하지 않으면 제외된다.
-	var monster: Node3D = NativeEnemyModels.build(NativeEnemyModels.KINDS[0])["root"]
+	var monster: Node3D = EnemyRenderer3D.build(EnemyRenderer3D.KINDS[0])["root"]
 	fixture.add_child(monster)
 	monster.global_position = object.global_position
 	var monster_materials := {}
@@ -50,7 +50,7 @@ func run() -> void:
 	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for side: float in [-1.0, 1.0]:
 		tool.append_from(
-			box, 0, Transform3D(Basis.IDENTITY, preview.camera.global_basis.x * side * 5.0)
+			box, 0, Transform3D(Basis.IDENTITY, renderer.camera.global_basis.x * side * 5.0)
 		)
 	hollow.mesh = tool.commit()
 	hollow.material_override = original
@@ -110,13 +110,13 @@ func run() -> void:
 	var wall_ink: Material = wall.material_override
 	var builds := fade.material_builds
 	var triangles := fade.triangle_builds
-	object.global_position += preview.camera.global_basis.x * 20.0
+	object.global_position += renderer.camera.global_basis.x * 20.0
 	fade.sync(0.25)
 	check(
 		"leaving cover restores every original material together",
 		wall.material_override == original and roof.material_override == custom
 	)
-	object.global_position = foot + preview.camera.global_basis.z * 4.0
+	object.global_position = foot + renderer.camera.global_basis.z * 4.0
 	fade.sync(0.25)
 	check(
 		"returning behind the same object reuses its exact materials and BVH",
@@ -126,7 +126,7 @@ func run() -> void:
 			and fade.triangle_builds == triangles
 		)
 	)
-	object.global_position = foot - preview.camera.global_basis.z * 4.0
+	object.global_position = foot - renderer.camera.global_basis.z * 4.0
 	fade.sync(0.25)
 	check(
 		"objects behind the hero stay opaque",
@@ -136,14 +136,14 @@ func run() -> void:
 	var batched := Node3D.new()
 	NativePlayerOcclusion.mark_object(batched)
 	fixture.add_child(batched)
-	batched.global_position = foot + preview.camera.global_basis.z * 4.0
+	batched.global_position = foot + renderer.camera.global_basis.z * 4.0
 	for index in 2:
 		var part := MeshInstance3D.new()
 		part.mesh = box
 		part.material_override = original
-		part.position = preview.camera.global_basis.x * float(index) * 15.0
+		part.position = renderer.camera.global_basis.x * float(index) * 15.0
 		batched.add_child(part)
-	var report := Ortho3DStaticBatch.apply(batched)
+	var report := StaticMeshBatch3D.apply(batched)
 	fade._register(batched)
 	fade.sync(0.1)
 	var batch: MultiMeshInstance3D = report["batches"].values()[0]
@@ -164,7 +164,7 @@ func run() -> void:
 	var draws := batch.get_children()
 	var instances := fade.instance_builds
 	builds = fade.material_builds
-	batched.global_position += preview.camera.global_basis.x * 20.0
+	batched.global_position += renderer.camera.global_basis.x * 20.0
 	fade.sync(0.25)
 	check(
 		"uncovered batch restores the original slot and parks cached draws",
@@ -173,7 +173,7 @@ func run() -> void:
 			and batch.multimesh.get_instance_transform(0).basis.determinant() > 0.1
 		)
 	)
-	batched.global_position -= preview.camera.global_basis.x * 20.0
+	batched.global_position -= renderer.camera.global_basis.x * 20.0
 	fade.sync(0.1)
 	check(
 		"repeated batch cover creates no new draw nodes or materials",

@@ -4,7 +4,7 @@ extends RefCounted
 const MIN_OPACITY := 0.20
 const INTERVAL := 0.10
 const CACHE_OBJECTS := 16
-var preview: Ortho3DPreview
+var renderer: WorldRenderer3D
 var material_builds := 0
 var instance_builds := 0
 var triangle_builds := 0
@@ -30,9 +30,9 @@ var _clock := INTERVAL
 var _debug_disabled := false
 
 
-func setup(presenter: Ortho3DPreview) -> NativePlayerOcclusion:
-	preview = presenter
-	if OS.has_feature("web") and preview._probe_enabled:
+func setup(presenter: WorldRenderer3D) -> NativePlayerOcclusion:
+	renderer = presenter
+	if OS.has_feature("web") and renderer._probe_enabled:
 		_debug_disabled = bool(
 			JavaScriptBridge.eval("new URLSearchParams(location.search).get('occlusion') === 'off'")
 		)
@@ -119,9 +119,9 @@ func _add_entry(entry: Dictionary) -> void:
 
 
 func _collect() -> void:
-	_register(preview._forest_stage)
-	_register(preview._world_environment.cave)
-	for props in [preview._town_props, preview._encounter_props]:
+	_register(renderer._forest_stage)
+	_register(renderer._world_environment.cave)
+	for props in [renderer._town_props, renderer._encounter_props]:
 		for entry: Dictionary in props._entries.values():
 			mark_object(entry["root"])
 			_register(entry["root"])
@@ -132,7 +132,7 @@ func warm_up() -> void:
 	_collect()
 	if _debug_disabled or DisplayServer.get_name() == "headless":
 		return
-	warmed_materials = await NativeOcclusionWarmup.draw(preview, _samples.values())
+	warmed_materials = await NativeOcclusionWarmup.draw(renderer, _samples.values())
 
 
 func _prime(entry: Dictionary) -> void:
@@ -161,7 +161,7 @@ func _prime(entry: Dictionary) -> void:
 
 
 func sync(delta: float) -> void:
-	if _debug_disabled or not preview.game.native_ready:
+	if _debug_disabled or not renderer.game.native_ready:
 		return
 	_retired = _retired.filter(
 		func(entry: Dictionary): return entry["until"] > Engine.get_process_frames()
@@ -208,8 +208,8 @@ func _find_occluders() -> void:
 	for fade: Dictionary in _fades.values():
 		fade["wanted"] = false
 	var wanted := {}
-	var foot := preview.actor_foot(preview.game.player)
-	var toward := preview.camera.global_basis.z * 45.0
+	var foot := renderer.actor_foot(renderer.game.player)
+	var toward := renderer.camera.global_basis.z * 45.0
 	var candidates := _spatial_index.candidates(foot, toward)
 	query_candidates = candidates.size()
 	for entry: Dictionary in candidates:

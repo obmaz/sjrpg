@@ -1,8 +1,8 @@
 # 일반 투사체의 네이티브 표시
 
-`Player._projectiles()`는 기본 `firebolt`와 `fireball`을 `kind="proj", visual=""`로 만듭니다. 숨긴 원본 Canvas 대신 동작하는 `Ortho3DPreview._sync_cards()`는 이 값을 원화 화이트리스트 밖으로 취급해 실제 탄환이 보이지 않았습니다.
+`Player._projectiles()`는 기본 `firebolt`와 `fireball`을 `kind="proj", visual=""`로 만듭니다. 숨긴 원본 Canvas 대신 동작하는 `WorldRenderer3D._sync_cards()`는 이 값을 원화 화이트리스트 밖으로 취급해 실제 탄환이 보이지 않았습니다.
 
-`NativeCombatFx3D`는 현재 `game.world`의 살아 있는 일반 비투척 투사체만 관찰합니다. `Effect.native_position()`의 실제 높이와 궤적, 소스의 `age/life`, 연속 관찰된 실제 이동 방향을 사용합니다. 생성형 `PresentationArt`의 기존 `combat-frames.webp` 원소 행과 peak열을 재사용하며, 새 이미지·충돌·피해·자원 소비·효과용 타이머를 추가하지 않습니다. 본체는 원본44px 크기와 작은 source-age 흔들림을 유지하고, 꼬리는0.32m 이하입니다. 공간 깊이 검사를 사용하며 새 Canvas/SubViewport/점광원은 만들지 않습니다.
+`CombatEffects3D`는 현재 `game.world`의 살아 있는 일반 비투척 투사체만 관찰합니다. `Effect.native_position()`의 실제 높이와 궤적, 소스의 `age/life`, 연속 관찰된 실제 이동 방향을 사용합니다. 생성형 `PresentationArt`의 기존 `combat-frames.webp` 원소 행과 peak열을 재사용하며, 새 이미지·충돌·피해·자원 소비·효과용 타이머를 추가하지 않습니다. 본체는 원본44px 크기와 작은 source-age 흔들림을 유지하고, 꼬리는0.32m 이하입니다. 공간 깊이 검사를 사용하며 새 Canvas/SubViewport/점광원은 만들지 않습니다.
 
 최대32개의 투사체에 본체/꼬리2카드씩, 합계64카드·128삼각형을 사용합니다. 상한은 표시만 제한하고 게임 투사체를 삭제하지 않습니다. 정지 중에는 소스가 그대로 멈추며 동작 줄이기는 꼬리와 깜박임을 억제합니다. 지역이 바뀌거나 소스가 만료/삭제되면 해당 그림을 제거합니다. 기존 bolt/slash/spin/slam/frost/meteor/impact/cast/release 그림은 기존 경로로 유지합니다.
 

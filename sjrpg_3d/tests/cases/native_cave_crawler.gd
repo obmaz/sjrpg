@@ -8,7 +8,7 @@ func run() -> void:
 	game.encounters.set_process(false)
 	var enemy := Enemy.new()
 	enemy.setup(game, "goblin", 1)
-	enemy.set_meta("visual_variant", NativeEnemyModels.CRAWLER)
+	enemy.set_meta("visual_variant", EnemyRenderer3D.CRAWLER)
 	enemy.position = game.village.boss_point
 	game.world.add_child(enemy)
 	game.enemies.append(enemy)
@@ -17,20 +17,20 @@ func run() -> void:
 	game.camera.reset_smoothing()
 	game.camera.force_update_scroll()
 	await _frames(2)
-	var renderer: NativeEnemyModels = game.ortho_preview._enemy_models
+	var renderer: EnemyRenderer3D = game.world_renderer._enemy_models
 	renderer.sync()
 	var model: Dictionary = renderer.entries[enemy.get_instance_id()]
 	var root: Node3D = model["root"]
 	check(
 		"real encounter variant owns its own native volume",
 		(
-			model["kind"] == NativeEnemyModels.CRAWLER
+			model["kind"] == EnemyRenderer3D.CRAWLER
 			and not root.find_children("*", "MeshInstance3D", true, false).is_empty()
 		)
 	)
 	check(
 		"crawler is actually presented at its physical foot",
-		root.visible and root.position.distance_to(game.ortho_preview.actor_foot(enemy)) < .001
+		root.visible and root.position.distance_to(game.world_renderer.actor_foot(enemy)) < .001
 	)
 	var body: CharacterBody3D = game.spatial_world.actor_bodies[enemy.get_instance_id()]
 	var capsule := (body.get_child(0) as CollisionShape3D).shape as CapsuleShape3D
@@ -63,10 +63,10 @@ func run() -> void:
 	check("crawler uses lit skinned GLB geometry", lit and visual.skeleton.get_bone_count() > 30)
 	var foot := root.position
 	var jaw := visual.skeleton.find_bone(visual.manifest["attack_bone"])
-	NativeEnemyModels.pose(model, 0, 0, .35)
+	EnemyRenderer3D.pose(model, 0, 0, .35)
 	visual.skeleton.force_update_all_bone_transforms()
 	var open := visual.skeleton.get_bone_global_pose(jaw)
-	NativeEnemyModels.pose(model, 0, 0, .60)
+	EnemyRenderer3D.pose(model, 0, 0, .60)
 	visual.skeleton.force_update_all_bone_transforms()
 	check(
 		"real jaw closes on the source damage phase",
@@ -75,7 +75,7 @@ func run() -> void:
 			and root.position == foot
 		)
 	)
-	var other := NativeEnemyModels.build(NativeEnemyModels.CRAWLER)
+	var other := EnemyRenderer3D.build(EnemyRenderer3D.CRAWLER)
 	check(
 		"crawler instances own skeleton and hit materials",
 		(
@@ -87,22 +87,22 @@ func run() -> void:
 	(other["root"] as Node3D).free()
 	enemy.take_damage(enemy.max_hp * 2.0, null)
 	var corpse: Dictionary = game.corpses.back()
-	game.ortho_preview._world_environment._sync_corpses()
+	game.world_renderer._world_environment._sync_corpses()
 	var id: int = (corpse["visual"] as Node).get_instance_id()
-	var fallen: Dictionary = game.ortho_preview._world_environment._corpses[id]
+	var fallen: Dictionary = game.world_renderer._world_environment._corpses[id]
 	check(
 		"real death retains crawler volume and original lifetime",
 		(
-			fallen["kind"] == NativeEnemyModels.CRAWLER
-			and NativeEnemyModels.corpse_kind(corpse) == NativeEnemyModels.CRAWLER
+			fallen["kind"] == EnemyRenderer3D.CRAWLER
+			and EnemyRenderer3D.corpse_kind(corpse) == EnemyRenderer3D.CRAWLER
 			and float(corpse["lifetime"]) > 0
 		)
 	)
 	game.remove_corpse(corpse)
-	game.ortho_preview._world_environment._sync_corpses()
+	game.world_renderer._world_environment._sync_corpses()
 	check(
 		"consumption removes the actual corpse model",
-		not game.ortho_preview._world_environment._corpses.has(id)
+		not game.world_renderer._world_environment._corpses.has(id)
 	)
 	game.queue_free()
 	await _frames(2)

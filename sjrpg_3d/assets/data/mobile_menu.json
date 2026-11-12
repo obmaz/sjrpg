@@ -15,7 +15,7 @@
   "sha256": "00637057a26d1a3fc68a8a597dbfdfed20f6d0e9fb3f8bc47825c984f46fc7f9"
  },
  "atlas": {
-  "path": "assets/art/hud/mobile-menu.webp",
+  "path": "assets/ui/hud/mobile-menu.webp",
   "sha256": "4c611e6b7c84f0dfd497324158cc6a36f5cbab5662882de9cbc2fb43f3ac96d9",
   "size": [
    1024,

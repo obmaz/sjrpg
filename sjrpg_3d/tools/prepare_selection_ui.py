@@ -8,7 +8,7 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-source_path = ROOT / 'assets/source/selection-trim.png'
+source_path = ROOT / 'assets/source/ui/selection-trim.png'
 source = Image.open(source_path).convert('RGBA')
 sheet = Image.new('RGBA', (1024, 768))
 rects = {}
@@ -28,12 +28,12 @@ for key, index, target in [('primary', 0, (8, 8)), ('continue', 1, (8, 176)), ('
     measurements[key] = [bounds[0] + x0, bounds[1] + y0, bounds[2] + x0, bounds[3] + y0]
 for alias, original in [('back', 'continue'), ('tab_active', 'primary'), ('tab_inactive', 'continue')]:
     rects[alias] = rects[original]
-target = ROOT / 'assets/art/ui/selection-trim.webp'
+target = ROOT / 'assets/ui/selection/selection-trim.webp'
 temporary = target.with_suffix('.tmp')
 sheet.save(temporary, 'WEBP', quality=94, alpha_quality=100, method=6, exact=True)
 temporary.replace(target)
-manifest = dict(texture='res://assets/art/ui/selection-trim.webp', regions=rects, nine_slice=22,
-                source='assets/source/selection-trim.png', source_rects=measurements,
+manifest = dict(texture='res://assets/ui/selection/selection-trim.webp', regions=rects, nine_slice=22,
+                source='assets/source/ui/selection-trim.png', source_rects=measurements,
                 source_sha256=hashlib.sha256(source_path.read_bytes()).hexdigest(),
                 render_sha256=hashlib.sha256(target.read_bytes()).hexdigest())
 (ROOT / 'assets/data/selection_ui.json').write_text(json.dumps(manifest, indent=1) + '\n')

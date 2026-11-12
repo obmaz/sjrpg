@@ -33,7 +33,7 @@ func run() -> void:
 		"unchanged world retains the same uploaded whole-map mesh",
 		model.revision == revision and model.full_mesh == mesh
 	)
-	var house: Dictionary = game.ortho_preview._houses["nw"]
+	var house: Dictionary = game.world_renderer._houses["nw"]
 	var root := NativePlayerOcclusion.static_owner(house["meshes"][0]) as Node3D
 	var original := root.transform
 	var before: PackedVector2Array = _shape(game, "building:nw")["poly"]
@@ -95,7 +95,7 @@ func run() -> void:
 		"restoring the same building restores its actual footprint",
 		(_shape(game, "building:nw")["poly"] as PackedVector2Array) == before
 	)
-	var fortress: Ortho3DFortification = game.ortho_preview._fortification
+	var fortress: FortificationRenderer3D = game.world_renderer._fortification
 	var saved: Array = game.town_gates.progress.duplicate()
 	var old_reduce := Prefs.reduce_motion
 	Prefs.reduce_motion = false

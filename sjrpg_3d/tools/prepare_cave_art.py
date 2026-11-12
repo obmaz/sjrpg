@@ -15,7 +15,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 MEASURE = ROOT / 'tools/extract/cave_art_measure.json'
-OUTPUT = ROOT / 'assets/art/cave'
+OUTPUT = ROOT / 'assets/sprites/dungeon'
 PADDING = 8
 
 
@@ -76,7 +76,7 @@ def main():
         if not (x < foot[0] < x + size[0] and y < foot[1] < y + size[1]):
             raise ValueError(f'Ground contact falls outside the illustration: {key}')
         gvs, gvk = frame.get('gvs', 1), frame.get('gvk', 0)
-        result = dict(sheet='res://assets/art/cave/' + atlas_name + '.webp',
+        result = dict(sheet='res://assets/sprites/dungeon/' + atlas_name + '.webp',
                       source=[x, y, *size], foot=foot, height=foot[1] - y,
                       origin=native, packing=packing, gvs=gvs, gvk=gvk,
                       world_height=frame['world_height'], body=None)

@@ -2,7 +2,7 @@ extends TestCase
 ## Actual config persistence and startup/change ordering; no unsupported screen API calls in CI.
 
 class ObservedPrefs:
-	extends "res://scripts/prefs.gd"
+	extends "res://scripts/state/prefs.gd"
 	var applied: Array[String] = []
 
 	func apply_screen_orientation(_from_gesture := false) -> void:

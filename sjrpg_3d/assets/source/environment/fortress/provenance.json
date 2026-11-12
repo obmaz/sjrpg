@@ -3,7 +3,7 @@
   "source": "original.png",
   "prompt": "prompt.txt",
   "sha256": "a01fe62a241126e00f99dcdd81ecd43169daa0aadd0630e4517888b8c25f4e80",
-  "runtime": "sjrpg_3d/assets/art/preview3d/fortress-atlas.png",
+  "runtime": "sjrpg_3d/assets/materials/shared/fortress_atlas.png",
   "actualReferences": [
     {
       "path": "assets/source/style/gate-wall-design.png",

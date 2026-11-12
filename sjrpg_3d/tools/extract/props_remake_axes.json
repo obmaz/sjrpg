@@ -10,7 +10,7 @@
     1254,
     1254
    ],
-   "render_file": "assets/art/village/remake-pool.webp",
+   "render_file": "assets/sprites/village/remake-pool.webp",
    "space": "native",
    "edges": [
     {
@@ -251,7 +251,7 @@
     1254,
     1254
    ],
-   "render_file": "assets/art/village/remake-portal.webp",
+   "render_file": "assets/sprites/village/remake-portal.webp",
    "space": "native",
    "edges": [
     {
@@ -567,7 +567,7 @@
     724,
     724
    ],
-   "render_file": "assets/art/village/remake-chest.webp",
+   "render_file": "assets/sprites/village/remake-chest.webp",
    "space": "native",
    "edges": [
     {
@@ -778,7 +778,7 @@
     724,
     724
    ],
-   "render_file": "assets/art/village/remake-chest-broken.webp",
+   "render_file": "assets/sprites/village/remake-chest-broken.webp",
    "space": "native",
    "edges": [
     {

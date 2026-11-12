@@ -2,7 +2,7 @@
 	"forward": "+Z",
 	"id": "environment/trail_sign",
 	"inputs": {
-		"res://tools/prop_art/bake.gd": "417ad48faa3d12e160b511b43c3e9fd31418559a4b9a24db003d3c90cb5f4254"
+		"res://tools/assets/props/bake.gd": "0e065c0f49b939e462f4a0bed2384b21a71ac32477bdb7f824d5c8bdc4708dc4"
 	},
 	"layout_sha256": "331ad492990300b5a97aec5f47ba45cd1d0e7aee130c40a2e32f7f063d8b3ab1",
 	"meshes": {

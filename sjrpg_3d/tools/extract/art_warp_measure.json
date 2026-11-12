@@ -411,7 +411,7 @@
   ]
  },
  "hill": {
-  "png": "assets/source/hill-new.png",
+  "png": "assets/source/environment/landmarks/hill-new.png",
   "segments": [
    {
     "name": "upper stair tread",
@@ -5507,7 +5507,7 @@
   ]
  },
  "encounter-stone": {
-  "png": "assets/source/encounter-stone.png",
+  "png": "assets/source/environment/encounter_stone/encounter-stone.png",
   "segments": [
    {
     "name": "rear left post cap front",

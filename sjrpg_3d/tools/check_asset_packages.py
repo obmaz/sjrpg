@@ -66,7 +66,7 @@ def check(folder):
 
 
 def check_craft():
-    folder = ROOT / 'assets/models/materials/village_craft'
+    folder = ROOT / 'assets/materials/village_craft'
     spec = json.loads((folder / 'asset.json').read_text())
     assert spec['kind'] == 'material_family' and spec['id'] == folder.name
     for role in ('masonry', 'oak', 'roof'):
@@ -91,7 +91,7 @@ def check_surface_families():
         assert len(proof['images']) == count
         unique = set()
         for index, entry in enumerate(proof['images']):
-            expected = f'assets/models/materials/{family}/{role}-{index}.png'
+            expected = f'assets/materials/{family}/{role}-{index}.png'
             assert entry['path'] == expected
             runtime = ROOT / expected
             original = (source / entry['original']).resolve()
@@ -114,7 +114,7 @@ def check_surface_families():
 
 
 def check_world_sources():
-    record = json.loads((ROOT / 'assets/source/preview3d/world-refinement/provenance.json').read_text())
+    record = json.loads((ROOT / 'assets/source/environment/world_refinement/provenance.json').read_text())
     for source in record['implementation']:
         path = (ROOT / source['path']).resolve()
         assert path.is_relative_to(ROOT) and path.is_file()
@@ -133,7 +133,8 @@ def main():
         folders = sorted(p.parent for p in base.glob('*/asset.json'))
     assert folders
     for folder in folders:
-        check(folder)
+        if json.loads((folder / 'asset.json').read_text()).get('kind') == 'surface':
+            check(folder)
     if not args.asset:
         check_craft()
         check_surface_families()

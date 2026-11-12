@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Actual exported NativeAdventure, real pointer/keyboard input, fresh profiles only.
+// Actual exported Adventure3D, real pointer/keyboard input, fresh profiles only.
 import assert from 'node:assert/strict';
 import {assertImportedMerchantAsset} from './review/diagnostic_contracts.mjs';
 import {mkdir,writeFile} from 'node:fs/promises';

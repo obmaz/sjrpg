@@ -39,7 +39,7 @@ class LocalEntryTest(unittest.TestCase):
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
         self.write('tools/ci.sh', (ROOT / 'tools/ci.sh').read_text())
-        for name in ['tools/check_workflows.py', 'tools/test_ci.py', 'sjrpg_3d/tools/test_stamp_web.py', 'sjrpg_3d/tools/test_import_project.py']:
+        for name in ['tools/check_workflows.py', 'tools/test_ci.py', 'sjrpg_3d/tools/test_stamp_web.py', 'sjrpg_3d/tools/test_import_project.py', 'sjrpg_3d/tools/test_resource_layout.py']:
             self.write(name, 'pass\n')
         for name in ['sjrpg_3d/tools/review/test_diagnostic_contracts.mjs', 'sjrpg_3d/tools/check_native_style.mjs', 'sjrpg_3d/tools/check_combat_visibility.mjs']:
             self.write(name, '// valid module\n')
@@ -113,7 +113,7 @@ class DisposableReviewTest(unittest.TestCase):
     def test_same_observer_and_single_hook_on_repeated_preparation(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            main = root / 'sjrpg_3d/scripts/main.gd'
+            main = root / 'sjrpg_3d/scripts/app/main.gd'
             main.parent.mkdir(parents=True)
             main.write_text('func _ready():\n\tshow_title()\n')
             prepare(root)

@@ -31,12 +31,12 @@
    "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
   },
   {
-   "path": "assets/art/forest/paving.webp",
+   "path": "assets/materials/terrain/paving_base.webp",
    "role": "Reviewed adjacent limestone albedo family",
    "sha256": "293bb740e1c277bf7e6cd566c8c9f6a05105e5e7ca0e8960e041ad23e2b2d9ef"
   },
   {
-   "path": "assets/art/forest/earth.webp",
+   "path": "assets/sprites/forest/earth.webp",
    "role": "Reviewed earth albedo family",
    "sha256": "379f9866399c0e0e5265adfea05c3779fc7e6723cc42626226c7275157e4a17c"
   },

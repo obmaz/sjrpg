@@ -52,7 +52,7 @@ func run() -> void:
 			and _count(game, "nova") == rings + 1
 		)
 	)
-	var nova: NativeNovaFx3D = game.ortho_preview._nova_fx
+	var nova: NovaEffects3D = game.world_renderer._nova_fx
 	nova.sync()
 	check(
 		"success has an actual shared native ring, not a hidden Canvas effect",

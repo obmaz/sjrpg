@@ -1,5 +1,5 @@
 {
- "texture": "res://assets/art/ui/selection-trim.webp",
+ "texture": "res://assets/ui/selection/selection-trim.webp",
  "regions": {
   "primary": [
    8,
@@ -45,7 +45,7 @@
   ]
  },
  "nine_slice": 22,
- "source": "assets/source/selection-trim.png",
+ "source": "assets/source/ui/selection-trim.png",
  "source_rects": {
   "primary": [
    39,

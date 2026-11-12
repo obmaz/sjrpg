@@ -1,7 +1,7 @@
 {
  "generator": "image_gen",
  "original": "/workspace/generated_images/exec-c20c70ee-dcdc-4a06-b012-af817aff4637.png",
- "output": "assets/source/selection-trim.png",
+ "output": "assets/source/ui/selection-trim.png",
  "num_last_images_to_include": 1,
  "reference": {
   "type": "conversation_image",
@@ -10,6 +10,6 @@
  "transparent_background": true,
  "prompt": "Create a production 2x2 UI ornament atlas for the EXACT guardian-selection screen in the attached reference. Match its restrained realistic dark forest fantasy interface: warm aged gold/champagne thin beveled metal, brushed brown-gold foil, charcoal green-black panels. This is interface artwork viewed flat from the front, NOT isometric. Do not include a game scene, portraits, characters, typography, numbers, words, UI mockup, gridlines or labels. One square canvas, four equal square cells, transparent outside each isolated element. Keep each element confined to its own cell with clear 10% margins. TOP LEFT CELL: a long wide horizontal PRIMARY BUTTON, width 85% of cell and height 23% of cell, centered. Chamfered clipped corners, double thin champagne-gold edge, softly textured aged amber-gold metal interior, a narrow restrained warm highlight across the middle of top edge, dark quiet edges. Follow the supplied reference's gold 'start adventure' button exactly in material, not neon yellow, not ornate baroque. No text or internal symbols. TOP RIGHT CELL: the matching SECONDARY / CONTINUE BUTTON at the identical shape and dimensions, charcoal gray-black brushed interior, subtle warm bronze double beveled chamfer frame, no glow, no text. BOTTOM LEFT CELL: a compact symmetric GOLD TREE CREST matching the tree mark above the supplied Korean game logo. Fine bare branching tree with a short trunk, restrained engraved gold line work, a thin understated ornamental horizontal rule with a tiny hanging diamond beneath it; no letters, no plaque, no background. It will sit ABOVE separate real Korean logo text. BOTTOM RIGHT CELL: a small antique-gold outline SHIELD with TWO CROSSED SWORDS inside matching the warrior card icon in the supplied reference, dark muted green/bronze fill inside shield only, delicate realistic metal bevel, no glow. True fully transparent alpha outside all four artworks, no gray/white cloudy matte, no checkerboard, no cast-shadow plate. Sharp fine edge detail readable after reduction, modest material texture, elegant familiar fantasy RPG finish.",
  "source_sha256": "4ff6cab1f8c0890b9ba3f3f901e24f0ad4f3521aa9fe9c07b425bbc191bce4ba",
- "runtime": "assets/art/ui/selection-trim.webp",
+ "runtime": "assets/ui/selection/selection-trim.webp",
  "runtime_sha256": "08b1045013d8220fd6c65497e7e0848d7b43f886cc81e4de9ac0f24a49774039"
 }

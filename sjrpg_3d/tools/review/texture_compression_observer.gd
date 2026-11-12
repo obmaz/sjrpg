@@ -2,16 +2,16 @@ extends Node
 ## CI-only read-only texture observation, injected only into the explicit review URL.
 ## Normal screenshots precede the separately labelled controlled resource loads.
 const TARGETS := [
-	"res://assets/art/preview3d/limestone.webp",
-	"res://assets/art/preview3d/slate.webp",
-	"res://assets/art/preview3d/timber.webp",
-	"res://assets/art/preview3d/bark.webp",
-	"res://assets/art/forest/grass.webp",
-	"res://assets/art/forest/paving.webp",
-	"res://assets/art/village/rock.webp",
-	"res://assets/art/village/water.webp",
-	"res://assets/art/cave/floor.webp",
-	"res://assets/art/cave/dark.webp",
+	"res://assets/materials/shared/limestone.webp",
+	"res://assets/materials/shared/slate.webp",
+	"res://assets/materials/shared/timber.webp",
+	"res://assets/materials/shared/bark.webp",
+	"res://assets/materials/terrain/grass_base.webp",
+	"res://assets/materials/terrain/paving_base.webp",
+	"res://assets/materials/terrain/rock_base.webp",
+	"res://assets/sprites/village/water.webp",
+	"res://assets/sprites/dungeon/floor.webp",
+	"res://assets/sprites/dungeon/dark.webp",
 ]
 var _root: Node
 var _callback: JavaScriptObject
@@ -32,7 +32,7 @@ func _ready() -> void:
 		window.__sjrpgTextureCompressionAction = _callback
 
 func _game() -> Node:
-	if not is_instance_valid(_root) or not (_root.current is NativeAdventure):
+	if not is_instance_valid(_root) or not (_root.current is Adventure3D):
 		return null
 	var game: Node = _root.current.simulation
 	return game if is_instance_valid(game) and game.native_ready else null
@@ -92,9 +92,9 @@ func _process(delta: float) -> void:
 		_probe["completed_frame"] = frame
 		_probe["texture_memory_after_bytes"] = _texture_memory()
 		_pending_frame = -1
-	var preview: Ortho3DPreview = game.ortho_preview
-	var eye := preview.camera.global_basis.z.normalized()
-	var position := preview.camera.global_position
+	var renderer: WorldRenderer3D = game.world_renderer
+	var eye := renderer.camera.global_basis.z.normalized()
+	var position := renderer.camera.global_position
 	var feature_flags := {}
 	for feature: String in ["s3tc", "bptc", "etc2", "astc"]:
 		feature_flags[feature] = OS.has_feature(feature)
@@ -109,10 +109,10 @@ func _process(delta: float) -> void:
 		"player": [game.player.position.x, game.player.position.y],
 		"world_zoom": Prefs.world_zoom,
 		"camera_position": [position.x, position.y, position.z],
-		"camera_size": preview.camera.size,
+		"camera_size": renderer.camera.size,
 		"camera_elevation": rad_to_deg(asin(eye.y)),
 		"camera_azimuth": fposmod(rad_to_deg(atan2(eye.x, eye.z)), 360.0),
-		"render_size": [preview.viewport.size.x, preview.viewport.size.y],
+		"render_size": [renderer.viewport.size.x, renderer.viewport.size.y],
 		"hud_visible": game.hud.visible,
 		"hud_bars_visible": game.hud._bars.visible,
 		"hud_controls_visible": game.hud.controls.visible,

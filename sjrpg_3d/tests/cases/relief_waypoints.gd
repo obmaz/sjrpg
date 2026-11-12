@@ -5,8 +5,8 @@ func run() -> void:
 	game.player.set_process(false)
 	game.exploration.set_process(false)
 	game._spawn_timer = 10000.0
-	var preview: Ortho3DPreview = game.ortho_preview
-	var props: NativeTownProps3D = preview._town_props
+	var renderer: WorldRenderer3D = game.world_renderer
+	var props: TownPropRenderer3D = renderer._town_props
 	for id: String in ["tree","cave"]:
 		var source: IsoSprite = game.village.portal_sprites[id]
 		var at := source.position
@@ -33,7 +33,7 @@ func run() -> void:
 		var cave_centre := NativeCavePlan.body_center(game.dungeon.entry_point())
 		check("field waypoint is separated from the cave hill: "+id,at.distance_to(cave_centre)>NativeCavePlan.SOURCE_RADIUS+250.0)
 	check("waypoint discoveries survive reload",GameState.load_game() and GameState.discovered_sanctuaries.has("tree") and GameState.discovered_sanctuaries.has("cave"))
-	var river := NativeGroundRelief.river_outline(game.village)
+	var river := GroundRelief3D.river_outline(game.village)
 	var mid := (river[0]+river[1])*0.5
 	var dry := Iso.project((mid-Vector2(0,2.1))*SpatialWorld3D.UNITS)
 	var wet := Iso.project((mid-Vector2(0,0.65))*SpatialWorld3D.UNITS)
@@ -41,7 +41,7 @@ func run() -> void:
 	for i: int in 40:
 		game.spatial_world.move_source_actor(game.player,game.player.position.move_toward(wet,4.0),Player.RADIUS)
 	var bank_y: float = game.spatial_world.height_at(game.player.position)
-	check("real player walks down the river bank below surrounding land",bank_y < -0.35 and bank_y > NativeGroundRelief.BED_LEVEL)
-	check("bridge deck remains above the sunken river",absf(game.spatial_world.height_at(game.village.bridge.axis_point(0.5)))<0.01 and NativeGroundRelief.WATER_LEVEL < -1.0)
+	check("real player walks down the river bank below surrounding land",bank_y < -0.35 and bank_y > GroundRelief3D.BED_LEVEL)
+	check("bridge deck remains above the sunken river",absf(game.spatial_world.height_at(game.village.bridge.axis_point(0.5)))<0.01 and GroundRelief3D.WATER_LEVEL < -1.0)
 	game.queue_free()
 	await _frames(2)

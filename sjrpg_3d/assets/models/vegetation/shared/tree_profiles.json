@@ -1,0 +1,64 @@
+{
+  "generator": "tools/assets/vegetation/prepare_trees.py",
+  "generator_sha256": "1fe2ee69406b3dc8a165642f76e1ed72ad0ada255e43291fe770ade876c8a3a5",
+  "geometry_license": "Original geometry authored for this project under the repository license; no external model downloaded",
+  "source_material_provenance": "assets/source/vegetation/town_trees/generation.json",
+  "camera": {
+    "projection": "orthographic",
+    "azimuth_deg": 45,
+    "elevation_deg": 35.2643896828,
+    "ground_axes_deg": [
+      -30,
+      30
+    ]
+  },
+  "variants": [
+    {
+      "path": "assets/models/vegetation/town_oak_0/model.glb",
+      "sha256": "4598087a3dc0cc98dd6298e65e0fea4b837fa91266eb0e6c6df9464c970dc470",
+      "bytes": 216580,
+      "branches": 62,
+      "leaf_sprays": 377,
+      "triangles": 4886,
+      "vertices": 4641,
+      "leaf_material": "LeafSprays",
+      "native_root": [
+        0,
+        0,
+        0
+      ],
+      "native_up": "+Y",
+      "crown_kind": "staggered asymmetric broadleaf tiers with real branches, curved alpha-card sprays in varying fixed 3D orientations",
+      "billboard": false
+    },
+    {
+      "path": "assets/models/vegetation/town_oak_1/model.glb",
+      "sha256": "d69df92a7cc83b75477845c6dc5cac4f56b2f84ba5a32baf40ae2ba6f9f60662",
+      "bytes": 216516,
+      "branches": 62,
+      "leaf_sprays": 377,
+      "triangles": 4886,
+      "vertices": 4641,
+      "leaf_material": "LeafSprays",
+      "native_root": [
+        0,
+        0,
+        0
+      ],
+      "native_up": "+Y",
+      "crown_kind": "staggered asymmetric broadleaf tiers with real branches, curved alpha-card sprays in varying fixed 3D orientations",
+      "billboard": false
+    }
+  ],
+  "limitations": [
+    "Alpha-cutout leaf sprays have finite surface thickness and require double-sided alpha-scissor material in Godot; they are not camera-facing billboards",
+    "Generated bark/leaf albedo supplies surface variation; no claim of PBR scan",
+    "Runtime portrait/landscape, two-axis orbit and shadow appearance remain to be inspected in Godot/browser by root"
+  ],
+  "packaging": {
+    "embedded_images": false,
+    "export_image_format": "NONE",
+    "export_texcoords": true,
+    "material_binding": "TreeGeometry3D assigns shared bark.webp and tree-leaves.webp by preserved Bark/LeafSprays material names; both primitives retain TEXCOORD_0"
+  }
+}

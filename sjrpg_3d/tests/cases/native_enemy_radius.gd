@@ -26,7 +26,7 @@ func run() -> void:
 	game.town_gates.closed[0] = false
 	backend.sync_scope()
 	await _settle()
-	for kind: String in NativeEnemyModels.KINDS:
+	for kind: String in EnemyRenderer3D.KINDS:
 		var enemy := Enemy.new()
 		enemy.setup(game, kind, 1)
 		enemy.position = outside

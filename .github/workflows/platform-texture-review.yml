@@ -30,7 +30,7 @@ jobs:
               run: |
                   tools/setup_godot.sh
                   python3 sjrpg_3d/tools/review/publish_texture_imports.py snapshot --out sjrpg_3d/build/texture-imports/source-snapshot.json
-                  timeout 240 tools/check.sh --project=3d --only=ortho_3d_materials,native_terrain_readability,native_encounter_props,native_house_family,native_mira,art_projection
+                  timeout 240 tools/check.sh --project=3d --only=world_materials_3d,native_terrain_readability,native_encounter_props,native_house_family,native_mira,art_projection
                   sjrpg_3d/tools/export_web.sh
             - name: Publish verified engine-generated import metadata as blobs only
               env:
@@ -91,9 +91,9 @@ jobs:
                   project = Path(os.environ["SJRPG_REVIEW_PROJECT"])
                   target = project / "scripts/texture_compression_ci_observer.gd"
                   target.write_text(Path("sjrpg_3d/tools/review/texture_compression_observer.gd").read_text())
-                  main = project / "scripts/main.gd"
+                  main = project / "scripts/app/main.gd"
                   text = main.read_text()
-                  needle = '\t\tadd_child(preload("res://scripts/native_style_review.gd").new().setup(self))\n'
+                  needle = '\t\tadd_child(preload("res://scripts/inspection/native_style_review.gd").new().setup(self))\n'
                   assert text.count(needle) == 1, "Exact explicit review observer insertion point"
                   text = text.replace(needle, needle + '\t\tadd_child(preload("res://scripts/texture_compression_ci_observer.gd").new().setup(self))\n')
                   main.write_text(text)

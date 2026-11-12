@@ -63,7 +63,7 @@ function verifyTerrain(s,role){
   assert.equal(material.upper_texture,material.lower_texture,'reuse identical ground source');
   assert.notDeepEqual(material.upper_color,material.lower_color,'readable raised turf '+role);
   assert(material.earth,'exposed earth exists on original cliff '+role);
-  assert.equal(material.earth_texture,'res://assets/art/village/rock.webp','reuse actual cliff source');
+  assert.equal(material.earth_texture,'res://assets/materials/terrain/rock_base.webp','reuse actual cliff source');
  }else if(role===1)assert(material.upper_texture.includes('paving'),'stone landmark stays paved');
  checks.push('actual shared surface/material '+role+' '+s.review.azimuth);
 }

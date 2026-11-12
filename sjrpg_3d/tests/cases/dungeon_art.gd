@@ -62,12 +62,12 @@ func run() -> void:
 			maps_match = maps_match and game.map_shapes[index]["poly"] == expected_map
 	check("generated floor source matches the collision and native layout input", floors_match)
 	check("both maps follow the actual shared cave FLOOR cells", maps_match)
-	var environment: Ortho3DEnvironment = game.ortho_preview._world_environment
+	var environment: EnvironmentRenderer3D = game.world_renderer._world_environment
 	var rendered := environment.cave.get_node_or_null("CaveFloor") as MeshInstance3D
 	var material := rendered.material_override as ShaderMaterial if rendered != null else null
 	var shared := (
 		material != null
-		and material.shader.resource_path == "res://scripts/native_cave_floor.gdshader"
+		and material.shader.resource_path == "res://assets/materials/cave/floor.gdshader"
 	)
 	if material != null:
 		for variant in 6:
@@ -75,7 +75,7 @@ func run() -> void:
 				shared
 				and (
 					material.get_shader_parameter("surface_%d" % variant)
-					== load("res://assets/models/materials/cave/floor/floor-%d.png" % variant)
+					== load("res://assets/materials/cave/floor/floor-%d.png" % variant)
 				)
 			)
 	check("one union cave floor shares all six generated floor samplers", shared)
@@ -211,8 +211,8 @@ func run() -> void:
 			game.field_root.visibility_layer == 0
 			and game.map_shapes == forest_map
 			and game.player.get_parent() == game.world
-			and game.ortho_preview._world_environment.forest.visible
-			and not game.ortho_preview._world_environment.cave.visible
+			and game.world_renderer._world_environment.forest.visible
+			and not game.world_renderer._world_environment.cave.visible
 		)
 	)
 	check(

@@ -2,9 +2,9 @@
 	"forward": "+Z",
 	"id": "environment/wall_torch",
 	"inputs": {
-		"res://scripts/native_cave_lanterns_3d.gd": "93952158d2109b94f1d3f22793a503599840851c05b5761349beb50ea2dfa867",
-		"res://tools/prop_art/bake.gd": "417ad48faa3d12e160b511b43c3e9fd31418559a4b9a24db003d3c90cb5f4254",
-		"res://tools/prop_art/torch_builder.gd": "89c67acb306a4901162a91ac87ec4ca4b9c58f71404e27d1188b9e0f4158040f"
+		"res://scripts/rendering/environment/cave_lantern_renderer_3d.gd": "e02e96950f27a2d505f2723d3831a8766201a4f90bd9d86f060ab3e1322479f7",
+		"res://tools/assets/props/bake.gd": "0e065c0f49b939e462f4a0bed2384b21a71ac32477bdb7f824d5c8bdc4708dc4",
+		"res://tools/assets/props/torch_builder.gd": "6987004bf255ce65375da78279bd0068dce01e8d0c2fc05484451db6dd0241c2"
 	},
 	"layout_sha256": "dfdd82551da1d8b0f57cf3caae8692a787c8be50ad3457d2f268b5a7c9c083e7",
 	"meshes": {

@@ -1,19 +1,19 @@
 {
  "concept": {
-  "path": "assets/source/cave-design.png",
+  "path": "assets/source/environment/cave_entrance/concepts/cave-design.png",
   "sha256": "6b95c81daf51edf5f78c442863c5125f810fef639f0f9c0e6f44d13057052979"
  },
  "sources": [
   {
-   "path": "assets/source/cave-kit.png",
+   "path": "assets/source/dungeon/concepts/cave-kit.png",
    "sha256": "5f6c799d5040c9f1def0db7b5f46cde63e821acb52916e857ff9307633b8d5b8"
   },
   {
-   "path": "assets/source/cave-ledges.png",
+   "path": "assets/source/dungeon/concepts/cave-ledges.png",
    "sha256": "2b75eac7dbe044a3e1bf66ae94356da10fae78b2741ddc86610058680a6f04af"
   },
   {
-   "path": "assets/source/cave-arches.png",
+   "path": "assets/source/dungeon/concepts/cave-arches.png",
    "sha256": "454b7087b843a9e82fca6b2ada318c11ff554abdd1db63c1ba3e9969425a7e6a"
   }
  ],
@@ -29,7 +29,7 @@
  "review": "The cave design concept fixes the grey layered rock, weathered slab floor, sparse ferns and amber lantern material language. Production sprites were reviewed on light and dark solid backgrounds: hidden RGB blur is fully transparent, with no broad grey halo or ground-shadow plate. Wall end contacts measure the overall authored ground axis; naturally broken ridges are not claimed to be rigid parallel building edges. Small x-to-y shear aligns the wall contacts while preserving vertical rock height.",
  "textures": {
   "floor": {
-   "path": "assets/art/cave/floor.webp",
+   "path": "assets/sprites/dungeon/floor.webp",
    "sha256": "2dcf79cdcc806c4c055c76fa0987870a903de753504c63740bc994e5fe185ef4",
    "size": [
     512,
@@ -37,7 +37,7 @@
    ]
   },
   "dark": {
-   "path": "assets/art/cave/dark.webp",
+   "path": "assets/sprites/dungeon/dark.webp",
    "sha256": "943feb5680f4ab46fb7a4aa658fbcb6f9d54848a762d350422fccfd1eb86bb84",
    "size": [
     512,
@@ -45,7 +45,7 @@
    ]
   },
   "props": {
-   "path": "assets/art/cave/props.webp",
+   "path": "assets/sprites/dungeon/props.webp",
    "sha256": "4a5d1bd94000ad886ce54c77742d9cb661f74ca0d49d576440cc6026b336aa69",
    "size": [
     1024,
@@ -53,7 +53,7 @@
    ]
   },
   "ledges": {
-   "path": "assets/art/cave/ledges.webp",
+   "path": "assets/sprites/dungeon/ledges.webp",
    "sha256": "f9a2f9d890a468d8396bfabac33a1edd0ff44804e3374acd29d6771a80a3c3ee",
    "size": [
     1024,
@@ -61,7 +61,7 @@
    ]
   },
   "arches": {
-   "path": "assets/art/cave/arches.webp",
+   "path": "assets/sprites/dungeon/arches.webp",
    "sha256": "93deb00d475df8122015cc1d25d38fa5455a89bd774c46872a6e2d5adda24088",
    "size": [
     1536,
@@ -71,7 +71,7 @@
  },
  "frames": {
   "wall_positive": {
-   "sheet": "res://assets/art/cave/props.webp",
+   "sheet": "res://assets/sprites/dungeon/props.webp",
    "source": [
     9,
     89,
@@ -131,7 +131,7 @@
    "review": "Painted ground contacts across the near wall face. Native baseline 24.80 degrees; gvk aligns it to +30 degrees without stretching vertical rock faces. Top/middle/bottom stone surfaces share the elevated rock camera; broken ridge height varies naturally. Two same-x measurements follow the visible vertical front face, excluding the cap top depth and diagonal half-run. Their average calibrates actual rock relief independently of the illustration bounding height."
   },
   "wall_negative": {
-   "sheet": "res://assets/art/cave/props.webp",
+   "sheet": "res://assets/sprites/dungeon/props.webp",
    "source": [
     523,
     62,
@@ -191,7 +191,7 @@
    "review": "Painted ground contacts across the near wall face. Native baseline -24.86 degrees; gvk aligns it to -30 degrees while preserving vertical rock faces. Natural ridge and pillar height changes are not rigid horizontal-axis measurements. Two same-x measurements follow the visible vertical front face, excluding the cap top depth and diagonal half-run. Their average calibrates actual rock relief independently of the illustration bounding height."
   },
   "boulder": {
-   "sheet": "res://assets/art/cave/props.webp",
+   "sheet": "res://assets/sprites/dungeon/props.webp",
    "source": [
     92,
     615,
@@ -215,7 +215,7 @@
    "review": "Contact at the centre of the lowest supporting rock cluster; front stones remain below this depth-sort anchor."
   },
   "lantern": {
-   "sheet": "res://assets/art/cave/props.webp",
+   "sheet": "res://assets/sprites/dungeon/props.webp",
    "source": [
     633,
     707,
@@ -239,7 +239,7 @@
    "review": "Contact at the stone pedestal ground centre. Only painted light inside the lantern remains; there is no fixed ground glow/shadow plate."
   },
   "ledge_positive": {
-   "sheet": "res://assets/art/cave/ledges.webp",
+   "sheet": "res://assets/sprites/dungeon/ledges.webp",
    "source": [
     8,
     255,
@@ -299,7 +299,7 @@
    "review": "Natural knee-height front cutaway. End contacts are actual painted near-ground stone pixels (native baseline 23.41 degrees); gvk aligns the overall ground axis to +30 degrees. Individual stone height and the irregular outer contour are not rigid straight edges. Two same-x measurements follow the visible vertical front face, excluding the cap top depth and diagonal half-run. Their average calibrates actual rock relief independently of the illustration bounding height."
   },
   "ledge_negative": {
-   "sheet": "res://assets/art/cave/ledges.webp",
+   "sheet": "res://assets/sprites/dungeon/ledges.webp",
    "source": [
     520,
     253,
@@ -359,7 +359,7 @@
    "review": "Natural knee-height front cutaway. End contacts are actual painted near-ground stone pixels (native baseline -23.11 degrees); gvk aligns the overall ground axis to -30 degrees. Broken rock tops and uneven ground-contact protrusions remain unwarped apart from this shared camera shear. Two same-x measurements follow the visible vertical front face, excluding the cap top depth and diagonal half-run. Their average calibrates actual rock relief independently of the illustration bounding height."
   },
   "arch_positive": {
-   "sheet": "res://assets/art/cave/arches.webp",
+   "sheet": "res://assets/sprites/dungeon/arches.webp",
    "source": [
     8,
     56,
@@ -405,7 +405,7 @@
    "review": "The actual painted inner jamb ground-contact corners define the clear opening and depth-sort midpoint. Small ground-camera shear aligns that pass-through span to the game ground axis. Curved arches, variable rock heights and hanging speleothems are not claimed as rigid parallel building edges. The centre of this opening is transparent (alpha 0); opaque rock and warm lamp painting remain."
   },
   "arch_negative": {
-   "sheet": "res://assets/art/cave/arches.webp",
+   "sheet": "res://assets/sprites/dungeon/arches.webp",
    "source": [
     520,
     80,
@@ -451,7 +451,7 @@
    "review": "The actual painted inner jamb ground-contact corners define the clear opening and depth-sort midpoint. Small ground-camera shear aligns that pass-through span to the game ground axis. Curved arches, variable rock heights and hanging speleothems are not claimed as rigid parallel building edges. The centre of this opening is transparent (alpha 0); opaque rock and warm lamp painting remain."
   },
   "entrance": {
-   "sheet": "res://assets/art/cave/arches.webp",
+   "sheet": "res://assets/sprites/dungeon/arches.webp",
    "source": [
     1032,
     77,

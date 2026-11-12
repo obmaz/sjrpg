@@ -53,7 +53,7 @@ func run() -> void:
 	check("normal entry installs the hazard lifecycle", game.dungeon.enter())
 	await _frames(4)
 	var hazards: DungeonHazards = game.dungeon.hazards
-	var visual: NativeDungeonHazards = game.ortho_preview._world_environment._hazards
+	var visual: DungeonHazardRenderer3D = game.world_renderer._world_environment._hazards
 	check(
 		"all authored traps have real imported scenes",
 		hazards.traps.size() == 9 and visual.displays.size() == 9

@@ -10,7 +10,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "assets/source/atmosphere/sunshaft-candidate.png"
 GENERATION = ROOT / "tools/extract/forest_atmosphere_generation.json"
-OUTPUT = ROOT / "assets/art/effects/forest-atmosphere.webp"
+OUTPUT = ROOT / "assets/effects/textures/forest-atmosphere.webp"
 
 
 def record(path):

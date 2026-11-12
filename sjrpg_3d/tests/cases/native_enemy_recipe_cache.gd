@@ -43,16 +43,16 @@ func _same_vertices(first: PackedVector3Array, second: PackedVector3Array) -> bo
 
 func run() -> void:
 	var benchmark: Array[Dictionary] = []
-	for kind: String in NativeEnemyModels.KINDS:
-		var before: Dictionary = NativeEnemyModels.cache_stats()
+	for kind: String in EnemyRenderer3D.KINDS:
+		var before: Dictionary = EnemyRenderer3D.cache_stats()
 		var first_start: int = Time.get_ticks_usec()
-		var first: Dictionary = NativeEnemyModels.build(kind)
+		var first: Dictionary = EnemyRenderer3D.build(kind)
 		var first_us: int = Time.get_ticks_usec() - first_start
-		var after_first: Dictionary = NativeEnemyModels.cache_stats()
+		var after_first: Dictionary = EnemyRenderer3D.cache_stats()
 		var cold: bool = int(after_first["asset_loads"]) > int(before["asset_loads"])
 		var first_root: Node3D = first["root"]
 		add_child(first_root)
-		var second: Dictionary = NativeEnemyModels.build(kind)
+		var second: Dictionary = EnemyRenderer3D.build(kind)
 		var second_root: Node3D = second["root"]
 		add_child(second_root)
 		var first_meshes: Array[MeshInstance3D] = _meshes(first_root)
@@ -101,17 +101,17 @@ func run() -> void:
 			_same_vertices(_world_vertices(first_root), _world_vertices(second_root))
 		)
 		var untouched: PackedVector3Array = _world_vertices(second_root)
-		NativeEnemyModels.pose(first, 0.61, 0.24, 0.73)
+		EnemyRenderer3D.pose(first, 0.61, 0.24, 0.73)
 		check(
 			"posing one actor never moves the other rig " + kind,
 			_same_vertices(untouched, _world_vertices(second_root))
 		)
-		NativeEnemyModels.pose(second, 0.61, 0.24, 0.73)
+		EnemyRenderer3D.pose(second, 0.61, 0.24, 0.73)
 		check(
 			"replayed joint animation gives identical actual vertices " + kind,
 			_same_vertices(_world_vertices(first_root), _world_vertices(second_root))
 		)
-		NativeEnemyModels.tint(first, Color(0.3, 0.6, 0.9), 0.6, Color.RED, 0.25)
+		EnemyRenderer3D.tint(first, Color(0.3, 0.6, 0.9), 0.6, Color.RED, 0.25)
 		for index: int in second_materials.size():
 			check(
 				"hit flash/alpha cannot contaminate shared recipe or sibling " + kind,
@@ -125,10 +125,10 @@ func run() -> void:
 		check(
 			"cache does not retain the source Node hierarchy " + kind, source_ref.get_ref() == null
 		)
-		var hot_before: Dictionary = NativeEnemyModels.cache_stats()
+		var hot_before: Dictionary = EnemyRenderer3D.cache_stats()
 		var hot_start: int = Time.get_ticks_usec()
 		for iteration: int in 12:
-			var fresh: Dictionary = NativeEnemyModels.build(kind)
+			var fresh: Dictionary = EnemyRenderer3D.build(kind)
 			var root: Node3D = fresh["root"]
 			check(
 				"new cache hit retains original palette after old actor flash " + kind,
@@ -136,7 +136,7 @@ func run() -> void:
 			)
 			root.free()
 		var hot_us: int = Time.get_ticks_usec() - hot_start
-		var hot_after: Dictionary = NativeEnemyModels.cache_stats()
+		var hot_after: Dictionary = EnemyRenderer3D.cache_stats()
 		check(
 			"repeated actors reuse the imported PackedScene " + kind,
 			(
@@ -163,7 +163,7 @@ func run() -> void:
 
 	var presenter := FloorPresenter.new()
 	add_child(presenter)
-	var corpse_model: Dictionary = NativeEnemyModels.build("goblin")
+	var corpse_model: Dictionary = EnemyRenderer3D.build("goblin")
 	var corpse_root: Node3D = corpse_model["root"]
 	add_child(corpse_root)
 	var corpse: Dictionary = {
@@ -174,12 +174,12 @@ func run() -> void:
 		"lifetime": 30.0,
 		"used": false
 	}
-	NativeEnemyModels.place_corpse(presenter, corpse_model, corpse)
+	EnemyRenderer3D.place_corpse(presenter, corpse_model, corpse)
 	var at_rest: Transform3D = corpse_root.transform
 	var placements: int = int(corpse_model["_corpse_placement_updates"])
 	var placement_start: int = Time.get_ticks_usec()
 	for iteration: int in 60:
-		NativeEnemyModels.place_corpse(presenter, corpse_model, corpse)
+		EnemyRenderer3D.place_corpse(presenter, corpse_model, corpse)
 	var placement_us: int = Time.get_ticks_usec() - placement_start
 	check(
 		"static corpse repeats no pose traversal or floor bounds placement",
@@ -189,7 +189,7 @@ func run() -> void:
 		)
 	)
 	corpse["time"] = 1.5
-	NativeEnemyModels.place_corpse(presenter, corpse_model, corpse)
+	EnemyRenderer3D.place_corpse(presenter, corpse_model, corpse)
 	check(
 		"corpse fade still updates while placement is cached",
 		(
@@ -200,11 +200,11 @@ func run() -> void:
 		)
 	)
 	corpse["used"] = true
-	NativeEnemyModels.place_corpse(presenter, corpse_model, corpse)
+	EnemyRenderer3D.place_corpse(presenter, corpse_model, corpse)
 	check("consumed corpse hides immediately despite cached placement", not corpse_root.visible)
 	corpse["used"] = false
 	presenter.floor_height = 0.75
-	NativeEnemyModels.place_corpse(presenter, corpse_model, corpse)
+	EnemyRenderer3D.place_corpse(presenter, corpse_model, corpse)
 	check(
 		"changed actual floor invalidates corpse placement",
 		(
@@ -214,8 +214,8 @@ func run() -> void:
 	)
 	placements += 1
 	corpse["pos"] = Vector2(300, -40)
-	NativeEnemyModels.place_corpse(presenter, corpse_model, corpse)
-	var floor_point: Vector3 = Ortho3DPreview.ground_position(corpse["pos"])
+	EnemyRenderer3D.place_corpse(presenter, corpse_model, corpse)
+	var floor_point: Vector3 = WorldRenderer3D.ground_position(corpse["pos"])
 	check(
 		"moved corpse follows the current projected ground",
 		(
@@ -226,7 +226,7 @@ func run() -> void:
 	)
 	placements += 1
 	corpse["facing"] = 1.24
-	NativeEnemyModels.place_corpse(presenter, corpse_model, corpse)
+	EnemyRenderer3D.place_corpse(presenter, corpse_model, corpse)
 	check(
 		"changed facing invalidates static corpse pose",
 		int(corpse_model["_corpse_placement_updates"]) == placements + 1
@@ -234,7 +234,7 @@ func run() -> void:
 	placements += 1
 	var old_scale: Vector3 = corpse_root.scale
 	corpse["height"] = 102.5
-	NativeEnemyModels.place_corpse(presenter, corpse_model, corpse)
+	EnemyRenderer3D.place_corpse(presenter, corpse_model, corpse)
 	check(
 		"changed body height invalidates corpse scale",
 		(
@@ -243,7 +243,7 @@ func run() -> void:
 		)
 	)
 	corpse["time"] = 0.0
-	NativeEnemyModels.place_corpse(presenter, corpse_model, corpse)
+	EnemyRenderer3D.place_corpse(presenter, corpse_model, corpse)
 	check("expired cached corpse is never visible", not corpse_root.visible)
 	print(
 		"ART_AUDIT NATIVE_ENEMY_RECIPE_BENCH ",

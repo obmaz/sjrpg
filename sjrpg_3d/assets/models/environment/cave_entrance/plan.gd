@@ -26,7 +26,7 @@ static func body_center(entry: Vector2) -> Vector2:
 static func frame(entry: Vector2) -> Transform3D:
 	var forward := Vector3(1, 0, 1).normalized()
 	var axis := Vector3(1, 0, -1).normalized()
-	return Transform3D(Basis(axis, Vector3.UP, forward), Ortho3DPreview.ground_position(body_center(entry),-SITE_DEPTH) + forward * front_offset())
+	return Transform3D(Basis(axis, Vector3.UP, forward), WorldRenderer3D.ground_position(body_center(entry),-SITE_DEPTH) + forward * front_offset())
 
 static func outline(radius: float) -> PackedVector2Array:
 	var points := PackedVector2Array()

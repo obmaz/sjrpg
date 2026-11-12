@@ -10,16 +10,16 @@ func _different(a: PackedVector3Array, b: PackedVector3Array) -> bool:
 
 
 func run() -> void:
-	for kind: String in NativeEnemyModels.KINDS + [NativeEnemyModels.CRAWLER]:
+	for kind: String in EnemyRenderer3D.KINDS + [EnemyRenderer3D.CRAWLER]:
 		check(
 			"species uses its independently editable imported scene " + kind,
 			NativeEnemyAssets.uses_asset(kind)
 		)
-		var model := NativeEnemyModels.build(kind)
+		var model := EnemyRenderer3D.build(kind)
 		var visual: NativeEnemyVisual = model["visual"]
 		add_child(visual)
 		await _frames(2)
-		NativeEnemyModels.pose(model, 0, 0, 0)
+		EnemyRenderer3D.pose(model, 0, 0, 0)
 		var idle := visual.posed_vertices()
 		check(
 			"imported model has actual weighted geometry and a skeleton " + kind,
@@ -39,12 +39,12 @@ func run() -> void:
 					and visual.animator.get_animation(role).length > 0.0
 				)
 			)
-		NativeEnemyModels.pose(model, 0, .24, 0)
+		EnemyRenderer3D.pose(model, 0, .24, 0)
 		var running := visual.posed_vertices()
 		check("locomotion deforms real skin vertices " + kind, _different(idle, running))
-		NativeEnemyModels.pose(model, 0, 0, .42)
+		EnemyRenderer3D.pose(model, 0, 0, .42)
 		var prepared := visual.posed_vertices()
-		NativeEnemyModels.pose(model, 0, 0, .60)
+		EnemyRenderer3D.pose(model, 0, 0, .60)
 		var impact := visual.posed_vertices()
 		check(
 			"source hit phase selects the authored contact frame " + kind,
@@ -57,7 +57,7 @@ func run() -> void:
 			)
 		)
 		for phase in [.2, .42, .60, .8]:
-			NativeEnemyModels.pose(model, 0, 0, phase)
+			EnemyRenderer3D.pose(model, 0, 0, phase)
 			var minimum := INF
 			for point in visual.posed_vertices():
 				minimum = minf(minimum, point.y)
@@ -81,18 +81,18 @@ func run() -> void:
 						),
 						bottom >= -.01 and bottom < .12
 					)
-		NativeEnemyModels.pose(model, 0, 0, 1.0)
+		EnemyRenderer3D.pose(model, 0, 0, 1.0)
 		check(
 			"recovery returns to the same idle without shifting physics " + kind,
 			not _different(idle, visual.posed_vertices()) and visual.position == root_at
 		)
-		var second := NativeEnemyModels.build(kind)
+		var second := EnemyRenderer3D.build(kind)
 		var other: NativeEnemyVisual = second["visual"]
 		add_child(other)
 		await _frames(2)
 		var untouched := other.posed_vertices()
-		NativeEnemyModels.pose(model, .8, .35, .55)
-		NativeEnemyModels.tint(model, Color.WHITE, .6, Color.RED, .3)
+		EnemyRenderer3D.pose(model, .8, .35, .55)
+		EnemyRenderer3D.tint(model, Color.WHITE, .6, Color.RED, .3)
 		check(
 			"instances share immutable mesh and clip resources " + kind,
 			(
@@ -110,7 +110,7 @@ func run() -> void:
 				and other.materials[0].albedo_color == other.colors[0]
 			)
 		)
-		NativeEnemyModels.pose(model, 0, 0, 0, true)
+		EnemyRenderer3D.pose(model, 0, 0, 0, true)
 		var dead := visual.posed_vertices()
 		var lowest := INF
 		for vertex in dead:

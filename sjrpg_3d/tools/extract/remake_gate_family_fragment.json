@@ -21649,7 +21649,7 @@
      1254,
      1254
     ],
-    "render_file": "assets/art/village/gates.webp",
+    "render_file": "assets/sprites/village/gates.webp",
     "space": "native",
     "edges": [
      {
@@ -22001,7 +22001,7 @@
      1254,
      1254
     ],
-    "render_file": "assets/art/village/gates.webp",
+    "render_file": "assets/sprites/village/gates.webp",
     "space": "native",
     "edges": [
      {
@@ -22209,7 +22209,7 @@
      63,
      530
     ],
-    "render_file": "assets/art/village/walls.webp",
+    "render_file": "assets/sprites/village/walls.webp",
     "space": "native",
     "edges": [
      {
@@ -22354,7 +22354,7 @@
      63,
      530
     ],
-    "render_file": "assets/art/village/walls.webp",
+    "render_file": "assets/sprites/village/walls.webp",
     "space": "native",
     "edges": [
      {

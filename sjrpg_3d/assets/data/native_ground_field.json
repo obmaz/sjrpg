@@ -1,7 +1,7 @@
 {
-  "generator": "tools/preview3d/bake_ground_field.py",
-  "generator_sha256": "7d95149830a835a2f99e3c52a5e2bde6f93c1ddfbdfb294d90aed336be166237",
-  "source": "assets/source/preview3d/generated-ground/roads.json",
+  "generator": "tools/assets/terrain/bake_ground_field.py",
+  "generator_sha256": "2c6c6a6b12514309ab6e15b7be4cf6ca6b7ded8c881b76824a8faf85256d96a0",
+  "source": "assets/source/terrain/ground_field/roads.json",
   "source_sha256": "b8e6c01b4c3d357b892dbb5127a7fbd58a46a31348750e0adb8e5b594c00d280",
   "origin": [
     -65.0,

@@ -25,7 +25,7 @@ func run() -> void:
 			if SkillDefs.describe(s["id"], 1) == "":
 				print("FAIL %s has no description" % s["id"])
 				failures += 1
-		var game := preload("res://scripts/game.gd").new()
+		var game := preload("res://scripts/gameplay/game.gd").new()
 		add_child(game)
 		await _frames(2)
 		var player: Player = game.player

@@ -10,7 +10,7 @@
    "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
   },
   {
-   "path": "assets/source/hero-selection.png",
+   "path": "assets/source/ui/hero-selection.png",
    "sha256": "8c2a909faef5497bc858655270c507ce193c8e16cd2e185d3f21868b35a48153"
   }
  ],
@@ -35,11 +35,11 @@
   {
    "actor": "warrior",
    "atlas": {
-    "path": "assets/art/actors/warrior.webp",
+    "path": "assets/sprites/actors/warrior.webp",
     "sha256": "477aae3fc2a57ef5fca9eea1555c2cb3e908e7c50e21d51b7c94514e0768855c"
    },
    "metadata": {
-    "path": "assets/art/actors/warrior.json",
+    "path": "assets/sprites/actors/warrior.json",
     "sha256": "39d78c414d94f41661ff4aab6186d3861e5971762ccb669ed7f3d74bd23b1857"
    },
    "method": "largest alpha>64 connected component of each of16idle frames; head-to-lowest-painted-pixel, excludes transparent region padding; includes attached props and leading boot, not a 3D anatomy measurement",
@@ -51,11 +51,11 @@
   {
    "actor": "mage",
    "atlas": {
-    "path": "assets/art/actors/mage.png",
+    "path": "assets/sprites/actors/mage.png",
     "sha256": "be63cbdf32b188bae9532f70c725e118d5a85143cb2ca997b7249043ce357b51"
    },
    "metadata": {
-    "path": "assets/art/actors/mage.json",
+    "path": "assets/sprites/actors/mage.json",
     "sha256": "ad3a811b0732ea4b9f6aebe1b1784e0a8c5a7aea399d6de2cca1432d54bdbb46"
    },
    "method": "largest alpha>64 connected component of each of16idle frames; head-to-lowest-painted-pixel, excludes transparent region padding; includes attached props and leading boot, not a 3D anatomy measurement",

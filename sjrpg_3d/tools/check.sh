@@ -20,6 +20,8 @@ fail=0
 
 echo "── 1/3 임포트"
 "$ROOT/tools/import_project.sh" || exit 1
+python3 "$ROOT/tools/check_resource_layout.py" || exit 1
+"$GODOT_SH" --headless --script res://tools/check_script_resources.gd || exit 1
 python3 "$ROOT/tools/check_enemy_assets.py" || exit 1
 python3 "$ROOT/tools/check_architecture_assets.py" || exit 1
 python3 "$ROOT/tools/check_prop_assets.py" || exit 1

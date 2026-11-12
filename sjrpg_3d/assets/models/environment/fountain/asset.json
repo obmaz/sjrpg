@@ -6,7 +6,7 @@
   "atlasGrid": [2, 2],
   "cells": ["pier_niche", "basin", "coping", "foundation"],
   "legacyWater": {
-    "texture": "res://assets/art/village/remake-pool.webp",
+    "texture": "res://assets/sprites/village/remake-pool.webp",
     "regionPixels": [268, 402, 90, 60],
     "imagePixels": [1024, 1024]
   }

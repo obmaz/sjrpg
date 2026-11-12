@@ -1,7 +1,7 @@
 {
  "source": "assets/source/remake/bridge.png",
  "source_sha256": "139a5b49b39cebac19dedc55df1934e36fdac3811d89279183341ff1c11bf688",
- "render": "assets/art/village/bridge.webp",
+ "render": "assets/sprites/village/bridge.webp",
  "source_size": [
   1254,
   1254
@@ -813,7 +813,7 @@
    "role": "supplementary material/mood reference"
   },
   {
-   "path": "assets/source/bridge-new.png",
+   "path": "assets/source/architecture/bridge/concepts/bridge-new.png",
    "role": "previous bridge geometry guide"
   }
  ],

@@ -292,7 +292,7 @@
     ]
    },
    "source_sha256": "e343fc456ada5de04ef96b0c571a702c041f98f3e5aa4ab39b8a31897d5434b2",
-   "render": "assets/art/village/remake-pool.webp",
+   "render": "assets/sprites/village/remake-pool.webp",
    "alpha_review": "Native1254 square RGBA; alpha>20 bounding box has complete silhouette and transparent margins. Alpha<=2 hidden matte specks are not visible structural edges; no painted ground shadow.",
    "derive_hidden_back_corner": true,
    "ground_note": "Visible left/front/right lower plinth corners measured from native pixels. Occluded rear corner is completed as a collision rectangle after projection, and is not used to certify artwork.",
@@ -301,7 +301,7 @@
   "portal": {
    "source": "assets/source/remake/portal-v2.png",
    "source_sha256": "2ffcc33a29bb9ae4c0db72af4846614e5956b8a53616788f5ad6f1734ebde0ce",
-   "render": "assets/art/village/remake-portal.webp",
+   "render": "assets/sprites/village/remake-portal.webp",
    "foot": [
     834,
     1200
@@ -669,7 +669,7 @@
     724,
     724
    ],
-   "render": "assets/art/village/remake-chest.webp",
+   "render": "assets/sprites/village/remake-chest.webp",
    "foot": [
     419,
     672
@@ -904,7 +904,7 @@
     1448,
     724
    ],
-   "render": "assets/art/village/remake-chest-broken.webp",
+   "render": "assets/sprites/village/remake-chest-broken.webp",
    "foot": [
     419,
     672
@@ -1124,7 +1124,7 @@
     2172,
     724
    ],
-   "render": "assets/art/village/remake-rock.webp",
+   "render": "assets/sprites/village/remake-rock.webp",
    "foot": [
     338,
     629
@@ -1460,7 +1460,7 @@
     ]
    },
    "source_sha256": "1a24455758b2660b7a3c53bd809df953f76edd4d211fea4b0ddb4157cea3be50",
-   "render": "assets/art/village/remake-portal.webp",
+   "render": "assets/sprites/village/remake-portal.webp",
    "alpha_review": "Native1254 square RGBA; alpha>20 bounding box has complete silhouette and transparent margins. Alpha<=2 hidden matte specks are not visible structural edges; no painted ground shadow.",
    "enabled": false,
    "review": "Pending simpler arch regeneration: raw +15/-26 planes require excessive global reshaping."

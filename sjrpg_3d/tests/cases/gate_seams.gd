@@ -48,8 +48,8 @@ func run() -> void:
 	var mesh := ArtWarp.data("gate-0")
 	check("wall extraction follows the current gate calibration", extraction["parent_mesh"]["points"] == mesh["points"] and extraction["parent_mesh"]["triangles"] == mesh["triangles"])
 	var datums := {"coping": 159.7852, "cap": 196.4467}
-	var gate_image := Image.load_from_file("res://assets/art/village/gates.webp")
-	var wall_image := Image.load_from_file("res://assets/art/village/walls.webp")
+	var gate_image := Image.load_from_file("res://assets/sprites/village/gates.webp")
+	var wall_image := Image.load_from_file("res://assets/sprites/village/walls.webp")
 	var walls: Array[WallPiece] = []
 	for item in game.world.get_children():
 		if item is WallPiece:

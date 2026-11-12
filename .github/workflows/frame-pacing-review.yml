@@ -19,7 +19,7 @@ jobs:
       - name: Verify native movement, poses and combat feedback
         run: |
           tools/setup_godot.sh
-          sjrpg_3d/tools/check.sh --only=native_animation_sampling,native_floor_query_budget,native_threshold_support,ortho_3d_motion,native_merchant,native_mira,native_warrior,native_enemy_models,native_enemy_recipe_cache,native_actor_materials,native_render_budget,hit_flash,town_gate_closure,gates
+          sjrpg_3d/tools/check.sh --only=native_animation_sampling,native_floor_query_budget,native_threshold_support,hero_animation_3d,native_merchant,native_mira,native_warrior,native_enemy_models,native_enemy_recipe_cache,native_actor_materials,native_render_budget,hit_flash,town_gate_closure,gates
   compare:
     runs-on: ubuntu-latest
     timeout-minutes: 40
@@ -66,7 +66,7 @@ jobs:
             python3 - <<'PY'
           import os
           from pathlib import Path
-          main=Path(os.environ["SJRPG_PACING_GAME"])/"sjrpg_3d/scripts/main.gd"
+          main=Path(os.environ["SJRPG_PACING_GAME"])/"sjrpg_3d/scripts/app/main.gd"
           source=main.read_text()
           needle="\tshow_title()\n"
           hook='\tif OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get(\'frame_pacing_profile\')", true)) == "1":\n\t\tadd_child(load("res://scripts/frame_pacing_observer.gd").new().setup(self))\n'

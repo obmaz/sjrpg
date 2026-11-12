@@ -2,11 +2,11 @@
 	"forward": "+Z",
 	"id": "heroes/warrior",
 	"inputs": {
-		"res://scripts/native_actor_materials.gd": "15272c2eb2d56a2674a97930a7711f7145eabcd3d1a9e2eafd246469d6f02235",
-		"res://tools/prop_art/actor_shapes.gd": "d1f946445f433d9596aec997af3612fab9395c5b809dddd341283e59e05eb36f",
-		"res://tools/prop_art/bake.gd": "417ad48faa3d12e160b511b43c3e9fd31418559a4b9a24db003d3c90cb5f4254",
-		"res://tools/prop_art/resident_builder.gd": "55639c595f0f7cb4793650d00aec70215aec011ab7595e9d88b435182840bb54",
-		"res://tools/prop_art/warrior_builder.gd": "9dff388595592a7b950e09eceffdd162a9cd1a8a3a6d4c39911e220244f9a47d"
+		"res://scripts/rendering/materials/actor_surface_materials.gd": "a77dd0072a45339ef91694c421c24ded85d5522a00d1bc32de094491d56a5d8d",
+		"res://tools/assets/props/actor_shapes.gd": "d1f946445f433d9596aec997af3612fab9395c5b809dddd341283e59e05eb36f",
+		"res://tools/assets/props/bake.gd": "0e065c0f49b939e462f4a0bed2384b21a71ac32477bdb7f824d5c8bdc4708dc4",
+		"res://tools/assets/props/resident_builder.gd": "018b9794804fcde50cd49b9edc72935774e2b1a84b732245f3afd3875465b132",
+		"res://tools/assets/props/warrior_builder.gd": "a81378df4e28cefea41f3f8d4cb25a36161093d7c1c6d166b61bd4d4b411893f"
 	},
 	"layout_sha256": "8aa30d849cfa581cdb63bf4f0304c074959537870c57a30d0d84a144e6c7beea",
 	"meshes": {

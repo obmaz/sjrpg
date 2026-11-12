@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Exercise real same-document history and trusted fullscreen; Android OS notifications
-// are covered by the actual NativeAdventure headless case, not simulated by this fixture.
+// are covered by the actual Adventure3D headless case, not simulated by this fixture.
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {readFile} from 'node:fs/promises';

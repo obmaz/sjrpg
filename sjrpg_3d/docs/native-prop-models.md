@@ -15,7 +15,7 @@
 | 나무5종·수풀2종 | `vegetation/<id>/visual.tscn` | 씬에서 공유 메시를 한 번 읽어 공간 청크 MultiMesh에 배치 |
 | 동굴 표지·벽 횃불 | `environment/{trail_sign,wall_torch}/visual.tscn` | 안내 글자·방향, 실제 벽 접촉 배치·불꽃·광원·배칭 |
 
-분수·워프게이트·마법사·상인·미라·참나무의 기존 GLB와 출처는 원래 경로에 보존한다. 씬이 원본을 직접 인스턴스화하므로 골격·동작·기존 제작기의 출력 경로를 중복하지 않는다. 나머지 고정 형상 제작기는 `tools/prop_art/`에만 있으며 앱에서 제외한다. 외형이 GLB여도 전사의 동작을 새 클립으로 바꿀 필요는 없다. 현재 플레이어 거리·명중 시계를 읽는 관절 제어를 보존한다.
+분수·워프게이트·마법사·상인·미라·참나무의 기존 GLB와 출처는 원래 경로에 보존한다. 씬이 원본을 직접 인스턴스화하므로 골격·동작·기존 제작기의 출력 경로를 중복하지 않는다. 나머지 고정 형상 제작기는 `tools/assets/props/`에만 있으며 앱에서 제외한다. 외형이 GLB여도 전사의 동작을 새 클립으로 바꿀 필요는 없다. 현재 플레이어 거리·명중 시계를 읽는 관절 제어를 보존한다.
 
 ## 교체와 검증
 
@@ -26,8 +26,8 @@
 기존 기하를 재현하려면 저장소 루트에서 실행한다.
 
 ```sh
-sjrpg_3d/tools/godot.sh --headless res://tools/prop_art/bake.tscn
-sjrpg_3d/tools/godot.sh --headless res://tools/prop_art/bake.tscn -- --only=heroes/warrior
+sjrpg_3d/tools/godot.sh --headless res://tools/assets/props/bake.tscn
+sjrpg_3d/tools/godot.sh --headless res://tools/assets/props/bake.tscn -- --only=heroes/warrior
 sjrpg_3d/tools/check.sh --only=native_prop_assets,native_warrior,native_residents,native_encounter_props
 ```
 

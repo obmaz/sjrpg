@@ -30,7 +30,7 @@
    "referenced_image_paths": [
     "assets/source/reference-fx/family-concept.png",
     "assets/source/style/approved-game-reference.jpg",
-    "assets/source/impact-atlas.png"
+    "assets/source/effects/combat/impact-atlas.png"
    ],
    "transparent_background": false,
    "output": "assets/source/reference-fx/skill-sheet.png",
@@ -53,7 +53,7 @@
      "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
     },
     {
-     "path": "assets/source/impact-atlas.png",
+     "path": "assets/source/effects/combat/impact-atlas.png",
      "sha256": "9da7b2773ef0de3f2cd6a4fe6147a451717a7ad62b698ec86127793c3493c835"
     }
    ]
@@ -371,7 +371,7 @@
    "runtime_change": "Independent frost override packed from v2; main atlas and five other effects retain identical bytes.",
    "runtime_trial": {
     "source": "assets/source/reference-fx/frost-open-v2.png",
-    "runtime_override_path": "assets/art/effects/frost-low.webp",
+    "runtime_override_path": "assets/effects/textures/frost-low.webp",
     "measured_ground_centers": [
      [
       274,

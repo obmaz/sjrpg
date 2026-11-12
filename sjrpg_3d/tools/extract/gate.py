@@ -23,8 +23,8 @@ import gate_projection
 
 ROOT = Path(__file__).resolve().parents[2]
 M = json.loads(Path(__file__).with_name("gate_measure.json").read_text(encoding="utf-8"))
-SHEET = ROOT / "assets/art/village/gates.webp"
-WALL_SHEET = ROOT / "assets/art/village/walls.webp"
+SHEET = ROOT / "assets/sprites/village/gates.webp"
+WALL_SHEET = ROOT / "assets/sprites/village/walls.webp"
 COS, SIN = math.cos(math.radians(30)), 0.5
 PAD = 4
 WALL_SEGS = {}
@@ -330,7 +330,7 @@ def family_manifest(data):
                   concept=record(M.get("family_concept", "assets/source/style/gate-wall-design.png")),
                   generation=record(M.get("generation_provenance", "tools/extract/gate_generation.json")),
                   sources=[record(path) for path in sources],
-                  renders=[record("assets/art/village/gates.webp"), record("assets/art/village/walls.webp")],
+                  renders=[record("assets/sprites/village/gates.webp"), record("assets/sprites/village/walls.webp")],
                   wall_module=dict(source=M["wall"]["segs"]["a"]["png"],
                                    extraction=record(M['wall']['segs']['a']['extracted_scale']),
                                    derived_direction="b reflects the same projected module horizontally",

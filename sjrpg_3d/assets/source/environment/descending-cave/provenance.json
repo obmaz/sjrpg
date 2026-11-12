@@ -23,7 +23,7 @@
     },
     {
       "path": "assets/models/environment/cave_entrance/bake.gd",
-      "sha256": "2232ba53408bedbffec61273346172250b854d192c955c2ea95644aa6da4fa00"
+      "sha256": "03b8a5483438eb163030f58e9896c87d696b79c069aa1835af06d918534b651c"
     },
     {
       "path": "assets/models/environment/cave_entrance/bake.tscn",
@@ -31,7 +31,7 @@
     },
     {
       "path": "assets/models/environment/cave_entrance/model.gd",
-      "sha256": "fe5b19243524514d0d24a5ba7af6c77549e2b70f0ac1bf9bffa3b5a987e282a5"
+      "sha256": "b363f0d155e9e39d5b7cacea9cb885c0f3fe35e82a3229bb8a87816ed49bafe9"
     },
     {
       "path": "assets/models/environment/cave_entrance/model.glb",
@@ -39,10 +39,10 @@
     },
     {
       "path": "assets/models/environment/cave_entrance/plan.gd",
-      "sha256": "a89b2998b4d7ef3a59e085a6f5bd2392392d59f6abdeeb75b5c7fdc6a484a0e7"
+      "sha256": "4707f8e6b013f694bd2dc2086b79eb8506724fd4538ebcc4e8dcb7233dfbb1ab"
     },
     {
-      "path": "tools/prop_art/cave_builder.gd",
+      "path": "tools/assets/props/cave_builder.gd",
       "sha256": "778784cf58150e34c1e4f3420160ee76d651a7d65f3500aa3cbf35b5ea9b7ac0"
     },
     {
@@ -59,25 +59,25 @@
     },
     {
       "path": "assets/models/environment/cave_entrance/geometry.json",
-      "sha256": "b941f8113ebbc79a479d6713f04e21fc0fee019e12867a3ca3c8130fd531c1bf"
+      "sha256": "362dcff3f0e56ab13130bf0ffb8ef627ce022b11bc6cbee0d8499eb33332c3bb"
     }
   ],
   "mapping": "3D modeling reference; not a billboard",
   "integrationInputs": [
     {
-      "path": "scripts/forest_region.gd",
+      "path": "scripts/world/forest_region.gd",
       "sha256": "c1a0c16329081deff53d118b41f6ee1dd6f31d5b334c61a34eb2a924d5402e58"
     },
     {
-      "path": "scripts/native_ground_relief.gd",
-      "sha256": "894ecf56b8c7d73efc83dd1af5fa5443ef859874616372f5380b37ac2047ad50"
+      "path": "scripts/world/geometry/ground_relief_3d.gd",
+      "sha256": "e7528044cd6d63b0d2dc876cb3be81816e1920681eaf91cd1cce6a49cd485095"
     },
     {
-      "path": "scripts/native_ground.gdshader",
+      "path": "assets/materials/terrain/ground.gdshader",
       "sha256": "40f058e41c7143993edb315cddf89342e95ace77326d96273bb2454998042135"
     },
     {
-      "path": "scripts/native_river.gdshader",
+      "path": "assets/materials/water/river.gdshader",
       "sha256": "5fd6a51de5aee5c5a84bed2b1ae8d9d382a1a478859d9f39175e4d5876b5556b"
     }
   ]

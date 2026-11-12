@@ -15,10 +15,10 @@ def main():
     parser.add_argument("operation",choices=["snapshot","publish"])
     parser.add_argument("--out",type=Path,required=True)
     args = parser.parse_args()
-    images = {p.relative_to(ROOT).as_posix():digest(p) for p in (ROOT/"assets/art").rglob("*") if p.is_file() and not p.name.endswith(".import")}
+    images = {p.relative_to(ROOT).as_posix():digest(p) for folder in texture_policy.VISUAL_ROOTS for p in (ROOT/folder).rglob("*") if p.is_file() and not p.name.endswith(".import")}
     if args.operation == "snapshot":
         params = {}
-        for path in (ROOT/"assets/art").rglob("*.import"):
+        for path in sorted(path for folder in texture_policy.VISUAL_ROOTS for path in (ROOT/folder).rglob("*.import")):
             text = path.read_text()
             parts = texture_policy.sections(text,str(path))
             if texture_policy.values(text,parts["remap"],str(path)).get("importer") == '"texture"':

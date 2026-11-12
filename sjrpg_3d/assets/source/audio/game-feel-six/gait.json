@@ -1,5 +1,5 @@
 {
-  "model": "assets/art/preview3d/mage.glb",
+  "model": "assets/models/heroes/mage/model.glb",
   "sha256": "40f5cc5fc77aa35d934c7c764cdcd0f9b9fa8b5012def66ab638b0c4f910fe48",
   "clip": "run",
   "samples": 64,

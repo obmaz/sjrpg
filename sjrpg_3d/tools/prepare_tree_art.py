@@ -54,12 +54,12 @@ def main():
             raise ValueError(f'Root contact falls outside its illustration: {frame["id"]}')
         frames[frame['id']] = dict(source=[x, y, *size], foot=foot,
                                    height=foot[1] - y, origin=native, packing=packing)
-    target = ROOT / 'assets/art/village/trees.webp'
+    target = ROOT / 'assets/sprites/village/trees.webp'
     temporary = target.with_suffix('.tmp')
     atlas.save(temporary, 'WEBP', quality=94, alpha_quality=100, exact=True, method=6)
     temporary.replace(target)
     metadata = dict(source=measure['source'], source_sha256=sha(source),
-                    render='assets/art/village/trees.webp', render_sha256=sha(target),
+                    render='assets/sprites/village/trees.webp', render_sha256=sha(target),
                     camera=measure['camera'], review=measure['review'],
                     frames=frames, variants=measure['variants'])
     if 'references' in measure:

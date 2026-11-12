@@ -21,7 +21,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[2]
 MEASURE = json.loads((Path(__file__).with_name("chapel_measure.json")).read_text(encoding="utf-8"))
-SHEET = ROOT / "assets/art/village/town.webp"
+SHEET = ROOT / "assets/sprites/village/town.webp"
 
 
 def _v(x):

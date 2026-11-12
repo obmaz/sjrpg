@@ -120,7 +120,7 @@ def pack():
     sheet=Image.new('RGBA',(2048,2940),(0,0,0,0))
     for key,c in M['buildings'].items():
         im=Image.open(ROOT/c['png']).convert('RGBA');p=c['packing'];size=(round(im.width*p),round(im.height*p));image=im.convert('RGBa').resize(size,Image.Resampling.LANCZOS).convert('RGBA');image=Image.fromarray(chapel._bleed(np.array(image)));sheet.paste(image,tuple(c['xy']))
-    pool=Image.open(ROOT/'assets/source/town-pool.png');sheet.paste(pool,(6,2054));target=ROOT/'assets/art/village/town.webp';temporary=target.with_suffix('.tmp')
+    pool=Image.open(ROOT/'assets/source/environment/fountain/town-pool.png');sheet.paste(pool,(6,2054));target=ROOT/'assets/sprites/village/town.webp';temporary=target.with_suffix('.tmp')
     sheet.save(temporary,'WEBP',quality=94,alpha_quality=100,method=6,exact=True);temporary.replace(target)
     chapel.pack()
 

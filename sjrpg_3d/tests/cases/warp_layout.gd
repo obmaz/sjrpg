@@ -8,7 +8,7 @@ func run() -> void:
 	var view := SubViewport.new()
 	view.size = Vector2i(720, 1280)
 	add_child(view)
-	var game := preload("res://scripts/game.gd").new()
+	var game := preload("res://scripts/gameplay/game.gd").new()
 	view.add_child(game)
 	await _frames(3)
 	for enemy in game.enemies:

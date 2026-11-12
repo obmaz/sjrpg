@@ -24,9 +24,9 @@ def save(image, path):
 
 
 def main():
-    ui_path = ROOT / 'assets/source/hud-trim.png'
-    effects_path = ROOT / 'assets/source/combat-frames.png'
-    map_path = ROOT / 'assets/source/map-rim.png'
+    ui_path = ROOT / 'assets/source/ui/hud-trim.png'
+    effects_path = ROOT / 'assets/source/effects/combat/combat-frames.png'
+    map_path = ROOT / 'assets/source/ui/map-rim.png'
     ui_source = Image.open(ui_path).convert('RGBA')
     sheet = Image.new('RGBA', (CELL * 2, CELL * 2))
     frames = {}
@@ -55,7 +55,7 @@ def main():
         frames[key] = dict(source=[x * CELL, y * CELL, CELL, CELL], paint_half=half,
                            source_roi=[left + source_offset[0], top + source_offset[1], side, side],
                            source_path=str((map_path if key == "map" else ui_path).relative_to(ROOT)))
-    ui = dict(**save(sheet, 'assets/art/hud/generated-trim.webp'), frames=frames)
+    ui = dict(**save(sheet, 'assets/ui/hud/generated-trim.webp'), frames=frames)
     effects_source = Image.open(effects_path).convert('RGB')
     effects = Image.new('RGB', (CELL * 4, CELL * 4))
     for row in range(4):
@@ -65,7 +65,7 @@ def main():
                                           (col + 1) * effects_source.width // 4, (row + 1) * effects_source.height // 4))
             region = region.resize((240, 240), Image.Resampling.LANCZOS)
             effects.paste(region, (col * CELL + 8, row * CELL + 8))
-    impact = dict(**save(effects, 'assets/art/effects/combat-frames.webp'), cell=CELL, rows=4, columns=4,
+    impact = dict(**save(effects, 'assets/effects/textures/combat-frames.webp'), cell=CELL, rows=4, columns=4,
                   elements=['physical', 'fire', 'lightning', 'frost'], blend='add', phases=['contact', 'peak', 'fragments', 'tail'])
     data = dict(sources=[record(ui_path), record(map_path), record(effects_path)],
                 reference=record(ROOT / 'assets/source/style/approved-game-reference.jpg'),

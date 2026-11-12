@@ -41,16 +41,16 @@ jobs:
                   else
                       git archive HEAD | tar -x -C "$RUNNER_TEMP/resource-game"
                   fi
-                  cp sjrpg_3d/scripts/resource_profile_review.gd "$RUNNER_TEMP/resource-game/sjrpg_3d/scripts/resource_profile_review.gd"
+                  cp sjrpg_3d/scripts/inspection/resource_profile_review.gd "$RUNNER_TEMP/resource-game/sjrpg_3d/scripts/inspection/resource_profile_review.gd"
                   cp sjrpg_3d/tools/check_resource_profile.mjs sjrpg_3d/tools/resource_telemetry.mjs "$RUNNER_TEMP/resource-game/sjrpg_3d/tools/"
                   python3 - <<'PY'
                   import os
                   from pathlib import Path
-                  p=Path(os.environ["RUNNER_TEMP"])/"resource-game/sjrpg_3d/scripts/main.gd"
+                  p=Path(os.environ["RUNNER_TEMP"])/"resource-game/sjrpg_3d/scripts/app/main.gd"
                   text=p.read_text()
-                  if 'res://scripts/resource_profile_review.gd' not in text:
+                  if 'res://scripts/inspection/resource_profile_review.gd' not in text:
                       needle="\tshow_title()\n"
-                      hook='\tif OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get(\'resource_profile\')", true)) == "1":\n\t\tadd_child(load("res://scripts/resource_profile_review.gd").new().setup(self))\n'
+                      hook='\tif OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get(\'resource_profile\')", true)) == "1":\n\t\tadd_child(load("res://scripts/inspection/resource_profile_review.gd").new().setup(self))\n'
                       assert needle in text
                       text=text.replace(needle,needle+hook,1)
                       p.write_text(text)

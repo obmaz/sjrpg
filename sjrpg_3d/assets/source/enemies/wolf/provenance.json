@@ -13,7 +13,7 @@
   "runtime": "assets/models/enemies/wolf/model.glb",
   "runtime_sha256": "1420c3d510413399098beefa266adaa7843d9bb22756fdc8faa6b6a68a07ecae",
   "conversion": "conversion.json",
-  "converter": "tools/enemy_art/export_enemy.py",
+  "converter": "tools/assets/enemies/export_enemy.py",
   "changes": "미터 배율·축·발 원점 정규화, 제자리 FK 동작 변환, 무광 재질. 실제 런타임 스킨의 접지 보정과 사망 자세 중심 정렬.",
-  "converter_sha256": "4e4f8deb21c40b713e1ac75bf7fae83a81d98f500ede908e9311f71c9331626d"
+  "converter_sha256": "1172ba7550b1f9e2fe159e8ee064fc08a010b6a7ab23f7264a2d9b88198424fd"
 }

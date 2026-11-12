@@ -1,50 +1,50 @@
 {
- "master_reference": {
-  "path": "assets/source/style/approved-game-reference.jpg",
-  "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
- },
- "concept": {
-  "path": "assets/source/remake/town-master-scene.png",
-  "sha256": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389"
- },
- "generation": {
-  "path": "tools/extract/town_remake_generation.json",
-  "sha256": "4492f969943544b6b4f08b37e93053c6df8ab6bc4be592447208ae9b958a37fa"
- },
- "sources": [
-  {
-   "path": "assets/source/remake/gate-a.png",
-   "sha256": "a0f3d56235882394d645cea025efae632c16e1e23157b67579945bd95aeb7cb6"
+  "master_reference": {
+    "path": "assets/source/style/approved-game-reference.jpg",
+    "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
   },
-  {
-   "path": "assets/source/remake/gate-b-v2.png",
-   "sha256": "d775ab279668e1551180823d7f4e130a9df56220f537167f3a21885134e0593f"
+  "concept": {
+    "path": "assets/source/remake/town-master-scene.png",
+    "sha256": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389"
   },
-  {
-   "path": "assets/source/remake/wall-from-gate.png",
-   "sha256": "d9fbcf39f9b7e8f9c230b76f53363ecec6312bb46ebeaecd76b7447b5e9a35d7"
+  "generation": {
+    "path": "tools/extract/town_remake_generation.json",
+    "sha256": "bf953f2a1d61847061f90526b3ffa2c185534eed147dc0c3d785f3f256aab3df"
+  },
+  "sources": [
+    {
+      "path": "assets/source/remake/gate-a.png",
+      "sha256": "a0f3d56235882394d645cea025efae632c16e1e23157b67579945bd95aeb7cb6"
+    },
+    {
+      "path": "assets/source/remake/gate-b-v2.png",
+      "sha256": "d775ab279668e1551180823d7f4e130a9df56220f537167f3a21885134e0593f"
+    },
+    {
+      "path": "assets/source/remake/wall-from-gate.png",
+      "sha256": "d9fbcf39f9b7e8f9c230b76f53363ecec6312bb46ebeaecd76b7447b5e9a35d7"
+    }
+  ],
+  "renders": [
+    {
+      "path": "assets/sprites/village/gates.webp",
+      "sha256": "2d7e7cb7fa82a237929c67d61a1dda1590cf72a4c2d4c0f6a7c479a10eda246a"
+    },
+    {
+      "path": "assets/sprites/village/walls.webp",
+      "sha256": "9e2f4375744c3dcb0b9de0e7a92f91e476fb8bdc111ffd500fdffd0c4de689c2"
+    }
+  ],
+  "wall_module": {
+    "source": "assets/source/remake/wall-from-gate.png",
+    "extraction": {
+      "path": "tools/extract/remake_wall_from_gate.json",
+      "sha256": "9b13be0d72a7b11afba2e7fa3f178b48292f42fbdd2ccf84b46e43e1b7029202"
+    },
+    "derived_direction": "b reflects the same projected module horizontally",
+    "height": 200,
+    "thickness": 64,
+    "scale_a": 0.5312,
+    "scale_b": 0.5312
   }
- ],
- "renders": [
-  {
-   "path": "assets/art/village/gates.webp",
-   "sha256": "2d7e7cb7fa82a237929c67d61a1dda1590cf72a4c2d4c0f6a7c479a10eda246a"
-  },
-  {
-   "path": "assets/art/village/walls.webp",
-   "sha256": "9e2f4375744c3dcb0b9de0e7a92f91e476fb8bdc111ffd500fdffd0c4de689c2"
-  }
- ],
- "wall_module": {
-  "source": "assets/source/remake/wall-from-gate.png",
-  "extraction": {
-   "path": "tools/extract/remake_wall_from_gate.json",
-   "sha256": "9b13be0d72a7b11afba2e7fa3f178b48292f42fbdd2ccf84b46e43e1b7029202"
-  },
-  "derived_direction": "b reflects the same projected module horizontally",
-  "height": 200,
-  "thickness": 64,
-  "scale_a": 0.5312,
-  "scale_b": 0.5312
- }
 }

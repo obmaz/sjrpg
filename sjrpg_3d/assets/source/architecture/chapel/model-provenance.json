@@ -4,40 +4,40 @@
   "sourceType": "offline_native_mesh_bake",
   "inputs": [
     {
-      "path": "tools/architecture_art/bake.gd",
-      "sha256": "931f8f1526583c995a0f5af89f9172c54155de9455ddee238c6fa7ae131064eb"
+      "path": "tools/assets/architecture/bake.gd",
+      "sha256": "f4ca89e250a3158b6cefdfb452d7fbfe0439fd6f59937201df0fd5a4d84e5dc7"
     },
     {
-      "path": "tools/architecture_art/chapel_builder.gd",
-      "sha256": "a14975c74a26a8839d34b617e6bf0342c4f60aa0b299eb6e020f5a233e689e82"
+      "path": "tools/assets/architecture/chapel_builder.gd",
+      "sha256": "86f540552310c80dd976b1efe15a0a05c7573168d18852e93399129ab858f9e8"
     },
     {
-      "path": "tools/architecture_art/medieval_details.gd",
+      "path": "tools/assets/architecture/medieval_details.gd",
       "sha256": "5e4f5d3ecd4b74f72acee622f84bcab0b119c62b009f35d8550feb5abae8352b"
     },
     {
-      "path": "assets/models/materials/village_craft/surfaces.gd",
-      "sha256": "8aa72ffb1177ae1f91101f04a9bdcb34304e8d399fe975dd666d14a2dd9fe8af"
+      "path": "assets/materials/village_craft/surfaces.gd",
+      "sha256": "d65873251b691a43132daab4722bd0a8bbb7c7b2c5ffbf4212ab867363b7196d"
     },
     {
-      "path": "scripts/iso.gd",
+      "path": "scripts/core/iso.gd",
       "sha256": "2b727818d9bdf36c7aa6308d24c785ba9474aa217b10c82ba67c54c1a1404bfd"
     },
     {
-      "path": "scripts/village.gd",
-      "sha256": "b4bdba097b36659e9eb0c3eae87f0c1236a3229da7c1857a387ec166406cd59e"
+      "path": "scripts/world/village.gd",
+      "sha256": "a69c967119892ffcd86448d6413ef9edacb8554f760470e2ff2126b005e27f77"
     },
     {
-      "path": "scripts/forest_region.gd",
+      "path": "scripts/world/forest_region.gd",
       "sha256": "c1a0c16329081deff53d118b41f6ee1dd6f31d5b334c61a34eb2a924d5402e58"
     },
     {
       "path": "assets/data/village.json",
-      "sha256": "830c6b0125c090318b26482c151e789b12bf887164cd970246e2a0a093c88f72"
+      "sha256": "931f2f82be69ed860a2c122b949abcc0a5243e24b24fe818a34f2e5369a8fdff"
     },
     {
-      "path": "scripts/native_chapel_plan.gd",
-      "sha256": "e006c262ee0ba7d3f4a0d1a4600c9aeae88ab93dcfccda3956d4deb92103b7ce"
+      "path": "scripts/world/geometry/chapel_plan_3d.gd",
+      "sha256": "55b30bf4478b30e9ec64cf220ddcae4c4f449a868cff9fee03b1b5a5aa7ef675"
     }
   ],
   "outputs": [
@@ -59,7 +59,7 @@
     },
     {
       "path": "materials/stone.tres",
-      "sha256": "6da23724a5d675fe4c84e3e605d7b380f8e17d80265e91797fa87f77f591ffb3"
+      "sha256": "742e4bbd7d4f662b8d5f154cf337687e0178aa0492e510444c28e66a5a532346"
     },
     {
       "path": "materials/facade.tres",
@@ -67,7 +67,7 @@
     },
     {
       "path": "materials/slate.tres",
-      "sha256": "baa758f16aaebe26b7a056983148a299a0d51c5bd6675cf1b7e972d02cd4c89a"
+      "sha256": "0ee5cd06bb48061e9d4907387c8c5d61e00a6c571f939304e5d79d6d0261accc"
     },
     {
       "path": "materials/bronze.tres",

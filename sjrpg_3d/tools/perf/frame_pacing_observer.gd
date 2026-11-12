@@ -44,7 +44,7 @@ func _command(args: Array) -> void:
 
 func _state() -> Dictionary:
 	var current: Node = root_screen.current
-	var adventure: bool = current is NativeAdventure
+	var adventure: bool = current is Adventure3D
 	var report := {"draw_seq": _draw_seq, "recorded": _samples.size(), "overflow": _overflow,
 		"process_frame": Engine.get_process_frames(), "frames_drawn": Engine.get_frames_drawn(),
 		"adventure": adventure, "paused": get_tree().paused,
@@ -72,7 +72,7 @@ func _state() -> Dictionary:
 	report["input"] = [movement.x, movement.y]
 	var controls: TouchControls = game.hud.controls
 	report["stick"] = {"center": [controls._stick_center.x, controls._stick_center.y], "radius": controls.stick_radius()}
-	var presenter: Ortho3DPreview = game.ortho_preview
+	var presenter: WorldRenderer3D = game.world_renderer
 	report["camera"] = [presenter.camera.global_position.x, presenter.camera.global_position.y, presenter.camera.global_position.z]
 	report["native_size"] = [presenter.viewport.size.x, presenter.viewport.size.y]
 	report["native_msaa"] = presenter.viewport.msaa_3d

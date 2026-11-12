@@ -26,22 +26,22 @@ func run() -> void:
 	game.encounters.set_process(false)
 	game.quest_runtime.set_process(false)
 	game.exploration.set_process(false)
-	var preview: Ortho3DPreview = game.ortho_preview
-	var fx: NativeCombatFx3D = preview._combat_fx
+	var renderer: WorldRenderer3D = game.world_renderer
+	var fx: CombatEffects3D = renderer._combat_fx
 	var floor_body := Fixture.box(game.spatial_world, Fixture.remote_at(Vector3(120, 2.5, 120)), Vector3(30, 1, 30), SpatialWorld3D.FLOOR)
 	await Fixture.settle(get_tree())
 	game.spatial_world.teleport_source_actor(game.player, SpatialWorld3D.projected(Fixture.remote_at(Vector3(120, 3, 120))), Player.RADIUS)
 	game.player.facing = 0.0
 	check("fresh mage actually equips starter firebolt", str(GameState.slots[0]) == "firebolt")
 	var shot := _cast(game, "firebolt")
-	check("starter creates the previously skipped generic nonthrow effect", shot != null and NativeCombatFx3D.supports(shot))
+	check("starter creates the previously skipped generic nonthrow effect", shot != null and CombatEffects3D.supports(shot))
 	if shot == null:
 		game.queue_free()
 		await _frames(2)
 		return
 	var id := shot.get_instance_id()
 	fx.sync()
-	check("real firebolt now has native body without joining the authored-card path", fx._entries.has(id) and not preview._cards.has(id) and not game.field_root.visible)
+	check("real firebolt now has native body without joining the authored-card path", fx._entries.has(id) and not renderer._cards.has(id) and not game.field_root.visible)
 	var entry: Dictionary = fx._entries[id]
 	var body: MeshInstance3D = entry["body"]
 	shot._process(0.08)
@@ -65,32 +65,32 @@ func run() -> void:
 	shot.set_process(false)
 	Prefs.reduce_motion = true
 	fx.sync()
-	check("reduced motion removes tail/flicker while preserving the real body", not (entry["tail"] as MeshInstance3D).visible and body.visible and is_equal_approx((body.mesh as QuadMesh).size.x * body.global_transform.basis.x.length(), 44.0 / (65.0 * Ortho3DPreview.PROJECTION_FACTOR)))
+	check("reduced motion removes tail/flicker while preserving the real body", not (entry["tail"] as MeshInstance3D).visible and body.visible and is_equal_approx((body.mesh as QuadMesh).size.x * body.global_transform.basis.x.length(), 44.0 / (65.0 * WorldRenderer3D.PROJECTION_FACTOR)))
 	Prefs.reduce_motion = false
 	shot._process(shot.life + 0.1)
 	fx.sync()
 	check("source expiry removes native picture without a second clock", not fx._entries.has(id))
 	await _frames(2)
 	var ball := _cast(game, "fireball", true)
-	check("actual fireball shares the repaired native path", ball != null and NativeCombatFx3D.supports(ball) and float(ball.params["explode"]) > 0.0)
+	check("actual fireball shares the repaired native path", ball != null and CombatEffects3D.supports(ball) and float(ball.params["explode"]) > 0.0)
 	fx.sync()
 	check("actual fireball creates its own body/tail pair", ball != null and fx._entries.has(ball.get_instance_id()))
 	if ball != null:
 		ball.queue_free()
 	await _frames(2)
 	var bolt := _cast(game, "iceBolt", true)
-	preview._sync_cards()
+	renderer._sync_cards()
 	fx.sync()
-	check("existing authored ice bolt is rendered once in its original path", bolt != null and not NativeCombatFx3D.supports(bolt) and preview._cards.has(bolt.get_instance_id()) and not fx._entries.has(bolt.get_instance_id()))
+	check("existing authored ice bolt is rendered once in its original path", bolt != null and not CombatEffects3D.supports(bolt) and renderer._cards.has(bolt.get_instance_id()) and not fx._entries.has(bolt.get_instance_id()))
 	if bolt != null:
 		bolt.queue_free()
 	await _frames(2)
 	var forest_world: Node = game.world
 	# Real spawning remains gameplay-owned even when the render cap is exceeded.
-	for index in NativeCombatFx3D.MAX_PROJECTILES + 3:
+	for index in CombatEffects3D.MAX_PROJECTILES + 3:
 		game.spawn_projectile({"pos": game.player.position + Vector2(index, -34), "dir": Vector2.RIGHT, "speed": 620.0, "damage": 1.0, "color": SkillDefs.FIRE}, game.player)
 	fx.sync()
-	check("native projectile pictures are bounded without deleting gameplay shots", fx._entries.size() == NativeCombatFx3D.MAX_PROJECTILES and game.world.get_children().filter(func(node): return node is Effect and node.kind == "proj" and not node.is_queued_for_deletion()).size() == NativeCombatFx3D.MAX_PROJECTILES + 3)
+	check("native projectile pictures are bounded without deleting gameplay shots", fx._entries.size() == CombatEffects3D.MAX_PROJECTILES and game.world.get_children().filter(func(node): return node is Effect and node.kind == "proj" and not node.is_queued_for_deletion()).size() == CombatEffects3D.MAX_PROJECTILES + 3)
 	game.player.position = game.dungeon.entry_point()
 	check("projectile ownership fixture enters the actual cave", game.dungeon.enter())
 	fx.sync()
@@ -98,7 +98,7 @@ func run() -> void:
 	game.dungeon.leave("")
 	await Fixture.settle(get_tree())
 	fx.sync()
-	check("actual forest return observes only still-existing source projectiles", game.world == forest_world and fx._entries.size() > 0 and fx._entries.size() <= NativeCombatFx3D.MAX_PROJECTILES)
+	check("actual forest return observes only still-existing source projectiles", game.world == forest_world and fx._entries.size() > 0 and fx._entries.size() <= CombatEffects3D.MAX_PROJECTILES)
 	floor_body.queue_free()
 	Prefs.reduce_motion = old_motion
 	game.queue_free()

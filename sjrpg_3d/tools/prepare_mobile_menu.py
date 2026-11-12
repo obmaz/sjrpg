@@ -37,7 +37,7 @@ def main():
         sheet.paste(tile, (column * cell, 0))
         frames[key] = {'source': [column * cell, 0, cell, cell], 'paint_half': half,
                        'source_roi': item['source_roi'], 'paint_bounds': list(bounds)}
-    output = ROOT / 'assets/art/hud/mobile-menu.webp'
+    output = ROOT / 'assets/ui/hud/mobile-menu.webp'
     output.parent.mkdir(parents=True, exist_ok=True)
     temporary = output.with_suffix('.tmp')
     sheet.save(temporary, 'WEBP', quality=94, alpha_quality=100, method=6, exact=True)

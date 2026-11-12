@@ -61,16 +61,16 @@ jobs:
                   git fetch --no-tags --depth=1 origin "$SJRPG_WALK_SHA"
                   mkdir -p "$RUNNER_TEMP/stability-game"
                   git archive "$SJRPG_WALK_SHA" | tar -x -C "$RUNNER_TEMP/stability-game"
-                  cp sjrpg_3d/scripts/stability_resource_review.gd sjrpg_3d/scripts/canvas_allocation_review.gd "$RUNNER_TEMP/stability-game/sjrpg_3d/scripts/"
+                  cp sjrpg_3d/scripts/inspection/stability_resource_review.gd sjrpg_3d/scripts/inspection/canvas_allocation_review.gd "$RUNNER_TEMP/stability-game/sjrpg_3d/scripts/"
                   python3 - <<'PY'
                   import os
                   from pathlib import Path
-                  main=Path(os.environ["RUNNER_TEMP"])/"stability-game/sjrpg_3d/scripts/main.gd"
+                  main=Path(os.environ["RUNNER_TEMP"])/"stability-game/sjrpg_3d/scripts/app/main.gd"
                   text=main.read_text()
                   needle="\tshow_title()\n"
-                  hook='\tif OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get(\'walking_profile\')", true)) == "1":\n\t\tadd_child(load("res://scripts/stability_resource_review.gd").new().setup(self))\n\t\tadd_child(load("res://scripts/canvas_allocation_review.gd").new())\n'
+                  hook='\tif OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get(\'walking_profile\')", true)) == "1":\n\t\tadd_child(load("res://scripts/inspection/stability_resource_review.gd").new().setup(self))\n\t\tadd_child(load("res://scripts/inspection/canvas_allocation_review.gd").new())\n'
                   assert needle in text
-                  assert 'res://scripts/stability_resource_review.gd' not in text
+                  assert 'res://scripts/inspection/stability_resource_review.gd' not in text
                   main.write_text(text.replace(needle,needle+hook,1))
                   PY
                   chmod +x "$RUNNER_TEMP/stability-game/tools/"*.sh "$RUNNER_TEMP/stability-game/sjrpg_3d/tools/"*.sh

@@ -4,13 +4,15 @@
 
 ## 3D의 책임
 
-`NativeAdventure`가3D판 모험의 진입점입니다. 기존 `Game`·`Player`·`Enemy` 규칙은 UI·진행·AI와의 호환 어댑터로 유지하며, 실제 몸체는 `SpatialWorld3D`의 `CharacterBody3D`입니다. 화면 좌표를 지면 X/Z와 실제 Y높이로 변환하고, 정적 건축·지형·성문·마을 안전 경계·동굴에서3D 충돌을 검사합니다. 2D 좌표 어댑터가 기존 미니맵과 의뢰 데이터를 계속 사용할 수 있게 합니다.
+`Adventure3D`가3D판 모험의 진입점입니다. 기존 `Game`·`Player`·`Enemy` 규칙은 UI·진행·AI와의 호환 어댑터로 유지하며, 실제 몸체는 `SpatialWorld3D`의 `CharacterBody3D`입니다. 화면 좌표를 지면 X/Z와 실제 Y높이로 변환하고, 정적 건축·지형·성문·마을 안전 경계·동굴에서3D 충돌을 검사합니다. 2D 좌표 어댑터가 기존 미니맵과 의뢰 데이터를 계속 사용할 수 있게 합니다.
 
 `SpatialCombat3D`는3D 몸체·높이·벽을 기준으로 공격을 제한합니다. 투사체는 발사 높이를 유지하며 실제 이동 구간을 검사합니다. 기존 스킬 수치·재사용·명중 반응·저장 데이터는 재사용합니다.
 
-`NativeCombatFx3D`는 원래 Canvas가 숨겨진3D판에서 일반 화염탄 등 비투척 투사체의 표시를 담당합니다. 실제 `Effect.native_position()`과 소스 수명으로 기존 생성형 원소 이미지를 배치하며 게임 투사체를 삭제하거나 시계를 추가하지 않습니다. `NativeEncounterProps3D`는 비석과 상자의 개별 원화 소유권을 교체하고 실제 충전·피격·소모 상태를 읽습니다. 레벨업 효과도 현재 월드에 속한 소스만 표시해 동굴 방문 중 정지된 숲의 축하가 따라오지 않게 합니다.
+`CombatEffects3D`는 원래 Canvas가 숨겨진3D판에서 일반 화염탄 등 비투척 투사체의 표시를 담당합니다. 실제 `Effect.native_position()`과 소스 수명으로 기존 생성형 원소 이미지를 배치하며 게임 투사체를 삭제하거나 시계를 추가하지 않습니다. `EncounterPropRenderer3D`는 비석과 상자의 개별 원화 소유권을 교체하고 실제 충전·피격·소모 상태를 읽습니다. 레벨업 효과도 현재 월드에 속한 소스만 표시해 동굴 방문 중 정지된 숲의 축하가 따라오지 않게 합니다.
 
-`Ortho3DPreview`는 기존 이름을 유지한 공간 표시기입니다. 3D판에서는 마을뿐 아니라 숲과 동굴에서도 켜져 있습니다. 건물·성벽·성문·나무·주민·전사·마법사·몬스터는 입체 모델을 사용합니다. 지면·물·효과·알파 식생의 평면 표시는 실제3D 공간과 함께 유지합니다. 카메라는 직교45°/35.264°를 유지합니다. 기존2D판의3D 비교 표시기·자산·전환 경로는 제거했으며,2D판은 동결합니다.
+`WorldRenderer3D`는 운영 공간 표시기입니다. 3D판에서는 마을뿐 아니라 숲과 동굴에서도 켜져 있습니다. 건물·성벽·성문·나무·주민·전사·마법사·몬스터는 입체 모델을 사용합니다. 지면·물·효과·알파 식생의 평면 표시는 실제3D 공간과 함께 유지합니다. 카메라는 직교45°/35.264°를 유지합니다. 기존2D판의3D 비교 표시기·자산·전환 경로는 제거했으며,2D판은 동결합니다.
+
+자산·스크립트·제작/검수 도구의 역할과 이름은 [3D 폴더 구조](../sjrpg_3d/docs/project-layout.md)를 따릅니다.
 
 ## 지도와 공간 동기화
 
@@ -44,31 +46,29 @@ Android 도구 준비는 `sjrpg_3d/tools/setup_android.sh`에서 수행합니다
 
 ## 집별 표면과 몬스터 곡면
 
-`sjrpg_3d/tools/preview3d/make_surface_variety.py`는 원본 수식에서 512px 공유 알베도 14종을 재현합니다. 기존 이미지를 재색칠하지 않으며 원본 PNG·고정 시드·런타임 해시는 `assets/source/preview3d/surface-variety/provenance.json`에 보존합니다. 벽/자연물은 2.56m, 지붕은 2.6m의 기존 UV와 실제 기하를 유지합니다. 새 표면은 mode=1 보호 규칙을 적용하며 법선/거칠기 맵으로 가장하지 않습니다. 건물 벽 채움은 독립 생성형 원화 패키지를 사용하며 `NativeHouse3D.STYLES`가 집별 표면 ID·지붕·목재를 연결하고, `NativeSceneryProps3D`는 위치에서 공유 바위 재질을 고릅니다. 지면 변형은 지형 역할 번호에 고정되어 로드 순서에 영향받지 않습니다. 원래 풀잎 결은 기본 알베도로 보존하고 새 헤더·이끼 표면을 세부 재질로 혼합해 큰 단색 얼룩을 피합니다.
+`sjrpg_3d/tools/assets/materials/make_surface_variety.py`는 원본 수식에서 512px 공유 알베도 14종을 재현합니다. 기존 이미지를 재색칠하지 않으며 원본 PNG·고정 시드·런타임 해시는 `assets/source/materials/surface_variety/provenance.json`에 보존합니다. 벽/자연물은 2.56m, 지붕은 2.6m의 기존 UV와 실제 기하를 유지합니다. 새 표면은 mode=1 보호 규칙을 적용하며 법선/거칠기 맵으로 가장하지 않습니다. 건물 벽 채움은 독립 생성형 원화 패키지를 사용하며 `HouseRenderer3D.STYLES`가 집별 표면 ID·지붕·목재를 연결하고, `SceneryRenderer3D`는 위치에서 공유 바위 재질을 고릅니다. 지면 변형은 지형 역할 번호에 고정되어 로드 순서에 영향받지 않습니다. 원래 풀잎 결은 기본 알베도로 보존하고 새 헤더·이끼 표면을 세부 재질로 혼합해 큰 단색 얼룩을 피합니다.
 
-`NativeEnemyModels._form`은 유기체에 한정해 제한된 단면 보간과 연속 법선을 사용합니다. 바위와 철물의 모서리는 유지하며, 같은 관절별 메시 캐시를 재사용합니다. 몸체·공격·시체·실제 충돌은 기존 규칙을 유지합니다. 회귀 검사는 실제 삼각형 부피·바깥 법선·6천 삼각형 예산·재질 독립성과 공유 메시를 검사합니다.
+`EnemyRenderer3D._form`은 유기체에 한정해 제한된 단면 보간과 연속 법선을 사용합니다. 바위와 철물의 모서리는 유지하며, 같은 관절별 메시 캐시를 재사용합니다. 몸체·공격·시체·실제 충돌은 기존 규칙을 유지합니다. 회귀 검사는 실제 삼각형 부피·바깥 법선·6천 삼각형 예산·재질 독립성과 공유 메시를 검사합니다.
 
 ## 침엽수·관목과 다리 디테일
 
-`NativeWildVegetation`은 새 침엽수 3종과 관목 2종의 원본 입체 메시를 제작합니다. `python3 sjrpg_3d/tools/preview3d/make_needles.py`로 프로젝트 소유의 512px RGBA 바늘잎을 만들고, `sjrpg_3d/tools/godot.sh --headless res://tools/preview3d/generate_wild_vegetation.tscn`으로 텍스처를 중복 내장하지 않는 `.res` 메시와 실제 해시·삼각형 기록을 만듭니다. 원본과 제작 기록은 `assets/source/preview3d/wild-vegetation/`에 보존합니다. 잎 묶음은 고정된 곡면이며 빌보드가 아닙니다. 기존 활엽수의 alpha-scissor 0.42는 유지하고 작은 바늘잎은 밉맵 가독성을 위해 0.28을 사용합니다.
+`WildVegetationRenderer3D`은 새 침엽수 3종과 관목 2종의 원본 입체 메시를 제작합니다. `python3 sjrpg_3d/tools/assets/materials/make_needles.py`로 프로젝트 소유의 512px RGBA 바늘잎을 만들고, `sjrpg_3d/tools/godot.sh --headless res://tools/assets/vegetation/generate_wild_vegetation.tscn`으로 텍스처를 중복 내장하지 않는 `.res` 메시와 실제 해시·삼각형 기록을 만듭니다. 원본과 제작 기록은 `assets/source/vegetation/wild_flora/`에 보존합니다. 잎 묶음은 고정된 곡면이며 빌보드가 아닙니다. 기존 활엽수의 alpha-scissor 0.42는 유지하고 작은 바늘잎은 밉맵 가독성을 위해 0.28을 사용합니다.
 
-`Ortho3DTrees`와 `Ortho3DForestTrees`는 5종의 메시를 공유합니다. 새 침엽수는 기존 수관 폭의 0.68/0.86/0.52 안에서 높이와 뿌리·줄기 충돌을 보존합니다. 종류는 기존 위치 기반 FNV-1a 시드에서 결정하며 게임 RNG를 소모하지 않습니다. 관목은 기존 줄기 충돌 안에만 배치하고, 24m 공간 묶음의 실제 전체 AABB로 컬링합니다. 나무는 기존 16m 공간 묶음을 유지합니다.
+`TreeGeometry3D`와 `ForestTreeRenderer3D`는 5종의 메시를 공유합니다. 새 침엽수는 기존 수관 폭의 0.68/0.86/0.52 안에서 높이와 뿌리·줄기 충돌을 보존합니다. 종류는 기존 위치 기반 FNV-1a 시드에서 결정하며 게임 RNG를 소모하지 않습니다. 관목은 기존 줄기 충돌 안에만 배치하고, 24m 공간 묶음의 실제 전체 AABB로 컬링합니다. 나무는 기존 16m 공간 묶음을 유지합니다.
 
-`NativeBridge3D`는 공유 `Bridge.deck_polygon()`과 기존 난간 경계를 읽습니다. 기둥·줄눈·아치·덮개돌·철물·포장석을 4개 정적 서피스로 묶습니다. 장식 아케이드 뒤의 연속 석재는 기존 충돌/투사체 차폐와 일치시키기 위한 구조이며 실제 열린 통로로 표시하지 않습니다. 기존 발판/난간 경계를 유지하며 `NativeBridgePlan`의 강바닥 기초·물살 가름돌을 표시와 삼각형 SOLID가 공유합니다. 포장석의 표시 편향은 물리 높이에 더하지 않습니다.
+`BridgeRenderer3D`는 공유 `Bridge.deck_polygon()`과 기존 난간 경계를 읽습니다. 기둥·줄눈·아치·덮개돌·철물·포장석을 4개 정적 서피스로 묶습니다. 장식 아케이드 뒤의 연속 석재는 기존 충돌/투사체 차폐와 일치시키기 위한 구조이며 실제 열린 통로로 표시하지 않습니다. 기존 발판/난간 경계를 유지하며 `BridgePlan3D`의 강바닥 기초·물살 가름돌을 표시와 삼각형 SOLID가 공유합니다. 포장석의 표시 편향은 물리 높이에 더하지 않습니다.
 
 ## 생성형 지면과 길 연결
 
-`NativeGround3D`와 `native_ground.gdshader`는 기존 150m 지면과 길 표시를 한 개의 불투명 조명 서피스로 표시합니다. `assets/source/preview3d/generated-ground/`에 생성 도구의 원본 1254px PNG·실제 프롬프트·첨부 참조와 해시를 보존합니다. 바닥과 연결부를 각각 2×2 아틀라스로 생성했으며 각 칸은 627px/2.56m(약245px/m)입니다. 새 아틀라스는 mode=1·밉맵을 사용하고 기존 GPU 압축 허용 목록을 늘리지 않습니다. 같은 패밀리의 반사 반복과 공간 혼합으로 이음선을 줄이며, 새 법선/거칠기 맵을 만들었다고 주장하지 않습니다.
+`GroundRenderer3D`와 `native_ground.gdshader`는 기존 150m 지면과 길 표시를 한 개의 불투명 조명 서피스로 표시합니다. `assets/source/terrain/ground_field/`에 생성 도구의 원본 1254px PNG·실제 프롬프트·첨부 참조와 해시를 보존합니다. 바닥과 연결부를 각각 2×2 아틀라스로 생성했으며 각 칸은 627px/2.56m(약245px/m)입니다. 새 아틀라스는 mode=1·밉맵을 사용하고 기존 GPU 압축 허용 목록을 늘리지 않습니다. 같은 패밀리의 반사 반복과 공간 혼합으로 이음선을 줄이며, 새 법선/거칠기 맵을 만들었다고 주장하지 않습니다.
 
-길의 데이터 마스크는 원화를 편집해서 만들지 않습니다. `sjrpg_3d/tools/godot.sh --headless res://tools/preview3d/capture_road_geometry.tscn`이 실제 `Village.map_roads` 7개와 기하 합집합을 기록하고, `python3 sjrpg_3d/tools/preview3d/bake_ground_field.py`가 경계까지의 부호 거리와 XZ 바깥 법선을 굽습니다. `assets/data/native_ground_field.png`는 선형·무손실·밉맵 없는 데이터 텍스처로 3D 원화 압축 대상과 구별합니다. 교차로 내부에는 별도 길 경계를 그리지 않으며 실제 길 좌표가 바뀌면 `natural_ground` 검사가 재생성을 요구합니다. 바닥 Y=0과 실제 물리 지형을 보존하고 2D판은 변경하지 않습니다.
+길의 데이터 마스크는 원화를 편집해서 만들지 않습니다. `sjrpg_3d/tools/godot.sh --headless res://tools/review/models/capture_road_geometry.tscn`이 실제 `Village.map_roads` 7개와 기하 합집합을 기록하고, `python3 sjrpg_3d/tools/assets/terrain/bake_ground_field.py`가 경계까지의 부호 거리와 XZ 바깥 법선을 굽습니다. `assets/data/native_ground_field.png`는 선형·무손실·밉맵 없는 데이터 텍스처로 3D 원화 압축 대상과 구별합니다. 교차로 내부에는 별도 길 경계를 그리지 않으며 실제 길 좌표가 바뀌면 `natural_ground` 검사가 재생성을 요구합니다. 바닥 Y=0과 실제 물리 지형을 보존하고 2D판은 변경하지 않습니다.
 
 `Enemy.SIZE_FACTOR=1.30`은 모든 종의 높이·폭·실제 캡슐과 기본 반경에 함께 적용됩니다. 모델·공격 높이·표시·시체는 같은 원본 크기를 읽습니다. 근접 거리는 늘어난 반경만큼 중심 거리만 더해 기존 몸 가장자리의 도달 거리를 유지합니다. 스폰 검색은 확대된 종별 반경으로 실제 장애물을 검사합니다.
 
 ### 잔디 결의 다양성
 
-`generated-grass-variety.png`는 사용자 기준 화면과 기존 바닥 패밀리를 실제 참조로 편집한 2×2 전용 잔디 알베도입니다. 1254px 원본을 리사이즈하지 않고 각 칸 627px/2.56m(약245px/m)로 사용합니다. 원본·실제 프롬프트·첨부 참조 SHA-256은 `sjrpg_3d/assets/source/preview3d/grass-variety/`에 보존합니다. mode=1·밉맵을 사용하며 VRAM 압축 허용 목록과 다른 이미지 설정은 바꾸지 않습니다.
-
-`grass_variety.gdshaderinc`는 서로 다른 풀 결 네 장을 11.5m 생육 구역·3.4m 군락·27m 광역 변화로 혼합합니다. 각 이미지의 방향과 반 타일 이동을 달리하고 밉맵 미분을 전달해 격자 경계와 반복 무늬를 줄입니다. `native_ground.gdshader`의 기존 길 거리장과 포장석·접합부는 보존합니다. 높은 잔디 지형은 `native_grass.gdshader`와 두 서식지 공유 재질을 사용하며 기존 높이별 색 비율만 적용합니다. 지형 메시·미터 UV·실제 충돌·카메라 줌은 바꾸지 않습니다.
+`sjrpg_3d/assets/materials/grass/`의 생성 원화10종은 공용 셰이더에서 연속적으로 혼합합니다. 원본·실제 참조·임포트 정책과 검수는 [야외 표면](../sjrpg_3d/docs/native-outdoor-surfaces.md)을 따릅니다.
 
 푸시 전 공통 진입점은 `tools/ci.sh`입니다. 자동 CI 한 개·수동 브라우저/진단·웹 배포의 경계는 [CI 운영](ci.md)을 따릅니다.
 
@@ -76,11 +76,11 @@ Android 도구 준비는 `sjrpg_3d/tools/setup_android.sh`에서 수행합니다
 
 건물별 생성형 원화·다리 표면과 동굴 입구 모델은 에셋 폴더별로 관리합니다. 공용 코드 변경 없이 같은 에셋의 원화나 제작기를 교체하는 범위, 외부 모델의 미터·축·원점·충돌·소켓 계약은 [에셋 협업](../sjrpg_3d/docs/asset-workflow.md)을 따릅니다. 완료 리뷰·후보 비교는 현재 제작 규격과 구별하며 일회성 결과는 `build/`와 CI 아티팩트에 둡니다.
 
-동굴의 실제 바닥·경사·경계는 `DungeonRelief`가 공유하고, `DungeonHazards`가 장치의 시계·피해를 소유합니다. 주기는 항상 흐르고 피해는 영웅 주변20m에서 처리해 먼 방의 전투를 보존합니다. `NativeDungeonHazards`와 HUD·지도는 같은 상태를 읽습니다. 방별 진행은 `DungeonRooms`가 적 ID를 추적하고 HUD와 지도에 공유합니다. 모델 교체 경계·수명·검사는 [동굴 구조](../sjrpg_3d/docs/native-cave.md)를 따릅니다.
+동굴의 실제 바닥·경사·경계는 `DungeonRelief`가 공유하고, `DungeonHazards`가 장치의 시계·피해를 소유합니다. 주기는 항상 흐르고 피해는 영웅 주변20m에서 처리해 먼 방의 전투를 보존합니다. `DungeonHazardRenderer3D`와 HUD·지도는 같은 상태를 읽습니다. 방별 진행은 `DungeonRooms`가 적 ID를 추적하고 HUD와 지도에 공유합니다. 모델 교체 경계·수명·검사는 [동굴 구조](../sjrpg_3d/docs/native-cave.md)를 따릅니다.
 
 멧돼지·잠복자의 사망 클립과 해골 FBX의 공통 발 기준은 종별 원본 폴더의 `authoring.py`에서 정규화된 Z-up 공간으로 저작합니다. 변환·실제 스킨 접지·독립 보행 재측정은 [몬스터 모델 안내](../sjrpg_3d/docs/native-enemy-models.md)를 따릅니다.
 
-`NativeEnemyFeedback3D`는 체력/최근 피해·일반 적 준비 게이지·우두머리 범위를 표시합니다. AI의 실제 상태·타이머를 읽고 새 전투 시계나 판정은 소유하지 않습니다. [타격감 구조](../sjrpg_3d/docs/juice.md)를 참고하세요.
+`EnemyHitFeedback3D`는 체력/최근 피해·일반 적 준비 게이지·우두머리 범위를 표시합니다. AI의 실제 상태·타이머를 읽고 새 전투 시계나 판정은 소유하지 않습니다. [타격감 구조](../sjrpg_3d/docs/juice.md)를 참고하세요.
 
 상자의 피격/개봉 반응은 `Chest`의 짧은 표시 시간을 3D 표시기가 읽습니다. 정지·비활성 지역·동작 줄이기와 기존 보상/충돌 계약은 [타격감 구조](../sjrpg_3d/docs/juice.md)를 따릅니다.
 

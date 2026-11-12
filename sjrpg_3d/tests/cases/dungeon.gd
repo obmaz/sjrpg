@@ -91,7 +91,7 @@ func run() -> void:
 	check("cleared cave completes at the portal", cave.complete() and not cave.active and GameState.gold == gold + 100 + cave.entry_level * 20)
 	check("completion reward is paid once", not cave.complete())
 	await _frames(2)
-	check("exit returns outside and restores the native forest", game.player.position.distance_to(cave.entry_point()) < 1.0 and game.field_root.visibility_layer == 0 and game.ortho_preview._world_environment.forest.visible and not game.ortho_preview._world_environment.cave.visible)
+	check("exit returns outside and restores the native forest", game.player.position.distance_to(cave.entry_point()) < 1.0 and game.field_root.visibility_layer == 0 and game.world_renderer._world_environment.forest.visible and not game.world_renderer._world_environment.cave.visible)
 	check("reentry creates a fresh instance", cave.enter() and cave.remaining == 300.0 and cave.defeated == 0 and game.enemies.size() == 22)
 	gold = GameState.gold
 	cave.tick(301.0)
@@ -108,7 +108,7 @@ func run() -> void:
 	game.queue_free()
 	await _frames(2)
 	check("interrupted cave save requests an outside return", GameState.load_game() and GameState.return_to_cave_entrance and GameState.gold == 123)
-	game = preload("res://scripts/game.gd").new()
+	game = preload("res://scripts/gameplay/game.gd").new()
 	add_child(game)
 	await _frames(2)
 	check("reconnect starts outside the cave", not game.dungeon.active and game.player.position.distance_to(game.dungeon.entry_point()) < 1.0 and GameState.gold == 123)

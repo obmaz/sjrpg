@@ -4,8 +4,8 @@ extends TestCase
 func run() -> void:
 	var signatures := {}
 	var materials := {}
-	for identity: String in NativeResidents3D.AUTHORED_IDS:
-		var mesh := NativeResidents3D.build(identity)
+	for identity: String in ResidentRenderer3D.AUTHORED_IDS:
+		var mesh := ResidentRenderer3D.build(identity)
 		var bounds := mesh.get_aabb()
 		var triangles := 0
 		var vertex_count := 0
@@ -31,35 +31,35 @@ func run() -> void:
 		var signature := str(bounds) + ":" + str(vertex_count)
 		signatures[signature] = true
 		print("ART_AUDIT native_resident " + JSON.stringify({"identity": identity, "triangles": triangles, "surfaces": mesh.get_surface_count(), "bounds": str(bounds)}))
-	check("the remaining authored roles have distinct actual geometry", signatures.size() == NativeResidents3D.AUTHORED_IDS.size())
+	check("the remaining authored roles have distinct actual geometry", signatures.size() == ResidentRenderer3D.AUTHORED_IDS.size())
 	check("the remaining authored roles share at most four actual materials", materials.size() <= 4)
-	check("unknown identity is not falsely claimed as converted", NativeResidents3D.build("unknown") == null)
+	check("unknown identity is not falsely claimed as converted", ResidentRenderer3D.build("unknown") == null)
 	var game := await make_game("mage")
-	var preview: Ortho3DPreview = game.ortho_preview
-	var renderer: NativeResidents3D = preview._native_residents
-	renderer.sync()
-	check("every actual villager has a native owner", renderer.entries.size() == game.village.npc_nodes.size())
+	var world_renderer: WorldRenderer3D = game.world_renderer
+	var residents: ResidentRenderer3D = world_renderer._native_residents
+	residents.sync()
+	check("every actual villager has a native owner", residents.entries.size() == game.village.npc_nodes.size())
 	var body_count: int = game.spatial_world.actor_bodies.size()
 	for resident: Villager in game.village.npc_nodes.values():
 		var id := resident.get_instance_id()
-		var node: Node3D = renderer.entries[id]["node"]
-		check("converted resident has no duplicate source card", not preview._cards.has(id))
-		check("native resident follows authoritative actor foot", node.position.is_equal_approx(preview.actor_foot(resident)))
+		var node: Node3D = residents.entries[id]["node"]
+		check("converted resident has no duplicate source card", not world_renderer._cards.has(id))
+		check("native resident follows authoritative actor foot", node.position.is_equal_approx(world_renderer.actor_foot(resident)))
 		check("resident runtime geometry has baked unit scale", node.scale.is_equal_approx(Vector3.ONE))
 	check("visual replacement does not add physics actors", game.spatial_world.actor_bodies.size() == body_count)
 	var first: Villager = game.village.npc_nodes.values()[0]
 	first.show_hurt()
-	renderer.sync()
-	var first_meshes: Array[MeshInstance3D] = renderer.entries[first.get_instance_id()]["meshes"]
+	residents.sync()
+	var first_meshes: Array[MeshInstance3D] = residents.entries[first.get_instance_id()]["meshes"]
 	for mesh: MeshInstance3D in first_meshes:
 		check("native resident uses the real injury state on each body mesh", mesh.material_overlay != null)
 	first._hurt_flash = 0.0
-	renderer.sync()
+	residents.sync()
 	for mesh: MeshInstance3D in first_meshes:
 		check("native injury overlay clears with its source state", mesh.material_overlay == null)
 	var active: bool = game.dungeon.active
 	game.dungeon.active = true
-	renderer.sync()
-	check("forest residents disappear in cave scope", renderer.review_snapshot()["visible"] == 0)
+	residents.sync()
+	check("forest residents disappear in cave scope", residents.review_snapshot()["visible"] == 0)
 	game.dungeon.active = active
-	renderer.sync()
+	residents.sync()

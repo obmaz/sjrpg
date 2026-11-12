@@ -17,7 +17,7 @@ func _notification(what: int) -> void:
 			(part.mesh as ArrayMesh).surface_set_name(index, role)
 			if actor:
 				(part.mesh as ArrayMesh).surface_set_material(
-					index, NativeActorMaterials.material(role)
+					index, ActorSurfaceMaterials.material(role)
 				)
 	var flags: Dictionary = layout.get_meta("node_flags", {})
 	for path: String in flags:

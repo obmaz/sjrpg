@@ -19,7 +19,7 @@ func _clear(game: Node) -> void:
 
 
 func run() -> void:
-	var sheet: Texture2D = load("res://assets/art/actors/corpses.webp")
+	var sheet: Texture2D = load("res://assets/sprites/actors/corpses.webp")
 	check("corpse atlas contains the five generated enemy images", sheet != null and sheet.get_size() == Vector2(1280, 256))
 	check("new corpse crossfades from the actor", CorpseArt.opacity(15.0) == 0.0 and is_equal_approx(CorpseArt.opacity(14.82), 1.0))
 	var game := await make_game()
@@ -117,7 +117,7 @@ func run() -> void:
 	cave_action.call()
 	check("a pending cave skill cannot award loot after leaving", GameState.xp == xp)
 	await _frames(2)
-	var native_corpses: Dictionary = game.ortho_preview._world_environment._corpses
+	var native_corpses: Dictionary = game.world_renderer._world_environment._corpses
 	# Native corpse entries are dictionaries ({"root": Node3D, ...}), not bare meshes.
 	var restored_entry: Dictionary = native_corpses.get(forest_visual.get_instance_id(), {})
 	var restored_card: Node3D = restored_entry.get("root")

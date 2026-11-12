@@ -13,7 +13,7 @@ def prepare(target: Path) -> None:
     target = target.resolve()
     if target == ROOT:
         raise ValueError("운영 소스 대신 일회용 체크아웃 경로를 지정하세요")
-    main = target / 'sjrpg_3d/scripts/main.gd'
+    main = target / 'sjrpg_3d/scripts/app/main.gd'
     source = main.read_text()
     if HOOK not in source:
         needle = '\tshow_title()\n'

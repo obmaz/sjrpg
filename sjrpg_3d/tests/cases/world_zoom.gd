@@ -1,7 +1,7 @@
 extends TestCase
 ## Device zoom changes the world camera, keeping HUD dimensions and real input coordinates.
 
-const PrefsScript := preload("res://scripts/prefs.gd")
+const PrefsScript := preload("res://scripts/state/prefs.gd")
 const TEST_PATH := "user://tests/world-zoom-settings.cfg"
 
 
@@ -52,11 +52,11 @@ func run() -> void:
 			await _frames(2)
 			var target: Vector2 = game.player.position + Vector2(40, -30)
 			var native: Vector3 = SpatialWorld3D.native_point(target, game.spatial_world.height_at(target))
-			var preview: Ortho3DPreview = game.ortho_preview
-			var expected_native_size: float = game.scene_view.get_visible_rect().size.y / Ortho3DPreview.pixels_per_meter(game.camera.zoom.y)
-			check("native camera inherits the rebased scale exactly once in either quality", is_equal_approx(preview.camera.size, expected_native_size))
-			var screen := preview.camera.unproject_position(native)
-			screen *= game.get_viewport_rect().size / Vector2(preview.viewport.size)
+			var renderer: WorldRenderer3D = game.world_renderer
+			var expected_native_size: float = game.scene_view.get_visible_rect().size.y / WorldRenderer3D.pixels_per_meter(game.camera.zoom.y)
+			check("native camera inherits the rebased scale exactly once in either quality", is_equal_approx(renderer.camera.size, expected_native_size))
+			var screen := renderer.camera.unproject_position(native)
+			screen *= game.get_viewport_rect().size / Vector2(renderer.viewport.size)
 			check("native screen-to-floor targeting round-trips at zoom %s/economy=%s" % [amount, low], game.screen_to_world(screen).distance_to(target) < 0.01)
 			check("native targeting changes neither minimap nor menu touch dimensions", game.hud.minimap.size == hud_size and game.hud.controls._buttons["bar_bag"] == controls_before)
 	Prefs.set_low_resolution(false)

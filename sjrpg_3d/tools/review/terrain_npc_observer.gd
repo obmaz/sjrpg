@@ -49,7 +49,7 @@ func _action(arguments: Array) -> void:
 	role = next_role
 	face = next_face
 	requested_frame = Engine.get_process_frames()
-	if is_instance_valid(root.current) and root.current is NativeAdventure:
+	if is_instance_valid(root.current) and root.current is Adventure3D:
 		var game: Node = root.current.simulation
 		if is_instance_valid(game.spatial_world):
 			# Resample actual installed collider geometry for every requested view,
@@ -61,7 +61,7 @@ func _action(arguments: Array) -> void:
 			JavaScriptBridge.eval("window.__sjrpgTerrainNpcCurrentStaticPhysics = " + serialized, true)
 	if is_instance_valid(gallery):
 		gallery.hide()
-	if mode == "residents" and is_instance_valid(root.current) and root.current is NativeAdventure:
+	if mode == "residents" and is_instance_valid(root.current) and root.current is Adventure3D:
 		if not is_instance_valid(gallery):
 			gallery = NativeModelGallery.new().setup(root.current.simulation)
 			add_child(gallery)
@@ -74,7 +74,7 @@ func _layout_residents() -> void:
 	if role == 1:
 		keys.append_array(["merchant", "mira"])
 	else:
-		keys.append_array(NativeResidents3D.IDS)
+		keys.append_array(ResidentRenderer3D.IDS)
 	var yaw := deg_to_rad(45.0 + face * 90.0)
 	var toward := Vector3(sin(yaw), 0, cos(yaw))
 	var right := Vector3(cos(yaw), 0, -sin(yaw))
@@ -101,22 +101,22 @@ func _layout_residents() -> void:
 	gallery.viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 
 func _process(delta: float) -> void:
-	if not is_instance_valid(root.current) or not (root.current is NativeAdventure):
+	if not is_instance_valid(root.current) or not (root.current is Adventure3D):
 		return
 	var game: Node = root.current.simulation
-	if not is_instance_valid(game.ortho_preview) or not is_instance_valid(game.spatial_world):
+	if not is_instance_valid(game.world_renderer) or not is_instance_valid(game.spatial_world):
 		return
 	# Game._ready awaits the first physics frame, installs all six encounter
 	# stones, rebuilds native geometry, awaits the broad phase, then marks ready.
 	# Early renderer probes are not the completed construction boundary.
 	if not game.native_ready:
 		return
-	var preview: Node = game.ortho_preview
+	var renderer: Node = game.world_renderer
 	if terrain_owner != game.get_instance_id():
 		terrain_owner = game.get_instance_id()
-		terrain_cache = _terrain_report(game, preview)
+		terrain_cache = _terrain_report(game, renderer)
 		chapel_group = null
-		for candidate: Node in preview.stage.find_children("*", "Node3D", true, false):
+		for candidate: Node in renderer.stage.find_children("*", "Node3D", true, false):
 			if candidate.has_meta("chapel_detail"):
 				chapel_group = candidate as Node3D
 				break
@@ -137,30 +137,30 @@ func _process(delta: float) -> void:
 		game.hud.visible = original_hud_visible
 		hid_hud = false
 	if mode == "terrain":
-		_photograph(preview)
+		_photograph(renderer)
 	elif architecture_mode:
-		_architecture_photograph(preview)
+		_architecture_photograph(renderer)
 	elif mode == "residents" and is_instance_valid(gallery):
 		# The opaque isolated gallery fully covers the world. Keep real physics,
 		# source clocks and native skeleton sync alive, but do not shade an unseen
 		# forest behind this explicit CI photograph.
-		preview.viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
+		renderer.viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 		if gallery._sample_residents():
 			gallery.viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 	elapsed += delta
 	if elapsed < 0.2:
 		return
 	elapsed = 0.0
-	var inspection_camera: Camera3D = gallery.camera if mode == "residents" and is_instance_valid(gallery) else preview.camera
+	var inspection_camera: Camera3D = gallery.camera if mode == "residents" and is_instance_valid(gallery) else renderer.camera
 	var eye := inspection_camera.global_basis.z.normalized()
 	var origin := inspection_camera.unproject_position(inspection_camera.global_position - eye * 20.0)
 	var axes := []
 	for axis: Vector3 in [Vector3.RIGHT, Vector3.FORWARD, Vector3.UP]:
 		var point := inspection_camera.unproject_position(inspection_camera.global_position - eye * 20.0 + axis) - origin
 		axes.append([point.x, point.y])
-	var data := {"mode": mode, "role": role, "face": face, "frame": Engine.get_process_frames(), "requested_frame": requested_frame, "terrain": terrain_cache, "physics": _physical_surfaces(game), "projection": "orthographic" if inspection_camera.projection == Camera3D.PROJECTION_ORTHOGONAL else "perspective", "azimuth": fposmod(rad_to_deg(atan2(eye.x, eye.z)), 360.0), "elevation": rad_to_deg(asin(eye.y)), "axes": axes, "player": [game.player.position.x, game.player.position.y], "residents": preview._native_residents.review_snapshot(), "quality": "low" if Prefs.low_resolution else "high", "render_size": [preview.viewport.size.x, preview.viewport.size.y], "hud_hidden": not game.hud.visible, "static_physics_sha256": sampled_physics_digest, "initial_static_physics_sha256": static_physics_digest, "static_physics_shapes": static_physics_count, "static_physics_delta": static_physics_delta, "camera_size": inspection_camera.size, "camera_position": _plain(inspection_camera.global_position)}
+	var data := {"mode": mode, "role": role, "face": face, "frame": Engine.get_process_frames(), "requested_frame": requested_frame, "terrain": terrain_cache, "physics": _physical_surfaces(game), "projection": "orthographic" if inspection_camera.projection == Camera3D.PROJECTION_ORTHOGONAL else "perspective", "azimuth": fposmod(rad_to_deg(atan2(eye.x, eye.z)), 360.0), "elevation": rad_to_deg(asin(eye.y)), "axes": axes, "player": [game.player.position.x, game.player.position.y], "residents": renderer._native_residents.review_snapshot(), "quality": "low" if Prefs.low_resolution else "high", "render_size": [renderer.viewport.size.x, renderer.viewport.size.y], "hud_hidden": not game.hud.visible, "static_physics_sha256": sampled_physics_digest, "initial_static_physics_sha256": static_physics_digest, "static_physics_shapes": static_physics_count, "static_physics_delta": static_physics_delta, "camera_size": inspection_camera.size, "camera_position": _plain(inspection_camera.global_position)}
 	if architecture_mode:
-		data["architecture"] = _architecture_report(preview)
+		data["architecture"] = _architecture_report(renderer)
 	if mode == "residents" and is_instance_valid(gallery):
 		var snapshot := gallery.review_snapshot()
 		var selected := []
@@ -172,9 +172,9 @@ func _process(delta: float) -> void:
 		snapshot["count"] = selected.size()
 		snapshot["render_size"] = [gallery.viewport.size.x, gallery.viewport.size.y]
 		snapshot["msaa"] = gallery.viewport.msaa_3d
-		snapshot["world_render_disabled_behind_opaque_gallery"] = preview.viewport.render_target_update_mode == SubViewport.UPDATE_DISABLED
+		snapshot["world_render_disabled_behind_opaque_gallery"] = renderer.viewport.render_target_update_mode == SubViewport.UPDATE_DISABLED
 		data["gallery"] = snapshot
-		data["native_poses"] = _native_poses(preview)
+		data["native_poses"] = _native_poses(renderer)
 	JavaScriptBridge.eval("window.__sjrpgTerrainNpcReview = " + JSON.stringify(data), true)
 
 func _physical_surfaces(game: Node) -> Array:
@@ -209,21 +209,21 @@ func _plain(value: Variant) -> Variant:
 		return result
 	return value
 
-func _terrain_report(game: Node, preview: Node) -> Array:
+func _terrain_report(game: Node, renderer: Node) -> Array:
 	var result := []
-	var container: Node = preview._world_environment.forest.get_node("NativeLandmarks")
+	var container: Node = renderer._world_environment.forest.get_node("NativeLandmarks")
 	for entry: Dictionary in container.get_meta("native_landmark_report")["entries"]:
 		var group: Node3D = entry["root"]
 		var top: MeshInstance3D = group.get_node("WalkableTop")
 		var upper := top.material_override as StandardMaterial3D
-		var lower := preview._materials["grass"] as StandardMaterial3D
+		var lower := renderer._materials["grass"] as StandardMaterial3D
 		var earth: MeshInstance3D = group.get_node_or_null("ExposedEarth")
 		var earth_material := earth.material_override as StandardMaterial3D if earth else null
 		result.append({"role": entry["role"], "upper_color": [upper.albedo_color.r, upper.albedo_color.g, upper.albedo_color.b], "lower_color": [lower.albedo_color.r, lower.albedo_color.g, lower.albedo_color.b], "upper_texture": upper.albedo_texture.resource_path if upper.albedo_texture else "", "lower_texture": lower.albedo_texture.resource_path if lower.albedo_texture else "", "earth": earth != null, "earth_texture": earth_material.albedo_texture.resource_path if earth_material else "", "rise": entry["surface"]["rise"], "floor_height": game.spatial_world.height_at(game.player.position)})
 	return result
 
-func _photograph(preview: Node) -> void:
-	var container: Node = preview._world_environment.forest.get_node("NativeLandmarks")
+func _photograph(renderer: Node) -> void:
+	var container: Node = renderer._world_environment.forest.get_node("NativeLandmarks")
 	var group: Node3D = container.get_node("Landmark%d" % role)
 	var bounds: AABB = group.get_node("WalkableTop").get_aabb()
 	# Enclose the actual walkable top and its exposed native cliff, with valley
@@ -231,13 +231,13 @@ func _photograph(preview: Node) -> void:
 	bounds = group.get_node("WalkableTop").global_transform * bounds
 	bounds.position.y = minf(0.0, bounds.position.y)
 	bounds.size.y = maxf(0.1, group.get_node("WalkableTop").get_aabb().end.y) - bounds.position.y
-	_frame_bounds(preview, bounds, Vector2(6.0, 5.0))
+	_frame_bounds(renderer, bounds, Vector2(6.0, 5.0))
 
-func _frame_bounds(preview: Node, bounds: AABB, margin: Vector2) -> void:
+func _frame_bounds(renderer: Node, bounds: AABB, margin: Vector2) -> void:
 	var focus := bounds.get_center()
 	var yaw := deg_to_rad(45.0 + face * 90.0)
 	var direction := Vector3(sin(yaw), tan(deg_to_rad(ELEVATION)), cos(yaw)).normalized()
-	var camera: Camera3D = preview.camera
+	var camera: Camera3D = renderer.camera
 	camera.position = focus + direction * 52.0
 	camera.look_at(focus, Vector3.UP)
 	var width := 0.0
@@ -246,7 +246,7 @@ func _frame_bounds(preview: Node, bounds: AABB, margin: Vector2) -> void:
 		var offset: Vector3 = bounds.get_endpoint(corner) - focus
 		width = maxf(width, absf(offset.dot(camera.global_basis.x)) * 2.0)
 		height = maxf(height, absf(offset.dot(camera.global_basis.y)) * 2.0)
-	var aspect := float(preview.viewport.size.x) / float(preview.viewport.size.y)
+	var aspect := float(renderer.viewport.size.x) / float(renderer.viewport.size.y)
 	camera.size = maxf(height + margin.y, (width + margin.x) / aspect)
 	# Match the real presenter's fitted shadow depth slab instead of casting
 	# through an arbitrary 125m forest while photographing a nearby terrace.
@@ -257,11 +257,11 @@ func _frame_bounds(preview: Node, bounds: AABB, margin: Vector2) -> void:
 	# Keep the actual foreground/whole house while avoiding a clipped black band.
 	var ground_focus_depth := maxf(4.0, focus.y / sin(deg_to_rad(ELEVATION)) + 1.0)
 	camera.far = 52.0 + ground_depth + ground_focus_depth
-	preview.viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	renderer.viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 
-func _native_poses(preview: Node) -> Dictionary:
+func _native_poses(renderer: Node) -> Dictionary:
 	var result := {}
-	for entry: Dictionary in preview._native_residents.entries.values():
+	for entry: Dictionary in renderer._native_residents.entries.values():
 		if str(entry["source"]) != "cc0_import":
 			continue
 		var body: Node3D = entry["node"]
@@ -303,8 +303,8 @@ func _static_geometry(game: Node) -> Array:
 	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return JSON.stringify(a) < JSON.stringify(b))
 	return result
 
-func _architecture_bounds(preview: Node) -> AABB:
-	var fort: Ortho3DFortification = preview._fortification
+func _architecture_bounds(renderer: Node) -> AABB:
+	var fort: FortificationRenderer3D = renderer._fortification
 	var report: Dictionary = fort.report
 	var wall_height: float = report["wall_top"]
 	if mode == "chapel":
@@ -315,7 +315,7 @@ func _architecture_bounds(preview: Node) -> AABB:
 		return chapel_group.global_transform * AABB(Vector3(-footprint.x * 0.5 - 0.45, 0, -footprint.y * 0.5 - 0.45), Vector3(footprint.x + 0.9, float(chapel["tower_height"]) + 0.25, footprint.y + 0.9))
 	if mode == "house":
 		var key: String = ["nw", "ne", "sw", "se"][role]
-		var house: Dictionary = preview._houses[key]
+		var house: Dictionary = renderer._houses[key]
 		var footprint: Vector2 = house["footprint"]
 		var peak: float = float(house["eaves_height"]) + float(house["roof_rise"]) + 1.80
 		var meshes: Array = house["meshes"]
@@ -348,15 +348,15 @@ func _architecture_bounds(preview: Node) -> AABB:
 	var flat := start.lerp(end, 0.37)
 	return AABB(Vector3(flat.x - 1.4, wall_height - 2.4, flat.y - 1.4), Vector3(2.8, 3.2, 2.8))
 
-func _architecture_photograph(preview: Node) -> void:
-	_frame_bounds(preview, _architecture_bounds(preview), Vector2(0.6, 0.6))
+func _architecture_photograph(renderer: Node) -> void:
+	_frame_bounds(renderer, _architecture_bounds(renderer), Vector2(0.6, 0.6))
 
 func _material_report(material: StandardMaterial3D) -> Dictionary:
 	return {"texture": material.albedo_texture.resource_path if material.albedo_texture else "", "color": [material.albedo_color.r, material.albedo_color.g, material.albedo_color.b], "uv_scale": _plain(material.uv1_scale), "triplanar": material.uv1_triplanar, "world_triplanar": material.uv1_world_triplanar, "roughness": material.roughness, "texture_size": [material.albedo_texture.get_width(), material.albedo_texture.get_height()] if material.albedo_texture else []}
 
-func _architecture_report(preview: Node) -> Dictionary:
-	var fort: Ortho3DFortification = preview._fortification
-	var data := {"kind": mode, "index": role, "bounds": _plain(_architecture_bounds(preview)), "stone": _material_report(preview._materials["stone"]), "wood": _material_report(preview._materials["wood"]), "slate": _material_report(preview._materials["slate"]), "same_fortification_stone": fort.report["stone"] == preview._materials["stone"], "fortification_triangles": fort.report["triangles"], "fortification_surfaces": fort.report["static_surfaces"]}
+func _architecture_report(renderer: Node) -> Dictionary:
+	var fort: FortificationRenderer3D = renderer._fortification
+	var data := {"kind": mode, "index": role, "bounds": _plain(_architecture_bounds(renderer)), "stone": _material_report(renderer._materials["stone"]), "wood": _material_report(renderer._materials["wood"]), "slate": _material_report(renderer._materials["slate"]), "same_fortification_stone": fort.report["stone"] == renderer._materials["stone"], "fortification_triangles": fort.report["triangles"], "fortification_surfaces": fort.report["static_surfaces"]}
 	if mode == "chapel":
 		var chapel: Dictionary = chapel_group.get_meta("chapel_detail")
 		data["key"] = "chapel"
@@ -368,13 +368,13 @@ func _architecture_report(preview: Node) -> Dictionary:
 		var shared := true
 		for mesh: MeshInstance3D in chapel["meshes"]:
 			if mesh.name == "ChapelDetail_stone":
-				shared = shared and mesh.material_override == preview._materials["stone"]
+				shared = shared and mesh.material_override == renderer._materials["stone"]
 			elif mesh.name == "ChapelDetail_slate":
 				data["slate"] = _material_report(mesh.material_override as StandardMaterial3D)
 		data["same_chapel_stone"] = shared
 	if mode == "house":
 		var key: String = ["nw", "ne", "sw", "se"][role]
-		var house: Dictionary = preview._houses[key]
+		var house: Dictionary = renderer._houses[key]
 		data["key"] = key
 		data["triangles"] = house["triangles"]
 		data["surfaces"] = house["surfaces"]
@@ -383,7 +383,7 @@ func _architecture_report(preview: Node) -> Dictionary:
 		var shared := true
 		for mesh: MeshInstance3D in house["meshes"]:
 			if mesh.name.ends_with("_stone"):
-				shared = shared and mesh.material_override == preview._materials["stone"]
+				shared = shared and mesh.material_override == renderer._materials["stone"]
 			elif mesh.name.ends_with("_wood"):
 				data["wood"] = _material_report(mesh.material_override as StandardMaterial3D)
 			elif mesh.name.ends_with("_slate"):
@@ -393,7 +393,7 @@ func _architecture_report(preview: Node) -> Dictionary:
 		var gate: Dictionary = fort.gates[role]
 		var outward: Vector3 = gate["outward"]
 		var frame: Transform3D = gate["frame"]
-		data["view_side"] = "outside" if (preview.camera.global_position - frame.origin).dot(outward) > 0 else "inside"
+		data["view_side"] = "outside" if (renderer.camera.global_position - frame.origin).dot(outward) > 0 else "inside"
 		data["progress"] = gate["progress"]
 		data["frame"] = _plain(frame)
 		data["width"] = gate["width"]

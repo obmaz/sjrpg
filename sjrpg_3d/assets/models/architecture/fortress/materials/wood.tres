@@ -1,6 +1,6 @@
 [gd_resource type="StandardMaterial3D" format=3]
 
-[ext_resource type="Texture2D" path="res://assets/models/materials/village_craft/oak.png" id="1_otl7n"]
+[ext_resource type="Texture2D" path="res://assets/materials/village_craft/oak.png" id="1_otl7n"]
 
 [resource]
 albedo_color = Color(0.4977255, 0.48019612, 0.4266667, 1)

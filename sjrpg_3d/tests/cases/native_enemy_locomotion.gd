@@ -1,12 +1,12 @@
 extends TestCase
 ## 실제 GLB 발의 보폭과 물리 이동·투영 방향·충돌·공격의 연결을 검사한다.
-const MeasureStride := preload("res://tools/enemy_art/measure_stride.gd")
+const MeasureStride := preload("res://tools/assets/enemies/measure_stride.gd")
 const Fixture := preload("res://tests/native_combat_fixture.gd")
 
 
 func run() -> void:
-	for kind: String in NativeEnemyModels.KINDS + [NativeEnemyModels.CRAWLER]:
-		var model := NativeEnemyModels.build(kind)
+	for kind: String in EnemyRenderer3D.KINDS + [EnemyRenderer3D.CRAWLER]:
+		var model := EnemyRenderer3D.build(kind)
 		var visual: NativeEnemyVisual = model["visual"]
 		add_child(visual)
 		var gait: Dictionary = visual.manifest["locomotion"]
@@ -28,7 +28,7 @@ func run() -> void:
 		var distance: float = gait["distance_per_clip_m"]
 		for scale_factor: float in [1.0, 1.4]:
 			var phase := visual.travel_cycle(distance * scale_factor * 0.37, scale_factor)
-			NativeEnemyModels.pose(model, 0.7, phase, 0.0)
+			EnemyRenderer3D.pose(model, 0.7, phase, 0.0)
 			check(
 				"scaled body uses the same contact-distance clock " + kind,
 				absf(_curve_at(gait["distance_curve"], fposmod(phase, 1.0)) - .37) < .00001
@@ -82,8 +82,8 @@ func run() -> void:
 	backend.teleport_source_actor(enemy, SpatialWorld3D.projected(centre), enemy.radius, true)
 	check("teleport does not count as a stride", is_equal_approx(enemy._run_distance_m, stopped))
 	enemy._state = "chase"
-	game.ortho_preview._enemy_models.sync()
-	var live: Dictionary = game.ortho_preview._enemy_models.entries[enemy.get_instance_id()]
+	game.world_renderer._enemy_models.sync()
+	var live: Dictionary = game.world_renderer._enemy_models.entries[enemy.get_instance_id()]
 	var rendered: NativeEnemyVisual = live["visual"]
 	check(
 		"production presenter uses measured metres instead of the old 70px cycle",
@@ -97,12 +97,12 @@ func run() -> void:
 	)
 	var held := rendered.sample_time
 	get_tree().paused = true
-	game.ortho_preview._enemy_models.sync(1.0)
+	game.world_renderer._enemy_models.sync(1.0)
 	check("pause holds gait pose", is_equal_approx(rendered.sample_time, held))
 	get_tree().paused = false
 	enemy._state = "windup"
 	enemy._timer = enemy._windup_duration * 0.3
-	game.ortho_preview._enemy_models.sync()
+	game.world_renderer._enemy_models.sync()
 	check("distance never overrides attack timing", rendered.active_clip == "attack")
 	Fixture.remove([floor_body, wall])
 	game.queue_free()

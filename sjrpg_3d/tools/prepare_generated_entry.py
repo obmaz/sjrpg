@@ -8,7 +8,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "assets/source/entry-redesign"
-TARGET = ROOT / "assets/art/entry"
+TARGET = ROOT / "assets/ui/entry"
 
 
 def main():

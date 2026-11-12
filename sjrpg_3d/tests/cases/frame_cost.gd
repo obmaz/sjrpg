@@ -54,23 +54,23 @@ func run() -> void:
 	check("autosave is a 30 second safety net", is_equal_approx(game.AUTOSAVE_SECONDS, 30.0))
 
 	# Combat text and effect cards are recycled instead of rebuilt per hit.
-	var preview: Ortho3DPreview = game.ortho_preview
+	var renderer: WorldRenderer3D = game.world_renderer
 	game.float_text(game.player.position, "12", Color.WHITE)
 	await _frames(3)
-	var label_builds := preview.label_builds
-	check("combat text appears as a native label", label_builds > 0 and not preview._labels.is_empty())
+	var label_builds := renderer.label_builds
+	check("combat text appears as a native label", label_builds > 0 and not renderer._labels.is_empty())
 	for effect in Effect.in_world(game.world):
 		if effect.kind == "text":
 			effect.queue_free()
 	await _frames(3)
-	check("an expired label waits hidden in the pool", preview._labels.is_empty() and not preview._label_pool.is_empty() and not preview._label_pool[0].visible)
+	check("an expired label waits hidden in the pool", renderer._labels.is_empty() and not renderer._label_pool.is_empty() and not renderer._label_pool[0].visible)
 	game.float_text(game.player.position, "34", Color.WHITE)
 	await _frames(3)
 	var reused := false
-	for entry: Dictionary in preview._labels.values():
+	for entry: Dictionary in renderer._labels.values():
 		var label: Label3D = entry["node"]
 		reused = reused or (label.visible and label.text == "34")
-	check("the next combat text reuses that label", reused and preview.label_builds == label_builds)
-	check("camera cards share one quad mesh", preview._new_card(ForestArt.texture("grass"), Rect2(0, 0, 8, 8), true).mesh == preview._new_card(ForestArt.texture("grass"), Rect2(0, 0, 8, 8), false).mesh)
+	check("the next combat text reuses that label", reused and renderer.label_builds == label_builds)
+	check("camera cards share one quad mesh", renderer._new_card(ForestArt.texture("grass"), Rect2(0, 0, 8, 8), true).mesh == renderer._new_card(ForestArt.texture("grass"), Rect2(0, 0, 8, 8), false).mesh)
 	game.queue_free()
 	await _frames(2)

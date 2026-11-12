@@ -18,8 +18,8 @@ func _legacy_sample(player: AnimationPlayer, clip: String, sample: float) -> voi
 
 
 func _compare(label: String, actual: Node3D, reference: Node3D) -> void:
-	var actual_bones: Skeleton3D = NativeResidents3D._find_skeleton(actual)
-	var reference_bones: Skeleton3D = NativeResidents3D._find_skeleton(reference)
+	var actual_bones: Skeleton3D = ResidentRenderer3D._find_skeleton(actual)
+	var reference_bones: Skeleton3D = ResidentRenderer3D._find_skeleton(reference)
 	if not check(label + " retains both complete imported skeletons", actual_bones != null and reference_bones != null):
 		return
 	check(label + " preserves all 65 bone poses", actual_bones.get_bone_count() == 65 and reference_bones.get_bone_count() == 65)
@@ -41,15 +41,15 @@ func _check_work(label: String, actual: AnimationPlayer, reference: AnimationPla
 
 func run() -> void:
 	var game := await make_game("mage")
-	var preview: Ortho3DPreview = game.ortho_preview
-	var motion: Ortho3DHeroMotion = preview._hero_motion
+	var renderer: WorldRenderer3D = game.world_renderer
+	var motion: HeroAnimation3D = renderer._hero_motion
 	game.process_mode = Node.PROCESS_MODE_DISABLED
-	preview.set_process(false)
-	var reference := (load(Ortho3DPreview.MAGE_PATH) as PackedScene).instantiate() as Node3D
+	renderer.set_process(false)
+	var reference := (load(WorldRenderer3D.MAGE_SCENE_PATH) as PackedScene).instantiate() as Node3D
 	add_child(reference)
-	var reference_player: AnimationPlayer = NativeResidents3D._find_animation(reference)
-	Ortho3DHeroMotion.new().setup(reference_player, reference)
-	_instrument(preview.animation)
+	var reference_player: AnimationPlayer = ResidentRenderer3D._find_animation(reference)
+	HeroAnimation3D.new().setup(reference_player, reference)
+	_instrument(renderer.animation)
 	_instrument(reference_player)
 	var player: Player = game.player
 	player.sprite.clear_contact_hold()
@@ -68,22 +68,22 @@ func run() -> void:
 		player.position = origin + Vector2(step.z, 0)
 		player._run_distance = step.y
 		player._attack_time = player._attack_duration * step.w
-		preview.animation.set("processed_keys", 0)
+		renderer.animation.set("processed_keys", 0)
 		reference_player.set("processed_keys", 0)
 		motion.sync(player, step.x)
 		_legacy_sample(reference_player, motion.active_clip, motion.sample_time)
-		_compare("mage step " + str(index), preview.actor, reference)
-		_check_work("mage step " + str(index), preview.animation, reference_player, old_clip == motion.active_clip)
+		_compare("mage step " + str(index), renderer.actor, reference)
+		_check_work("mage step " + str(index), renderer.animation, reference_player, old_clip == motion.active_clip)
 	reference.free()
 	game.queue_free()
 	await _frames(2)
 	for identity: String in ["merchant", "mira"]:
-		var actual: Node3D = NativeResidents3D.create(identity)
-		var baseline: Node3D = NativeResidents3D.create(identity)
+		var actual: Node3D = ResidentRenderer3D.create(identity)
+		var baseline: Node3D = ResidentRenderer3D.create(identity)
 		add_child(actual)
 		add_child(baseline)
-		var actual_player: AnimationPlayer = NativeResidents3D.idle_player(actual)
-		var baseline_player: AnimationPlayer = NativeResidents3D.idle_player(baseline)
+		var actual_player: AnimationPlayer = ResidentRenderer3D.idle_player(actual)
+		var baseline_player: AnimationPlayer = ResidentRenderer3D.idle_player(baseline)
 		_instrument(actual_player)
 		_instrument(baseline_player)
 		var selected: String = str(actual.get_meta("resident_idle_clip"))
@@ -92,12 +92,12 @@ func run() -> void:
 			var stable := baseline_player.current_animation == selected
 			actual_player.set("processed_keys", 0)
 			baseline_player.set("processed_keys", 0)
-			var sample: Dictionary = NativeResidents3D.sample_idle(actual, source_time)
+			var sample: Dictionary = ResidentRenderer3D.sample_idle(actual, source_time)
 			_legacy_sample(baseline_player, selected, float(sample["sample_time"]))
 			_compare(identity + " at " + str(source_time), actual, baseline)
 			_check_work(identity + " at " + str(source_time), actual_player, baseline_player, stable)
 		var before := int(actual_player.get("processed_keys"))
-		NativeResidents3D.sample_idle(actual, clip.length + 0.17)
+		ResidentRenderer3D.sample_idle(actual, clip.length + 0.17)
 		check(identity + " still skips unchanged source-clock samples", int(actual_player.get("processed_keys")) == before)
 		actual.free()
 		baseline.free()

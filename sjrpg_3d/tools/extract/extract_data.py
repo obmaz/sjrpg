@@ -11,7 +11,7 @@
   landmarks.json  지형 랜드마크 윗면·절벽·구조물                           ← forestIsometricTerraces
 
 원본이 바뀌면 이 스크립트를 다시 돌려 차이를 확인합니다. 예배당은 원본 원화가 ±30° 기준을 벗어나 새로 생성한
-원화(assets/source/chapel-new.png)를 쓰므로 Dart가 아니라 chapel.py(측정값 chapel_measure.json)에서 village.json에 합칩니다
+원화(assets/source/architecture/chapel/concepts/chapel-new.png)를 쓰므로 Dart가 아니라 chapel.py(측정값 chapel_measure.json)에서 village.json에 합칩니다
 (docs/chapel-regeneration.md).
 """
 import json

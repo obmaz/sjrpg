@@ -2,8 +2,8 @@ extends TestCase
 ## Hero conversion observes the real Player action and distance clocks.
 func run() -> void:
 	var game := await make_game("warrior")
-	var preview: Ortho3DPreview = game.ortho_preview
-	var hero := preview.actor as NativeWarrior3D
+	var renderer: WorldRenderer3D = game.world_renderer
+	var hero := renderer.actor as WarriorRenderer3D
 	if not check("warrior uses actual native articulated geometry", hero != null):
 		return
 	check("native warrior has no hero billboard", hero.find_children("*", "MeshInstance3D", true, false).all(func(node: Node): return not (node as MeshInstance3D).mesh is QuadMesh))
@@ -42,8 +42,8 @@ func run() -> void:
 	hero.sync(player)
 	check("real attack progress moves the sword shoulder in three dimensions", windup.distance_to(hero.arms[1].rotation) > 0.5)
 	player.sprite.trigger_flash(Color(1.0, 0.5, 0.3))
-	preview._sync_actor(0.0)
-	check("warrior follows actual spatial actor foot and source recoil", hero.position.is_equal_approx(preview.actor_foot(player) + Ortho3DPreview.ground_position(player.sprite.position)))
+	renderer._sync_actor(0.0)
+	check("warrior follows actual spatial actor foot and source recoil", hero.position.is_equal_approx(renderer.actor_foot(player) + WorldRenderer3D.ground_position(player.sprite.position)))
 	check("actual warrior injury state reaches all native surfaces", hero.meshes.all(func(mesh: MeshInstance3D): return mesh.material_overlay != null))
 	player.sprite.flash = 0.0
 	hero.sync(player)

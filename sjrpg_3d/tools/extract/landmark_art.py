@@ -31,10 +31,10 @@ def merge(records):
 
 
 def pack():
-    sources=[M['0']['png'],M['1']['png'],'assets/source/landmark-tree.png','assets/source/landmark-waterfall.png'];sheet=Image.new('RGBA',(1536,1536),(0,0,0,0))
+    sources=[M['0']['png'],M['1']['png'],'assets/source/vegetation/concepts/landmark-tree.png','assets/source/environment/landmarks/landmark-waterfall.png'];sheet=Image.new('RGBA',(1536,1536),(0,0,0,0))
     for i,path in enumerate(sources):
         image=Image.open(ROOT/path).convert('RGBA').convert('RGBa').resize((768,768),Image.Resampling.LANCZOS).convert('RGBA');sheet.paste(Image.fromarray(chapel._bleed(np.array(image))),((i%2)*768,(i//2)*768))
-    target=ROOT/'assets/art/village/landmarks.webp';temporary=target.with_suffix('.tmp')
+    target=ROOT/'assets/sprites/village/landmarks.webp';temporary=target.with_suffix('.tmp')
     sheet.save(temporary,'WEBP',quality=94,alpha_quality=100,method=6,exact=True);temporary.replace(target)
 
 

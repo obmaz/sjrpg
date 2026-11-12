@@ -6,7 +6,7 @@ func run() -> void:
 	for cls in ["warrior", "mage"]:
 		GameState.delete_save()
 		GameState.new_game(cls)
-		var game := preload("res://scripts/game.gd").new()
+		var game := preload("res://scripts/gameplay/game.gd").new()
 		add_child(game)
 		await _frames(2)
 		for e in game.enemies:

@@ -1,266 +1,266 @@
 {
- "version": 1,
- "source": {
-  "path": "assets/source/npcs/identities.png",
-  "sha256": "c1d71b2fb5dd9ae3477b546fc3056b6dd7610f91072a0ccbd5a68522f0eb0616"
- },
- "generation": {
-  "path": "tools/extract/npc_generation.json",
-  "sha256": "42acd74a06bb4129b62799a72a533f1d8c5e05f6500adf2cbc27ab7ed8cdcd51"
- },
- "measure": {
-  "path": "tools/extract/npc_measure.json",
-  "sha256": "e72cbc64a106ef6b1085808183c17c32382d9589637bca1153620a8e805073db"
- },
- "references": [
-  {
-   "path": "assets/source/style/approved-game-reference.jpg",
-   "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+  "version": 1,
+  "source": {
+    "path": "assets/source/npcs/identities.png",
+    "sha256": "c1d71b2fb5dd9ae3477b546fc3056b6dd7610f91072a0ccbd5a68522f0eb0616"
   },
-  {
-   "path": "assets/source/hero-selection.png",
-   "sha256": "8c2a909faef5497bc858655270c507ce193c8e16cd2e185d3f21868b35a48153"
-  }
- ],
- "atlas": {
-  "path": "assets/art/actors/npcs.webp",
-  "sha256": "831ffd08f84a7eb058e3a44452d7d37df701668d4428460eed7a745d2a8614d4",
-  "size": [
-   896,
-   640
+  "generation": {
+    "path": "tools/extract/npc_generation.json",
+    "sha256": "786ca55a5d6bb11a3f4007f6c3bda590013cf5a9ba2cf8ee589ec00cd24c2c80"
+  },
+  "measure": {
+    "path": "tools/extract/npc_measure.json",
+    "sha256": "dd641912d79c9ef922be36fccf4abcd82673a9392e0de4a7bb560a2574c06701"
+  },
+  "references": [
+    {
+      "path": "assets/source/style/approved-game-reference.jpg",
+      "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+    },
+    {
+      "path": "assets/source/ui/hero-selection.png",
+      "sha256": "8c2a909faef5497bc858655270c507ce193c8e16cd2e185d3f21868b35a48153"
+    }
   ],
-  "cell": [
-   224,
-   320
-  ],
-  "blend": "alpha"
- },
- "labels": {
-  "상인": "merchant",
-  "대장장이": "smith",
-  "탈것 상인": "stable",
-  "촌장": "elder",
-  "보급원 미라": "mira",
-  "수녀 엘린": "elin",
-  "약초사 노아": "noah",
-  "조사관 로웬": "rowen"
- },
- "people": {
-  "merchant": {
-   "source": [
-    0,
-    0,
-    224,
-    320
-   ],
-   "foot": [
-    112.0,
-    302.0
-   ],
-   "ref_height": 280.0,
-   "visible_bounds": [
-    70,
-    17,
-    197,
-    304
-   ],
-   "body_height": 112.0,
-   "pixels_sha256": "195225c142056ddacdad165dcad1933205ef3d71e26493927a21ef2d82a495f6",
-   "source_roi": [
-    94,
-    4,
-    314,
-    506
-   ]
+  "atlas": {
+    "path": "assets/sprites/actors/npcs.webp",
+    "sha256": "831ffd08f84a7eb058e3a44452d7d37df701668d4428460eed7a745d2a8614d4",
+    "size": [
+      896,
+      640
+    ],
+    "cell": [
+      224,
+      320
+    ],
+    "blend": "alpha"
   },
-  "smith": {
-   "source": [
-    224,
-    0,
-    224,
-    320
-   ],
-   "foot": [
-    112.0,
-    302.0
-   ],
-   "ref_height": 280.0,
-   "visible_bounds": [
-    70,
-    17,
-    201,
-    306
-   ],
-   "body_height": 112.0,
-   "pixels_sha256": "84f14b2f920e726ca07372f9896667bdcbe3b9bdf4a008da07f3d63bb687b993",
-   "source_roi": [
-    461,
-    1,
-    693,
-    508
-   ]
+  "labels": {
+    "상인": "merchant",
+    "대장장이": "smith",
+    "탈것 상인": "stable",
+    "촌장": "elder",
+    "보급원 미라": "mira",
+    "수녀 엘린": "elin",
+    "약초사 노아": "noah",
+    "조사관 로웬": "rowen"
   },
-  "stable": {
-   "source": [
-    448,
-    0,
-    224,
-    320
-   ],
-   "foot": [
-    112.0,
-    302.0
-   ],
-   "ref_height": 280.0,
-   "visible_bounds": [
-    86,
-    19,
-    209,
-    306
-   ],
-   "body_height": 112.0,
-   "pixels_sha256": "eafc6fae2a0cae73bd9338a4a99f80ae98a943792a09e82413c3045ecba9859f",
-   "source_roi": [
-    876,
-    9,
-    1089,
-    509
-   ]
-  },
-  "elder": {
-   "source": [
-    672,
-    0,
-    224,
-    320
-   ],
-   "foot": [
-    112.0,
-    302.0
-   ],
-   "ref_height": 280.0,
-   "visible_bounds": [
-    65,
-    17,
-    196,
-    306
-   ],
-   "body_height": 112.0,
-   "pixels_sha256": "f30c36c9775393b1290196746dbf91d3673bbdc0f2f0f795cd9f5fa860686622",
-   "source_roi": [
-    1237,
-    3,
-    1466,
-    508
-   ]
-  },
-  "mira": {
-   "source": [
-    0,
-    320,
-    224,
-    320
-   ],
-   "foot": [
-    112.0,
-    302.0
-   ],
-   "ref_height": 280.0,
-   "visible_bounds": [
-    68,
-    20,
-    189,
-    304
-   ],
-   "body_height": 112.0,
-   "pixels_sha256": "93eed1055027d3a78994961cfa40eb6a0d75ed71c0c7ae96c3eade60beeb039c",
-   "source_roi": [
-    90,
-    517,
-    302,
-    1021
-   ]
-  },
-  "elin": {
-   "source": [
-    224,
-    320,
-    224,
-    320
-   ],
-   "foot": [
-    112.0,
-    302.0
-   ],
-   "ref_height": 280.0,
-   "visible_bounds": [
-    64,
-    17,
-    173,
-    304
-   ],
-   "body_height": 112.0,
-   "pixels_sha256": "166122ed6d47ecd01ac92b62a1106f484841bf6455103561b80b83615b799972",
-   "source_roi": [
-    480,
-    513,
-    674,
-    1020
-   ]
-  },
-  "noah": {
-   "source": [
-    448,
-    320,
-    224,
-    320
-   ],
-   "foot": [
-    112.0,
-    302.0
-   ],
-   "ref_height": 280.0,
-   "visible_bounds": [
-    43,
-    17,
-    183,
-    303
-   ],
-   "body_height": 112.0,
-   "pixels_sha256": "05fcd2efef103255fbec9fabdd6a61947aca93f45d27036bb457ca14aed20934",
-   "source_roi": [
-    827,
-    524,
-    1068,
-    1020
-   ]
-  },
-  "rowen": {
-   "source": [
-    672,
-    320,
-    224,
-    320
-   ],
-   "foot": [
-    112.0,
-    302.0
-   ],
-   "ref_height": 280.0,
-   "visible_bounds": [
-    69,
-    17,
-    198,
-    306
-   ],
-   "body_height": 112.0,
-   "pixels_sha256": "26324dcdaf19771a1b2c5d60af9882d6e2d09d4661ec0d30169f2e5f601a8acd",
-   "source_roi": [
-    1236,
-    512,
-    1466,
-    1023
-   ]
+  "people": {
+    "merchant": {
+      "source": [
+        0,
+        0,
+        224,
+        320
+      ],
+      "foot": [
+        112.0,
+        302.0
+      ],
+      "ref_height": 280.0,
+      "visible_bounds": [
+        70,
+        17,
+        197,
+        304
+      ],
+      "body_height": 112.0,
+      "pixels_sha256": "195225c142056ddacdad165dcad1933205ef3d71e26493927a21ef2d82a495f6",
+      "source_roi": [
+        94,
+        4,
+        314,
+        506
+      ]
+    },
+    "smith": {
+      "source": [
+        224,
+        0,
+        224,
+        320
+      ],
+      "foot": [
+        112.0,
+        302.0
+      ],
+      "ref_height": 280.0,
+      "visible_bounds": [
+        70,
+        17,
+        201,
+        306
+      ],
+      "body_height": 112.0,
+      "pixels_sha256": "84f14b2f920e726ca07372f9896667bdcbe3b9bdf4a008da07f3d63bb687b993",
+      "source_roi": [
+        461,
+        1,
+        693,
+        508
+      ]
+    },
+    "stable": {
+      "source": [
+        448,
+        0,
+        224,
+        320
+      ],
+      "foot": [
+        112.0,
+        302.0
+      ],
+      "ref_height": 280.0,
+      "visible_bounds": [
+        86,
+        19,
+        209,
+        306
+      ],
+      "body_height": 112.0,
+      "pixels_sha256": "eafc6fae2a0cae73bd9338a4a99f80ae98a943792a09e82413c3045ecba9859f",
+      "source_roi": [
+        876,
+        9,
+        1089,
+        509
+      ]
+    },
+    "elder": {
+      "source": [
+        672,
+        0,
+        224,
+        320
+      ],
+      "foot": [
+        112.0,
+        302.0
+      ],
+      "ref_height": 280.0,
+      "visible_bounds": [
+        65,
+        17,
+        196,
+        306
+      ],
+      "body_height": 112.0,
+      "pixels_sha256": "f30c36c9775393b1290196746dbf91d3673bbdc0f2f0f795cd9f5fa860686622",
+      "source_roi": [
+        1237,
+        3,
+        1466,
+        508
+      ]
+    },
+    "mira": {
+      "source": [
+        0,
+        320,
+        224,
+        320
+      ],
+      "foot": [
+        112.0,
+        302.0
+      ],
+      "ref_height": 280.0,
+      "visible_bounds": [
+        68,
+        20,
+        189,
+        304
+      ],
+      "body_height": 112.0,
+      "pixels_sha256": "93eed1055027d3a78994961cfa40eb6a0d75ed71c0c7ae96c3eade60beeb039c",
+      "source_roi": [
+        90,
+        517,
+        302,
+        1021
+      ]
+    },
+    "elin": {
+      "source": [
+        224,
+        320,
+        224,
+        320
+      ],
+      "foot": [
+        112.0,
+        302.0
+      ],
+      "ref_height": 280.0,
+      "visible_bounds": [
+        64,
+        17,
+        173,
+        304
+      ],
+      "body_height": 112.0,
+      "pixels_sha256": "166122ed6d47ecd01ac92b62a1106f484841bf6455103561b80b83615b799972",
+      "source_roi": [
+        480,
+        513,
+        674,
+        1020
+      ]
+    },
+    "noah": {
+      "source": [
+        448,
+        320,
+        224,
+        320
+      ],
+      "foot": [
+        112.0,
+        302.0
+      ],
+      "ref_height": 280.0,
+      "visible_bounds": [
+        43,
+        17,
+        183,
+        303
+      ],
+      "body_height": 112.0,
+      "pixels_sha256": "05fcd2efef103255fbec9fabdd6a61947aca93f45d27036bb457ca14aed20934",
+      "source_roi": [
+        827,
+        524,
+        1068,
+        1020
+      ]
+    },
+    "rowen": {
+      "source": [
+        672,
+        320,
+        224,
+        320
+      ],
+      "foot": [
+        112.0,
+        302.0
+      ],
+      "ref_height": 280.0,
+      "visible_bounds": [
+        69,
+        17,
+        198,
+        306
+      ],
+      "body_height": 112.0,
+      "pixels_sha256": "26324dcdaf19771a1b2c5d60af9882d6e2d09d4661ec0d30169f2e5f601a8acd",
+      "source_roi": [
+        1236,
+        512,
+        1466,
+        1023
+      ]
+    }
   }
- }
 }

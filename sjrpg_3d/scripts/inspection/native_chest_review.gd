@@ -48,7 +48,7 @@ static func run(game: Node, mode: String) -> void:
 	game.hud.controls.release_all()
 	game.hud._toast_plaque.hide()
 	WorldOcclusion.update(game.player.global_position, false)
-	game.ortho_preview._encounter_props.sync()
+	game.world_renderer._encounter_props.sync()
 	game.get_tree().paused = true
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval(

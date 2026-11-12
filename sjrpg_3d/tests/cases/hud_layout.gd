@@ -50,7 +50,7 @@ func run() -> void:
 	add_child(view)
 	GameState.delete_save()
 	GameState.new_game("mage")
-	var game := preload("res://scripts/game.gd").new()
+	var game := preload("res://scripts/gameplay/game.gd").new()
 	view.add_child(game)
 	await _frames(3)
 	game.hud.set_process(false)

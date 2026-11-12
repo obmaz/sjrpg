@@ -13,9 +13,9 @@
   ],
   "atlases": {
     "goblin": {
-      "texture": "assets/art/actors/goblin.webp",
+      "texture": "assets/sprites/actors/goblin.webp",
       "texture_sha256": "e40ac941794cd424ac78126f382698406802bb724add1daaa9823ed5192446d5",
-      "metadata": "assets/art/actors/goblin.json",
+      "metadata": "assets/sprites/actors/goblin.json",
       "metadata_sha256": "5bb9fc69b6bdcaf6e4374559f239d47141d1411ed6fbdbd093d03c2a11fb0987",
       "texture_size": [
         2048,
@@ -49,9 +49,9 @@
       "invalid_frames": []
     },
     "wolf": {
-      "texture": "assets/art/actors/wolf.webp",
+      "texture": "assets/sprites/actors/wolf.webp",
       "texture_sha256": "fdbad640405338531dc95c7eb1193b53747a9d8736ea6da30b0e0bd2cf9ada37",
-      "metadata": "assets/art/actors/wolf.json",
+      "metadata": "assets/sprites/actors/wolf.json",
       "metadata_sha256": "4e9e845287828a3484dbda7c95d98ad274fd31c0f95d61acb401099733be56cc",
       "texture_size": [
         2048,
@@ -90,9 +90,9 @@
       "invalid_frames": []
     },
     "boar": {
-      "texture": "assets/art/actors/boar.webp",
+      "texture": "assets/sprites/actors/boar.webp",
       "texture_sha256": "e928dac467593b2185bacb1bdc04e5e4645a50d2a1629b80d945fdc56b4d1f44",
-      "metadata": "assets/art/actors/boar.json",
+      "metadata": "assets/sprites/actors/boar.json",
       "metadata_sha256": "4a495610caef2a625323a8f385a8d339fcfb778de4c3d9048d71dfdc416baf00",
       "texture_size": [
         2048,
@@ -131,9 +131,9 @@
       "invalid_frames": []
     },
     "skeleton": {
-      "texture": "assets/art/actors/skeleton.webp",
+      "texture": "assets/sprites/actors/skeleton.webp",
       "texture_sha256": "db979abe09edc5718884c7c0cbef6619f8238e3dc648580aebd6cded72855c36",
-      "metadata": "assets/art/actors/skeleton.json",
+      "metadata": "assets/sprites/actors/skeleton.json",
       "metadata_sha256": "f6812566169183e440140e61e6b80a3ba88eb17c7d5ce1b2d58cdfc306098f1f",
       "texture_size": [
         2048,
@@ -196,9 +196,9 @@
       "invalid_frames": []
     },
     "golem": {
-      "texture": "assets/art/actors/golem.webp",
+      "texture": "assets/sprites/actors/golem.webp",
       "texture_sha256": "47b6f0b22c6b0b6eeae37c672fbe66cc4cea675d5d74be287d8e29b3a462b4a0",
-      "metadata": "assets/art/actors/golem.json",
+      "metadata": "assets/sprites/actors/golem.json",
       "metadata_sha256": "12bfa38dc1d7685e9adbba17ebc04eddb7d8217ce4db456920fd510e2fc2c459",
       "texture_size": [
         2048,

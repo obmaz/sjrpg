@@ -1,12 +1,14 @@
 # 독립 에셋 제작과 협업
 
+전체 경로와 이름 기준은 [폴더와 이름 규칙](project-layout.md)을 따릅니다.
+
 다른 AI나 모델러는 에셋 하나의 폴더를 담당합니다. 공용 표시기·물리·게임 규칙은 통합 담당자가 소유합니다. 한 에셋을 교체하기 위해 전역 목록·대형 JSON·여러 건물 생성기를 동시에 수정하지 않습니다.
 
 ## 현재 연결 구조
 
 - `assets/models/architecture/<id>/`: [GLB·개별 씬·재질·배치 기록](native-architecture-models.md). ID는 shop, smith, stable, home, chapel, fortress, bridge입니다. 기존 여섯 표면 자산은 같은 폴더의 `asset.json`과 `albedo.png`를 유지합니다.
-- `scripts/native_asset_surface.gd`: 폴더별 설정을 읽는 공용 어댑터. 원화 추가·수정에는 이 파일을 고치지 않습니다.
-- `scripts/native_asset_surface.gdshader`: 집과 예배당의 실제 로컬 좌표로 네 방향 벽을 구별하고, 면 전체에 각 원화를 한 번 배치합니다. 창·문·골조와 충돌은 실제 기하가 유지합니다. 다리는 같은 어댑터의 미터 타일 모드를 사용합니다.
+- `scripts/rendering/materials/building_surface_materials.gd`: 폴더별 설정을 읽는 공용 어댑터. 원화 추가·수정에는 이 파일을 고치지 않습니다.
+- `assets/materials/shared/building_surface.gdshader`: 집과 예배당의 실제 로컬 좌표로 네 방향 벽을 구별하고, 면 전체에 각 원화를 한 번 배치합니다. 창·문·골조와 충돌은 실제 기하가 유지합니다. 다리는 같은 어댑터의 미터 타일 모드를 사용합니다.
 - `assets/models/environment/cave_entrance/model.gd`와 `plan.gd`: 동굴 입구의 GLB 메시 어댑터와 표시·충돌의 공통 치수. 동굴 내부 생성·진입 규칙은 이 에셋에 넣지 않습니다.
 - `assets/source/architecture/<id>/`: 채택 원본·실제 프롬프트·출처와 해시. 패키지에서는 제외합니다.
 
@@ -16,7 +18,7 @@
 
 재생성에는 기존 `assets/source/remake/house-*.png` 또는 `chapel-v2.png`, 해당 에셋의 `layout.png`·`layout.json`, 사용자 스타일 원본을 실제로 첨부합니다. 배치도는 현재 모델의 네 방향을 정면에서 촬영한 정규화 UV 입력이며 비례를 보기 좋게 다시 조정하지 않습니다. 문·창·장미창의 어두운 내부는 실제 개구부 안에 들어가야 하고, 주변 장식은 기존 돌출 기하와 겹쳐 두 개의 문틀처럼 보이지 않아야 합니다. 건물별 프롬프트와 참조 해시는 같은 소스 폴더에 유지합니다.
 
-`tools/preview3d/render_facades.tscn`은 생성 입력과 네 방향 검수 렌더를 만듭니다. `--after`는 적용 후 렌더, `--no-layouts`는 원본 배치도 보존, `--baseline`은 `build/facade-baseline/<id>.ctex`에 보존한 이전 PCK의 실제 재질을 사용합니다. 게임과 같은 태양·반사광·직교 카메라를 두 비교에 함께 적용합니다. `node tools/preview3d/compare_facades.mjs`는 저장된 렌더를 수정하지 않고 좌우로 배치한 HTML·PNG를 만듭니다. 검수 결과는 저장소 루트 `build/review/facades/`에만 두며 게임에 포함하지 않습니다.
+`tools/review/models/render_facades.tscn`은 생성 입력과 네 방향 검수 렌더를 만듭니다. `--after`는 적용 후 렌더, `--no-layouts`는 원본 배치도 보존, `--baseline`은 `build/facade-baseline/<id>.ctex`에 보존한 이전 PCK의 실제 재질을 사용합니다. 게임과 같은 태양·반사광·직교 카메라를 두 비교에 함께 적용합니다. `node tools/review/models/compare_facades.mjs`는 저장된 렌더를 수정하지 않고 좌우로 배치한 HTML·PNG를 만듭니다. 검수 결과는 저장소 루트 `build/review/facades/`에만 두며 게임에 포함하지 않습니다.
 
 ## 외부 모델 제작자에게 전달할 사항
 
@@ -43,10 +45,10 @@ GLB/텍스처/라이선스·원본 출처·제작 도구 버전은 같은 에셋
 
 야외 웨이포인트는 `assets/models/environment/waypoint/`의 모델·셰이더·생성형 문양만 교체합니다. 상면 반경1.55m, 돌 기단 높이0.10m, 정면+Z, 원점은 주변 지면 중앙입니다. 문양은 기단 상면에 놓고 물리 FLOOR도 같은 높이로 만듭니다. 플레이어가 밟을 수 있어야 하며 수직 문·기둥·SOLID를 추가하지 않습니다. 발견 전은 어두운 회색, 발견 후는 절제된 석재색과 네 모퉁이 불빛을 사용합니다. 첫 활성화 판정·발견 저장은 `Exploration`의 소유입니다.
 
-강둑 원화는 `assets/models/environment/riverbank/albedo.png`의2×2 아틀라스입니다. 좌상 젖은 암석, 우상 뿌리와 흙, 좌하 풀과 자갈, 우하 수중 자갈 바닥이며 실제 타일 밀도는2m입니다. 새 이미지 교체는 이 폴더와 대응 원본 폴더만 수정합니다. 실제 지형 높이·다리 접속은 공용 `NativeGroundRelief`가 담당합니다.
+강둑 원화는 `assets/models/environment/riverbank/albedo.png`의2×2 아틀라스입니다. 좌상 젖은 암석, 우상 뿌리와 흙, 좌하 풀과 자갈, 우하 수중 자갈 바닥이며 실제 타일 밀도는2m입니다. 새 이미지 교체는 이 폴더와 대응 원본 폴더만 수정합니다. 실제 지형 높이·다리 접속은 공용 `GroundRelief3D`가 담당합니다.
 
 
-동굴 조형은 `tools/prop_art/cave_builder.gd`에서0.30m 밀도장과 통로 차집합으로 만듭니다. 수정 후 저장소 루트에서 `sjrpg_3d/tools/godot.sh --headless res://assets/models/environment/cave_entrance/bake.tscn`으로 `model.glb`·`visual.tscn`과 형상 기록을 재생성합니다. 런타임 `model.gd`는 저장된 메시만 읽으며 시작할 때 조형 계산을 하지 않습니다. 새 메시·제작기·공유 치수·원화 출처를 한 에셋 커밋에 포함하고 가로·세로 렌더, 실제 하강·천장·측벽 충돌을 함께 확인합니다.
+동굴 조형은 `tools/assets/props/cave_builder.gd`에서0.30m 밀도장과 통로 차집합으로 만듭니다. 수정 후 저장소 루트에서 `sjrpg_3d/tools/godot.sh --headless res://assets/models/environment/cave_entrance/bake.tscn`으로 `model.glb`·`visual.tscn`과 형상 기록을 재생성합니다. 런타임 `model.gd`는 저장된 메시만 읽으며 시작할 때 조형 계산을 하지 않습니다. 새 메시·제작기·공유 치수·원화 출처를 한 에셋 커밋에 포함하고 가로·세로 렌더, 실제 하강·천장·측벽 충돌을 함께 확인합니다.
 
 동굴의 로컬 메시와 별개로 `frame()`은 주변 땅보다3.2m 낮고, 지형 통합 어댑터가 외부20m 하강로와 암반 측면을 연결합니다. 모델 교체 시 바깥 지면을0m로 가정해 입구 전체를 다시 올리지 않습니다.
 
@@ -54,11 +56,11 @@ GLB/텍스처/라이선스·원본 출처·제작 도구 버전은 같은 에셋
 
 분수의 전용 표면 패키지는 `assets/models/environment/fountain/`입니다. `albedo.png`의 좌상은 세로 기둥 아치 패널, 우상은 수조 외벽, 좌하는 덮개, 우하는 기초입니다. `asset.json`의 `legacyWater`는 기존2D 분수 물의 텍스처와 픽셀 UV 영역을 지정하며, 표면 교체 때 공용 표시기나 물리 규칙을 수정하지 않습니다. 중심 기둥의 아치 몰딩은 실제 기하이고, 기존5.20×3.88×5.20m 크기와 두 낙수점·보행 충돌은 유지합니다.
 
-건물 표면 패키지의 `infillOnly=true`는 문·창·골조가 그려지지 않은 외벽 전체 재질입니다. 개구부와 테두리는 실제 기하가 만들므로 그림 속 틀과 이중 경계가 생기지 않습니다. `roofCell`은 공유 `assets/models/materials/village_craft/roof.png`의 한 조각 재질(0슬레이트·1테라코타·2삼나무·3세이지 슬레이트)을 고르며 선택 항목 `roofTint`로 조절합니다. `NativeAssetSurface.roof_material()`이 이를 읽습니다. 전용 지붕이 필요하면 같은 건물 폴더의 선택 항목 `roofAlbedo`로2×2 기와 조각 원화를 지정하고 소스 폴더의 `roof-provenance.json`에 원본/해시를 기록합니다. 공용 재질을 수정하지 않고 개별 에셋만 커밋할 수 있습니다. 실제2.6m당8단·6열·반 칸 엇갈림을 셰이더도 그대로 따르고 좁은 겹침선 음영을 적용합니다. 공용 `masonry.png`는 골조·계단/덮개·광장 포장·기단의 네 역할, `oak.png`는 기둥/문/통로의 나뭇결입니다. 이 공용 패밀리와 셰이더의 교체는 해당 폴더, 개별 벽과 지붕 선택은 건물 폴더로 한정해 커밋합니다. 생성 입력을 재사용한 경우 `inputGeneration`과 `infill-input.png`에 그 입력의 원본·프롬프트·참조 해시도 보존합니다.
+건물 표면 패키지의 `infillOnly=true`는 문·창·골조가 그려지지 않은 외벽 전체 재질입니다. 개구부와 테두리는 실제 기하가 만들므로 그림 속 틀과 이중 경계가 생기지 않습니다. `roofCell`은 공유 `assets/materials/village_craft/roof.png`의 한 조각 재질(0슬레이트·1테라코타·2삼나무·3세이지 슬레이트)을 고르며 선택 항목 `roofTint`로 조절합니다. `BuildingSurfaceMaterials.roof_material()`이 이를 읽습니다. 전용 지붕이 필요하면 같은 건물 폴더의 선택 항목 `roofAlbedo`로2×2 기와 조각 원화를 지정하고 소스 폴더의 `roof-provenance.json`에 원본/해시를 기록합니다. 공용 재질을 수정하지 않고 개별 에셋만 커밋할 수 있습니다. 실제2.6m당8단·6열·반 칸 엇갈림을 셰이더도 그대로 따르고 좁은 겹침선 음영을 적용합니다. 공용 `masonry.png`는 골조·계단/덮개·광장 포장·기단의 네 역할, `oak.png`는 기둥/문/통로의 나뭇결입니다. 이 공용 패밀리와 셰이더의 교체는 해당 폴더, 개별 벽과 지붕 선택은 건물 폴더로 한정해 커밋합니다. 생성 입력을 재사용한 경우 `inputGeneration`과 `infill-input.png`에 그 입력의 원본·프롬프트·참조 해시도 보존합니다.
 
 예배당의 `hybridFacade=true`는 [예배당 계약](native-chapel-refinement.md)을 따르는 예외입니다. 직접 지정한 사용자 화면을 생성 입력으로 첨부하고, 입구·본당 정면·측면·석재의2×2 원화와 높이별 `facadeWarp` 표를 같은 폴더에서 관리합니다. 그림 속 유리를 실제 구멍으로 바꾸지 않으며 입체 몰딩은 표의 역변환을 사용합니다.
 
-[야외 잔디·강물](native-outdoor-surfaces.md)과 [동굴 내부 표면](native-cave-surfaces.md)은 건물 아틀라스와 별도 패키지입니다. 제작자는 `assets/models/materials/{grass,water}/<종류>-<번호>.png` 또는 `cave/{floor,wall}/<종류>-<번호>.png`와 대응 소스 폴더의 원본·프롬프트·출처만 교체합니다. 잔디/강물은 각10종, 동굴은 각6종이며 기존 파일명·원본1254²·불투명 RGB·미터 배율을 유지한 그림 교체에는 공용 셰이더·배치·물리를 수정하지 않습니다. 종류나 배열 층수 변경은 통합 담당자가 공유 어댑터와 압축 정책을 함께 검수합니다.
+[야외 잔디·강물](native-outdoor-surfaces.md)과 [동굴 내부 표면](native-cave-surfaces.md)은 건물 아틀라스와 별도 패키지입니다. 제작자는 `assets/materials/{grass,water}/<종류>-<번호>.png` 또는 `cave/{floor,wall}/<종류>-<번호>.png`와 대응 소스 폴더의 원본·프롬프트·출처만 교체합니다. 잔디/강물은 각10종, 동굴은 각6종이며 기존 파일명·원본1254²·불투명 RGB·미터 배율을 유지한 그림 교체에는 공용 셰이더·배치·물리를 수정하지 않습니다. 종류나 배열 층수 변경은 통합 담당자가 공유 어댑터와 압축 정책을 함께 검수합니다.
 
 ## 몬스터 GLB와 씬
 

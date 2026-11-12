@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 
-const MERCHANT_GLB = 'res://assets/art/native_residents/merchant.glb';
+const MERCHANT_GLB = 'res://assets/models/residents/merchant/model.glb';
 const MERCHANT_SCENE = 'res://assets/models/residents/merchant/visual.tscn';
 
 export function assertImportedMerchantAsset(model, label) {

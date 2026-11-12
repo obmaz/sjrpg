@@ -1,0 +1,227 @@
+{
+  "status": "기존 확대 크기·기능을 보존하고 2D 원본 재료·물 픽셀과 실제 아치 몰딩으로 분수 디테일을 보강.",
+  "guide_read": "docs/3d-asset-guide.md",
+  "references": [
+    {
+      "path": "docs/3d-asset-guide.md",
+      "sha256": "89e275a126afa80e665c60ee94491fc07379f1391e58863524c05d2d885abfe3"
+    },
+    {
+      "path": "sjrpg_3d/assets/source/style/approved-game-reference.jpg",
+      "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+    },
+    {
+      "path": "sjrpg_3d/assets/sprites/village/remake-pool.webp",
+      "sha256": "736d492ff9797a1a6850ce1f4526216d663bcca72c1ab97e32656d9b7ef7e100"
+    },
+    {
+      "path": "sjrpg_3d/assets/sprites/village/remake-portal.webp",
+      "sha256": "27ed6f2de2f404ae021105bcb99860f40cca222cebbdc04f1f2e2fa80b702381"
+    },
+    {
+      "path": "sjrpg_3d/assets/materials/shared/limestone.webp",
+      "sha256": "2561c1be419f951bf0bce7b9fd5085c24a92600cf66424a4775e16cd37b58e6c"
+    },
+    {
+      "path": "sjrpg_3d/assets/materials/shared/timber.webp",
+      "sha256": "4cac472a9fb54db9e89bdaf1577db846bd49f936e759dca7b10101175f7dcb1c"
+    },
+    {
+      "path": "sjrpg_3d/assets/data/village.json",
+      "sha256": "830c6b0125c090318b26482c151e789b12bf887164cd970246e2a0a093c88f72"
+    },
+    {
+      "path": "sjrpg_3d/assets/data/art_warps.json",
+      "sha256": "3e60399bc14bd12370e50a683e8566013faf8f1ace2eea558a1eeeb549c2e73d"
+    }
+  ],
+  "generation": {
+    "images_generated": true,
+    "surface_provenance": "assets/source/environment/fountain/provenance.json",
+    "geometry": "Blender 4.3.2, tools/assets/environment/build_native_town_props.py",
+    "legacy_water": "기존 assets/sprites/village/remake-pool.webp의 물 UV 영역을 재사용. 새 수면 원화나 전체 오브젝트 판을 만들지 않음."
+  },
+  "transform": {
+    "units": "metres",
+    "up": "+Y",
+    "forward": "+Z",
+    "ground_y": 0,
+    "runtime_scale": [
+      1,
+      1,
+      1
+    ]
+  },
+  "collision": {
+    "owner": "existing SpatialWorld3D and Village source footprint",
+    "new_colliders": false
+  },
+  "validation": {
+    "geometry": "seven authoring-buffer / actual GLB checks passed, fountain 3932 triangles / 3 surfaces, gate 1883 / 4",
+    "Godot": "native_town_props, native_house_family, player_occlusion and related regression cases",
+    "browser": "실제 세로·가로 마을 화면으로 석재·수면·그림자·접지와 기존 동작을 검수한다. 실제 Android 기기 성능은 측정하지 않음."
+  },
+  "generator": {
+    "path": "tools/assets/environment/build_native_town_props.py",
+    "sha256": "a45b4d8dc1c9b8161a9ff68b683d0e6888df896b7ec210bd28c016558e472dbe",
+    "coordinate_conversion": "author native(X,Y,Z) -> Blender(X,-Z,Y) -> GLB Y-up",
+    "command": "blender -b -t 2 --python tools/assets/environment/build_native_town_props.py -- --export",
+    "version": "Blender 4.3.2",
+    "export_image_format": "NONE"
+  },
+  "runtime": {
+    "models": [
+      {
+        "path": "assets/models/environment/fountain/model.glb",
+        "sha256": "135a3cff87b30c7e7c929e3b425a556686257cef9a4094f2ac05fdbf915af781",
+        "bytes": 299072,
+        "triangles": 3932,
+        "surfaces": 3,
+        "bounds_m": {
+          "min": [
+            -2.5999999046325684,
+            0,
+            -2.5999999046325684
+          ],
+          "max": [
+            2.5999999046325684,
+            3.880000114440918,
+            2.5999999046325684
+          ],
+          "size": [
+            5.199999809265137,
+            3.880000114440918,
+            5.199999809265137
+          ]
+        },
+        "embedded_images": 0,
+        "embedded_textures": 0,
+        "material_slots": [
+          "limestone",
+          "water",
+          "bronze"
+        ],
+        "node_transforms": "identity; all native metre coordinates baked in mesh",
+        "exporter": "Khronos glTF Blender I/O v4.3.47",
+        "automatic_import_lod": false
+      },
+      {
+        "path": "assets/models/environment/warp_gate/model.glb",
+        "sha256": "b9a594a0d1a417e3a3d8183aac3c5d13dd12468d4a073baafe5605caae51d2a6",
+        "bytes": 145760,
+        "triangles": 1883,
+        "surfaces": 4,
+        "bounds_m": {
+          "min": [
+            -1.5490000247955322,
+            0,
+            -0.6399999856948853
+          ],
+          "max": [
+            1.5490000247955322,
+            3.065000057220459,
+            0.6399999856948853
+          ],
+          "size": [
+            3.0980000495910645,
+            3.065000057220459,
+            1.2799999713897705
+          ]
+        },
+        "embedded_images": 0,
+        "embedded_textures": 0,
+        "material_slots": [
+          "limestone",
+          "timber",
+          "bronze",
+          "portal"
+        ],
+        "node_transforms": "identity; all native metre coordinates baked in mesh",
+        "exporter": "Khronos glTF Blender I/O v4.3.47",
+        "automatic_import_lod": false
+      }
+    ],
+    "material_images_embedded": false,
+    "maximum_surfaces_with_particles": {
+      "fountain": 3,
+      "portal": 5
+    },
+    "portal_effect_geometry": "12 instances of one shared SphereMesh, radius0.012m/height0.024m, six radial segments and three rings"
+  },
+  "materials": {
+    "limestone": {
+      "shared": "assets/materials/shared/limestone.webp",
+      "tile_m": 2.56,
+      "courses": 8,
+      "texels_per_m": 244.921875,
+      "maps": [
+        "base color only; shared imported resource"
+      ]
+    },
+    "timber": {
+      "shared": "assets/materials/shared/timber.webp",
+      "maps": [
+        "base color only"
+      ]
+    },
+    "bronze": {
+      "source": "physical scalar material, no generated image",
+      "metallic": 0.45,
+      "roughness": 0.72
+    },
+    "water_portal": {
+      "source": "explicit spatial shaders",
+      "clock": "original PlazaWater.phase; no TIME or independent timer"
+    },
+    "motes": {
+      "mesh": "shared small effect sphere",
+      "instances_per_gate": 12,
+      "draws_per_gate": 1
+    },
+    "fountain_stone": {
+      "package": "assets/models/environment/fountain/",
+      "maps": [
+        "generated albedo only"
+      ],
+      "mapping": "pier facade + basin/coping/foundation triplanar"
+    }
+  },
+  "files": [
+    {
+      "path": "scripts/rendering/environment/town_prop_renderer_3d.gd",
+      "sha256": "ac3c219debf0b67f9da399f825709ebda05fe2c6e3a13a92fccefbcb2e8c8cdb"
+    },
+    {
+      "path": "assets/models/environment/warp_gate/surface.gdshader",
+      "sha256": "573ad78d3556bcca1e9b79e61fe2bb4a03890f9b87d9a4994c2bd8c44d02d41a"
+    },
+    {
+      "path": "assets/models/environment/fountain/water.gdshader",
+      "sha256": "41a7c8f659c026e09e93734bd861faed700d1d60358e72c2b8024588008b9c12"
+    },
+    {
+      "path": "tools/assets/environment/build_native_town_props.py",
+      "sha256": "a45b4d8dc1c9b8161a9ff68b683d0e6888df896b7ec210bd28c016558e472dbe"
+    },
+    {
+      "path": "tools/assets/environment/test_native_town_props.py",
+      "sha256": "e79fc4822b1e22b885c30f38916096072175df6c0bb96aa0b2f3e58084524b01"
+    },
+    {
+      "path": "tests/cases/native_town_props.gd",
+      "sha256": "668fcbc360ba2f409c50a5ea84ae6343a07775bf541d62012591cecde60e43ba"
+    },
+    {
+      "path": "assets/models/environment/fountain/material.gd",
+      "sha256": "96a4cb5a57cd36c9011b7cef4a3308dcff9e305e5dfb85f4b6c8e763879178e7"
+    },
+    {
+      "path": "assets/models/environment/fountain/surface.gdshader",
+      "sha256": "fe0ed8fed4f6b0e1b18355bfcfa8dda86683af4658cf376094e2b93f5a60a129"
+    },
+    {
+      "path": "assets/models/environment/fountain/asset.json",
+      "sha256": "efced6af469b0536f26b06dbb4d9cec9447fb6f91a726b5215b7443d7dfedbe1"
+    }
+  ]
+}

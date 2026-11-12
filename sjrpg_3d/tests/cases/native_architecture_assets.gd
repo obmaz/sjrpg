@@ -4,8 +4,8 @@ extends TestCase
 
 func run() -> void:
 	for id: String in ["shop", "smith", "stable", "home", "chapel", "fortress", "bridge"]:
-		var first := NativeArchitectureAssets.create(id)
-		var second := NativeArchitectureAssets.create(id)
+		var first := ArchitectureSceneLibrary.create(id)
+		var second := ArchitectureSceneLibrary.create(id)
 		add_child(first)
 		add_child(second)
 		var one := first.find_children("*", "MeshInstance3D", true, false)

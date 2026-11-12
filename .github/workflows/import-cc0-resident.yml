@@ -17,7 +17,7 @@ jobs:
         steps:
             - uses: actions/checkout@v7.0.1
             - name: Syntax check exact-source candidate tools
-              run: python3 -m py_compile sjrpg_3d/tools/hero_art/fetch_resident_sources.py sjrpg_3d/tools/hero_art/export_cc0_resident.py sjrpg_3d/tools/hero_art/publish_resident_blobs.py
+              run: python3 -m py_compile sjrpg_3d/tools/assets/heroes/fetch_resident_sources.py sjrpg_3d/tools/assets/heroes/export_cc0_resident.py sjrpg_3d/tools/assets/heroes/publish_resident_blobs.py
             - name: Install offline model converter
               run: |
                   sudo apt-get update -qq
@@ -32,27 +32,27 @@ jobs:
             - uses: actions/cache/restore@v4
               with:
                   path: /tmp/sjrpg-cc0-merchant-source
-                  key: cc0-character-sources-${{ hashFiles('sjrpg_3d/tools/hero_art/source-provenance.json') }}-${{ github.run_id }}
+                  key: cc0-character-sources-${{ hashFiles('sjrpg_3d/tools/assets/heroes/source-provenance.json') }}-${{ github.run_id }}
                   restore-keys: |
-                      cc0-character-sources-${{ hashFiles('sjrpg_3d/tools/hero_art/source-provenance.json') }}-
+                      cc0-character-sources-${{ hashFiles('sjrpg_3d/tools/assets/heroes/source-provenance.json') }}-
             - name: Preserve and verify the existing merchant and mage sources
-              run: python3 sjrpg_3d/tools/hero_art/fetch_sources.py
+              run: python3 sjrpg_3d/tools/assets/heroes/fetch_sources.py
             - name: Acquire the reviewed female Ranger and matching female head under exact CC0 licenses
-              run: python3 sjrpg_3d/tools/hero_art/fetch_resident_sources.py
+              run: python3 sjrpg_3d/tools/assets/heroes/fetch_resident_sources.py
             - name: Build grounded female actor with actual rest-aware animation and strict mobile budgets
-              run: blender --background --python-exit-code 1 --python sjrpg_3d/tools/hero_art/export_cc0_resident.py
+              run: blender --background --python-exit-code 1 --python sjrpg_3d/tools/assets/heroes/export_cc0_resident.py
             - name: Import with the pinned engine and publish candidate blobs without moving refs
               env:
                   SJRPG_ASSET_TOKEN: ${{ github.token }}
               run: |
                   chmod +x tools/*.sh sjrpg_3d/tools/*.sh
                   tools/setup_godot.sh
-                  python3 sjrpg_3d/tools/hero_art/publish_resident_blobs.py
+                  python3 sjrpg_3d/tools/assets/heroes/publish_resident_blobs.py
             - uses: actions/cache/save@v4
               if: always()
               with:
                   path: /tmp/sjrpg-cc0-merchant-source
-                  key: cc0-character-sources-${{ hashFiles('sjrpg_3d/tools/hero_art/source-provenance.json') }}-${{ github.run_id }}
+                  key: cc0-character-sources-${{ hashFiles('sjrpg_3d/tools/assets/heroes/source-provenance.json') }}-${{ github.run_id }}
             - uses: actions/upload-artifact@v6
               if: always()
               with:
@@ -63,6 +63,6 @@ jobs:
                       build/cc0-resident/LICENSE-*.txt
                       build/cc0-resident/resident-source-provenance.json
                       build/cc0-resident/published-blobs.json
-                      build/cc0-resident/godot-import/assets/art/native_residents
+                      build/cc0-resident/godot-import/assets/models/residents
                   if-no-files-found: ignore
                   retention-days: 7

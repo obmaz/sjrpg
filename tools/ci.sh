@@ -19,6 +19,7 @@ python3 tools/check_workflows.py
 python3 tools/test_ci.py
 python3 sjrpg_3d/tools/test_stamp_web.py
 python3 sjrpg_3d/tools/test_import_project.py
+python3 sjrpg_3d/tools/test_resource_layout.py
 node sjrpg_3d/tools/review/test_diagnostic_contracts.mjs
 node --check sjrpg_3d/tools/check_native_style.mjs
 node --check sjrpg_3d/tools/check_combat_visibility.mjs

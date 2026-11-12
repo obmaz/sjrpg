@@ -8,7 +8,7 @@ func run() -> void:
 	game.player.set_process(false)
 	game.encounters.set_process(false)
 	var village: Village = game.village
-	var props: NativeTownProps3D = game.ortho_preview._town_props
+	var props: TownPropRenderer3D = game.world_renderer._town_props
 	props.sync()
 	var portal: IsoSprite = village.portal_sprites["town"]
 	var visual: Node3D = props._entries[portal.get_instance_id()]["root"]
@@ -44,8 +44,8 @@ func run() -> void:
 		check(
 			"town has a broad dry field before the river",
 			(
-				NativeGroundRelief.river_distance(
-					Iso.unproject(corner) / 65, NativeGroundRelief.river_outline(village)
+				GroundRelief3D.river_distance(
+					Iso.unproject(corner) / 65, GroundRelief3D.river_outline(village)
 				)
 				> 15
 			)

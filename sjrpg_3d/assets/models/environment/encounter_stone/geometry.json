@@ -2,8 +2,8 @@
 	"forward": "+Z",
 	"id": "environment/encounter_stone",
 	"inputs": {
-		"res://tools/prop_art/bake.gd": "417ad48faa3d12e160b511b43c3e9fd31418559a4b9a24db003d3c90cb5f4254",
-		"res://tools/prop_art/encounter_builder.gd": "f908a22c9293fc32b82e355e8fa071243bc9656f4113a7d1511224b733c5f0ba"
+		"res://tools/assets/props/bake.gd": "0e065c0f49b939e462f4a0bed2384b21a71ac32477bdb7f824d5c8bdc4708dc4",
+		"res://tools/assets/props/encounter_builder.gd": "f908a22c9293fc32b82e355e8fa071243bc9656f4113a7d1511224b733c5f0ba"
 	},
 	"layout_sha256": "37e34e3a22f904b21844d9f45cc9d28cbcf56c18210f66c32ce7836caddef827",
 	"meshes": {

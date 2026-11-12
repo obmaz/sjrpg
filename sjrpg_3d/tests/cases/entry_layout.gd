@@ -2,7 +2,7 @@ extends TestCase
 ## Real selection callbacks, saved bytes and adaptive controls; no adventure is loaded by preview.
 
 class EntryRoot:
-	extends "res://scripts/main.gd"
+	extends "res://scripts/app/main.gd"
 	var launches := 0
 	func _ready() -> void:
 		pass
@@ -77,7 +77,7 @@ func run() -> void:
 	var view := SubViewport.new()
 	view.size = Vector2i(720, 1280)
 	add_child(view)
-	var select := preload("res://scripts/class_select.gd").new()
+	var select := preload("res://scripts/ui/screens/class_select.gd").new()
 	view.add_child(select)
 	await _frames(3)
 	check("first launch opens an empty slot directly to hero choice", select.selected_slot == 1 and select._stage == "class" and not select.start_button.disabled)
@@ -108,7 +108,7 @@ func run() -> void:
 	GameState.save_game()
 	var path := GameState.slot_path(2)
 	var saved := FileAccess.get_file_as_string(path)
-	var loaded := preload("res://scripts/class_select.gd").new()
+	var loaded := preload("res://scripts/ui/screens/class_select.gd").new()
 	view.add_child(loaded)
 	await _frames(3)
 	check("saved entry starts at slot choices and identifies the actual hero", loaded._stage == "slots" and loaded.selected_slot == 2 and not loaded.continue_button.disabled and "Lv.7" in loaded.slot_buttons[1].text and loaded.selected_class == "warrior")

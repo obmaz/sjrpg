@@ -12,7 +12,7 @@ func _enemy(game: Node, kind: String, at: Vector2) -> Enemy:
 	return enemy
 
 
-func _visible(feedback: NativeEnemyFeedback3D, id: int, key: String) -> bool:
+func _visible(feedback: EnemyHitFeedback3D, id: int, key: String) -> bool:
 	if not feedback.entries.has(id):
 		return false
 	var entry: Dictionary = feedback.entries[id]
@@ -26,9 +26,9 @@ func run() -> void:
 	var game := await make_game("warrior")
 	game._spawn_timer = 10000.0
 	game.player.set_process(false)
-	var preview: Ortho3DPreview = game.ortho_preview
-	preview.set_process(false)
-	var feedback: NativeEnemyFeedback3D = preview._enemy_feedback
+	var renderer: WorldRenderer3D = game.world_renderer
+	renderer.set_process(false)
+	var feedback: EnemyHitFeedback3D = renderer._enemy_feedback
 	var enemy := _enemy(game, "goblin", game.player.position + Vector2(90, 30))
 	var enemy_id := enemy.get_instance_id()
 	feedback.sync()
@@ -60,9 +60,9 @@ func run() -> void:
 		feedback.sync()
 		ratios = ink.get_shader_parameter("health_ratios")
 		check("ghost drain uses the source fraction without rebuilding its mesh", is_equal_approx(ratios.y, enemy.ghost_hp / enemy.max_hp) and bar.mesh == mesh)
-		var basis: Basis = preview.camera.global_transform.basis
-		var factor := Ortho3DPreview.GROUND_PER_METER * Ortho3DPreview.PROJECTION_FACTOR
-		var anchor := preview.actor_foot(enemy) + basis.y * ((enemy.sprite.body_height + 11.0) / factor)
+		var basis: Basis = renderer.camera.global_transform.basis
+		var factor := WorldRenderer3D.GROUND_PER_METER * WorldRenderer3D.PROJECTION_FACTOR
+		var anchor := renderer.actor_foot(enemy) + basis.y * ((enemy.sprite.body_height + 11.0) / factor)
 		check("health bar follows authoritative feet and camera-plane head offset", bar.global_position.distance_to(anchor) < 0.00001)
 		enemy.hp = enemy.max_hp
 		feedback.sync()
@@ -92,8 +92,8 @@ func run() -> void:
 			var actual := SpatialWorld3D.projected(ring.global_transform * local)
 			matches = matches and absf(boss.attack_distance(actual) - radius) < 0.001
 		check("all warning edges match the real y/0.55 boss hit ellipse", matches)
-		var foot: Vector3 = preview.actor_foot(boss)
-		check("boss warning lies on its native floor without depth bypass", absf(ring.global_position.y - foot.y - NativeEnemyFeedback3D.RING_LIFT) < 0.00001 and not NativeEnemyFeedback3D.RING_CODE.contains("depth_test_disabled"))
+		var foot: Vector3 = renderer.actor_foot(boss)
+		check("boss warning lies on its native floor without depth bypass", absf(ring.global_position.y - foot.y - EnemyHitFeedback3D.RING_LIFT) < 0.00001 and not EnemyHitFeedback3D.RING_CODE.contains("depth_test_disabled"))
 		var body: CharacterBody3D = game.spatial_world.actor_bodies[boss_id]
 		var before := ring.global_position
 		body.position.y += 0.28

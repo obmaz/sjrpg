@@ -1,5 +1,5 @@
 extends TestCase
-## Actual NativeAdventure and Main notifications: OS Back pauses without leaving or toggling away.
+## Actual Adventure3D and Main notifications: OS Back pauses without leaving or toggling away.
 
 
 func _progress(game: Node) -> Dictionary:
@@ -27,7 +27,7 @@ func run() -> void:
 	var view := SubViewport.new()
 	view.size = Vector2i(720, 1280)
 	add_child(view)
-	var root := preload("res://scripts/main.gd").new()
+	var root := preload("res://scripts/app/main.gd").new()
 	view.add_child(root)
 	await _frames(2)
 	check("Main disables the engine's automatic Android Back exit", not get_tree().quit_on_go_back)
@@ -35,7 +35,7 @@ func run() -> void:
 	root.notification(NOTIFICATION_WM_GO_BACK_REQUEST)
 	check("system Back on the title does not start or replace an adventure", root.current == title and not get_tree().paused)
 	root.start_game()
-	var adventure := root.current as NativeAdventure
+	var adventure := root.current as Adventure3D
 	var game: Node = adventure.simulation
 	for frame in 300:
 		if game.native_ready:
@@ -53,13 +53,13 @@ func run() -> void:
 		var primary: String = str(GameState.slots[0])
 		game.player.cooldowns[primary] = 5.0
 		var hud: Hud = game.hud
-		var preview: Node = game.ortho_preview
+		var renderer: Node = game.world_renderer
 		var before := _progress(game)
 		var saved := FileAccess.get_file_as_string(GameState.save_path)
 		root.notification(NOTIFICATION_WM_GO_BACK_REQUEST)
 		await _frames(3)
 		var settings: PanelFrame = hud._panel
-		check("actual OS Back opens settings and pauses the same world", settings is SettingsPanel and get_tree().paused and root.current == adventure and game.ortho_preview == preview)
+		check("actual OS Back opens settings and pauses the same world", settings is SettingsPanel and get_tree().paused and root.current == adventure and game.world_renderer == renderer)
 		for press in 4:
 			root.notification(NOTIFICATION_WM_GO_BACK_REQUEST)
 			root.handle_system_back()
@@ -77,7 +77,7 @@ func run() -> void:
 		root.notification(NOTIFICATION_WM_GO_BACK_REQUEST)
 		await _frames(3)
 		check("OS Back replaces an already paused bag with settings", bag_was_open and bag_ref.get_ref() == null and hud._panel is SettingsPanel and get_tree().paused)
-		check("replacing another panel keeps the same character and adventure progress", _progress(game) == before and root.current == adventure and game.ortho_preview == preview)
+		check("replacing another panel keeps the same character and adventure progress", _progress(game) == before and root.current == adventure and game.world_renderer == renderer)
 		settings = hud._panel
 		root._on_web_back([])
 		await _frames(2)

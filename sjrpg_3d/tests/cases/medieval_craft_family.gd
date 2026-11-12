@@ -5,7 +5,7 @@ extends TestCase
 func run() -> void:
 	var family := "woodland_oak_and_forged_iron"
 	for id: String in ["shop", "smith", "stable", "home"]:
-		var model := NativeArchitectureAssets.create(id)
+		var model := ArchitectureSceneLibrary.create(id)
 		add_child(model)
 		var report: Dictionary = model.report
 		check(
@@ -71,7 +71,7 @@ func run() -> void:
 			model.find_children("*", "MeshInstance3D", true, false).size() == 6
 		)
 		model.free()
-	var chapel := NativeArchitectureAssets.create("chapel")
+	var chapel := ArchitectureSceneLibrary.create("chapel")
 	add_child(chapel)
 	check(
 		"chapel fixtures belong to the surrounding town",
@@ -82,7 +82,7 @@ func run() -> void:
 		)
 	)
 	chapel.free()
-	var fortress := NativeArchitectureAssets.create("fortress")
+	var fortress := ArchitectureSceneLibrary.create("fortress")
 	add_child(fortress)
 	check(
 		"gate heraldry ties the enclosure to its village",

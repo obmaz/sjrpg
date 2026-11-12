@@ -64,8 +64,8 @@ func run() -> void:
 	var old_reduced := Prefs.reduce_motion
 	Prefs.reduce_motion = false
 	var game := await make_game("mage")
-	var preview: Ortho3DPreview = game.ortho_preview
-	var environment: Ortho3DEnvironment = preview._world_environment
+	var renderer: WorldRenderer3D = game.world_renderer
+	var environment: EnvironmentRenderer3D = renderer._world_environment
 	game.player.position = game.dungeon.entry_point()
 	await _frames(2)
 	if not check("existing Stage1 cave still opens before torch inspection", game.dungeon.enter()):
@@ -91,7 +91,7 @@ func run() -> void:
 	for source: Node2D in game.dungeon.art.visuals:
 		if str(source.get_meta("cave_role", "")) != "lantern":
 			continue
-		var expected := Ortho3DPreview.ground_position(
+		var expected := WorldRenderer3D.ground_position(
 			source.global_position, DungeonRelief.at(source.global_position)
 		)
 		same_sources = (
@@ -134,7 +134,7 @@ func run() -> void:
 		mounted = (
 			mounted
 			and is_equal_approx(
-				mount.origin.y, anchors[torch_index].y + NativeCaveLanterns3D.MOUNT_HEIGHT
+				mount.origin.y, anchors[torch_index].y + CaveLanternRenderer3D.MOUNT_HEIGHT
 			)
 		)
 		mounted = (
@@ -143,7 +143,7 @@ func run() -> void:
 			and mount.basis.y.y > 0.95
 			and is_equal_approx(mount.basis.determinant(), 1.0)
 		)
-		mounted = mounted and float(contact["wall_height"]) == Ortho3DCaveRock.CHAMBER_HEIGHT
+		mounted = mounted and float(contact["wall_height"]) == CaveWallGeometry3D.CHAMBER_HEIGHT
 		mounted = (
 			mounted
 			and light_positions[torch_index].is_equal_approx(
@@ -151,8 +151,8 @@ func run() -> void:
 					mount
 					* Vector3(
 						0,
-						NativeCaveLanterns3D.FLAME_BASE + 0.24,
-						NativeCaveLanterns3D.TORCH_DEPTH + 0.10
+						CaveLanternRenderer3D.FLAME_BASE + 0.24,
+						CaveLanternRenderer3D.TORCH_DEPTH + 0.10
 					)
 				)
 			)
@@ -211,7 +211,7 @@ func run() -> void:
 			)
 			valid = valid and batch.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		else:
-			valid = valid and batch.material_override == preview._materials[key]
+			valid = valid and batch.material_override == renderer._materials[key]
 	check(
 		"ten real wood/iron torches and opaque volume flames share four bounded batches",
 		(
@@ -254,7 +254,7 @@ func run() -> void:
 			and transform.origin.is_equal_approx(
 				(
 					mount
-					* Vector3(0, NativeCaveLanterns3D.FLAME_BASE, NativeCaveLanterns3D.TORCH_DEPTH)
+					* Vector3(0, CaveLanternRenderer3D.FLAME_BASE, CaveLanternRenderer3D.TORCH_DEPTH)
 				)
 			)
 		)
@@ -288,7 +288,7 @@ func run() -> void:
 				core_mesh,
 				report["outer_transforms"][torch_index],
 				report["core_transforms"][torch_index],
-				preview.camera.global_transform.basis.z.normalized()
+				renderer.camera.global_transform.basis.z.normalized()
 			)
 		)
 	check(

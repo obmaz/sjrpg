@@ -2,20 +2,20 @@ extends TestCase
 ## 실제 건물 재질 연결과 공유 몬스터 메시의 곡면 법선을 검사한다.
 func run() -> void:
 	var game := await make_game("mage")
-	var preview: Ortho3DPreview = game.ortho_preview
+	var renderer: WorldRenderer3D = game.world_renderer
 	var walls := {}
 	var doors := {}
-	for key: String in NativeHouse3D.STYLES:
+	for key: String in HouseRenderer3D.STYLES:
 		var id: String = {"nw":"shop","ne":"smith","sw":"stable","se":"home"}[key]
-		var wall := NativeAssetSurface.material(id, Vector3(6,5,6))
+		var wall := BuildingSurfaceMaterials.material(id, Vector3(6,5,6))
 		var texture: Texture2D = wall.get_shader_parameter("atlas")
-		var door: StandardMaterial3D = preview._materials[NativeHouse3D.resource_key(key, "wood")]
+		var door: StandardMaterial3D = renderer._materials[HouseRenderer3D.resource_key(key, "wood")]
 		walls[texture.get_instance_id()] = true
 		doors[door.albedo_texture.get_instance_id()] = true
 		check("house wall uses a dedicated nonrepeating four-face atlas " + key, wall.get_shader_parameter("tile") == false and texture.get_width() >= 1254)
-	check("houses retain four distinct facades and share clean generated oak without painted door frames", walls.size() == 4 and doors.size() == 1 and (preview._materials["door"] as StandardMaterial3D).albedo_texture == load(NativeVillageSurfaces.ROOT + "oak.png"))
+	check("houses retain four distinct facades and share clean generated oak without painted door frames", walls.size() == 4 and doors.size() == 1 and (renderer._materials["door"] as StandardMaterial3D).albedo_texture == load(NativeVillageSurfaces.ROOT + "oak.png"))
 	for kind: String in ["wolf", "boar", "goblin", "skeleton"]:
-		var model: Dictionary = NativeEnemyModels.build(kind)
+		var model: Dictionary = EnemyRenderer3D.build(kind)
 		var root: Node3D = model["root"]
 		var curved := 0
 		for mesh: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):

@@ -1,0 +1,293 @@
+{
+  "purpose": "Shared front-on native3D village albedos; 2D sprite art is unchanged.",
+  "generation": "tools/assets/materials/make_clean_masonry.py (walls and roofs); timber/bark keep their crops",
+  "authoritative_reference": {
+    "path": "assets/source/style/approved-game-reference.jpg",
+    "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+  },
+  "materials": {
+    "limestone": {
+      "role": "Fortification ashlar and the shared trim stone of every building.",
+      "source": "assets/source/materials/masonry/limestone.png",
+      "source_sha256": "aa7e4d0b8b6877d6fccb33fdb269e4a3d9d245973fefeed289f7ce848fdbe1ab",
+      "generator": "tools/assets/materials/make_clean_masonry.py",
+      "path": "assets/materials/shared/limestone.webp",
+      "sha256": "2561c1be419f951bf0bce7b9fd5085c24a92600cf66424a4775e16cd37b58e6c",
+      "size": [
+        768,
+        768
+      ],
+      "operation": "Deterministic procedural albedo at 1536px, Lanczos downsample to 768px, WebP quality 94.",
+      "physical_tile_m": [
+        2.56,
+        2.56
+      ],
+      "source_size": [
+        1536,
+        1536
+      ],
+      "runtime_bytes": 17806,
+      "edge_jump_rgb_mean_0_255": {
+        "left_right": 0.06640625,
+        "top_bottom": 0.4995659589767456
+      }
+    },
+    "slate": {
+      "role": "Chapel and dormer house roofs (smithy uses a darker tint).",
+      "source": "assets/source/materials/masonry/slate.png",
+      "source_sha256": "689ea741522f14d23fe152dcfc5f07a2ccfdd9556ce4db1129a5d28e6b1eff3b",
+      "generator": "tools/assets/materials/make_clean_masonry.py",
+      "path": "assets/materials/shared/slate.webp",
+      "sha256": "bf862f2b2f2caa8297d8ca6dc5419963d747a9f33f977a8588b9dda65cfb7688",
+      "size": [
+        768,
+        768
+      ],
+      "operation": "Deterministic procedural albedo at 1536px, Lanczos downsample to 768px, WebP quality 94.",
+      "physical_tile_m": [
+        2.6,
+        2.6
+      ],
+      "source_size": [
+        1536,
+        1536
+      ],
+      "runtime_bytes": 15134,
+      "edge_jump_rgb_mean_0_255": {
+        "left_right": 0.1306423544883728,
+        "top_bottom": 27.8828125
+      },
+      "courses": 8,
+      "columns": 6,
+      "stagger": "odd courses from the eave (image top) offset by half a column"
+    },
+    "timber": {
+      "source": "assets/source/materials/shared/village_materials.png",
+      "source_sha256": "0ab9f5bc5e5357abf9f5a81a5ddd38f4ea8ef1bc3cef87ebc72e261a112f3591",
+      "crop": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "path": "assets/materials/shared/timber.webp",
+      "sha256": "4cac472a9fb54db9e89bdaf1577db846bd49f936e759dca7b10101175f7dcb1c",
+      "size": [
+        627,
+        627
+      ],
+      "operation": "Exact quadrant crop and WebP encoding; no upscaling, painting or source relighting."
+    },
+    "bark": {
+      "source": "assets/source/materials/shared/village_materials.png",
+      "source_sha256": "0ab9f5bc5e5357abf9f5a81a5ddd38f4ea8ef1bc3cef87ebc72e261a112f3591",
+      "crop": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "path": "assets/materials/shared/bark.webp",
+      "sha256": "ca8532c220bb6dcb78a2b14a8dc4a78439885e0ee4f061ff92dee58007af7736",
+      "size": [
+        627,
+        627
+      ],
+      "operation": "Exact quadrant crop and WebP encoding; no upscaling, painting or source relighting."
+    },
+    "chapel_stone": {
+      "role": "Chapel walls: long pale ivory ashlar with fine joints.",
+      "source": "assets/source/materials/masonry/chapel_stone.png",
+      "source_sha256": "c5543d8bfd10f8513225f5aff1765f0201ba1b12b9c8b283068a50d4f1f70bdb",
+      "generator": "tools/assets/materials/make_clean_masonry.py",
+      "path": "assets/materials/shared/chapel_stone.webp",
+      "sha256": "5599ac267a69d9016a58c4c874a63b2271525caf91c7b3a5e63e709484b863df",
+      "size": [
+        768,
+        768
+      ],
+      "operation": "Deterministic procedural albedo at 1536px, Lanczos downsample to 768px, WebP quality 94.",
+      "physical_tile_m": [
+        2.56,
+        2.56
+      ],
+      "source_size": [
+        1536,
+        1536
+      ],
+      "runtime_bytes": 14076,
+      "edge_jump_rgb_mean_0_255": {
+        "left_right": 0.4097222089767456,
+        "top_bottom": 0.4500868022441864
+      }
+    },
+    "brick": {
+      "role": "Dormer house (se): red-brown brick, light lime mortar.",
+      "source": "assets/source/materials/masonry/brick.png",
+      "source_sha256": "f2880daec85fb00932673737d3cff9b87941c6e2c7ae6ff2681cf742867c6483",
+      "generator": "tools/assets/materials/make_clean_masonry.py",
+      "path": "assets/materials/shared/brick.webp",
+      "sha256": "44d8f14eb0d86986f70e7020de7e7b7b0dcf58fd775e1f5339dc3c7af0a135ee",
+      "size": [
+        768,
+        768
+      ],
+      "operation": "Deterministic procedural albedo at 1536px, Lanczos downsample to 768px, WebP quality 94.",
+      "physical_tile_m": [
+        2.56,
+        2.56
+      ],
+      "source_size": [
+        1536,
+        1536
+      ],
+      "runtime_bytes": 61536,
+      "edge_jump_rgb_mean_0_255": {
+        "left_right": 1.1050347089767456,
+        "top_bottom": 1.2673611640930176
+      }
+    },
+    "rubble": {
+      "role": "Smithy (ne): irregular fieldstone with recessed mortar.",
+      "source": "assets/source/materials/masonry/rubble.png",
+      "source_sha256": "5cb6126506df03c6e75a7fbdbe7300c61801a872195c03c0a155135ce3a7cfcb",
+      "generator": "tools/assets/materials/make_clean_masonry.py",
+      "path": "assets/materials/shared/rubble.webp",
+      "sha256": "7fc64bfe3814a1b3576ce0fec10b79bb7f6edc5f026133e444d2ace1e7da578e",
+      "size": [
+        768,
+        768
+      ],
+      "operation": "Deterministic procedural albedo at 1536px, Lanczos downsample to 768px, WebP quality 94.",
+      "physical_tile_m": [
+        2.56,
+        2.56
+      ],
+      "source_size": [
+        1536,
+        1536
+      ],
+      "runtime_bytes": 57906,
+      "edge_jump_rgb_mean_0_255": {
+        "left_right": 3.035590171813965,
+        "top_bottom": 3.9205729961395264
+      }
+    },
+    "plaster": {
+      "role": "Merchant shop (nw): warm lime plaster between the timber frame.",
+      "source": "assets/source/materials/masonry/plaster.png",
+      "source_sha256": "7feb47b67f69ee9e969d56f869831a84b3548dbd2fe2f2b5ad66f56b475f55fc",
+      "generator": "tools/assets/materials/make_clean_masonry.py",
+      "path": "assets/materials/shared/plaster.webp",
+      "sha256": "3847da83df10d4957b6e91a16f5d5d82d4a72670d075a110e0e2aa0ef31fc286",
+      "size": [
+        768,
+        768
+      ],
+      "operation": "Deterministic procedural albedo at 1536px, Lanczos downsample to 768px, WebP quality 94.",
+      "physical_tile_m": [
+        2.56,
+        2.56
+      ],
+      "source_size": [
+        1536,
+        1536
+      ],
+      "runtime_bytes": 11524,
+      "edge_jump_rgb_mean_0_255": {
+        "left_right": 0.1809895783662796,
+        "top_bottom": 0.1792534738779068
+      }
+    },
+    "planks": {
+      "role": "Stable house (sw): horizontal timber weatherboards.",
+      "source": "assets/source/materials/masonry/planks.png",
+      "source_sha256": "8b2872d78760341d8554263269426082eb19747b3f0ff9fdc83632f2fa20dd4f",
+      "generator": "tools/assets/materials/make_clean_masonry.py",
+      "path": "assets/materials/shared/planks.webp",
+      "sha256": "0cebe6305ee1ab1e0e14dfdcc8724a55bb02f7c383e729f980b7f6ca6a39965b",
+      "size": [
+        768,
+        768
+      ],
+      "operation": "Deterministic procedural albedo at 1536px, Lanczos downsample to 768px, WebP quality 94.",
+      "physical_tile_m": [
+        2.56,
+        2.56
+      ],
+      "source_size": [
+        1536,
+        1536
+      ],
+      "runtime_bytes": 21498,
+      "edge_jump_rgb_mean_0_255": {
+        "left_right": 0.006076388992369175,
+        "top_bottom": 0.5099826455116272
+      }
+    },
+    "clay": {
+      "role": "Merchant shop roof: terracotta barrel tiles.",
+      "source": "assets/source/materials/masonry/clay.png",
+      "source_sha256": "f598889993fb2e3840e54d92e9b76aca6f9b8c8ac2e6fe9ed4dc1f3fc58ef283",
+      "generator": "tools/assets/materials/make_clean_masonry.py",
+      "path": "assets/materials/shared/clay.webp",
+      "sha256": "96dfb4bd535b5fe264473854eaf235e7a41d4e640d1c88075026a26e1ad2d15c",
+      "size": [
+        768,
+        768
+      ],
+      "operation": "Deterministic procedural albedo at 1536px, Lanczos downsample to 768px, WebP quality 94.",
+      "physical_tile_m": [
+        2.6,
+        2.6
+      ],
+      "source_size": [
+        1536,
+        1536
+      ],
+      "runtime_bytes": 32690,
+      "edge_jump_rgb_mean_0_255": {
+        "left_right": 0.1870659738779068,
+        "top_bottom": 46.43098831176758
+      },
+      "courses": 8,
+      "columns": 6,
+      "stagger": "odd courses from the eave (image top) offset by half a column"
+    },
+    "shingle": {
+      "role": "Stable house roof: weathered split cedar shingles.",
+      "source": "assets/source/materials/masonry/shingle.png",
+      "source_sha256": "78a9d61a527c542051e811520a45cc2f28dc20e6e87d524962d23bb93b0760d9",
+      "generator": "tools/assets/materials/make_clean_masonry.py",
+      "path": "assets/materials/shared/shingle.webp",
+      "sha256": "c7ba4be858f1744a143f0edfd7e129df71b6127f4bce2d7bfddd06888f9bda76",
+      "size": [
+        768,
+        768
+      ],
+      "operation": "Deterministic procedural albedo at 1536px, Lanczos downsample to 768px, WebP quality 94.",
+      "physical_tile_m": [
+        2.6,
+        2.6
+      ],
+      "source_size": [
+        1536,
+        1536
+      ],
+      "runtime_bytes": 22978,
+      "edge_jump_rgb_mean_0_255": {
+        "left_right": 0.5577256679534912,
+        "top_bottom": 55.95399475097656
+      },
+      "courses": 8,
+      "columns": 6,
+      "stagger": "odd courses from the eave (image top) offset by half a column"
+    }
+  },
+  "physical_scale": {
+    "limestone_tile_m": 2.56,
+    "limestone_courses": 8,
+    "slate_tile_m": 2.6
+  },
+  "limitations": "Wall and roof tiles are deterministic procedural base colors with intrinsic edge tone only, not PBR scans; no normal/roughness maps. No ground or directional scene shadow is baked."
+}

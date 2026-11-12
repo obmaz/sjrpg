@@ -4,40 +4,40 @@
   "sourceType": "offline_native_mesh_bake",
   "inputs": [
     {
-      "path": "tools/architecture_art/bake.gd",
-      "sha256": "931f8f1526583c995a0f5af89f9172c54155de9455ddee238c6fa7ae131064eb"
+      "path": "tools/assets/architecture/bake.gd",
+      "sha256": "f4ca89e250a3158b6cefdfb452d7fbfe0439fd6f59937201df0fd5a4d84e5dc7"
     },
     {
-      "path": "tools/architecture_art/fortress_builder.gd",
-      "sha256": "9ac54852ba98e50cc9ee503ab655623b43a750a816e7f85606692747f727e7a1"
+      "path": "tools/assets/architecture/fortress_builder.gd",
+      "sha256": "6683fee734311ab5f0f00c06c959a3d32c769eda42321a95b63c8bf6dbe25927"
     },
     {
-      "path": "tools/architecture_art/medieval_details.gd",
+      "path": "tools/assets/architecture/medieval_details.gd",
       "sha256": "5e4f5d3ecd4b74f72acee622f84bcab0b119c62b009f35d8550feb5abae8352b"
     },
     {
-      "path": "assets/models/materials/village_craft/surfaces.gd",
-      "sha256": "8aa72ffb1177ae1f91101f04a9bdcb34304e8d399fe975dd666d14a2dd9fe8af"
+      "path": "assets/materials/village_craft/surfaces.gd",
+      "sha256": "d65873251b691a43132daab4722bd0a8bbb7c7b2c5ffbf4212ab867363b7196d"
     },
     {
-      "path": "scripts/iso.gd",
+      "path": "scripts/core/iso.gd",
       "sha256": "2b727818d9bdf36c7aa6308d24c785ba9474aa217b10c82ba67c54c1a1404bfd"
     },
     {
-      "path": "scripts/village.gd",
-      "sha256": "b4bdba097b36659e9eb0c3eae87f0c1236a3229da7c1857a387ec166406cd59e"
+      "path": "scripts/world/village.gd",
+      "sha256": "a69c967119892ffcd86448d6413ef9edacb8554f760470e2ff2126b005e27f77"
     },
     {
-      "path": "scripts/forest_region.gd",
+      "path": "scripts/world/forest_region.gd",
       "sha256": "c1a0c16329081deff53d118b41f6ee1dd6f31d5b334c61a34eb2a924d5402e58"
     },
     {
       "path": "assets/data/village.json",
-      "sha256": "830c6b0125c090318b26482c151e789b12bf887164cd970246e2a0a093c88f72"
+      "sha256": "931f2f82be69ed860a2c122b949abcc0a5243e24b24fe818a34f2e5369a8fdff"
     },
     {
-      "path": "scripts/native_fortress_plan.gd",
-      "sha256": "8164e5fa8e50eef2298a39ec7734283d578f3a3905707af675625f9add2c3cf3"
+      "path": "scripts/world/geometry/fortress_plan_3d.gd",
+      "sha256": "72927c91779ef214b246f14221ef57e424754b3133aad094e51ef995831e4dfe"
     }
   ],
   "outputs": [
@@ -59,7 +59,7 @@
     },
     {
       "path": "materials/wood.tres",
-      "sha256": "da7b26a54b417c4d14ecaa83c4ff7f5363e3b02db1951da262dfd325109d31cb"
+      "sha256": "3bf36ccc8f39af1e76d0fdf827c34dff82ef6d91910c3fc46f17f6d48bc544ec"
     },
     {
       "path": "materials/iron.tres",
@@ -67,11 +67,11 @@
     },
     {
       "path": "materials/stone.tres",
-      "sha256": "87e7dad123ae3fca731e4e9d9116fc33dc470093ebdcce6a5cb2c8ab6161a669"
+      "sha256": "869e1d1850b5d1f9686de6a1c2b25c1198678bf3c4b570fb889c77958a240ac1"
     },
     {
       "path": "materials/granite.tres",
-      "sha256": "f299f946e441e2583f53f7c5e133cbf04328599027dd5595bc57523490c51df2"
+      "sha256": "d6a3ec2daca36e57b3df97357bf1da501d2ba14c73207f2a075def187c8c9707"
     }
   ],
   "triangles": 37472,

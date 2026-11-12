@@ -4,36 +4,36 @@
   "sourceType": "offline_native_mesh_bake",
   "inputs": [
     {
-      "path": "tools/architecture_art/bake.gd",
-      "sha256": "931f8f1526583c995a0f5af89f9172c54155de9455ddee238c6fa7ae131064eb"
+      "path": "tools/assets/architecture/bake.gd",
+      "sha256": "f4ca89e250a3158b6cefdfb452d7fbfe0439fd6f59937201df0fd5a4d84e5dc7"
     },
     {
-      "path": "tools/architecture_art/house_builder.gd",
-      "sha256": "cbb3338372e8af2c2ce29e5280ef2a3104e0ea2efd80842f968c9a6eed97d5ef"
+      "path": "tools/assets/architecture/house_builder.gd",
+      "sha256": "ae30d307b8119e5d639f3cb75310a26a69a10cef1b642101fedf1593a18cc17a"
     },
     {
-      "path": "tools/architecture_art/medieval_details.gd",
+      "path": "tools/assets/architecture/medieval_details.gd",
       "sha256": "5e4f5d3ecd4b74f72acee622f84bcab0b119c62b009f35d8550feb5abae8352b"
     },
     {
-      "path": "assets/models/materials/village_craft/surfaces.gd",
-      "sha256": "8aa72ffb1177ae1f91101f04a9bdcb34304e8d399fe975dd666d14a2dd9fe8af"
+      "path": "assets/materials/village_craft/surfaces.gd",
+      "sha256": "d65873251b691a43132daab4722bd0a8bbb7c7b2c5ffbf4212ab867363b7196d"
     },
     {
-      "path": "scripts/iso.gd",
+      "path": "scripts/core/iso.gd",
       "sha256": "2b727818d9bdf36c7aa6308d24c785ba9474aa217b10c82ba67c54c1a1404bfd"
     },
     {
-      "path": "scripts/village.gd",
-      "sha256": "b4bdba097b36659e9eb0c3eae87f0c1236a3229da7c1857a387ec166406cd59e"
+      "path": "scripts/world/village.gd",
+      "sha256": "a69c967119892ffcd86448d6413ef9edacb8554f760470e2ff2126b005e27f77"
     },
     {
-      "path": "scripts/forest_region.gd",
+      "path": "scripts/world/forest_region.gd",
       "sha256": "c1a0c16329081deff53d118b41f6ee1dd6f31d5b334c61a34eb2a924d5402e58"
     },
     {
       "path": "assets/data/village.json",
-      "sha256": "830c6b0125c090318b26482c151e789b12bf887164cd970246e2a0a093c88f72"
+      "sha256": "931f2f82be69ed860a2c122b949abcc0a5243e24b24fe818a34f2e5369a8fdff"
     },
     {
       "path": "assets/models/architecture/shared/house_plan.gd",
@@ -59,15 +59,15 @@
     },
     {
       "path": "materials/stone.tres",
-      "sha256": "fc63ac734da5ed162d471549ff0fef9af0794c7e341efd8718e25f7d7069e34c"
+      "sha256": "587b6825a25d7d340768fe67145a223eeb5f04d4a27ef39f9781b1a39eac0f32"
     },
     {
       "path": "materials/wall.tres",
-      "sha256": "959880071ba68407080bd7cd36739471958371b99b01fe814ee5b0732743438d"
+      "sha256": "8e7426e91ff87a58fe679004c5e1e0cf80fbfcbf20010734de778ca3e58dfabe"
     },
     {
       "path": "materials/wood.tres",
-      "sha256": "e7b9fb85213fae97d10e0364fc17fbeaffb44983d14fcc506d9fb698d25e834b"
+      "sha256": "cf9104d362897ac753ff9ab57802f0eccdcaad02db9824af5a2fd8b46be891af"
     },
     {
       "path": "materials/iron.tres",
@@ -79,7 +79,7 @@
     },
     {
       "path": "materials/slate.tres",
-      "sha256": "653e8a4d47e5d0190e40eb65cfadcd4b0fc5a6d19a332bf46471a3aa0c0ee497"
+      "sha256": "f0b872de7288d50d3be3fb910a170b41ebb93bab9ff7f21444bd1a7ff347eb18"
     }
   ],
   "triangles": 8008,

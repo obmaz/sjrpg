@@ -1,5 +1,5 @@
 {
- "parent": "assets/source/gate-cohesive-a.png",
+ "parent": "assets/source/architecture/fortress/concepts/gate-cohesive-a.png",
  "parent_sha256": "2abd38a31c555e1cc379c91c645a99775104aeb0e64cb79697896b1ae9e27983",
  "warp": "gate-0",
  "parent_mesh": {
@@ -1527,6 +1527,6 @@
   430.8971966335042,
   467.27026359245065
  ],
- "output": "assets/source/wall-from-gate.png",
+ "output": "assets/source/architecture/fortress/concepts/wall-from-gate.png",
  "sha256": "5fa421880b7020c7fe45a037ddf527db878cb42c3dcc31c8f8ebffbd2d6ec943"
 }

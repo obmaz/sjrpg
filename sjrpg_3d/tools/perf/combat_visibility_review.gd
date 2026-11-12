@@ -24,7 +24,7 @@ func _ready() -> void:
 
 
 func _game() -> Node:
-	if is_instance_valid(_screen.current) and _screen.current is NativeAdventure:
+	if is_instance_valid(_screen.current) and _screen.current is Adventure3D:
 		return _screen.current.simulation
 	return null
 
@@ -249,7 +249,7 @@ func _prepare(requested: String) -> void:
 	game.hud._toast_plaque.hide()
 	game.hud._update_layout()
 	game.hud.controls._layout()
-	var presenter: Node = game.ortho_preview
+	var presenter: Node = game.world_renderer
 	presenter._world_environment._clock = 0.67
 	presenter.request_redraw()
 	presenter._process(0.0)
@@ -279,7 +279,7 @@ func _publish(ready: bool) -> void:
 		"frames_drawn": Engine.get_frames_drawn()}
 	var game: Node = _game()
 	if game != null and bool(game.get("native_ready")):
-		var presenter: Node = game.ortho_preview
+		var presenter: Node = game.world_renderer
 		result["hero"] = GameState.hero_class
 		result["paused"] = get_tree().paused
 		result["scope"] = "cave" if game.dungeon.active else "forest"

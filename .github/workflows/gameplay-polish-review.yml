@@ -19,7 +19,7 @@ jobs:
       - name: Import and test real combat, slots and cave contracts
         run: |
           tools/setup_godot.sh
-          sjrpg_3d/tools/check.sh --only=native_forest_props,native_cave_torches,native_enemy_feedback,native_zone_fx,save_exit_guard,native_cave_crawler,cave_swarm,native_cave_geometry,background,entry_loading,save_slots,quests,dungeon,encounters,encounter_combat,encounter_saving,native_encounter_props,native_projectile_fx,ortho_3d_motion,native_render_budget
+          sjrpg_3d/tools/check.sh --only=native_forest_props,native_cave_torches,native_enemy_feedback,native_zone_fx,save_exit_guard,native_cave_crawler,cave_swarm,native_cave_geometry,background,entry_loading,save_slots,quests,dungeon,encounters,encounter_combat,encounter_saving,native_encounter_props,native_projectile_fx,hero_animation_3d,native_render_budget
   capture:
     if: "!contains(github.event.head_commit.message, '[test-only]')"
     runs-on: ubuntu-latest

@@ -38,7 +38,7 @@ func _walk(player: Player, target: Vector2, frames: int) -> void:
 func make_game(cls := "warrior") -> Node:
 	GameState.delete_save()
 	GameState.new_game(cls)
-	var game := preload("res://scripts/game.gd").new()
+	var game := preload("res://scripts/gameplay/game.gd").new()
 	add_child(game)
 	await _frames(2)
 	while not game.native_ready:

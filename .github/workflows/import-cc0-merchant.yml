@@ -32,25 +32,25 @@ jobs:
               id: source_cache
               with:
                   path: /tmp/sjrpg-cc0-merchant-source
-                  key: cc0-character-sources-${{ hashFiles('sjrpg_3d/tools/hero_art/source-provenance.json') }}-${{ github.run_id }}
+                  key: cc0-character-sources-${{ hashFiles('sjrpg_3d/tools/assets/heroes/source-provenance.json') }}-${{ github.run_id }}
                   restore-keys: |
-                      cc0-character-sources-${{ hashFiles('sjrpg_3d/tools/hero_art/source-provenance.json') }}-
+                      cc0-character-sources-${{ hashFiles('sjrpg_3d/tools/assets/heroes/source-provenance.json') }}-
             - name: Verify exact official free source files and packaged CC0 licenses
-              run: python3 sjrpg_3d/tools/hero_art/fetch_sources.py
+              run: python3 sjrpg_3d/tools/assets/heroes/fetch_sources.py
             - name: Build actual adult merchant and verify exported geometry
-              run: blender --background --python-exit-code 1 --python sjrpg_3d/tools/hero_art/export_cc0_merchant.py
+              run: blender --background --python-exit-code 1 --python sjrpg_3d/tools/assets/heroes/export_cc0_merchant.py
             - name: Import with the pinned engine and publish candidate blobs without moving refs
               env:
                   SJRPG_ASSET_TOKEN: ${{ github.token }}
               run: |
                   chmod +x tools/*.sh sjrpg_3d/tools/*.sh sjrpg_2d/tools/*.sh
                   tools/setup_godot.sh
-                  python3 sjrpg_3d/tools/hero_art/publish_merchant_blobs.py
+                  python3 sjrpg_3d/tools/assets/heroes/publish_merchant_blobs.py
             - uses: actions/cache/save@v4
               if: always()
               with:
                   path: /tmp/sjrpg-cc0-merchant-source
-                  key: cc0-character-sources-${{ hashFiles('sjrpg_3d/tools/hero_art/source-provenance.json') }}-${{ github.run_id }}
+                  key: cc0-character-sources-${{ hashFiles('sjrpg_3d/tools/assets/heroes/source-provenance.json') }}-${{ github.run_id }}
             - uses: actions/upload-artifact@v6
               if: always()
               with:
@@ -60,6 +60,6 @@ jobs:
                       build/cc0-merchant/provenance.json
                       build/cc0-merchant/LICENSE-*.txt
                       build/cc0-merchant/published-blobs.json
-                      build/cc0-merchant/godot-import/assets/art/native_residents
+                      build/cc0-merchant/godot-import/assets/models/residents
                   if-no-files-found: ignore
                   retention-days: 7

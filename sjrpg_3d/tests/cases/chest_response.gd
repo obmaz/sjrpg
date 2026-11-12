@@ -11,9 +11,9 @@ func run() -> void:
 	await _frames(4)
 	for enemy: Enemy in game.enemies:
 		enemy.set_process(false)
-	var preview: Ortho3DPreview = game.ortho_preview
-	preview.set_process(false)
-	var props: NativeEncounterProps3D = preview._encounter_props
+	var renderer: WorldRenderer3D = game.world_renderer
+	renderer.set_process(false)
+	var props: EncounterPropRenderer3D = renderer._encounter_props
 	props.sync()
 	var iron: Chest
 	var gold: Chest
@@ -43,7 +43,7 @@ func run() -> void:
 		"resisted impact rattles only inside the existing full lid sweep",
 		(
 			lid.rotation.x < 0
-			and lid.rotation.x > deg_to_rad(NativeEncounterMesh3D.OPEN_ANGLE)
+			and lid.rotation.x > deg_to_rad(EncounterGeometry3D.OPEN_ANGLE)
 			and entry["root"].transform == anchor
 		)
 	)
@@ -82,7 +82,7 @@ func run() -> void:
 		"real opening passes through a visible intermediate hinge pose",
 		(
 			lid.rotation.x < -.01
-			and lid.rotation.x > deg_to_rad(NativeEncounterMesh3D.OPEN_ANGLE) + .01
+			and lid.rotation.x > deg_to_rad(EncounterGeometry3D.OPEN_ANGLE) + .01
 		)
 	)
 	get_tree().paused = true
@@ -97,7 +97,7 @@ func run() -> void:
 	check(
 		"opening settles once without another reward or continuing process",
 		(
-			is_equal_approx(lid.rotation.x, deg_to_rad(NativeEncounterMesh3D.OPEN_ANGLE))
+			is_equal_approx(lid.rotation.x, deg_to_rad(EncounterGeometry3D.OPEN_ANGLE))
 			and not iron.is_processing()
 			and GameState.gold == paid
 			and entry["root"].transform == anchor
@@ -115,7 +115,7 @@ func run() -> void:
 			and not gold.is_processing()
 			and is_equal_approx(
 				(gold_entry["lid"] as Node3D).rotation.x,
-				deg_to_rad(NativeEncounterMesh3D.OPEN_ANGLE)
+				deg_to_rad(EncounterGeometry3D.OPEN_ANGLE)
 			)
 		)
 	)

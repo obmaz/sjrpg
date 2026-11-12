@@ -23,7 +23,7 @@ func run() -> void:
 	var door_a := chapel.native_point(Vector2(door["a"][0], door["a"][1]))
 	var door_b := chapel.native_point(Vector2(door["b"][0], door["b"][1]))
 	var door_height := door_a.distance_to(door_b) / Iso.S
-	check("enlarged chapel source retains its doorway proportions", door_height >= 120.0 * NativeChapelPlan.SIZE_FACTOR and door_height <= 130.0 * NativeChapelPlan.SIZE_FACTOR, str(door_height))
+	check("enlarged chapel source retains its doorway proportions", door_height >= 120.0 * ChapelPlan3D.SIZE_FACTOR and door_height <= 130.0 * ChapelPlan3D.SIZE_FACTOR, str(door_height))
 	var area := 0.0
 	for index in v.terrace.size():
 		area += v.terrace[index].cross(v.terrace[(index + 1) % v.terrace.size()])

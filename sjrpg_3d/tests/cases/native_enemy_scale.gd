@@ -48,7 +48,7 @@ func run() -> void:
 	var game := await make_game("warrior")
 	game.set_process(false)
 	game.encounters.set_process(false)
-	var preview: Ortho3DPreview = game.ortho_preview
+	var renderer: WorldRenderer3D = game.world_renderer
 	var backend: SpatialWorld3D = game.spatial_world
 	# 실제 생성 위치 중 가장 큰 종과 한 걸음의 여유까지 들어가는 공터를 고른다.
 	# 작은 고블린의 합법 위치가 늑대·골렘까지 수용한다고 가정하지 않는다.
@@ -75,7 +75,7 @@ func run() -> void:
 		old_enemy.queue_free()
 	game.enemies.clear()
 	await _frames(2)
-	for kind: String in NativeEnemyModels.KINDS:
+	for kind: String in EnemyRenderer3D.KINDS:
 		var enemy := Enemy.new()
 		enemy.setup(game, kind, 1)
 		enemy.position = spawn
@@ -84,8 +84,8 @@ func run() -> void:
 		game.enemies.append(enemy)
 		enemy.set_process(false)
 		await _frames(2)
-		preview._enemy_models.sync()
-		var model: Dictionary = preview._enemy_models.entries[enemy.get_instance_id()]
+		renderer._enemy_models.sync()
+		var model: Dictionary = renderer._enemy_models.entries[enemy.get_instance_id()]
 		var root: Node3D = model["root"]
 		var metres: float = Enemy.NATIVE_HEIGHT_METRES[kind]
 		var old_heights := {
@@ -138,7 +138,7 @@ func run() -> void:
 				SpatialWorld3D.actor_dimensions(enemy, 7.0).x, SpatialWorld3D.radius_metres(7.0)
 			)
 		)
-		var foot: Vector3 = preview.actor_foot(enemy)
+		var foot: Vector3 = renderer.actor_foot(enemy)
 		var from: Vector2 = enemy.position + Vector2(-100, 10)
 		var to: Vector2 = enemy.position + Vector2(100, 10)
 		var chest_y: float = foot.y + metres * 0.5
@@ -164,14 +164,14 @@ func run() -> void:
 		)
 		enemy.force_chase()
 		enemy._step(Vector2.RIGHT, 0.04)
-		preview._enemy_models.sync()
+		renderer._enemy_models.sync()
 		check(
 			"walking keeps native feet and canonical collider size " + kind,
 			(
 				root.position.is_equal_approx(
 					(
-						preview.actor_foot(enemy)
-						+ Ortho3DPreview.ground_position(enemy.sprite.position)
+						renderer.actor_foot(enemy)
+						+ WorldRenderer3D.ground_position(enemy.sprite.position)
 					)
 				)
 				and is_equal_approx(shape.height, metres)
@@ -179,7 +179,7 @@ func run() -> void:
 			)
 		)
 		enemy.take_damage(1.0, null)
-		preview._enemy_models.sync()
+		renderer._enemy_models.sync()
 		var ratio: float = metres / float(model["base_height"])
 		var squash: Vector2 = enemy.sprite.squash_scale()
 		check(
@@ -190,28 +190,28 @@ func run() -> void:
 				)
 				and root.position.is_equal_approx(
 					(
-						preview.actor_foot(enemy)
-						+ Ortho3DPreview.ground_position(enemy.sprite.position)
+						renderer.actor_foot(enemy)
+						+ WorldRenderer3D.ground_position(enemy.sprite.position)
 					)
 				)
 			)
 		)
 		enemy.take_damage(enemy.max_hp * 2.0, null)
-		preview._enemy_models.sync()
+		renderer._enemy_models.sync()
 		check(
 			"death retains native model without rescaling canonical height " + kind,
 			(
 				enemy.dead
 				and not game.enemies.has(enemy)
-				and preview._enemy_models.entries.has(enemy.get_instance_id())
+				and renderer._enemy_models.entries.has(enemy.get_instance_id())
 				and is_equal_approx(enemy.sprite.body_height / SpatialWorld3D.VERTICAL, metres)
 			)
 		)
 		var corpse: Dictionary = game.corpses.back()
 		game._tick_corpses(0.2)
-		preview._world_environment._sync_corpses()
+		renderer._world_environment._sync_corpses()
 		var visual: Node = corpse["visual"]
-		var fallen: Dictionary = preview._world_environment._corpses[visual.get_instance_id()]
+		var fallen: Dictionary = renderer._world_environment._corpses[visual.get_instance_id()]
 		var fallen_root: Node3D = fallen["root"]
 		var fallen_bounds: AABB = _bounds(fallen_root, false, true)
 		check(
@@ -224,7 +224,7 @@ func run() -> void:
 						(
 							fallen_root.position.y
 							+ fallen_bounds.position.y
-							- preview.surface_height(corpse["pos"])
+							- renderer.surface_height(corpse["pos"])
 							- 0.012
 						)
 					)
@@ -250,7 +250,7 @@ func run() -> void:
 		game.enemies.erase(enemy)
 		enemy.queue_free()
 		await _frames(2)
-		preview._enemy_models.sync()
-		preview._world_environment._sync_corpses()
+		renderer._enemy_models.sync()
+		renderer._world_environment._sync_corpses()
 	game.queue_free()
 	await _frames(2)

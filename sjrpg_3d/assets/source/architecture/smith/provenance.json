@@ -24,8 +24,8 @@
   ],
   "layout": "layout.json",
   "layoutGenerator": {
-    "path": "tools/preview3d/render_facades.gd",
-    "sha256": "a71425f9a521950597e9565bfd9887dd05d6f005869c0f567b2ba22d8a624898"
+    "path": "tools/review/models/render_facades.gd",
+    "sha256": "ab90e2ba190c58e73654ff3286da3c9233db5a23133998b49ac1485aaf1e8182"
   },
   "notes": "생성 픽셀 무가공 채택. 재료 고유색이며 별도 법선/거칠기 맵은 만들지 않았다. 개구부/골조는 실제 3D 기하가 담당한다.",
   "inputGeneration": {
@@ -54,8 +54,8 @@
     ],
     "layout": "layout.json",
     "layoutGenerator": {
-      "path": "tools/preview3d/render_facades.gd",
-      "sha256": "a71425f9a521950597e9565bfd9887dd05d6f005869c0f567b2ba22d8a624898"
+      "path": "tools/review/models/render_facades.gd",
+      "sha256": "ab90e2ba190c58e73654ff3286da3c9233db5a23133998b49ac1485aaf1e8182"
     },
     "notes": "생성 픽셀 무가공 채택. 재료 고유색이며 별도 법선/거칠기 맵은 만들지 않았다. 개구부/골조는 실제 3D 기하가 담당한다."
   }

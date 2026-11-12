@@ -47,7 +47,7 @@ def main():
                             visible_bounds=list(bounds), body_height=112.0,
                             pixels_sha256=hashlib.sha256(tile.tobytes()).hexdigest(), source_roi=item['roi'])
         labels[label] = key
-    output = ROOT / 'assets/art/actors/npcs.webp'
+    output = ROOT / 'assets/sprites/actors/npcs.webp'
     temporary = output.with_suffix('.tmp')
     atlas.save(temporary, 'WEBP', quality=94, alpha_quality=100, method=6, exact=True)
     temporary.replace(output)

@@ -1,6 +1,6 @@
 {
  "0": {
-  "png": "assets/source/hill-new.png",
+  "png": "assets/source/environment/landmarks/hill-new.png",
   "F": [
    540,
    870
@@ -29,7 +29,7 @@
   "native_size": 1254
  },
  "1": {
-  "png": "assets/source/garden-new.png",
+  "png": "assets/source/environment/landmarks/garden-new.png",
   "F": [
    545,
    830

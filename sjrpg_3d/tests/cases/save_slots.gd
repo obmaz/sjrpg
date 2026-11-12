@@ -7,7 +7,7 @@ const ROOT := "user://tests/save-slots"
 func run() -> void:
 	var old_path := GameState.slot_path(1)
 	var old_slot := GameState.active_slot
-	var defaults := preload("res://scripts/game_state.gd").new()
+	var defaults := preload("res://scripts/state/game_state.gd").new()
 	var default_path: String = ProjectSettings.globalize_path(defaults.slot_path(1))
 	check("default slot storage belongs exclusively to the3D namespace", default_path.contains("/sjrpg_3d/") and not default_path.contains("/sjrpg_2d/") and defaults._legacy_path().get_base_dir() == defaults.slot_path(1).get_base_dir())
 	defaults.free()
@@ -118,7 +118,7 @@ func _check_migration() -> void:
 	_write(legacy, JSON.stringify({"class": "warrior", "gold": 1}))
 	check("repeated migration never overwrites occupied slot progress", GameState.slot_summaries()[0]["class"] == "mage" and GameState.load_game() and GameState.gold == 777)
 	check("delete migrated hero leaves a durable receipt", GameState.delete_slot(1) and not GameState.save_game() and not GameState.slot_summaries()[0]["occupied"])
-	var reopened := preload("res://scripts/game_state.gd").new()
+	var reopened := preload("res://scripts/state/game_state.gd").new()
 	reopened.save_path = ROOT + "/guardian_save_slot_1.json"
 	check("a new process cannot resurrect a deleted hero from legacy originals", not reopened.slot_summaries()[0]["occupied"] and not reopened.load_game() and reopened.create_slot(1, "warrior"))
 	reopened.free()

@@ -18,20 +18,20 @@ func _changed(first: Array[Transform3D], second: Array[Transform3D]) -> bool:
 
 
 func run() -> void:
-	if not check("mira runtime asset is the real imported scene", ResourceLoader.exists(NativeResidents3D.IMPORTED_MODELS["mira"])):
+	if not check("mira runtime asset is the real imported scene", ResourceLoader.exists(ResidentRenderer3D.IMPORTED_MODELS["mira"])):
 		return
-	var model: Node3D = NativeResidents3D.create("mira")
+	var model: Node3D = ResidentRenderer3D.create("mira")
 	if not check("mira factory creates the imported root", model != null):
 		return
 	add_child(model)
 	await _frames(2)
-	check("mira has no unused procedural substitute", NativeResidents3D.build("mira") == null and str(model.get_meta("resident_source", "")) == "cc0_import" and str(model.get_meta("resident_asset", "")) == NativeResidents3D.IMPORTED_MODELS["mira"])
-	check("unmapped residents remain unmapped", NativeResidents3D.create("unknown") == null)
+	check("mira has no unused procedural substitute", ResidentRenderer3D.build("mira") == null and str(model.get_meta("resident_source", "")) == "cc0_import" and str(model.get_meta("resident_asset", "")) == ResidentRenderer3D.IMPORTED_MODELS["mira"])
+	check("unmapped residents remain unmapped", ResidentRenderer3D.create("unknown") == null)
 	check("imported root has baked unit scale", model.scale.is_equal_approx(Vector3.ONE))
-	var bounds: AABB = NativeResidents3D.local_bounds(model)
+	var bounds: AABB = ResidentRenderer3D.local_bounds(model)
 	check("mira soles use the shared actor ground pivot", absf(bounds.position.y) <= 0.015)
 	check("hooded Mira has the measured adult height", absf(bounds.size.y - 1.78) <= 0.04 and bounds.size.x > 0.3 and bounds.size.z > 0.15)
-	var meshes: Array[MeshInstance3D] = NativeResidents3D.descendant_meshes(model)
+	var meshes: Array[MeshInstance3D] = ResidentRenderer3D.descendant_meshes(model)
 	var skinned := false
 	var triangles := 0
 	var surfaces := 0
@@ -63,21 +63,21 @@ func run() -> void:
 	check("visual import creates no physics body", model.find_children("*", "CollisionObject3D", true, false).is_empty())
 	_verify_provenance()
 	print("ART_AUDIT imported_mira " + JSON.stringify({"bounds": str(bounds), "meshes": meshes.size(), "triangles": triangles}))
-	var animator: AnimationPlayer = NativeResidents3D.idle_player(model)
-	var skeleton: Skeleton3D = NativeResidents3D._find_skeleton(model)
+	var animator: AnimationPlayer = ResidentRenderer3D.idle_player(model)
+	var skeleton: Skeleton3D = ResidentRenderer3D._find_skeleton(model)
 	if not check("import retains a real skeleton and AnimationPlayer", animator != null and skeleton != null and skeleton.get_bone_count() == 65):
 		model.queue_free()
 		await _frames(2)
 		return
 	check("imported animation has no independent playback clock", animator.callback_mode_process == AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL and animator.autoplay.is_empty() and is_zero_approx(animator.playback_default_blend_time))
-	var first_sample: Dictionary = NativeResidents3D.sample_idle(model, 0.0)
+	var first_sample: Dictionary = ResidentRenderer3D.sample_idle(model, 0.0)
 	if not check("actual imported idle clip is present", not str(first_sample.get("clip", "")).is_empty()):
 		model.queue_free()
 		await _frames(2)
 		return
 	var clip: Animation = animator.get_animation(str(first_sample["clip"]))
 	var before: Array[Transform3D] = _pose(skeleton)
-	NativeResidents3D.sample_idle(model, clip.length * 0.37)
+	ResidentRenderer3D.sample_idle(model, clip.length * 0.37)
 	check("manual source-clock sampling changes actual bone transforms", _changed(before, _pose(skeleton)))
 	var held: Array[Transform3D] = _pose(skeleton)
 	var held_position: float = animator.current_animation_position
@@ -87,7 +87,7 @@ func run() -> void:
 	await _frames(2)
 	var game: Node = await make_game("mage")
 	await _frames(3)
-	var renderer: NativeResidents3D = game.ortho_preview._native_residents
+	var renderer: ResidentRenderer3D = game.world_renderer._native_residents
 	renderer.sync()
 	var mira: Villager
 	for candidate: Villager in game.village.npc_nodes.values():
@@ -106,7 +106,7 @@ func run() -> void:
 		game.queue_free()
 		await _frames(2)
 		return
-	check("mira has no duplicate 2D camera card", not game.ortho_preview._cards.has(mira.get_instance_id()))
+	check("mira has no duplicate 2D camera card", not game.world_renderer._cards.has(mira.get_instance_id()))
 	var bodies: int = game.spatial_world.actor_bodies.size()
 	var source_clock: float = mira._time
 	var source_pose: Array[Transform3D] = _pose(resident_skeleton)
@@ -142,7 +142,7 @@ func run() -> void:
 	mira.position += Vector2(12, -8)
 	mira.facing += 0.2
 	renderer.sync()
-	check("imported actor follows original feet and facing", resident_model.position.is_equal_approx(game.ortho_preview.actor_foot(mira)) and resident_model.scale.is_equal_approx(Vector3.ONE))
+	check("imported actor follows original feet and facing", resident_model.position.is_equal_approx(game.world_renderer.actor_foot(mira)) and resident_model.scale.is_equal_approx(Vector3.ONE))
 	mira.position = old_position
 	mira.visible = false
 	renderer.sync()
@@ -169,7 +169,7 @@ func run() -> void:
 
 
 func _verify_provenance() -> void:
-	var directory := "res://assets/source/native-residents/mira/"
+	var directory := "res://assets/source/residents/cc0/mira/"
 	var file: FileAccess = FileAccess.open(directory + "provenance.json", FileAccess.READ)
 	if not check("Mira preserves its actual source and conversion provenance", file != null):
 		return
@@ -178,7 +178,7 @@ func _verify_provenance() -> void:
 		return
 	var proof: Dictionary = parsed
 	check("Mira has its own role and exact packaged CC0 licensing", str(proof.get("asset", "")) == "mira" and str(proof.get("license", "")) == "CC0-1.0")
-	check("Mira runtime binary matches the provenance hash", str(proof.get("sha256", "")) == FileAccess.get_sha256(NativeResidents3D.IMPORTED_MODELS["mira"]))
+	check("Mira runtime binary matches the provenance hash", str(proof.get("sha256", "")) == FileAccess.get_sha256(ResidentRenderer3D.IMPORTED_MODELS["mira"]))
 	var budget: Dictionary = proof.get("offline_outfit_budget", {})
 	check("Mira simplification keeps the original face and exposed hands", not bool(budget.get("face_and_hands_decimated", true)) and int(proof.get("triangles", 0)) <= 18000 and int(proof.get("surfaces", 0)) <= 8)
 	for name: String in ["LICENSE-Outfits.txt", "LICENSE-Base.txt", "LICENSE-Animations.txt"]:

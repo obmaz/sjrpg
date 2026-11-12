@@ -3,7 +3,7 @@ extends TestCase
 
 
 func _native_active(game: Node) -> bool:
-	return is_instance_valid(game.ortho_preview) and game.ortho_preview.display.visible and game.field_root.visibility_layer == 0
+	return is_instance_valid(game.world_renderer) and game.world_renderer.display.visible and game.field_root.visibility_layer == 0
 
 
 func run() -> void:
@@ -16,9 +16,9 @@ func run() -> void:
 	Prefs.settings_path = "user://tests/native-edition-settings.cfg"
 	var game := await make_game("mage")
 	await _frames(3)
-	var preview: Ortho3DPreview = game.ortho_preview
+	var renderer: WorldRenderer3D = game.world_renderer
 	check("new3D adventure creates its native world without a preview parameter", _native_active(game) and is_instance_valid(game.spatial_world))
-	if preview == null:
+	if renderer == null:
 		game.queue_free()
 		await _frames(2)
 		Prefs.settings_path = old_path
@@ -33,14 +33,14 @@ func run() -> void:
 	game.hud.open_settings()
 	var panel: SettingsPanel = game.hud._panel
 	await _frames(2)
-	var pose_time: float = preview._hero_motion.sample_time
-	var pose_updates: int = preview._hero_motion.pose_updates
+	var pose_time: float = renderer._hero_motion.sample_time
+	var pose_updates: int = renderer._hero_motion.pose_updates
 	Prefs.set_low_resolution(not old_quality)
 	panel._rebuild()
 	await _frames(3)
-	check("paused settings reuse the live native world", get_tree().paused and _native_active(game) and game.ortho_preview == preview)
+	check("paused settings reuse the live native world", get_tree().paused and _native_active(game) and game.world_renderer == renderer)
 	check("paused settings preserve identity position health and attack clock", game.player.get_instance_id() == player_id and game.player.position == position and game.player.hp == hp and is_equal_approx(game.player._attack_time, attack_time) and GameState.hero_class == "mage")
-	check("paused menu changes do not advance the native cast pose", preview._hero_motion.sample_time == pose_time and preview._hero_motion.pose_updates == pose_updates)
+	check("paused menu changes do not advance the native cast pose", renderer._hero_motion.sample_time == pose_time and renderer._hero_motion.pose_updates == pose_updates)
 	var current: Label = panel.find_child("CurrentEdition", true, false)
 	var select_link: Button = panel.find_child("VersionSelect", true, false)
 	check("settings omit technical edition text and direct renderer switches", current == null and panel.find_child("Version2D", true, false) == null and panel.find_child("Version3D", true, false) == null and panel.find_child("Town2D", true, false) == null)
@@ -48,8 +48,8 @@ func run() -> void:
 	panel._confirm_restart()
 	await _frames(3)
 	panel._publish_version_buttons()
-	check("restart confirmation keeps the same paused native adventure without stale navigation", get_tree().paused and game.ortho_preview == preview and _native_active(game) and panel._version_buttons.is_empty())
-	var loaded := preload("res://scripts/prefs.gd").new()
+	check("restart confirmation keeps the same paused native adventure without stale navigation", get_tree().paused and game.world_renderer == renderer and _native_active(game) and panel._version_buttons.is_empty())
+	var loaded := preload("res://scripts/state/prefs.gd").new()
 	loaded.settings_path = Prefs.settings_path
 	add_child(loaded)
 	check("edition settings survive a fresh load from the isolated directory", loaded.low_resolution == Prefs.low_resolution and ProjectSettings.globalize_path(Prefs.settings_path).begins_with(OS.get_user_data_dir() + "/"))
@@ -58,19 +58,19 @@ func run() -> void:
 	game.player._cancel_actions()
 	game.player.position = game.village.gate_points[0] + (game.village.gate_points[0] - game.village.spawn_point).normalized() * 450.0
 	await _frames(3)
-	check("outside the town remains native3D with original field drawing culled", not Geometry2D.is_point_in_polygon(game.player.position, game.village.safe_zone) and _native_active(game) and preview._world_environment.forest.visible)
+	check("outside the town remains native3D with original field drawing culled", not Geometry2D.is_point_in_polygon(game.player.position, game.village.safe_zone) and _native_active(game) and renderer._world_environment.forest.visible)
 	game.player.position = game.dungeon.entry_point()
 	check("native adventure enters the existing cave encounter", game.dungeon.enter())
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	await _frames(2)
-	check("cave uses a visible native realm without revealing the2D field", game.dungeon.active and _native_active(game) and preview._world_environment.cave.visible and not preview._world_environment.forest.visible)
+	check("cave uses a visible native realm without revealing the2D field", game.dungeon.active and _native_active(game) and renderer._world_environment.cave.visible and not renderer._world_environment.forest.visible)
 	game.dungeon.leave("")
 	game.player.position = position
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	await _frames(2)
-	check("cave return reuses native assets and restores the native forest", game.ortho_preview == preview and _native_active(game) and preview._world_environment.forest.visible and not preview._world_environment.cave.visible)
+	check("cave return reuses native assets and restores the native forest", game.world_renderer == renderer and _native_active(game) and renderer._world_environment.forest.visible and not renderer._world_environment.cave.visible)
 	game.queue_free()
 	await _frames(2)
 	game = await make_game("warrior")

@@ -35,7 +35,7 @@ func run() -> void:
 	GameState.save_game()
 	check("interrupted defense becomes retryable", GameState.load_game() and Quests.phase("sun") == "accepted" and not Quests.state("sun")["started"] and Quests.state("sun")["defeated"] == 0)
 	check("other quest progress survives recovery", Quests.phase("roots") == "completed")
-	var game := preload("res://scripts/game.gd").new()
+	var game := preload("res://scripts/gameplay/game.gd").new()
 	add_child(game)
 	await _frames(2)
 	game.quest_runtime.report("moon")

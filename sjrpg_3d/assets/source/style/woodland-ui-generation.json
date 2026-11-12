@@ -5,7 +5,7 @@
   "latest_instruction": "Potions less photoreal; bottom four buttons more crafted, avatar and skill tree coherent.",
   "assets": [
     {
-      "runtime": "assets/art/hud/woodland-icons.png",
+      "runtime": "assets/ui/hud/woodland-icons.png",
       "dimensions": [
         1536,
         1024
@@ -42,7 +42,7 @@
       }
     },
     {
-      "runtime": "assets/art/hud/woodland-portraits.png",
+      "runtime": "assets/ui/hud/woodland-portraits.png",
       "dimensions": [
         1774,
         887

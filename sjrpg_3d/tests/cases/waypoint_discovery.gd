@@ -20,8 +20,8 @@ func run() -> void:
 	game.player.set_process(false)
 	game.exploration.set_process(false)
 	game.encounters.set_process(false)
-	var preview: Ortho3DPreview = game.ortho_preview
-	preview.set_process(false)
+	var renderer: WorldRenderer3D = game.world_renderer
+	renderer.set_process(false)
 	var at: Vector2 = game.village.portal_points["cave"]
 	game.spatial_world.teleport_source_actor(
 		game.player, at + Iso.project(Vector2(2.0, 0) * 65.0), Player.RADIUS
@@ -59,8 +59,8 @@ func run() -> void:
 			and banner.mouse_filter == Control.MOUSE_FILTER_IGNORE
 		)
 	)
-	preview._process(0.0)
-	var celebration: Ortho3DLevelUp = preview._level_up_fx
+	renderer._process(0.0)
+	var celebration: ProgressionEffects3D = renderer._level_up_fx
 	var entry: Dictionary = celebration._entries[source.get_instance_id()]
 	var root: Node3D = entry["root"]
 	var ring: MeshInstance3D = entry["ring"]
@@ -71,24 +71,24 @@ func run() -> void:
 			root.name == "WaypointDiscovery"
 			and (ring.mesh as TorusMesh).inner_radius > NativeWaypoint3D.RADIUS
 			and (
-				anchor.distance_to(Ortho3DPreview.ground_position(at, preview.surface_height(at)))
+				anchor.distance_to(WorldRenderer3D.ground_position(at, renderer.surface_height(at)))
 				< 0.01
 			)
 		)
 	)
 	game.player.position += Vector2(400, 400)
 	source._process(0.1)
-	preview._process(0.0)
+	renderer._process(0.0)
 	check(
 		"discovery stays at the waypoint when the hero leaves",
 		root.position == anchor and source.owner_node == null
 	)
 	var spark: MeshInstance3D = entry["sparks"][0]
 	Prefs.reduce_motion = true
-	preview._process(0.0)
+	renderer._process(0.0)
 	var stationary := spark.position
 	source._process(0.2)
-	preview._process(0.0)
+	renderer._process(0.0)
 	check(
 		"reduced motion holds the discovery glints in place",
 		spark.position == stationary and banner.rise_offset() == 0.0
@@ -96,7 +96,7 @@ func run() -> void:
 	Prefs.reduce_motion = false
 	source.set_process(true)
 	banner.set_process(true)
-	preview.set_process(true)
+	renderer.set_process(true)
 	get_tree().paused = true
 	var age := source.age
 	var banner_age := banner.age
@@ -108,7 +108,7 @@ func run() -> void:
 	get_tree().paused = false
 	source.set_process(false)
 	banner.set_process(false)
-	preview.set_process(false)
+	renderer.set_process(false)
 	game.spatial_world.teleport_source_actor(game.player, at, Player.RADIUS)
 	game.exploration.discover_current()
 	check(
@@ -127,7 +127,7 @@ func run() -> void:
 		banner.heading == "웨이포인트 발견" and banner.active and banner._pending.is_empty()
 	)
 	source._process(2.0)
-	preview._process(0.0)
+	renderer._process(0.0)
 	check(
 		"discovery geometry expires with the real source",
 		source.is_queued_for_deletion() and not celebration._entries.has(source.get_instance_id())

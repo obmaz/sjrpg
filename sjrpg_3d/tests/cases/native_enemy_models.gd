@@ -3,8 +3,8 @@ extends TestCase
 
 
 func run() -> void:
-	for kind: String in NativeEnemyModels.KINDS + [NativeEnemyModels.CRAWLER]:
-		var model := NativeEnemyModels.build(kind)
+	for kind: String in EnemyRenderer3D.KINDS + [EnemyRenderer3D.CRAWLER]:
+		var model := EnemyRenderer3D.build(kind)
 		var visual: NativeEnemyVisual = model["visual"]
 		add_child(visual)
 		var triangles := 0
@@ -41,7 +41,7 @@ func run() -> void:
 			"species remains a mobile budget rig " + kind,
 			visual.meshes.size() == 1 and triangles > 1000 and triangles < 6000
 		)
-		NativeEnemyModels.tint(model, Color.WHITE, .6, Color.RED, .4)
+		EnemyRenderer3D.tint(model, Color.WHITE, .6, Color.RED, .4)
 		check(
 			"native fade retains the source alpha " + kind,
 			is_equal_approx(visual.materials[0].albedo_color.a, .4)

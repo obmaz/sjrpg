@@ -23,39 +23,39 @@ func _stone_hit(meshes: Array[MeshInstance3D], origin: Vector3, ray: Vector3) ->
 
 
 func run() -> void:
-	var provenance: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/source/preview3d/houses/provenance.json"))
+	var provenance: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/source/architecture/houses/reference/provenance.json"))
 	var generator: Dictionary = provenance["generator"]
 	check("house provenance identifies the actual native mesh generator", FileAccess.get_sha256("res://" + str(generator["path"])) == generator["sha256"])
 	for texture: Dictionary in provenance["materials"]["textures"]:
 		check("house reuses recorded generated material pixels", FileAccess.get_sha256("res://" + str(texture["path"])) == texture["sha256"])
 	var game := await make_game("mage")
-	var preview: Ortho3DPreview = game.ortho_preview
-	check("house panes use reflected shared light rather than flat blue emission", not (preview._materials["glass"] as StandardMaterial3D).emission_enabled and (preview._materials["glass"] as StandardMaterial3D).roughness < 0.6)
-	_timber_axes(preview)
+	var renderer: WorldRenderer3D = game.world_renderer
+	check("house panes use reflected shared light rather than flat blue emission", not (renderer._materials["glass"] as StandardMaterial3D).emission_enabled and (renderer._materials["glass"] as StandardMaterial3D).roughness < 0.6)
+	_timber_axes(renderer)
 	var signatures := {}
 	var styles := {}
-	for key: String in NativeHouse3D.STYLES:
-		var style: Dictionary = NativeHouse3D.STYLES[key]
+	for key: String in HouseRenderer3D.STYLES:
+		var style: Dictionary = HouseRenderer3D.STYLES[key]
 		styles[str(style["wall"]) + "/" + str(style["slate"])] = true
 	check("the four houses never share the same wall and roof pair", styles.size() == 4)
 	for key: String in ["nw", "ne", "sw", "se"]:
-		var bounds := preview._building_bounds(key)
+		var bounds := renderer._building_bounds(key)
 		var width := maxf(3.5, bounds.size.x)
 		var depth := maxf(3.0, bounds.size.y)
 		var root := Node3D.new()
-		preview.stage.add_child(root)
+		renderer.stage.add_child(root)
 		root.position = Vector3(900, 0, 900)
-		var report := NativeHouse3D.build(preview, root, key, width, depth, 2.9)
+		var report := HouseRenderer3D.build(renderer, root, key, width, depth, 2.9)
 		var meshes: Array[MeshInstance3D] = report["meshes"]
 		var actual_bounds: AABB = report["bounds"]
 		print("ART_AUDIT native_house " + JSON.stringify({"key": key, "triangles": report["triangles"], "surfaces": report["surfaces"], "width": width, "depth": depth, "height_max": report["height_max"], "door_x": report["door_x"], "door_width": report["door_width"], "door_height": report["door_height"], "door_approach": {"x": report["door_approach"].position.x, "z": report["door_approach"].position.y, "width": report["door_approach"].size.x, "depth": report["door_approach"].size.y}, "openings": report["openings"].size(), "bounds_min": [actual_bounds.position.x, actual_bounds.position.y, actual_bounds.position.z], "bounds_max": [actual_bounds.end.x, actual_bounds.end.y, actual_bounds.end.z]}))
 		check("native house stays within its triangle/material budget: " + key, int(report["triangles"]) >= 6000 and int(report["triangles"]) <= 12000 and int(report["surfaces"]) == 6)
 		var style: Dictionary = report["style"]
-		check("each house has its own wall infill and roof cover: " + key, str(style["wall"]) != "stone" and FileAccess.file_exists(NativeAssetSurface.ROOT + {"nw":"shop","ne":"smith","sw":"stable","se":"home"}[key] + "/asset.json") and preview._materials.has(str(style["slate"])))
+		check("each house has its own wall infill and roof cover: " + key, str(style["wall"]) != "stone" and FileAccess.file_exists(BuildingSurfaceMaterials.ROOT + {"nw":"shop","ne":"smith","sw":"stable","se":"home"}[key] + "/asset.json") and renderer._materials.has(str(style["slate"])))
 		check("roof edge thickness remains inside recorded overhead allowance: " + key, actual_bounds.position.x >= -width * 0.5 - 0.24 and actual_bounds.end.x <= width * 0.5 + 0.24 and actual_bounds.position.z >= -depth * 0.5 - 0.24 and actual_bounds.end.z <= depth * 0.5 + 0.24)
 		check("house keeps the actual old collision footprint: " + key, (report["footprint"] as Vector2).is_equal_approx(Vector2(width, depth)) and report["closed_door"])
 		check("all houses use bonded edge dressings and staggered slate volumes: " + key, int(report["corner_quoins"]) >= 24 and int(report["slate_tiles"]) >= 100)
-		check("house wood reuses the actual shared timber pixels with explicit UVs: " + key, not (preview._materials["door"] as StandardMaterial3D).uv1_triplanar and (preview._materials["door"] as StandardMaterial3D).albedo_texture == (preview._materials["wood"] as StandardMaterial3D).albedo_texture)
+		check("house wood reuses the actual shared timber pixels with explicit UVs: " + key, not (renderer._materials["door"] as StandardMaterial3D).uv1_triplanar and (renderer._materials["door"] as StandardMaterial3D).albedo_texture == (renderer._materials["wood"] as StandardMaterial3D).albedo_texture)
 		var valid := true
 		var winding := true
 		var envelope := true
@@ -70,7 +70,7 @@ func run() -> void:
 				check("house installs its independent facade material", mesh.material_override is ShaderMaterial and mesh.material_override.has_meta("asset_id"))
 				check("actual house facade reaches its measured gable peak: " + key, is_equal_approx(mesh.material_override.get_shader_parameter("gable_rise"), float(report["roof_rise"])) and (mesh.material_override.get_shader_parameter("extent") as Vector3).is_equal_approx(Vector3(width - 0.40, report["eaves_height"], depth - 0.40)))
 			else:
-				check("house keeps shared structural materials", mesh.material_override == preview._materials[NativeHouse3D.resource_key(key, role)])
+				check("house keeps shared structural materials", mesh.material_override == renderer._materials[HouseRenderer3D.resource_key(key, role)])
 			for surface in mesh.mesh.get_surface_count():
 				var arrays := mesh.mesh.surface_get_arrays(surface)
 				var points: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
@@ -92,15 +92,15 @@ func run() -> void:
 						# Actual eave-facing lip triangles identify the course boundaries;
 						# caps, underlay and dormer roofs have different surface normals.
 						if normals[a].y < -0.05 and absf(normals[a].z) < 0.0001 and absf(normals[a].x) > 0.05:
-							var phase := minf(uv[a].y, minf(uv[b].y, uv[c].y)) * NativeHouse3D.SLATE_COURSES
+							var phase := minf(uv[a].y, minf(uv[b].y, uv[c].y)) * HouseRenderer3D.SLATE_COURSES
 							slate_course_grid = slate_course_grid and absf(phase - roundf(phase)) < 0.0001
 							measured_lips += 1
 							var stagger := fposmod(roundf(phase), 2.0) * 0.5
 							for vertex: int in [a, b, c]:
-								if absf(absf(points[vertex].z) - (depth * 0.5 + NativeHouse3D.EAVES)) < 0.005:
+								if absf(absf(points[vertex].z) - (depth * 0.5 + HouseRenderer3D.EAVES)) < 0.005:
 									continue
-								var joint := uv[vertex].x * NativeHouse3D.SLATE_COLUMNS - stagger
-								var gutter := 0.004 / NativeHouse3D.SLATE_TILE * NativeHouse3D.SLATE_COLUMNS
+								var joint := uv[vertex].x * HouseRenderer3D.SLATE_COLUMNS - stagger
+								var gutter := 0.004 / HouseRenderer3D.SLATE_TILE * HouseRenderer3D.SLATE_COLUMNS
 								slate_column_grid = slate_column_grid and absf(absf(joint - roundf(joint)) - gutter) < 0.0001
 								measured_joints += 1
 		check("all house mesh surfaces have finite vertices/UV/unit normals: " + key, valid)
@@ -127,16 +127,16 @@ func run() -> void:
 	await _frames(2)
 
 
-func _timber_axes(preview: Ortho3DPreview) -> void:
+func _timber_axes(renderer: WorldRenderer3D) -> void:
 	# Measure UV derivatives on the actual emitted beam geometry after rotation.
 	# A two-metre beam must retain grain direction and metre scale in all axes.
 	for axis in 3:
-		var builder := preload("res://tools/architecture_art/house_builder.gd").new()
+		var builder := preload("res://tools/assets/architecture/house_builder.gd").new()
 		var root := Node3D.new()
-		preview.stage.add_child(root)
+		renderer.stage.add_child(root)
 		root.position = Vector3(900, 0, 900)
 		builder._root = root
-		builder._materials["wood"] = preview._materials["door"]
+		builder._materials["wood"] = renderer._materials["door"]
 		var primitive := BoxMesh.new()
 		primitive.size = Vector3.ONE
 		builder._box_arrays = primitive.surface_get_arrays(0)
@@ -167,7 +167,7 @@ func _timber_axes(preview: Ortho3DPreview) -> void:
 			if absf(determinant) < 0.000001:
 				continue
 			var gradient: Vector3 = ((points[third] - points[first]) * d1.x - (points[second] - points[first]) * d2.x) / determinant
-			aligned = aligned and absf(gradient.normalized().dot(grain)) > 0.9999 and absf(gradient.length() - NativeHouse3D.TIMBER_TILE) < 0.0005
+			aligned = aligned and absf(gradient.normalized().dot(grain)) > 0.9999 and absf(gradient.length() - HouseRenderer3D.TIMBER_TILE) < 0.0005
 			measured += 1
 		check("rotated timber grain follows its real length and physical repeat axis" + str(axis), measured >= 8 and aligned)
 		root.queue_free()

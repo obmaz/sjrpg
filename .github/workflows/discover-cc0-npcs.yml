@@ -14,7 +14,7 @@ jobs:
         steps:
             - uses: actions/checkout@v7.0.1
             - name: Check fixed Standard archive licenses and actual model metadata
-              run: python3 sjrpg_3d/tools/hero_art/discover_cc0_npcs.py
+              run: python3 sjrpg_3d/tools/assets/heroes/discover_cc0_npcs.py
             - uses: actions/upload-artifact@v6
               if: always()
               with:

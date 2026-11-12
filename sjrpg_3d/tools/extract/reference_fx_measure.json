@@ -350,7 +350,7 @@
     2172,
     724
    ],
-   "override_path": "assets/art/effects/frost-low.webp",
+   "override_path": "assets/effects/textures/frost-low.webp",
    "packed_pivot": [
     192,
     244
@@ -532,7 +532,7 @@
      2172,
      724
     ],
-    "override_path": "assets/art/effects/frost-low.webp",
+    "override_path": "assets/effects/textures/frost-low.webp",
     "packed_pivot": [
      192,
      250

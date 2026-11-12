@@ -1,7 +1,7 @@
 extends TestCase
 ## Save-state geometry and guarded callbacks; browser harness supplies real input/visual proof.
-const REVIEW := preload("res://scripts/save_layout_review.gd")
-const SELECT := preload("res://scripts/class_select.gd")
+const REVIEW := preload("res://scripts/inspection/save_layout_review.gd")
+const SELECT := preload("res://scripts/ui/screens/class_select.gd")
 const EPS := 1.5
 
 

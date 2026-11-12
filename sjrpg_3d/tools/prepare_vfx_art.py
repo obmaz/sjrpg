@@ -11,7 +11,7 @@ for name, count in [('reward-atlas',3)]:
         cell = cell.convert('RGBa')
         cell.thumbnail((256,256),Image.Resampling.LANCZOS)
         atlas.paste(cell.convert('RGBA'),(index*256+(256-cell.width)//2,(256-cell.height)//2))
-    target = root/f'assets/art/effects/{name}.webp'
+    target = root/f'assets/effects/textures/{name}.webp'
     temporary = target.with_suffix('.tmp')
     atlas.save(temporary,'WEBP',quality=94,alpha_quality=100,exact=True)
     temporary.replace(target)

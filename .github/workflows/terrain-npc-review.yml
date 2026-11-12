@@ -62,7 +62,7 @@ jobs:
               if: matrix.edition == 'after'
               run: |
                   if test "$SJRPG_REVIEW_SCOPE" = architecture; then
-                      tools/check.sh --project=3d --only=native_house_family,ortho_3d_fortification,spatial_stairs,bridge
+                      tools/check.sh --project=3d --only=native_house_family,fortification_renderer_3d,spatial_stairs,bridge
                   else
                       tools/check.sh --project=3d --only=native_terrain_readability,melee_elevation,spatial_stairs,bridge
                   fi
@@ -84,9 +84,9 @@ jobs:
                   project = Path(os.environ["SJRPG_REVIEW_PROJECT"])
                   target = project / "scripts/terrain_npc_ci_observer.gd"
                   target.write_text(Path("sjrpg_3d/tools/review/terrain_npc_observer.gd").read_text())
-                  main = project / "scripts/main.gd"
+                  main = project / "scripts/app/main.gd"
                   text = main.read_text()
-                  needle = '\t\tadd_child(preload("res://scripts/native_style_review.gd").new().setup(self))\n'
+                  needle = '\t\tadd_child(preload("res://scripts/inspection/native_style_review.gd").new().setup(self))\n'
                   assert text.count(needle) == 1, "Exact explicit review observer insertion point"
                   text = text.replace(needle, needle + '\t\tadd_child(preload("res://scripts/terrain_npc_ci_observer.gd").new().setup(self))\n')
                   main.write_text(text)

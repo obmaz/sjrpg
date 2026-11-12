@@ -1,7 +1,7 @@
 {
  "source": "assets/source/remake/bridge.png",
  "source_sha256": "139a5b49b39cebac19dedc55df1934e36fdac3811d89279183341ff1c11bf688",
- "render": "assets/art/village/bridge.webp",
+ "render": "assets/sprites/village/bridge.webp",
  "render_sha256": "602b0209ca4ea4ab10ea654b0e9d748a62df871a51e2c52a572bcbdb46fccac8",
  "source_size": [
   1254,
@@ -236,7 +236,7 @@
    "sha256": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389"
   },
   {
-   "path": "assets/source/bridge-new.png",
+   "path": "assets/source/architecture/bridge/concepts/bridge-new.png",
    "role": "previous bridge geometry guide",
    "sha256": "0cdfc991d6cc71dc51e5246b0e27859bdb2877d72fd4ed7061a7e8be292cc1ca"
   }

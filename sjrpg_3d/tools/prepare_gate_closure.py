@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'assets/source/town-gates/portcullis.png'
 MEASURE = ROOT / 'tools/extract/gate_closure_measure.json'
 GENERATION = ROOT / 'tools/extract/gate_closure_generation.json'
-OUTPUT = ROOT / 'assets/art/village/portcullis.webp'
+OUTPUT = ROOT / 'assets/sprites/village/portcullis.webp'
 
 
 def record(path):

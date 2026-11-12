@@ -2,7 +2,7 @@
  "records": {
   "pool": {
    "sprite": {
-    "sheet": "res://assets/art/village/remake-pool.webp",
+    "sheet": "res://assets/sprites/village/remake-pool.webp",
     "source": [
      0,
      0,
@@ -57,7 +57,7 @@
    },
    "source": "assets/source/remake/fountain.png",
    "source_sha256": "e343fc456ada5de04ef96b0c571a702c041f98f3e5aa4ab39b8a31897d5434b2",
-   "render": "assets/art/village/remake-pool.webp",
+   "render": "assets/sprites/village/remake-pool.webp",
    "render_sha256": "736d492ff9797a1a6850ce1f4526216d663bcca72c1ab97e32656d9b7ef7e100",
    "alpha_review": "Native1254 square RGBA; alpha>20 bounding box has complete silhouette and transparent margins. Alpha<=2 hidden matte specks are not visible structural edges; no painted ground shadow.",
    "frame": {
@@ -88,7 +88,7 @@
   },
   "portal": {
    "sprite": {
-    "sheet": "res://assets/art/village/remake-portal.webp",
+    "sheet": "res://assets/sprites/village/remake-portal.webp",
     "source": [
      0,
      0,
@@ -146,7 +146,7 @@
    },
    "source": "assets/source/remake/portal-v2.png",
    "source_sha256": "2ffcc33a29bb9ae4c0db72af4846614e5956b8a53616788f5ad6f1734ebde0ce",
-   "render": "assets/art/village/remake-portal.webp",
+   "render": "assets/sprites/village/remake-portal.webp",
    "render_sha256": "27ed6f2de2f404ae021105bcb99860f40cca222cebbdc04f1f2e2fa80b702381",
    "alpha_review": "Native1254-square RGBA; alpha>20 bounding box [92,14,1148,1202], complete upper caps and stepped base with transparent margins. Low-alpha hidden matte specks are not the opaque silhouette. No painted ground shadow.",
    "frame": {
@@ -177,7 +177,7 @@
   },
   "chest": {
    "sprite": {
-    "sheet": "res://assets/art/village/remake-chest.webp",
+    "sheet": "res://assets/sprites/village/remake-chest.webp",
     "source": [
      0,
      0,
@@ -208,13 +208,13 @@
    },
    "source": "assets/source/remake/props-cells/chest.png",
    "source_sha256": "9879b9b340d1ba85f48f3c7d4d5d6c81e7fa4c5a5615b0c96040948261a03069",
-   "render": "assets/art/village/remake-chest.webp",
+   "render": "assets/sprites/village/remake-chest.webp",
    "render_sha256": "3130cf5430236e5924811fa31d76cde3fbe48e231d459df99edc3a9e7caab4ce",
    "alpha_review": "Exact unmodified 724-square crop of generated source sheet. Visible alpha>20 has transparent margins on all four sides, no clipped wood/iron/rock and no baked black ground shadow. The two chest bodies use the same532px width and [419,672] anchor; broken raised lid does not change physical scale."
   },
   "chest-broken": {
    "sprite": {
-    "sheet": "res://assets/art/village/remake-chest-broken.webp",
+    "sheet": "res://assets/sprites/village/remake-chest-broken.webp",
     "source": [
      0,
      0,
@@ -245,13 +245,13 @@
    },
    "source": "assets/source/remake/props-cells/chest-broken.png",
    "source_sha256": "23023e8aa3510d3c2ece1d44b62778251f5715d7fc0f5316a219eb27b9a906f0",
-   "render": "assets/art/village/remake-chest-broken.webp",
+   "render": "assets/sprites/village/remake-chest-broken.webp",
    "render_sha256": "1fd53d1e6c9cc301d7b84c7938d90af407f4aff178bdbceaf75c7d29119b5e9d",
    "alpha_review": "Exact unmodified 724-square crop of generated source sheet. Visible alpha>20 has transparent margins on all four sides, no clipped wood/iron/rock and no baked black ground shadow. The two chest bodies use the same532px width and [419,672] anchor; broken raised lid does not change physical scale."
   },
   "rock": {
    "sprite": {
-    "sheet": "res://assets/art/village/remake-rock.webp",
+    "sheet": "res://assets/sprites/village/remake-rock.webp",
     "source": [
      0,
      0,
@@ -276,7 +276,7 @@
    },
    "source": "assets/source/remake/props-cells/rock.png",
    "source_sha256": "9196ed77c652663b07f2bb55887bb191846cf9aceb33e74b5f496264e684f418",
-   "render": "assets/art/village/remake-rock.webp",
+   "render": "assets/sprites/village/remake-rock.webp",
    "render_sha256": "15323f438ad4291f2cf2928c2eb1178a36b3c80bdcc6fbfb2c01d3f5aeb2ebf2",
    "alpha_review": "Exact unmodified 724-square crop of generated source sheet. Visible alpha>20 has transparent margins on all four sides, no clipped wood/iron/rock and no baked black ground shadow. The two chest bodies use the same532px width and [419,672] anchor; broken raised lid does not change physical scale."
   }

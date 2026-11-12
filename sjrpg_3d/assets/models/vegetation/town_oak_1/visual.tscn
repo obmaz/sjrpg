@@ -1,5 +1,5 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="PackedScene" path="res://assets/art/preview3d/town-oak-1.glb" id="model"]
+[ext_resource type="PackedScene" path="res://assets/models/vegetation/town_oak_1/model.glb" id="model"]
 
 [node name="Model" instance=ExtResource("model")]

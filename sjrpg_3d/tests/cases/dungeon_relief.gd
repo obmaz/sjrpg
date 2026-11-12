@@ -109,7 +109,7 @@ func run() -> void:
 		"; ".join(failed_steps)
 	)
 	var surface := (
-		game.ortho_preview._world_environment.cave.get_node("CaveFloor") as MeshInstance3D
+		game.world_renderer._world_environment.cave.get_node("CaveFloor") as MeshInstance3D
 	)
 	check(
 		"one cached floor mesh replaces overlapping room surfaces",

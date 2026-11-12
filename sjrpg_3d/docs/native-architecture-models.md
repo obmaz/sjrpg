@@ -22,23 +22,23 @@
 
 GLB의 `Material_<역할>`은 중립 PBR 슬롯입니다. Godot 전용 전체 면 투영·예배당 원화 보정·성벽 셰이더는 glTF 표준에 포함되지 않으므로 **게임 외형은 GLB와 씬을 함께 열어 확인**합니다. GLB 하나에 셰이더를 베이크했다고 주장하지 않습니다. 엔진 전용 표면을 유지하고 같은 이미지를 GLB에도 중복 저장하지 않기 위한 구성입니다.
 
-`NativeArchitectureVisual`은 `@tool`로 Godot 에디터에서도 씬의 원래 재질을 연결합니다. `NativeArchitectureAssets`는 PackedScene을 캐시하고 `NativeArchitectureVisual`은 기록된 재질 슬롯과 노드를 연결합니다. 각 인스턴스의 노드는 분리하며 정적 메시와 재질은 공유합니다. 주택의 구조 재질은 기존 표시기의 공유 재질을 주입합니다. 오브젝트 가림 처리는 기존 루트 단위를 유지하고, 움직이는 문짝에는 `occlusion_dynamic`/`exclude_static_batch` 표시를 복원합니다.
+`NativeArchitectureVisual`은 `@tool`로 Godot 에디터에서도 씬의 원래 재질을 연결합니다. `ArchitectureSceneLibrary`는 PackedScene을 캐시하고 `NativeArchitectureVisual`은 기록된 재질 슬롯과 노드를 연결합니다. 각 인스턴스의 노드는 분리하며 정적 메시와 재질은 공유합니다. 주택의 구조 재질은 기존 표시기의 공유 재질을 주입합니다. 오브젝트 가림 처리는 기존 루트 단위를 유지하고, 움직이는 문짝에는 `occlusion_dynamic`/`exclude_static_batch` 표시를 복원합니다.
 
-`NativeHouse3D`, `Ortho3DChapel`, `NativeBridge3D`는 배치 어댑터입니다. `Ortho3DFortification`은 기존 `TownGateRuntime`의 닫힘/진행도와 동작 줄이기 설정을 여덟 문짝에 적용합니다. 새 트윈·독립 타이머·충돌체는 만들지 않습니다. 실제 계단/성문/다리 충돌은 `NativeChapelPlan`·`NativeFortressPlan`·`NativeBridgePlan`과 `SpatialWorld3D`가 소유합니다.
+`HouseRenderer3D`, `ChapelRenderer3D`, `BridgeRenderer3D`는 배치 어댑터입니다. `FortificationRenderer3D`은 기존 `TownGateRuntime`의 닫힘/진행도와 동작 줄이기 설정을 여덟 문짝에 적용합니다. 새 트윈·독립 타이머·충돌체는 만들지 않습니다. 실제 계단/성문/다리 충돌은 `ChapelPlan3D`·`FortressPlan3D`·`BridgePlan3D`과 `SpatialWorld3D`가 소유합니다.
 
 GLB 임포트는 `meshes/generate_lods=false`, `meshes/force_disable_compression=true`입니다. 기존 기와의 단/열 UV와 얇은 테두리 법선을 원래 정밀도로 보존합니다. 이 설정은 정점 데이터에만 적용하며 텍스처의 S3TC/ETC2 정책을 바꾸지 않습니다. 메시 수와 재질 구분은 유지하며 GLB 전환만으로 FPS가 개선됐다고 보장하지 않습니다.
 
 ## 재현과 자산별 작업
 
-원래 제작 모델링 코드는 `tools/architecture_art/{house,chapel,fortress,bridge}_builder.gd`로 옮겼습니다. `bake.gd`는 운영 Game이나 기존 GLB를 열지 않고 원본 Village 데이터·공유 주택 규격으로 제작합니다. `NativeHousePlan`이 주택의 공통 수치와 재질 선택을 한 곳에 보관합니다.
+원래 제작 모델링 코드는 `tools/assets/architecture/{house,chapel,fortress,bridge}_builder.gd`로 옮겼습니다. `bake.gd`는 운영 Game이나 기존 GLB를 열지 않고 원본 Village 데이터·공유 주택 규격으로 제작합니다. `NativeHousePlan`이 주택의 공통 수치와 재질 선택을 한 곳에 보관합니다.
 
-`tools/architecture_art/medieval_details.gd`는 마을 전체의 작은 세공을 공유하는 오프라인 도구입니다. 주택은 각 창을 실제로 덮을 수 있는 폭의 판자 덧문, 처마를 받치는 사선 버팀, 끝을 벼린 문 철띠, 직업별 길드 방패와 작은 등기구를 갖습니다. 상점 모서리의 상층 덧문은 경첩 각도를 주어 골조와 겹치지 않게 접어 엽니다. 예배당의 입구 등기구와 성문 탑의 숲 문장이 같은 세공 패밀리로 마을을 연결합니다. 벽돌·슬레이트·골조의 실제 UV는 유지하고, 참나무는 공통 풍화색을 사용합니다. 성곽의 목재는 같은 바탕에서 노출에 따른 차가운 풍화색만 더합니다.
+`tools/assets/architecture/medieval_details.gd`는 마을 전체의 작은 세공을 공유하는 오프라인 도구입니다. 주택은 각 창을 실제로 덮을 수 있는 폭의 판자 덧문, 처마를 받치는 사선 버팀, 끝을 벼린 문 철띠, 직업별 길드 방패와 작은 등기구를 갖습니다. 상점 모서리의 상층 덧문은 경첩 각도를 주어 골조와 겹치지 않게 접어 엽니다. 예배당의 입구 등기구와 성문 탑의 숲 문장이 같은 세공 패밀리로 마을을 연결합니다. 벽돌·슬레이트·골조의 실제 UV는 유지하고, 참나무는 공통 풍화색을 사용합니다. 성곽의 목재는 같은 바탕에서 노출에 따른 차가운 풍화색만 더합니다.
 
 세공 부품은 기존 불투명 재질 표면에 합칩니다. 부품마다 런타임 노드·투명 그림·동적 광원·새 텍스처를 추가하지 않습니다. 문장과 등기구는 기존 건물/탑에 붙는 장식이며 지상 통로나 충돌을 바꾸지 않습니다. 외부 제작자는 이 helper를 런타임에 연결하지 않고 개별 GLB를 편집해도 됩니다.
 
 ```sh
 # 저장소 루트에서 실행. --only를 생략하면 일곱 자산을 모두 재생성합니다.
-sjrpg_3d/tools/godot.sh --headless res://tools/architecture_art/bake.tscn -- --only=shop
+sjrpg_3d/tools/godot.sh --headless res://tools/assets/architecture/bake.tscn -- --only=shop
 sjrpg_3d/tools/import_project.sh
 python3 sjrpg_3d/tools/check_architecture_assets.py
 sjrpg_3d/tools/check.sh --only=native_architecture_assets,native_house_family,medieval_craft_family,ortho_3d_chapel,ortho_3d_fortification,wild_vegetation_bridge,village_structures,player_occlusion
@@ -56,6 +56,6 @@ sjrpg_3d/tools/check.sh --only=native_architecture_assets,native_house_family,me
 
 `medieval_craft_family`는 GLB에 가져온 덧문 각 판자의 실제 표면을 광선으로 확인하며 폭·경첩 좌표·기존 메시 수를 함께 검사합니다. 성문 탑의 문장도 실제 석조와 함께 광선을 쏴 탑 뒤에 묻히지 않는지 확인합니다. 기록된 장식 개수만으로 시각 검수를 대신하지 않습니다.
 
-네 방향 건물 렌더는 `tools/preview3d/render_facades.tscn`을 사용합니다. 실제 모바일 가로/세로에서 마을·성문·다리를 확인하고 기존 화면과 같은 카메라·광원으로 비교합니다. 일회성 비교와 진단 출력은 `build/`에 둡니다. 실제 Android 기기 실행과 로컬 브라우저 검수는 구분합니다.
+네 방향 건물 렌더는 `tools/review/models/render_facades.tscn`을 사용합니다. 실제 모바일 가로/세로에서 마을·성문·다리를 확인하고 기존 화면과 같은 카메라·광원으로 비교합니다. 일회성 비교와 진단 출력은 `build/`에 둡니다. 실제 Android 기기 실행과 로컬 브라우저 검수는 구분합니다.
 
-성곽은 2D 기준 원화(`assets/source/style/{wall-base-design,gate-wall-design}.png`)의 열린 원형 망루·양쪽 흉벽·목재 통로·외측 아치 음각을 따른다. 정적 재질은 5개에서4개로 줄이고, 열린 난간과 안쪽 흉벽을 추가한 기하 예산은38,000삼각형 미만이다. 그림과 충돌의 상부는 `NativeFortressPlan.crown_parts`를 공유한다. 실제 중앙 수직 광선이 지붕 없이 목재 바닥에 도달하며, 화살창·문짝·지상 통로 검사를 유지한다.
+성곽은 2D 기준 원화(`assets/source/style/{wall-base-design,gate-wall-design}.png`)의 열린 원형 망루·양쪽 흉벽·목재 통로·외측 아치 음각을 따른다. 정적 재질은 5개에서4개로 줄이고, 열린 난간과 안쪽 흉벽을 추가한 기하 예산은38,000삼각형 미만이다. 그림과 충돌의 상부는 `FortressPlan3D.crown_parts`를 공유한다. 실제 중앙 수직 광선이 지붕 없이 목재 바닥에 도달하며, 화살창·문짝·지상 통로 검사를 유지한다.

@@ -7,7 +7,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'assets/source/remake/river-materials.png'
-OUTPUT = ROOT / 'assets/art/village'
+OUTPUT = ROOT / 'assets/sprites/village'
 
 
 def sha(path):
@@ -30,7 +30,7 @@ def main():
         textures[name] = dict(path=str(target.relative_to(ROOT)), sha256=sha(target),
                               source_roi=roi, size=[512, 512])
     # Reuse the newly generated forest-earth material for the shore's soft edge.
-    earth = ROOT / 'assets/art/forest/earth.webp'
+    earth = ROOT / 'assets/sprites/forest/earth.webp'
     dirt = OUTPUT / 'dirt.webp'
     dirt.write_bytes(earth.read_bytes())
     textures['dirt'] = dict(path=str(dirt.relative_to(ROOT)), sha256=sha(dirt),

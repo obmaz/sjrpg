@@ -65,8 +65,8 @@ func run() -> void:
 		game.player.buffs.clear()
 		game.player.cooldowns.erase("test")
 		_advance(travel, WarpTravel.OUT * .5)
-		game.ortho_preview._sync_actor(0)
-		var effect: NativeWarpFx = game.ortho_preview._warp_fx
+		game.world_renderer._sync_actor(0)
+		var effect: WarpEffects3D = game.world_renderer._warp_fx
 		effect.sync()
 		var uniform := not effect.fade.slots.is_empty()
 		for slot in effect.fade.slots:
@@ -100,7 +100,7 @@ func run() -> void:
 				travel.opacity() > 0
 				and travel.opacity() < 1
 				and (
-					effect.root.position.distance_to(game.ortho_preview.actor_foot(game.player))
+					effect.root.position.distance_to(game.world_renderer.actor_foot(game.player))
 					< .001
 				)
 			)

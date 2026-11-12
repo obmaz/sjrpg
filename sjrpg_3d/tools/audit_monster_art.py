@@ -13,8 +13,8 @@ MANIFEST = ROOT / "tools/extract/monster_art_measure.json"
 
 
 def inspect(name: str) -> dict:
-    texture = ROOT / f"assets/art/actors/{name}.webp"
-    metadata = ROOT / f"assets/art/actors/{name}.json"
+    texture = ROOT / f"assets/sprites/actors/{name}.webp"
+    metadata = ROOT / f"assets/sprites/actors/{name}.json"
     data = json.loads(metadata.read_text())
     with Image.open(texture) as image:
         size = list(image.size)

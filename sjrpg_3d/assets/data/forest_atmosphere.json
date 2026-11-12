@@ -20,7 +20,7 @@
   }
  ],
  "texture": {
-  "path": "assets/art/effects/forest-atmosphere.webp",
+  "path": "assets/effects/textures/forest-atmosphere.webp",
   "sha256": "0d194d3d3bcaf23ea81544961e4a8d695d3491c7a9f4215bc960d321e91c14e6",
   "size": [
    768,

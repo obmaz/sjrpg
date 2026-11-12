@@ -7,7 +7,7 @@ func run() -> void:
 	game.process_mode = Node.PROCESS_MODE_DISABLED
 	var spatial: SpatialWorld3D = game.spatial_world
 	var space := spatial.get_world_3d().direct_space_state
-	var walk: Dictionary = game.ortho_preview._fortification.report["wall_walk"]
+	var walk: Dictionary = game.world_renderer._fortification.report["wall_walk"]
 	var decks := 0
 	var ground_clear := true
 	var overhead := true
@@ -41,10 +41,10 @@ func run() -> void:
 		decks == 8 and overhead and float(walk["width"]) >= 1.1
 	)
 	check("upper structure preserves ground FLOOR and hero headroom", ground_clear)
-	var frame := NativeBridgePlan.frame(game.village.bridge)
+	var frame := BridgePlan3D.frame(game.village.bridge)
 	var bridge_parts := 0
 	var foundations := true
-	for part: Dictionary in NativeBridgePlan.foundations(game.village.bridge):
+	for part: Dictionary in BridgePlan3D.foundations(game.village.bridge):
 		var polygon: PackedVector2Array = part["polygon"]
 		var centre := Vector2.ZERO
 		for p: Vector2 in polygon:
@@ -65,7 +65,7 @@ func run() -> void:
 		"all bridge footings and cutwaters have actual underwater collision",
 		bridge_parts == 9 and foundations
 	)
-	var material := game.ortho_preview._materials["village_stone"] as ShaderMaterial
+	var material := game.world_renderer._materials["village_stone"] as ShaderMaterial
 	check(
 		"pillars and steps use the adopted shared stone atlas",
 		material.get_shader_parameter("atlas") == load(NativeVillageSurfaces.ROOT + "masonry.png")

@@ -11,12 +11,12 @@ func run() -> void:
 	view.size = Vector2i(720, 1280)
 	add_child(view)
 	GameState.new_game("mage")
-	var game := preload("res://scripts/game.gd").new()
+	var game := preload("res://scripts/gameplay/game.gd").new()
 	view.add_child(game)
 	while not game.native_ready:
 		await get_tree().physics_frame
 		await _frames(1)
-	var preview: Ortho3DPreview = game.ortho_preview
+	var renderer: WorldRenderer3D = game.world_renderer
 	var position: Vector2 = game.player.position
 	var hp: float = game.player.hp
 	game.hud.open_settings()
@@ -36,11 +36,11 @@ func run() -> void:
 		check("settings expose all orientation choices while paused", panel._screen_orientation_buttons.size() == 3 and panel.find_child("ScreenOrientationHint", true, false) != null)
 		for choice: Button in panel._screen_orientation_buttons:
 			check("orientation choices remain touchable after layout rotation %s" % dimensions, choice.size.y >= 64.0 and panel._panel.get_global_rect().encloses(choice.get_global_rect()))
-		check("settings rotation keeps the same paused adventure", get_tree().paused and game.ortho_preview == preview and game.player.position == position and is_equal_approx(game.player.hp, hp))
+		check("settings rotation keeps the same paused adventure", get_tree().paused and game.world_renderer == renderer and game.player.position == position and is_equal_approx(game.player.hp, hp))
 	var portrait := panel.find_child("Orientation_portrait", true, false) as Button
 	portrait.pressed.emit()
 	await _frames(3)
-	check("actual settings choice saves orientation and preserves the paused adventure", Prefs.screen_orientation == "portrait" and get_tree().paused and game.ortho_preview == preview and game.player.position == position)
+	check("actual settings choice saves orientation and preserves the paused adventure", Prefs.screen_orientation == "portrait" and get_tree().paused and game.world_renderer == renderer and game.player.position == position)
 	var selected := panel.find_child("Orientation_portrait", true, false) as Button
 	check("the saved orientation is reflected after rebuilding settings", selected != null and selected.button_pressed)
 	if DisplayServer.get_name() == "headless":

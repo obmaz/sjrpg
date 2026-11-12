@@ -18,7 +18,7 @@ func run() -> void:
 	)
 	await _frames(3)
 	var id: int = corpse["visual"].get_instance_id()
-	var entry: Dictionary = game.ortho_preview._world_environment._corpses.get(id, {})
+	var entry: Dictionary = game.world_renderer._world_environment._corpses.get(id, {})
 	check("the real native corpse is registered before expiry", not entry.is_empty())
 	corpse["time"] = .12
 	await get_tree().create_timer(.30, false).timeout
@@ -28,7 +28,7 @@ func run() -> void:
 			not game.corpses.has(corpse)
 			and corpse["used"]
 			and not game.corpse_available(corpse)
-			and not game.ortho_preview._world_environment._corpses.has(id)
+			and not game.world_renderer._world_environment._corpses.has(id)
 		)
 	)
 	var hidden: Dictionary = game.add_corpse(enemy, true)

@@ -61,7 +61,7 @@ func run() -> void:
 	await _frames(2)
 	GameState.gold = 321
 	GameState.save_game()
-	var root := preload("res://scripts/main.gd").new()
+	var root := preload("res://scripts/app/main.gd").new()
 	add_child(root)
 	root.show_class_select()
 	var saved := FileAccess.get_file_as_bytes(GameState.save_path)
@@ -70,7 +70,7 @@ func run() -> void:
 	for child in root.get_children():
 		if child is PanelFrame:
 			confirmation = child
-	check("an occupied slot refuses a new hero without a replacement flow", confirmation == null and root.current.get_script() == preload("res://scripts/class_select.gd"))
+	check("an occupied slot refuses a new hero without a replacement flow", confirmation == null and root.current.get_script() == preload("res://scripts/ui/screens/class_select.gd"))
 	check("refusing an occupied start preserves the save", FileAccess.get_file_as_bytes(GameState.save_path) == saved and GameState.load_game() and GameState.gold == 321 and GameState.hero_class == "warrior")
 	var old := OldScene.new()
 	root._swap(old)

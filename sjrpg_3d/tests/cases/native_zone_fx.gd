@@ -27,9 +27,9 @@ func run() -> void:
 	game.encounters.set_process(false)
 	game.quest_runtime.set_process(false)
 	game.exploration.set_process(false)
-	var preview: Ortho3DPreview = game.ortho_preview
-	preview.set_process(false)
-	var fx: NativeZoneFx3D = preview._zone_fx
+	var renderer: WorldRenderer3D = game.world_renderer
+	renderer.set_process(false)
+	var fx: AreaEffects3D = renderer._zone_fx
 	var floor_body := Fixture.box(game.spatial_world, Fixture.remote_at(Vector3(120, 2.5, 120)), Vector3(30, 1, 30), SpatialWorld3D.FLOOR)
 	await Fixture.settle(get_tree())
 	game.spatial_world.teleport_source_actor(game.player, SpatialWorld3D.projected(Fixture.remote_at(Vector3(120, 3, 120))), Player.RADIUS)
@@ -40,23 +40,23 @@ func run() -> void:
 		await _frames(2)
 		return
 	var id := meteor.get_instance_id()
-	preview._sync_cards()
+	renderer._sync_cards()
 	fx.sync()
-	check("meteor warning now renders natively once while source Canvas is hidden", fx._entries.has(id) and not preview._cards.has(id) and not game.field_root.visible)
+	check("meteor warning now renders natively once while source Canvas is hidden", fx._entries.has(id) and not renderer._cards.has(id) and not game.field_root.visible)
 	var entry: Dictionary = fx._entries[id]
 	var root: Node3D = entry["root"]
 	var marker: MeshInstance3D = entry["marker"]
 	var glows := entry["glows"] as MultiMeshInstance3D
-	check("marker follows actual raised floor and does not double-project its height", root.global_position.is_equal_approx(meteor.native_position()) and is_equal_approx(root.global_position.y, 3.0) and is_equal_approx(marker.position.y, NativeZoneFx3D.SURFACE_LIFT))
-	check("zone picture has two surfaces and generated atlas glows in a bounded MultiMesh", root.get_child_count() == 2 and marker.mesh.get_surface_count() == 1 and glows.multimesh.mesh.get_surface_count() == 1 and glows.multimesh.instance_count == NativeZoneFx3D.MAX_GLOWS)
+	check("marker follows actual raised floor and does not double-project its height", root.global_position.is_equal_approx(meteor.native_position()) and is_equal_approx(root.global_position.y, 3.0) and is_equal_approx(marker.position.y, AreaEffects3D.SURFACE_LIFT))
+	check("zone picture has two surfaces and generated atlas glows in a bounded MultiMesh", root.get_child_count() == 2 and marker.mesh.get_surface_count() == 1 and glows.multimesh.mesh.get_surface_count() == 1 and glows.multimesh.instance_count == AreaEffects3D.MAX_GLOWS)
 	check("warning uses real depth instead of drawing through walls", "depth_test_disabled" not in (glows.material_override as ShaderMaterial).shader.code and not (marker.material_override as StandardMaterial3D).no_depth_test)
 	var points: PackedVector2Array = entry["points"]
 	var matches := true
 	for point in points:
 		matches = matches and absf(point.length() - meteor.radius) < 0.001
-		var native := NativeZoneFx3D._local_ground(point)
+		var native := AreaEffects3D._local_ground(point)
 		matches = matches and SpatialWorld3D.projected(native).distance_to(point) < 0.001
-	check("warning perimeter inverse-projects the actual source distance budget", matches and points.size() == NativeZoneFx3D.SEGMENTS)
+	check("warning perimeter inverse-projects the actual source distance budget", matches and points.size() == AreaEffects3D.SEGMENTS)
 	var before_age := meteor.age
 	var before_params := meteor.params.duplicate(true)
 	var before_resource: float = game.player.resource
@@ -115,10 +115,10 @@ func run() -> void:
 		ice.queue_free()
 	await _frames(2)
 	var forest_world: Node = game.world
-	for index in NativeZoneFx3D.MAX_ZONES + 3:
+	for index in AreaEffects3D.MAX_ZONES + 3:
 		game.spawn_zone({"pos": game.player.position + Vector2(index, 0), "radius": 70.0, "duration": 4.0, "tick": 0.3, "damage": 0.0, "color": SkillDefs.FIRE})
 	fx.sync()
-	check("zone picture budget never deletes excess gameplay sources", fx._entries.size() == NativeZoneFx3D.MAX_ZONES and game.world.get_children().filter(func(node): return node is Effect and node.kind == "zone" and not node.is_queued_for_deletion()).size() == NativeZoneFx3D.MAX_ZONES + 3)
+	check("zone picture budget never deletes excess gameplay sources", fx._entries.size() == AreaEffects3D.MAX_ZONES and game.world.get_children().filter(func(node): return node is Effect and node.kind == "zone" and not node.is_queued_for_deletion()).size() == AreaEffects3D.MAX_ZONES + 3)
 	game.player.position = game.dungeon.entry_point()
 	check("zone scope fixture enters the actual cave", game.dungeon.enter())
 	fx.sync()
@@ -126,7 +126,7 @@ func run() -> void:
 	game.dungeon.leave("")
 	await Fixture.settle(get_tree())
 	fx.sync()
-	check("actual forest return observes only living forest source zones", game.world == forest_world and fx._entries.size() > 0 and fx._entries.size() <= NativeZoneFx3D.MAX_ZONES)
+	check("actual forest return observes only living forest source zones", game.world == forest_world and fx._entries.size() > 0 and fx._entries.size() <= AreaEffects3D.MAX_ZONES)
 	floor_body.queue_free()
 	Prefs.reduce_motion = old_motion
 	game.queue_free()

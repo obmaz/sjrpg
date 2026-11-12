@@ -1,101 +1,101 @@
 {
- "version": 2,
- "date_utc": "2026-11-06",
- "purpose": "Quiet, lush forest-floor iteration selected after source, repeated-tile and actual portrait/landscape scene comparison.",
- "generator": "image_gen.imagegen",
- "settings": {
-  "transparent_background": false,
-  "num_calls_this_iteration": 1,
-  "requested_layout": "One opaque seamless1024square straight top-down material; actual native size documented."
- },
- "prompt": "Create ONE opaque seamless square production material tile for Guardians of Nature. Actual attached references in priority order: (1) AUTHORITATIVE USER GAME REFERENCE controls the lush restrained woodland-fantasy mood; (2) reviewed limestone paving for adjacent material scale/color; (3) reviewed compact brown earth as the soil family; (4) REJECTED FLOOR CANDIDATE, attached ONLY as a negative example. Candidate4 has too much bare earth and several continuous diagonal cleared bands; repeated in the game those bands look like a grid of paths. Do not copy its layout, lanes, stripes, diagonal bands or large connected soil regions.\n\nONE full-bleed opaque 1024\u00d71024 seamless material square. Strict orthographic STRAIGHT TOP-DOWN view. All four opposite edges must repeat seamlessly. The game projects this onto a mathematically correct 120-degree isometric ground plane at runtime. NO isometric projection, perspective, horizon or camera foreshortening in the texture.\n\nA quiet LUSH LOW WOODLAND FLOOR: 80\u201385 PERCENT very short muted-olive grass and low moss cover; only15\u201320PERCENT exposed matte gray-brown soil in SMALL isolated irregular pockets. The soil pockets are separate, scattered, softly interlocking with the vegetation and unevenly sized; none connects across the square. NO paths, NO clearings, NO stripes, NO continuous diagonal bands, NO long bare-earth lanes, NO grid and NO large circles or rounded repeated islands. No area of soil should read as a walkway. At thumbnail scale this must read primarily as softly mottled olive vegetation, with modest tiny earth glimpses\u2014not as a network of brown trails.\n\nVegetation stays flat and low, calm and readable at mobile scale. Use soft compact small grass/moss masses with subdued broad tonal variation and occasional tiny short blades. Most ground cover is a soft, close-to-soil leafy/moss surface, not a lattice of sharp individual strands. Only restrained microdetail. Avoid wiry curled fibers, crisscross lawn mesh, yellow straw, bright sharp grass lines, crisp little clover clusters, obvious repeated leaf motifs, round clover rosettes, repeating tufts, golf-course lawn, mown stripes, botanical macro photography and decorative garden planting. Do not substitute dense fine noise for natural organic variation. No large distinct motif that becomes obvious when tiled.\n\nPalette: muted earthy olive, gray-olive, quiet moss brown and small neutral warm-gray-brown earth pockets. Less saturated and less yellow than the tree canopy greens in image1, but keep enough living soft grass to feel lush. Low contrast inside the material; broad subtle material-color variation should flow naturally over the tile borders.\n\nCRITICAL: UNIFORM NEUTRAL DIFFUSE ALBEDO. NO cast shadows, canopy silhouettes, black shade patches, sunlight patches, spotlights, vignettes, corner darkening, directional gradients or dramatic surface highlights. All variation is material variation, not scene lighting. Runtime supplies tree-linked shade and daylight. Preserve only tiny subtle self-relief. No flowers, tall blades, shrubs, trees, roots, fallen leaves, mushrooms, logs, stones, paving, props, figures, UI, text, labels, borders, grid or watermark. Natural restrained realistic hand-finished game material matching the user reference. The source must work as a seamless evenly lit material, not a scene.",
- "source": {
-  "path": "assets/source/lighting/forest-floor-soft-v2.png",
-  "role": "Untouched generated v2 source adopted for runtime grass after root visual review; not separate user approval",
-  "sha256": "f38a46802fc08c34f3563ce3e71be704b3b8b52196cf341e802391f1f53fea88"
- },
- "original_generation_path": "/workspace/generated_images/exec-aeb8ca23-900c-4432-8ad6-06d40e92dc04.png",
- "size": [
-  1254,
-  1254
- ],
- "mode": "RGB",
- "alpha_min_max": [
-  255,
-  255
- ],
- "referenced_images": [
-  {
-   "path": "assets/source/style/approved-game-reference.jpg",
-   "role": "Authoritative user lush woodland style",
-   "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+  "version": 2,
+  "date_utc": "2026-11-06",
+  "purpose": "Quiet, lush forest-floor iteration selected after source, repeated-tile and actual portrait/landscape scene comparison.",
+  "generator": "image_gen.imagegen",
+  "settings": {
+    "transparent_background": false,
+    "num_calls_this_iteration": 1,
+    "requested_layout": "One opaque seamless1024square straight top-down material; actual native size documented."
   },
-  {
-   "path": "assets/art/forest/paving.webp",
-   "role": "Reviewed adjacent limestone albedo family",
-   "sha256": "293bb740e1c277bf7e6cd566c8c9f6a05105e5e7ca0e8960e041ad23e2b2d9ef"
+  "prompt": "Create ONE opaque seamless square production material tile for Guardians of Nature. Actual attached references in priority order: (1) AUTHORITATIVE USER GAME REFERENCE controls the lush restrained woodland-fantasy mood; (2) reviewed limestone paving for adjacent material scale/color; (3) reviewed compact brown earth as the soil family; (4) REJECTED FLOOR CANDIDATE, attached ONLY as a negative example. Candidate4 has too much bare earth and several continuous diagonal cleared bands; repeated in the game those bands look like a grid of paths. Do not copy its layout, lanes, stripes, diagonal bands or large connected soil regions.\n\nONE full-bleed opaque 1024×1024 seamless material square. Strict orthographic STRAIGHT TOP-DOWN view. All four opposite edges must repeat seamlessly. The game projects this onto a mathematically correct 120-degree isometric ground plane at runtime. NO isometric projection, perspective, horizon or camera foreshortening in the texture.\n\nA quiet LUSH LOW WOODLAND FLOOR: 80–85 PERCENT very short muted-olive grass and low moss cover; only15–20PERCENT exposed matte gray-brown soil in SMALL isolated irregular pockets. The soil pockets are separate, scattered, softly interlocking with the vegetation and unevenly sized; none connects across the square. NO paths, NO clearings, NO stripes, NO continuous diagonal bands, NO long bare-earth lanes, NO grid and NO large circles or rounded repeated islands. No area of soil should read as a walkway. At thumbnail scale this must read primarily as softly mottled olive vegetation, with modest tiny earth glimpses—not as a network of brown trails.\n\nVegetation stays flat and low, calm and readable at mobile scale. Use soft compact small grass/moss masses with subdued broad tonal variation and occasional tiny short blades. Most ground cover is a soft, close-to-soil leafy/moss surface, not a lattice of sharp individual strands. Only restrained microdetail. Avoid wiry curled fibers, crisscross lawn mesh, yellow straw, bright sharp grass lines, crisp little clover clusters, obvious repeated leaf motifs, round clover rosettes, repeating tufts, golf-course lawn, mown stripes, botanical macro photography and decorative garden planting. Do not substitute dense fine noise for natural organic variation. No large distinct motif that becomes obvious when tiled.\n\nPalette: muted earthy olive, gray-olive, quiet moss brown and small neutral warm-gray-brown earth pockets. Less saturated and less yellow than the tree canopy greens in image1, but keep enough living soft grass to feel lush. Low contrast inside the material; broad subtle material-color variation should flow naturally over the tile borders.\n\nCRITICAL: UNIFORM NEUTRAL DIFFUSE ALBEDO. NO cast shadows, canopy silhouettes, black shade patches, sunlight patches, spotlights, vignettes, corner darkening, directional gradients or dramatic surface highlights. All variation is material variation, not scene lighting. Runtime supplies tree-linked shade and daylight. Preserve only tiny subtle self-relief. No flowers, tall blades, shrubs, trees, roots, fallen leaves, mushrooms, logs, stones, paving, props, figures, UI, text, labels, borders, grid or watermark. Natural restrained realistic hand-finished game material matching the user reference. The source must work as a seamless evenly lit material, not a scene.",
+  "source": {
+    "path": "assets/source/lighting/forest-floor-soft-v2.png",
+    "role": "Untouched generated v2 source adopted for runtime grass after root visual review; not separate user approval",
+    "sha256": "f38a46802fc08c34f3563ce3e71be704b3b8b52196cf341e802391f1f53fea88"
   },
-  {
-   "path": "assets/art/forest/earth.webp",
-   "role": "Reviewed earth albedo family",
-   "sha256": "379f9866399c0e0e5265adfea05c3779fc7e6723cc42626226c7275157e4a17c"
+  "original_generation_path": "/workspace/generated_images/exec-aeb8ca23-900c-4432-8ad6-06d40e92dc04.png",
+  "size": [
+    1254,
+    1254
+  ],
+  "mode": "RGB",
+  "alpha_min_max": [
+    255,
+    255
+  ],
+  "referenced_images": [
+    {
+      "path": "assets/source/style/approved-game-reference.jpg",
+      "role": "Authoritative user lush woodland style",
+      "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+    },
+    {
+      "path": "assets/materials/terrain/paving_base.webp",
+      "role": "Reviewed adjacent limestone albedo family",
+      "sha256": "293bb740e1c277bf7e6cd566c8c9f6a05105e5e7ca0e8960e041ad23e2b2d9ef"
+    },
+    {
+      "path": "assets/sprites/forest/earth.webp",
+      "role": "Reviewed earth albedo family",
+      "sha256": "379f9866399c0e0e5265adfea05c3779fc7e6723cc42626226c7275157e4a17c"
+    },
+    {
+      "path": "assets/source/lighting/forest-floor-soft.png",
+      "role": "Rejected v1 attached as negative example: too dry with repeated diagonal soil lanes",
+      "sha256": "3fbf86d5ec43e3b52af84a145acea7663da6ee3b7f08f64abadf91bdddee1103"
+    }
+  ],
+  "prior_iteration": {
+    "path": "tools/extract/forest_floor_soft_generation.json",
+    "role": "Preserved v1 prompt and root rejection history",
+    "sha256": "055ef28c69d57b3e0de1efd90e6a6712b76726c39510ab2611e7ec0f56f93b22"
   },
-  {
-   "path": "assets/source/lighting/forest-floor-soft.png",
-   "role": "Rejected v1 attached as negative example: too dry with repeated diagonal soil lanes",
-   "sha256": "3fbf86d5ec43e3b52af84a145acea7663da6ee3b7f08f64abadf91bdddee1103"
+  "contact_sheet": {
+    "path": "/tmp/stage1-review/forest-floor-soft-v2-tiles.png",
+    "method": "Mechanical 2x2 repetition of the unchanged candidate resized to512square per tile for inspection; no source painting or retouching."
+  },
+  "edge_diagnostics": {
+    "mean_abs_rgb_left_right": 10.659,
+    "mean_abs_rgb_top_bottom": 8.975,
+    "mean_abs_rgb_adjacent_horizontal": 5.931,
+    "mean_abs_rgb_adjacent_vertical": 6.555,
+    "interpretation": "Diagnostics only; no seamlessness certification or runtime test."
+  },
+  "review": {
+    "status": "adopted_after_root_actual_scene_review",
+    "improvements": [
+      "Lusher mainly olive/moss vegetation; exposed soil reduced to smaller disconnected glimpses.",
+      "The broad continuous brown diagonal lanes from v1 are no longer dominant.",
+      "Quiet earthy olive variation and uniformly diffuse top-down source; no obvious scene lighting baked in."
+    ],
+    "limitations": [
+      "Some recognizable small-leaf/clover-like clusters and occasional short blade tufts remain despite the prompt; root should inspect repetition and actual mobile scale.",
+      "80–85 percent vegetation was requested, not quantitatively segmented or certified.",
+      "No runtime packing, camera projection certification, browser comparison or final-reference mood approval has been performed."
+    ],
+    "runtime_manifest_changed": true,
+    "runtime_assets_changed": true,
+    "technical_adoption": "Root compared v2 source and mechanical2x2 view: broad repetition remains visible but hue and surface are quieter than the previous wiry carpet. Authorized only a technical trial in actual scenes; not user approval or final reference completion.",
+    "actual_scene_review": {
+      "portrait": "chapel_reference, mage,714x1280,dpr1",
+      "landscape": "npc_courtyard,mage,1280x720,dpr1",
+      "finding": "Quieter broad albedo makes path flowers and tree silhouettes easier to read; unchanged paving/earth/flora and ground camera. Broad repeated motifs remain; not a claim of perfect seamlessness or final reference fidelity."
+    }
+  },
+  "packing": {
+    "tool": "tools/prepare_forest_art.py",
+    "measure": "tools/extract/forest_art_measure.json",
+    "source_key": "grass_soft_v2",
+    "roi": [
+      0,
+      0,
+      1254,
+      1254
+    ],
+    "operation": "Full opaque native source mechanically resized to512square, WebPquality94; no painted edits, no crop of adjacent materials.",
+    "runtime_texture": "assets/materials/terrain/grass_base.webp",
+    "runtime_manifest": "assets/data/forest_art.json",
+    "validation_status": "Runtime import/tests/export and actual scene review remain root-owned and pending."
   }
- ],
- "prior_iteration": {
-  "path": "tools/extract/forest_floor_soft_generation.json",
-  "role": "Preserved v1 prompt and root rejection history",
-  "sha256": "7f74116f7e725e73b3c530adc4baeb9ca2625a55cab98c5148dc9e36263922bf"
- },
- "contact_sheet": {
-  "path": "/tmp/stage1-review/forest-floor-soft-v2-tiles.png",
-  "method": "Mechanical 2x2 repetition of the unchanged candidate resized to512square per tile for inspection; no source painting or retouching."
- },
- "edge_diagnostics": {
-  "mean_abs_rgb_left_right": 10.659,
-  "mean_abs_rgb_top_bottom": 8.975,
-  "mean_abs_rgb_adjacent_horizontal": 5.931,
-  "mean_abs_rgb_adjacent_vertical": 6.555,
-  "interpretation": "Diagnostics only; no seamlessness certification or runtime test."
- },
- "review": {
-  "status": "adopted_after_root_actual_scene_review",
-  "improvements": [
-   "Lusher mainly olive/moss vegetation; exposed soil reduced to smaller disconnected glimpses.",
-   "The broad continuous brown diagonal lanes from v1 are no longer dominant.",
-   "Quiet earthy olive variation and uniformly diffuse top-down source; no obvious scene lighting baked in."
-  ],
-  "limitations": [
-   "Some recognizable small-leaf/clover-like clusters and occasional short blade tufts remain despite the prompt; root should inspect repetition and actual mobile scale.",
-   "80\u201385 percent vegetation was requested, not quantitatively segmented or certified.",
-   "No runtime packing, camera projection certification, browser comparison or final-reference mood approval has been performed."
-  ],
-  "runtime_manifest_changed": true,
-  "runtime_assets_changed": true,
-  "technical_adoption": "Root compared v2 source and mechanical2x2 view: broad repetition remains visible but hue and surface are quieter than the previous wiry carpet. Authorized only a technical trial in actual scenes; not user approval or final reference completion.",
-  "actual_scene_review": {
-   "portrait": "chapel_reference, mage,714x1280,dpr1",
-   "landscape": "npc_courtyard,mage,1280x720,dpr1",
-   "finding": "Quieter broad albedo makes path flowers and tree silhouettes easier to read; unchanged paving/earth/flora and ground camera. Broad repeated motifs remain; not a claim of perfect seamlessness or final reference fidelity."
-  }
- },
- "packing": {
-  "tool": "tools/prepare_forest_art.py",
-  "measure": "tools/extract/forest_art_measure.json",
-  "source_key": "grass_soft_v2",
-  "roi": [
-   0,
-   0,
-   1254,
-   1254
-  ],
-  "operation": "Full opaque native source mechanically resized to512square, WebPquality94; no painted edits, no crop of adjacent materials.",
-  "runtime_texture": "assets/art/forest/grass.webp",
-  "runtime_manifest": "assets/data/forest_art.json",
-  "validation_status": "Runtime import/tests/export and actual scene review remain root-owned and pending."
- }
 }

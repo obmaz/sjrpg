@@ -96,7 +96,7 @@
    "warp": "se"
   },
   "pool": {
-   "sheet": "res://assets/art/village/remake-pool.webp",
+   "sheet": "res://assets/sprites/village/remake-pool.webp",
    "source": [
     0,
     0,
@@ -150,7 +150,7 @@
    "warp": "remake-pool"
   },
   "chest": {
-   "sheet": "res://assets/art/village/remake-chest.webp",
+   "sheet": "res://assets/sprites/village/remake-chest.webp",
    "source": [
     0,
     0,
@@ -180,7 +180,7 @@
    "warp": "remake-chest"
   },
   "chest-broken": {
-   "sheet": "res://assets/art/village/remake-chest-broken.webp",
+   "sheet": "res://assets/sprites/village/remake-chest-broken.webp",
    "source": [
     0,
     0,
@@ -210,7 +210,7 @@
    "warp": "remake-chest-broken"
   },
   "rock": {
-   "sheet": "res://assets/art/village/remake-rock.webp",
+   "sheet": "res://assets/sprites/village/remake-rock.webp",
    "source": [
     0,
     0,
@@ -234,7 +234,7 @@
    "fluid_profile": {}
   },
   "portal": {
-   "sheet": "res://assets/art/village/remake-portal.webp",
+   "sheet": "res://assets/sprites/village/remake-portal.webp",
    "source": [
     0,
     0,
@@ -291,7 +291,7 @@
    ]
   },
   "cave": {
-   "sheet": "res://assets/art/cave/arches.webp",
+   "sheet": "res://assets/sprites/dungeon/arches.webp",
    "source": [
     1032,
     77,

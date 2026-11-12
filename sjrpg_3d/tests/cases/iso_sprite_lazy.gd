@@ -75,7 +75,7 @@ func run() -> void:
 		and (strip.position + strip.draw_shift).is_equal_approx(warped.position)
 		and warped.native_point(Vector2(420, 280)).is_equal_approx(anchor_before))
 
-	var consumer := Ortho3DAffordances.new()
+	var consumer := SpriteFallbacks3D.new()
 	var geometry: Dictionary = consumer._sprite_geometry(warped)
 	var source_texture: Texture2D = warped.texture
 	var calibration: Dictionary = ArtWarp.data(warped.def["warp"])

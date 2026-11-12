@@ -10,7 +10,7 @@
     1254,
     1254
    ],
-   "render_file": "assets/art/village/bridge.webp",
+   "render_file": "assets/sprites/village/bridge.webp",
    "source_sha256": "139a5b49b39cebac19dedc55df1934e36fdac3811d89279183341ff1c11bf688",
    "render_sha256": "602b0209ca4ea4ab10ea654b0e9d748a62df871a51e2c52a572bcbdb46fccac8",
    "space": "native",

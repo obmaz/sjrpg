@@ -21,10 +21,10 @@ boot_splash/show_image=false
 
 [autoload]
 
-GameState="*res://scripts/game_state.gd"
-Prefs="*res://scripts/prefs.gd"
-SoundFx="*res://scripts/sound_fx.gd"
-Gamepad="*res://scripts/gamepad_input.gd"
+GameState="*res://scripts/state/game_state.gd"
+Prefs="*res://scripts/state/prefs.gd"
+SoundFx="*res://scripts/audio/sound_fx.gd"
+Gamepad="*res://scripts/input/gamepad_input.gd"
 
 [display]
 

@@ -13,8 +13,8 @@
   "runtime": "assets/models/enemies/golem/model.glb",
   "runtime_sha256": "42a4a4eeeb9efd0f6c5dac56b50cd5e3083fa8d9dcf151148741bc2803069d6d",
   "conversion": "conversion.json",
-  "converter": "tools/enemy_art/export_remaining.py",
-  "converter_sha256": "4cfacde051d831e621c0fac072a37ab02cf68697cb0aa5ea8ef8e3b0b9b874bf",
+  "converter": "tools/assets/enemies/export_remaining.py",
+  "converter_sha256": "c8db7b686a8801bb72015f6a1f91d732b12ae5a93e042820b2a0801cda59bf89",
   "additional_inputs": [],
   "changes": "미터·축·발 원점 정규화, 실제 골격의 FK 클립 변환, 스킨 접지·사망 중심 보정. 원본 Mirror를 적용하고 던지는 돌 오브젝트는 제외.",
   "upstream_sources": [
@@ -23,7 +23,7 @@
   ],
   "converter_dependencies": [
     {
-      "path": "tools/enemy_art/skin_weights.py",
+      "path": "tools/assets/enemies/skin_weights.py",
       "sha256": "9bc3bede33b29b7708821b0ba5aa2ff094ecbda8d3779db5373502a1c9aa37fb"
     }
   ]

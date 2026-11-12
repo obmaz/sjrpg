@@ -6,12 +6,12 @@ func run() -> void:
 	var game := await make_game()
 	game.set_process(false)
 	game.player.set_process(false)
-	var preview: Ortho3DPreview = game.ortho_preview
-	preview.set_process(false)
-	var fx: NativeNovaFx3D = preview._nova_fx
+	var renderer: WorldRenderer3D = game.world_renderer
+	renderer.set_process(false)
+	var fx: NovaEffects3D = renderer._nova_fx
 	var reduced := Prefs.reduce_motion
 	Prefs.set_reduce_motion(false)
-	for index in NativeNovaFx3D.MAX_PULSES + 4:
+	for index in NovaEffects3D.MAX_PULSES + 4:
 		game.spawn_nova(game.player.position + Vector2(index, 0), 46, Color.WHITE, true)
 	var sources := Effect.in_world(game.world).filter(func(source): return source.kind == "nova")
 	fx.sync()

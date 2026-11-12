@@ -33,7 +33,7 @@ jobs:
               run: |
                   test "$(git rev-parse HEAD)" = 67dfea19bdaadab39b4a71bb406dd2c22b8a577f
                   test "$(git hash-object sjrpg_3d/tests/run_all.gd)" = 2d53a5df1edcd2fa246565ed6a5df74f0c106179
-                  test "$(git hash-object sjrpg_3d/scripts/music_director.gd)" = 7121cdaa3206495dd9e38de98af73a7e966fd98e
+                  test "$(git hash-object sjrpg_3d/scripts/audio/music_director.gd)" = 7121cdaa3206495dd9e38de98af73a7e966fd98e
                   chmod +x tools/*.sh sjrpg_3d/tools/*.sh
                   tools/setup_godot.sh
                   mkdir -p build/audio-mix-diagnostics
@@ -71,7 +71,7 @@ jobs:
             - name: Run the unchanged assertions with the engine-boundary test teardown
               run: |
                   test "$(git hash-object sjrpg_3d/tests/run_all.gd)" = 0188d34a974ad7a354ed66a3df42dea7dca1593a
-                  test "$(git hash-object sjrpg_3d/scripts/music_director.gd)" = 7121cdaa3206495dd9e38de98af73a7e966fd98e
+                  test "$(git hash-object sjrpg_3d/scripts/audio/music_director.gd)" = 7121cdaa3206495dd9e38de98af73a7e966fd98e
                   set +e
                   if test "$SJRPG_AUDIO_VARIANT" = full; then
                       timeout 1200 tools/check.sh --project=3d > build/audio-mix-diagnostics/candidate.log 2>&1

@@ -1,7 +1,7 @@
 extends TestCase
 ## Saved device option, live paused toggle, actual Engine FPS and mobile HUD/input clearance.
 
-const PrefsScript := preload("res://scripts/prefs.gd")
+const PrefsScript := preload("res://scripts/state/prefs.gd")
 const TEST_PATH := "user://tests/fps-settings.cfg"
 
 
@@ -32,7 +32,7 @@ func run() -> void:
 	view.size = Vector2i(720, 1280)
 	add_child(view)
 	GameState.new_game("mage")
-	var game := preload("res://scripts/game.gd").new()
+	var game := preload("res://scripts/gameplay/game.gd").new()
 	view.add_child(game)
 	while not game.native_ready:
 		await get_tree().physics_frame

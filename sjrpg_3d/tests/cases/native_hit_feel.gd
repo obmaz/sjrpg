@@ -4,10 +4,10 @@ func run() -> void:
 	var old_motion := Prefs.reduce_motion
 	Prefs.reduce_motion = false
 	var game := await make_game("warrior")
-	var preview: Ortho3DPreview = game.ortho_preview
+	var renderer: WorldRenderer3D = game.world_renderer
 	var hero: Player = game.player
 	hero.set_process(false)
-	var native := preview.actor as NativeWarrior3D
+	var native := renderer.actor as WarriorRenderer3D
 	var foe := Enemy.new()
 	foe.setup(game, "goblin", 1)
 	foe.hp = 1000.0
@@ -33,19 +33,19 @@ func run() -> void:
 	check("local hold does not freeze the whole game or extend damage callbacks", Engine.time_scale == 1.0 and hero._attack_time < clock and hero.contact_serial == 1)
 	var at := foe.position
 	foe.take_damage(350.0, hero)
-	preview._enemy_models.sync()
-	var model: Dictionary = preview._enemy_models.entries[foe.get_instance_id()]
+	renderer._enemy_models.sync()
+	var model: Dictionary = renderer._enemy_models.entries[foe.get_instance_id()]
 	var torso: Node3D = model["torso"]
 	var first_lean := Vector2(torso.rotation.x, torso.rotation.z)
 	check("confirmed hit tilts real chest and head while keeping the collision foot", first_lean.length() > 0.15 and foe.position == at and float(model["hit_lean"]) > 0.2)
 	var visual: NativeEnemyVisual = model["visual"]
-	NativeEnemyModels.pose(model, foe.facing, 0.0, 0.0)
+	EnemyRenderer3D.pose(model, foe.facing, 0.0, 0.0)
 	visual.skeleton.force_update_all_bone_transforms()
 	var bone := visual.skeleton.find_bone("shoulder_R")
 	var bone_pose := visual.skeleton.get_bone_global_pose(bone).origin
 	var resting := visual.skeleton.global_transform * bone_pose
 	var local_anchor := torso.global_transform.affine_inverse() * resting
-	NativeEnemyModels.hit_reaction(model, foe)
+	EnemyRenderer3D.hit_reaction(model, foe)
 	var recoiling := visual.skeleton.global_transform * bone_pose
 	check(
 		"skinned shoulder stays attached to the actual recoil pivot",
@@ -60,25 +60,25 @@ func run() -> void:
 	projectile.velocity = Vector2(-300, 0)
 	projectile.owner_node = hero
 	foe.take_damage(350.0, projectile)
-	preview._enemy_models.sync()
+	renderer._enemy_models.sync()
 	var reverse := Vector2(torso.rotation.x, torso.rotation.z)
 	check("opposite travel reverses the body's hit response", first_lean.dot(reverse) < 0.0)
 	projectile.free()
-	preview._sync_cards()
+	renderer._sync_cards()
 	var numbers: Array = game.cosmetic_effects.filter(func(effect: Effect): return effect.kind == "text" and effect.font_size == HitTier.number_size(HitTier.HEAVY))
 	check("heavy hits generate tiered numbers", not numbers.is_empty())
 	var number: Effect = numbers.back()
-	check("simultaneous follow-up number waits before its native pop", number.age < 0.0 and not preview._labels.has(number.get_instance_id()))
+	check("simultaneous follow-up number waits before its native pop", number.age < 0.0 and not renderer._labels.has(number.get_instance_id()))
 	number._process(-number.age)
-	preview._sync_cards()
-	var label: Label3D = preview._labels[number.get_instance_id()]["node"]
+	renderer._sync_cards()
+	var label: Label3D = renderer._labels[number.get_instance_id()]["node"]
 	check("actual 3D text honors heavy font size and initial pop", label.font_size == HitTier.number_size(HitTier.HEAVY) and label.scale.x > 1.3)
 	number.age = 0.12
-	preview._sync_cards()
+	renderer._sync_cards()
 	check("the 3D number pop settles without changing the damage value", is_equal_approx(label.scale.x, 1.0))
-	var fx := preview._hit_feel
+	var fx := renderer._hit_feel
 	fx.sync(0.0)
-	check("real confirmed impacts create directional depth-tested streaks and a short focus pulse", fx.entries.size() > 0 and float(fx.snapshot()["pulse"]) > 0.0 and not "depth_test_disabled" in NativeHitFeel3D.SPARK_CODE)
+	check("real confirmed impacts create directional depth-tested streaks and a short focus pulse", fx.entries.size() > 0 and float(fx.snapshot()["pulse"]) > 0.0 and not "depth_test_disabled" in HitFeedback3D.SPARK_CODE)
 	for entry: Dictionary in fx.entries.values():
 		var effect: Effect = entry["source"].get_ref()
 		check("streaks sit on the actual 3D struck chest", (entry["node"] as Node3D).position.is_equal_approx(effect.params["contact_position"]))
@@ -89,24 +89,24 @@ func run() -> void:
 	get_tree().paused = false
 	for index in 30:
 		var effect := Effect.spawn_impact(game, hero.position, hero, true)
-		effect.params["contact_position"] = preview.actor_foot(hero) + Vector3.UP
+		effect.params["contact_position"] = renderer.actor_foot(hero) + Vector3.UP
 		effect.params["tier"] = HitTier.HEAVY
 	fx.sync(0.0)
-	check("large area hits obey a fixed renderer budget", fx.entries.size() <= NativeHitFeel3D.MAX_BURSTS and fx.builds <= NativeHitFeel3D.MAX_BURSTS)
+	check("large area hits obey a fixed renderer budget", fx.entries.size() <= HitFeedback3D.MAX_BURSTS and fx.builds <= HitFeedback3D.MAX_BURSTS)
 	for effect: Effect in Effect.in_world(game.world):
 		if effect.kind == "impact":
 			effect.age = effect.life
 	fx.sync(0.4)
 	var builds := fx.builds
 	var next := Effect.spawn_impact(game, hero.position, hero, true)
-	next.params["contact_position"] = preview.actor_foot(hero) + Vector3.UP
+	next.params["contact_position"] = renderer.actor_foot(hero) + Vector3.UP
 	next.params["tier"] = HitTier.HEAVY
 	fx.sync(0.0)
 	check("new impacts reuse expired streak batches", fx.entries.size() == 1 and fx.builds == builds)
 	Prefs.reduce_motion = true
 	foe.take_damage(1.0, hero)
-	preview._enemy_models.sync()
-	preview._sync_cards()
+	renderer._enemy_models.sync()
+	renderer._sync_cards()
 	fx.sync(0.0)
 	check("reduced motion removes the extra flinch, sparks and focus", float(model["hit_lean"]) == 0.0 and fx.entries.is_empty() and float(fx.snapshot()["pulse"]) == 0.0 and label.scale == Vector3.ONE)
 	Prefs.reduce_motion = old_motion
@@ -152,9 +152,9 @@ func _check_mage_contact() -> void:
 	GameState.slots[0] = "sorceressAttack"
 	check("actual mage melee starter attack starts", hero.cast_slot(0))
 	hero._process(hero._attack_duration * 0.52)
-	var motion: Ortho3DHeroMotion = game.ortho_preview._hero_motion
+	var motion: HeroAnimation3D = game.world_renderer._hero_motion
 	motion.sync(hero, 0.0)
-	var clip: Animation = game.ortho_preview.animation.get_animation(motion.active_clip)
+	var clip: Animation = game.world_renderer.animation.get_animation(motion.active_clip)
 	check("GLB first confirmed contact seeks the contact key before holding", hero.contact_serial > 0 and motion.active_clip.to_lower().contains("cast") and is_equal_approx(motion.sample_time, Player.CONTACT_PROGRESS * clip.length))
 	var updates := motion.pose_updates
 	motion.sync(hero, 0.05)

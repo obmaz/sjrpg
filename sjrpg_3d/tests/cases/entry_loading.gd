@@ -7,14 +7,14 @@ class SlowSimulation:
 
 
 class SlowAdventure:
-	extends NativeAdventure
+	extends Adventure3D
 	func _ready() -> void:
 		simulation = SlowSimulation.new()
 		add_child(simulation)
 
 
 class EntryRoot:
-	extends "res://scripts/main.gd"
+	extends "res://scripts/app/main.gd"
 	var launches := 0
 	var hold_world := false
 	var launch_phases: Array[String] = []

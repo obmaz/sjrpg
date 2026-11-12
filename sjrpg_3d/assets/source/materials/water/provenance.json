@@ -3,7 +3,7 @@
   "tile_metres": 2.56,
   "images": [
     {
-      "path": "assets/models/materials/water/water-0.png",
+      "path": "assets/materials/water/water-0.png",
       "sha256": "96826013b3414972ff3abf9c1b0618a801add81dd9a0b74cedb12126492fe1d6",
       "bytes": 1621789,
       "original": "original-0.png",
@@ -16,7 +16,7 @@
       ]
     },
     {
-      "path": "assets/models/materials/water/water-1.png",
+      "path": "assets/materials/water/water-1.png",
       "sha256": "5f9412e95e878416f00b7541497659e786c3f0f80a9f15d63571ee677f99ad04",
       "bytes": 1629276,
       "original": "original-1.png",
@@ -29,7 +29,7 @@
       ]
     },
     {
-      "path": "assets/models/materials/water/water-2.png",
+      "path": "assets/materials/water/water-2.png",
       "sha256": "64cb00da3e9667e9efaa7522487533ecc41ce3d5fdaf6cf6ed4585264bfa9305",
       "bytes": 1641200,
       "original": "original-2.png",
@@ -42,7 +42,7 @@
       ]
     },
     {
-      "path": "assets/models/materials/water/water-3.png",
+      "path": "assets/materials/water/water-3.png",
       "sha256": "552f580d96e8238a55397bb052973a149a90fbbd670abe5289bc3da07f266f4b",
       "bytes": 1730034,
       "original": "original-3.png",
@@ -55,7 +55,7 @@
       ]
     },
     {
-      "path": "assets/models/materials/water/water-4.png",
+      "path": "assets/materials/water/water-4.png",
       "sha256": "0af93771d374912b38912bf8d9c910b476e23e50eb7ecfee98b96cde165be892",
       "bytes": 1842339,
       "original": "original-4.png",
@@ -68,7 +68,7 @@
       ]
     },
     {
-      "path": "assets/models/materials/water/water-5.png",
+      "path": "assets/materials/water/water-5.png",
       "sha256": "65f927cd2aeeb44d7187bd362f6f3f505c053c32daa032dd1da2b95ca43f9435",
       "bytes": 1669502,
       "original": "original-5.png",
@@ -81,7 +81,7 @@
       ]
     },
     {
-      "path": "assets/models/materials/water/water-6.png",
+      "path": "assets/materials/water/water-6.png",
       "sha256": "49753a5d4a0265472010801cf2cafea43a16a5173de47cd1f2dd8bae46e479f0",
       "bytes": 1802307,
       "original": "original-6.png",
@@ -94,7 +94,7 @@
       ]
     },
     {
-      "path": "assets/models/materials/water/water-7.png",
+      "path": "assets/materials/water/water-7.png",
       "sha256": "89db400298928a3e327f739f73a6b0475676f87da228197453623978f804b5dd",
       "bytes": 1654366,
       "original": "original-7.png",
@@ -107,7 +107,7 @@
       ]
     },
     {
-      "path": "assets/models/materials/water/water-8.png",
+      "path": "assets/materials/water/water-8.png",
       "sha256": "918002822ec482d48232ed09d958b594bd0929ed172307a3efcd86297d0d426f",
       "bytes": 1658542,
       "original": "original-8.png",
@@ -120,7 +120,7 @@
       ]
     },
     {
-      "path": "assets/models/materials/water/water-9.png",
+      "path": "assets/materials/water/water-9.png",
       "sha256": "2949109f684c552878967070ed96bbf25f3b6adeea095a7420144fe72f3c25ef",
       "bytes": 1951568,
       "original": "original-9.png",

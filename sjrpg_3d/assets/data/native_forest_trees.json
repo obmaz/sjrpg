@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "implementation": "scripts/ortho_3d_forest_trees.gd",
-  "mesh_provenance": "assets/art/preview3d/town-trees.json",
-  "material_provenance": "assets/source/preview3d/trees/generation.json",
+  "implementation": "scripts/rendering/vegetation/forest_tree_renderer_3d.gd",
+  "mesh_provenance": "assets/models/vegetation/shared/tree_profiles.json",
+  "material_provenance": "assets/source/vegetation/town_trees/generation.json",
   "approved_reference": "assets/source/style/approved-game-reference.jpg",
   "approved_reference_sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
   "new_generated_pixels": true,
@@ -19,7 +19,7 @@
     "yaw_radians": "((seed >> 1) & 0xffffff) / 16777216 * TAU",
     "gameplay_random_draws": 0,
     "size": "원본 수관 상한 안에서 변형별 폭 비율 [1,1,0.68,0.86,0.52]을 적용하고 원본 높이·뿌리·충돌을 보존한다.",
-    "position": "Ortho3DPreview.ground_position(source.global_position, presenter.surface_height(source.global_position))",
+    "position": "WorldRenderer3D.ground_position(source.global_position, presenter.surface_height(source.global_position))",
     "layout_record": "NativeForestTrees metadata native_forest_tree_layout: JSON-safe per-source position, key, frame, foot, k, flip, variant, yaw, native basis, native position, measured crown size and original collision radius"
   },
   "batching": {
@@ -51,8 +51,8 @@
     "Source-sized native tree fitting inherits the existing town-tree positive radial/vertical fitting; no new camera-facing geometry or flattening is introduced",
     "Runtime portrait/landscape, two-axis full-crown, actual terrain contact, alpha/shadow cost and representative combat performance require engine/browser validation"
   ],
-  "additional_mesh_provenance": "assets/source/preview3d/wild-vegetation/meshes.json",
-  "additional_material_provenance": "assets/source/preview3d/wild-vegetation/needles.json",
+  "additional_mesh_provenance": "assets/source/vegetation/wild_flora/meshes.json",
+  "additional_material_provenance": "assets/source/vegetation/wild_flora/needles.json",
   "additional_budget": {
     "conifer_triangles": [
       3320,

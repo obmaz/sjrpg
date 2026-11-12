@@ -13,7 +13,7 @@
     1254,
     1254
    ],
-   "render_file": "assets/art/village/town.webp",
+   "render_file": "assets/sprites/village/town.webp",
    "space": "native",
    "source_sha256": "d75434ed6c1a692e177ffd528c84818a7a01dffe1458c7bbe2c84c01922a7707",
    "edges": [
@@ -211,7 +211,7 @@
     1536,
     1024
    ],
-   "render_file": "assets/art/village/town.webp",
+   "render_file": "assets/sprites/village/town.webp",
    "space": "native",
    "source_sha256": "8f29d82f55782ce2efae9441f90e7aaf2793db7967c4bdf523869aec8044a7b1",
    "edges": [
@@ -396,7 +396,7 @@
     1254,
     1254
    ],
-   "render_file": "assets/art/village/town.webp",
+   "render_file": "assets/sprites/village/town.webp",
    "space": "native",
    "source_sha256": "7f963dcf60cf7bd4b10c7b6d50024877865bb4e9bb83130d7eb0ca262ef583d0",
    "edges": [
@@ -594,7 +594,7 @@
     1536,
     1024
    ],
-   "render_file": "assets/art/village/town.webp",
+   "render_file": "assets/sprites/village/town.webp",
    "space": "native",
    "source_sha256": "879907b9e0c66c31905ec002a48d09e0099f152716017d167578b977896d9618",
    "edges": [
@@ -779,7 +779,7 @@
     1254,
     1254
    ],
-   "render_file": "assets/art/village/town.webp",
+   "render_file": "assets/sprites/village/town.webp",
    "space": "native",
    "source_sha256": "e197ff7e23687a692fa02e4b9371c82998fefe51ceb6e47a9b5ab07681317171",
    "edges": [
@@ -1263,7 +1263,7 @@
     1254,
     1254
    ],
-   "render_file": "assets/art/village/bridge.webp",
+   "render_file": "assets/sprites/village/bridge.webp",
    "source_sha256": "139a5b49b39cebac19dedc55df1934e36fdac3811d89279183341ff1c11bf688",
    "render_sha256": "602b0209ca4ea4ab10ea654b0e9d748a62df871a51e2c52a572bcbdb46fccac8",
    "space": "native",
@@ -1749,7 +1749,7 @@
     1254,
     1254
    ],
-   "render_file": "assets/art/village/gates.webp",
+   "render_file": "assets/sprites/village/gates.webp",
    "space": "native",
    "edges": [
     {
@@ -2101,7 +2101,7 @@
     1254,
     1254
    ],
-   "render_file": "assets/art/village/gates.webp",
+   "render_file": "assets/sprites/village/gates.webp",
    "space": "native",
    "edges": [
     {
@@ -2309,7 +2309,7 @@
     63,
     530
    ],
-   "render_file": "assets/art/village/walls.webp",
+   "render_file": "assets/sprites/village/walls.webp",
    "space": "native",
    "edges": [
     {
@@ -2454,7 +2454,7 @@
     63,
     530
    ],
-   "render_file": "assets/art/village/walls.webp",
+   "render_file": "assets/sprites/village/walls.webp",
    "space": "native",
    "edges": [
     {
@@ -2599,7 +2599,7 @@
     1254,
     1254
    ],
-   "render_file": "assets/art/village/remake-portal.webp",
+   "render_file": "assets/sprites/village/remake-portal.webp",
    "space": "native",
    "edges": [
     {
@@ -2915,7 +2915,7 @@
     1254,
     1254
    ],
-   "render_file": "assets/art/village/remake-pool.webp",
+   "render_file": "assets/sprites/village/remake-pool.webp",
    "space": "native",
    "edges": [
     {
@@ -3156,7 +3156,7 @@
     724,
     724
    ],
-   "render_file": "assets/art/village/remake-chest.webp",
+   "render_file": "assets/sprites/village/remake-chest.webp",
    "space": "native",
    "edges": [
     {
@@ -3367,7 +3367,7 @@
     724,
     724
    ],
-   "render_file": "assets/art/village/remake-chest-broken.webp",
+   "render_file": "assets/sprites/village/remake-chest-broken.webp",
    "space": "native",
    "edges": [
     {
@@ -3557,13 +3557,13 @@
    "id": "landmark-0",
    "kind": "landmark",
    "key": "0",
-   "source_file": "assets/source/hill-new.png",
+   "source_file": "assets/source/environment/landmarks/hill-new.png",
    "source_rect": null,
    "source_size": [
     1254,
     1254
    ],
-   "render_file": "assets/art/village/landmarks.webp",
+   "render_file": "assets/sprites/village/landmarks.webp",
    "space": "native",
    "edges": [
     {
@@ -3650,13 +3650,13 @@
    "id": "landmark-1",
    "kind": "landmark",
    "key": "1",
-   "source_file": "assets/source/garden-new.png",
+   "source_file": "assets/source/environment/landmarks/garden-new.png",
    "source_rect": null,
    "source_size": [
     1254,
     1254
    ],
-   "render_file": "assets/art/village/landmarks.webp",
+   "render_file": "assets/sprites/village/landmarks.webp",
    "space": "native",
    "edges": [
     {
@@ -3758,13 +3758,13 @@
    "key": "encounter-stone",
    "definition_file": "assets/data/encounter_stone.json",
    "definition_key": "sprite",
-   "source_file": "assets/source/encounter-stone.png",
+   "source_file": "assets/source/environment/encounter_stone/encounter-stone.png",
    "source_rect": null,
    "source_size": [
     312,
     496
    ],
-   "render_file": "assets/art/village/encounter-stone.webp",
+   "render_file": "assets/sprites/village/encounter-stone.webp",
    "space": "native",
    "edges": [
     {

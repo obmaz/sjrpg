@@ -16,17 +16,17 @@ func _check_closed_surface(mesh: Mesh, label: String) -> void:
 	check("bridge detail has closed outward volume and clockwise normals: " + label, volume < 0.0 and wrong_normals == 0)
 
 func run() -> void:
-	var library := Ortho3DTrees.mesh_library()
+	var library := TreeGeometry3D.mesh_library()
 	check("five distinct native tree silhouettes are actually available", library.size() == 5)
 	for i: int in library.size():
 		var mesh: Mesh = library[i]["mesh"]
 		check("every tree is a rooted two-surface 3D mesh", mesh != null and mesh.get_surface_count() == 2 and absf(mesh.get_aabb().position.y) < 0.001 and mesh.get_aabb().size.z > 1.0)
 		if i >= 2:
 			var leaves := mesh.surface_get_material(1) as StandardMaterial3D
-			check("new conifers use shared dark needle cutouts with real lighting", leaves == Ortho3DTrees._needle_ink and leaves.albedo_texture.resource_path == NativeWildVegetation.NEEDLES and leaves.billboard_mode == BaseMaterial3D.BILLBOARD_DISABLED and leaves.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR)
+			check("new conifers use shared dark needle cutouts with real lighting", leaves == TreeGeometry3D._needle_ink and leaves.albedo_texture.resource_path == WildVegetationRenderer3D.NEEDLES and leaves.billboard_mode == BaseMaterial3D.BILLBOARD_DISABLED and leaves.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR)
 	var game := await make_game("mage")
 	var before: Array = game.village.bridge.solids().duplicate(true)
-	var environment: Ortho3DEnvironment = game.ortho_preview._world_environment
+	var environment: EnvironmentRenderer3D = game.world_renderer._world_environment
 	var bridge := environment.forest.get_node("NativeDetailedBridge") as Node3D
 	var report: Dictionary = bridge.get_meta("bridge_detail")
 	check("detailed bridge preserves the actual playable deck and rail endpoints", report["deck"] == game.village.bridge.deck_polygon() and report["foundation_parts"] == 9 and before == game.village.bridge.solids())

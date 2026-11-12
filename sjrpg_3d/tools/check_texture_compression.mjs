@@ -12,11 +12,11 @@ assert(['before','after'].includes(edition),'explicit before/after edition');
 const quality=process.env.SJRPG_TEXTURE_QUALITY||'high';
 assert(['high','low'].includes(quality),'same real rendering quality for both editions');
 const targets=[
- 'res://assets/art/preview3d/limestone.webp','res://assets/art/preview3d/slate.webp',
- 'res://assets/art/preview3d/timber.webp','res://assets/art/preview3d/bark.webp',
- 'res://assets/art/forest/grass.webp','res://assets/art/forest/paving.webp',
- 'res://assets/art/village/rock.webp','res://assets/art/village/water.webp',
- 'res://assets/art/cave/floor.webp','res://assets/art/cave/dark.webp',
+ 'res://assets/materials/shared/limestone.webp','res://assets/materials/shared/slate.webp',
+ 'res://assets/materials/shared/timber.webp','res://assets/materials/shared/bark.webp',
+ 'res://assets/materials/terrain/grass_base.webp','res://assets/materials/terrain/paving_base.webp',
+ 'res://assets/materials/terrain/rock_base.webp','res://assets/sprites/village/water.webp',
+ 'res://assets/sprites/dungeon/floor.webp','res://assets/sprites/dungeon/dark.webp',
 ];
 await mkdir(out,{recursive:true});
 const errors=[],captures=[],measurements=[],checks=[];

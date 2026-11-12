@@ -4,11 +4,11 @@ extends TestCase
 
 func run() -> void:
 	var game := await make_game("mage")
-	var preview: Ortho3DPreview = game.ortho_preview
-	var environment: Ortho3DEnvironment = preview._world_environment
+	var renderer: WorldRenderer3D = game.world_renderer
+	var environment: EnvironmentRenderer3D = renderer._world_environment
 	var root: Node3D = environment.forest.get_node("NativeLandmarks")
 	var report: Dictionary = root.get_meta("native_landmark_report")
-	var low_grass: ShaderMaterial = preview._materials["grass"]
+	var low_grass: ShaderMaterial = renderer._materials["grass"]
 	var shared_top: ShaderMaterial
 	var shared_earth: StandardMaterial3D
 	var turf_variants := {}
@@ -34,7 +34,7 @@ func run() -> void:
 		check("top and ramp retain their metre UV density " + str(role), correct_uv)
 		var earthy := group.get_node_or_null("ExposedEarth") as MeshInstance3D
 		if role == 1:
-			check("stone garden keeps paving and has no grass or earth rim", top.material_override == preview._materials["paving"] and earthy == null)
+			check("stone garden keeps paving and has no grass or earth rim", top.material_override == renderer._materials["paving"] and earthy == null)
 			continue
 		styled_count += 1
 		var turf := top.material_override as ShaderMaterial
@@ -50,7 +50,7 @@ func run() -> void:
 		var low_tint: Color = low_grass.get_shader_parameter("surface_tint")
 		check("upper grass retains its cool lit tint " + str(role), tint.b / tint.g > low_tint.b / low_tint.g * 1.25 and tint.get_luminance() > low_tint.get_luminance() * 1.10 and not turf.shader.code.contains("EMISSION") and not turf.shader.code.contains("unshaded"))
 		var geology := group.get_node("NaturalGeology") as MeshInstance3D
-		check("geological silhouette uses the actual solid shell " + str(role), _same_vertices(geology.mesh.get_faces(), NativeTerrainForms.faces(surface), Vector3.ZERO))
+		check("geological silhouette uses the actual solid shell " + str(role), _same_vertices(geology.mesh.get_faces(), TerrainForms3D.faces(surface), Vector3.ZERO))
 		var outside := 0
 		for point: Vector3 in geology.mesh.get_faces():
 			if not Geometry2D.is_point_in_polygon(SpatialWorld3D.projected(point), surface["top"]):
@@ -59,7 +59,7 @@ func run() -> void:
 		print("ART_AUDIT geological_shell " + JSON.stringify({"role": role, "faces": geology.mesh.get_faces().size(), "outside": outside, "bounds": str(geology.mesh.get_aabb())}))
 
 		var earth := earthy.material_override as StandardMaterial3D
-		check("earth uses one opaque lit rock texture at its original world scale " + str(role), earth == shared_earth and earth.albedo_texture == load("res://assets/art/forest/earth.webp") and earth.uv1_world_triplanar and earth.uv1_scale.is_equal_approx(Vector3.ONE / 2.56) and earth.transparency == BaseMaterial3D.TRANSPARENCY_DISABLED and not earth.emission_enabled)
+		check("earth uses one opaque lit rock texture at its original world scale " + str(role), earth == shared_earth and earth.albedo_texture == load("res://assets/sprites/forest/earth.webp") and earth.uv1_world_triplanar and earth.uv1_scale.is_equal_approx(Vector3.ONE / 2.56) and earth.transparency == BaseMaterial3D.TRANSPARENCY_DISABLED and not earth.emission_enabled)
 		_check_earth(earthy, surface, role)
 		check("visual turf and earth do not add collision " + str(role), group.find_children("*", "CollisionObject3D", true, false).is_empty())
 	check("all three raised grass landmarks are styled", styled_count == 3)
@@ -209,7 +209,7 @@ func _physical_boundary(surface: Dictionary) -> Array[Dictionary]:
 			if along.length_squared() < 0.00000001:
 				continue
 			var normal := Vector3(along.y, 0, -along.x).normalized()
-			var outside := (from + to) * 0.5 + Iso.project(Vector2(normal.x, normal.z) * Ortho3DPreview.GROUND_PER_METER).normalized()
+			var outside := (from + to) * 0.5 + Iso.project(Vector2(normal.x, normal.z) * WorldRenderer3D.GROUND_PER_METER).normalized()
 			if Geometry2D.is_point_in_polygon(outside, outline):
 				normal = -normal
 			result.append({"a": a, "b": b, "axis": along.normalized(), "length": along.length(), "normal": normal, "pieces": [], "area": 0.0, "earth_area": 0.0})

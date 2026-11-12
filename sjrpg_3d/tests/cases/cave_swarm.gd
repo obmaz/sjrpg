@@ -102,7 +102,7 @@ func _check_real_contact_and_restore() -> void:
 	check("the saved pack contains all twenty members", saved.size() == 20)
 	check("the same save loads without changing in-memory source references", GameState.load_game())
 	await _retire(game)
-	game = preload("res://scripts/game.gd").new()
+	game = preload("res://scripts/gameplay/game.gd").new()
 	add_child(game)
 	var saw_loading_pack := false
 	var quiet_loading_pack := true

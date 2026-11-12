@@ -65,7 +65,7 @@
           "triangles": 0,
           "video_bytes": 48960848
         },
-        "screen_script": "res://scripts/title_screen.gd",
+        "screen_script": "res://scripts/ui/screens/title_screen.gd",
         "viewport": [
           720,
           1558
@@ -216,7 +216,7 @@
           "render_width": 720,
           "update_mode": 4
         },
-        "screen_script": "res://scripts/native_adventure.gd",
+        "screen_script": "res://scripts/app/adventure_3d.gd",
         "town": true,
         "viewport": [
           720,
@@ -345,7 +345,7 @@
           "triangles": 242042,
           "video_bytes": 307530646
         },
-        "screen_script": "res://scripts/title_screen.gd",
+        "screen_script": "res://scripts/ui/screens/title_screen.gd",
         "viewport": [
           720,
           1558
@@ -496,7 +496,7 @@
           "render_width": 720,
           "update_mode": 4
         },
-        "screen_script": "res://scripts/native_adventure.gd",
+        "screen_script": "res://scripts/app/adventure_3d.gd",
         "town": false,
         "viewport": [
           720,
@@ -657,7 +657,7 @@
           "render_width": 720,
           "update_mode": 4
         },
-        "screen_script": "res://scripts/native_adventure.gd",
+        "screen_script": "res://scripts/app/adventure_3d.gd",
         "town": false,
         "viewport": [
           720,
@@ -1123,7 +1123,7 @@
           "render_width": 720,
           "update_mode": 0
         },
-        "screen_script": "res://scripts/native_adventure.gd",
+        "screen_script": "res://scripts/app/adventure_3d.gd",
         "town": false,
         "viewport": [
           720,
@@ -1284,7 +1284,7 @@
           "render_width": 720,
           "update_mode": 4
         },
-        "screen_script": "res://scripts/native_adventure.gd",
+        "screen_script": "res://scripts/app/adventure_3d.gd",
         "town": false,
         "viewport": [
           720,
@@ -1422,7 +1422,7 @@
           "triangles": 242042,
           "video_bytes": 320387274
         },
-        "screen_script": "res://scripts/title_screen.gd",
+        "screen_script": "res://scripts/ui/screens/title_screen.gd",
         "viewport": [
           720,
           1558
@@ -1582,7 +1582,7 @@
           "render_width": 720,
           "update_mode": 4
         },
-        "screen_script": "res://scripts/native_adventure.gd",
+        "screen_script": "res://scripts/app/adventure_3d.gd",
         "town": true,
         "viewport": [
           720,
@@ -1743,7 +1743,7 @@
           "render_width": 1558,
           "update_mode": 4
         },
-        "screen_script": "res://scripts/native_adventure.gd",
+        "screen_script": "res://scripts/app/adventure_3d.gd",
         "town": true,
         "viewport": [
           1558,
@@ -1881,7 +1881,7 @@
           "triangles": 242042,
           "video_bytes": 320387274
         },
-        "screen_script": "res://scripts/title_screen.gd",
+        "screen_script": "res://scripts/ui/screens/title_screen.gd",
         "viewport": [
           720,
           1558
@@ -2041,7 +2041,7 @@
           "render_width": 720,
           "update_mode": 4
         },
-        "screen_script": "res://scripts/native_adventure.gd",
+        "screen_script": "res://scripts/app/adventure_3d.gd",
         "town": false,
         "viewport": [
           720,
@@ -2202,7 +2202,7 @@
           "render_width": 720,
           "update_mode": 4
         },
-        "screen_script": "res://scripts/native_adventure.gd",
+        "screen_script": "res://scripts/app/adventure_3d.gd",
         "town": false,
         "viewport": [
           720,
@@ -2668,7 +2668,7 @@
           "render_width": 720,
           "update_mode": 0
         },
-        "screen_script": "res://scripts/native_adventure.gd",
+        "screen_script": "res://scripts/app/adventure_3d.gd",
         "town": false,
         "viewport": [
           720,
@@ -2829,7 +2829,7 @@
           "render_width": 720,
           "update_mode": 4
         },
-        "screen_script": "res://scripts/native_adventure.gd",
+        "screen_script": "res://scripts/app/adventure_3d.gd",
         "town": false,
         "viewport": [
           720,
@@ -2967,7 +2967,7 @@
           "triangles": 242042,
           "video_bytes": 320429970
         },
-        "screen_script": "res://scripts/title_screen.gd",
+        "screen_script": "res://scripts/ui/screens/title_screen.gd",
         "viewport": [
           720,
           1558
@@ -3127,7 +3127,7 @@
           "render_width": 720,
           "update_mode": 4
         },
-        "screen_script": "res://scripts/native_adventure.gd",
+        "screen_script": "res://scripts/app/adventure_3d.gd",
         "town": true,
         "viewport": [
           720,
@@ -3265,7 +3265,7 @@
           "triangles": 242042,
           "video_bytes": 320429970
         },
-        "screen_script": "res://scripts/title_screen.gd",
+        "screen_script": "res://scripts/ui/screens/title_screen.gd",
         "viewport": [
           720,
           1558
@@ -3425,7 +3425,7 @@
           "render_width": 720,
           "update_mode": 4
         },
-        "screen_script": "res://scripts/native_adventure.gd",
+        "screen_script": "res://scripts/app/adventure_3d.gd",
         "town": false,
         "viewport": [
           720,
@@ -3586,7 +3586,7 @@
           "render_width": 720,
           "update_mode": 4
         },
-        "screen_script": "res://scripts/native_adventure.gd",
+        "screen_script": "res://scripts/app/adventure_3d.gd",
         "town": false,
         "viewport": [
           720,
@@ -4052,7 +4052,7 @@
           "render_width": 720,
           "update_mode": 0
         },
-        "screen_script": "res://scripts/native_adventure.gd",
+        "screen_script": "res://scripts/app/adventure_3d.gd",
         "town": false,
         "viewport": [
           720,
@@ -4213,7 +4213,7 @@
           "render_width": 720,
           "update_mode": 4
         },
-        "screen_script": "res://scripts/native_adventure.gd",
+        "screen_script": "res://scripts/app/adventure_3d.gd",
         "town": false,
         "viewport": [
           720,
@@ -4351,7 +4351,7 @@
           "triangles": 242042,
           "video_bytes": 320429970
         },
-        "screen_script": "res://scripts/title_screen.gd",
+        "screen_script": "res://scripts/ui/screens/title_screen.gd",
         "viewport": [
           720,
           1558
@@ -4433,7 +4433,7 @@
           "triangles": 0,
           "video_bytes": 56860688
         },
-        "screen_script": "res://scripts/title_screen.gd",
+        "screen_script": "res://scripts/ui/screens/title_screen.gd",
         "viewport": [
           720,
           1558
@@ -4584,7 +4584,7 @@
           "render_width": 720,
           "update_mode": 4
         },
-        "screen_script": "res://scripts/native_adventure.gd",
+        "screen_script": "res://scripts/app/adventure_3d.gd",
         "town": true,
         "viewport": [
           720,
@@ -4713,7 +4713,7 @@
           "triangles": 210290,
           "video_bytes": 318619904
         },
-        "screen_script": "res://scripts/title_screen.gd",
+        "screen_script": "res://scripts/ui/screens/title_screen.gd",
         "viewport": [
           720,
           1558
@@ -4864,7 +4864,7 @@
           "render_width": 720,
           "update_mode": 4
         },
-        "screen_script": "res://scripts/native_adventure.gd",
+        "screen_script": "res://scripts/app/adventure_3d.gd",
         "town": false,
         "viewport": [
           720,
@@ -5025,7 +5025,7 @@
           "render_width": 720,
           "update_mode": 4
         },
-        "screen_script": "res://scripts/native_adventure.gd",
+        "screen_script": "res://scripts/app/adventure_3d.gd",
         "town": false,
         "viewport": [
           720,
@@ -5491,7 +5491,7 @@
           "render_width": 720,
           "update_mode": 0
         },
-        "screen_script": "res://scripts/native_adventure.gd",
+        "screen_script": "res://scripts/app/adventure_3d.gd",
         "town": false,
         "viewport": [
           720,
@@ -5652,7 +5652,7 @@
           "render_width": 720,
           "update_mode": 4
         },
-        "screen_script": "res://scripts/native_adventure.gd",
+        "screen_script": "res://scripts/app/adventure_3d.gd",
         "town": false,
         "viewport": [
           720,
@@ -5790,7 +5790,7 @@
           "triangles": 242042,
           "video_bytes": 332525108
         },
-        "screen_script": "res://scripts/title_screen.gd",
+        "screen_script": "res://scripts/ui/screens/title_screen.gd",
         "viewport": [
           720,
           1558

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {assertImportedMerchantAsset, assertWallTorchHeights} from './diagnostic_contracts.mjs';
 
-const asset = 'res://assets/art/native_residents/merchant.glb';
+const asset = 'res://assets/models/residents/merchant/model.glb';
 assertImportedMerchantAsset({asset, scene_paths: [asset]}, 'direct legacy model');
 assertImportedMerchantAsset({asset, scene_paths: ['res://assets/models/residents/merchant/visual.tscn']}, 'scene-wrapped model');
 assert.throws(() => assertImportedMerchantAsset({asset: 'unrelated.glb', scene_paths: [asset]}, 'wrong source'));

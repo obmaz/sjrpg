@@ -13,15 +13,15 @@
   "runtime": "assets/models/enemies/skeleton/model.glb",
   "runtime_sha256": "4496b0bcd964c1f7ecffab3462fb38c5e1ded5dd901f51069096eed203dccd35",
   "conversion": "conversion.json",
-  "converter": "tools/enemy_art/export_remaining.py",
-  "converter_sha256": "4cfacde051d831e621c0fac072a37ab02cf68697cb0aa5ea8ef8e3b0b9b874bf",
+  "converter": "tools/assets/enemies/export_remaining.py",
+  "converter_sha256": "c8db7b686a8801bb72015f6a1f91d732b12ae5a93e042820b2a0801cda59bf89",
   "additional_inputs": [],
   "changes": "미터·축·발 원점 정규화, 실제 골격의 FK 클립 변환, 스킨 접지·사망 중심 보정. 원본 모발·금속 턱·과장된 어깨 갑옷·안구 장식 제외. ASCII FBX는 FBX2glTF 0.9.7로 변환. 장화 대신 원본 뼈 발 사용.",
   "fbx2gltf_sha256": "b38210352fdd29d50ba53a6514c3ff05ccbb5d1e0a6442db7a49834bf34a3145",
   "fbx2gltf_url": "https://github.com/facebookincubator/FBX2glTF/releases/download/v0.9.7/FBX2glTF-linux-x64",
   "converter_dependencies": [
     {
-      "path": "tools/enemy_art/skin_weights.py",
+      "path": "tools/assets/enemies/skin_weights.py",
       "sha256": "9bc3bede33b29b7708821b0ba5aa2ff094ecbda8d3779db5373502a1c9aa37fb"
     },
     {

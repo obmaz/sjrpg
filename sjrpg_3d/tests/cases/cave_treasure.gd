@@ -12,10 +12,10 @@ func run() -> void:
 	game.spatial_world.sync_scope()
 	await get_tree().physics_frame
 	await get_tree().physics_frame
-	var preview: Ortho3DPreview = game.ortho_preview
-	preview.set_process(false)
-	preview._world_environment.sync(0, true)
-	var props: NativeEncounterProps3D = preview._encounter_props
+	var renderer: WorldRenderer3D = game.world_renderer
+	renderer.set_process(false)
+	renderer._world_environment.sync(0, true)
+	var props: EncounterPropRenderer3D = renderer._encounter_props
 	props.sync()
 	var iron: Chest
 	var gold: Chest
@@ -95,8 +95,8 @@ func run() -> void:
 
 
 func _check_wall_ownership(game: Node) -> void:
-	var preview: Ortho3DPreview = game.ortho_preview
-	var rock: Dictionary = preview._world_environment._cave_rock
+	var renderer: WorldRenderer3D = game.world_renderer
+	var rock: Dictionary = renderer._world_environment._cave_rock
 	var owners := {}
 	for wall: MeshInstance3D in rock["meshes"]:
 		var owner := NativePlayerOcclusion.static_owner(wall)
@@ -106,7 +106,7 @@ func _check_wall_ownership(game: Node) -> void:
 		"each connected cave wall owns its entire inner and outer material independently",
 		owners.size() == rock["meshes"].size() and owners.size() > 8
 	)
-	var fade: NativePlayerOcclusion = preview._occlusion
+	var fade: NativePlayerOcclusion = renderer._occlusion
 	var sample_found := false
 	var unrelated_stays_solid := true
 	var all_surfaces_match := true
@@ -125,7 +125,7 @@ func _check_wall_ownership(game: Node) -> void:
 		game.camera.position = game._camera_focus()
 		game.camera.reset_smoothing()
 		game.camera.force_update_scroll()
-		preview._sync_camera()
+		renderer._sync_camera()
 		fade.sync(1.0)
 		for wall: MeshInstance3D in rock["meshes"]:
 			var key := "object:%s" % wall.get_instance_id()
@@ -159,14 +159,14 @@ func _check_wall_ownership(game: Node) -> void:
 			{"found": sample_found, "solid": unrelated_stays_solid, "surfaces": all_surfaces_match}
 		)
 	)
-	preview._enemy_models.sync()
+	renderer._enemy_models.sync()
 	var dynamic_models := true
-	for model: Dictionary in preview._enemy_models.entries.values():
+	for model: Dictionary in renderer._enemy_models.entries.values():
 		for mesh: MeshInstance3D in (model["root"] as Node3D).find_children(
 			"*", "MeshInstance3D", true, false
 		):
 			dynamic_models = dynamic_models and NativePlayerOcclusion.static_owner(mesh) == null
 	check(
 		"all actual cave monster model parts remain outside static fade ownership",
-		dynamic_models and not preview._enemy_models.entries.is_empty()
+		dynamic_models and not renderer._enemy_models.entries.is_empty()
 	)

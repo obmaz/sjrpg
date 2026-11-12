@@ -7,7 +7,7 @@ const SHADER := preload("res://assets/models/environment/waypoint/surface.gdshad
 
 
 static func create(parent: Node3D, mote_mesh: Mesh, stone: Material) -> Dictionary:
-	var root := NativePropAssets.create("environment/waypoint")
+	var root := ModelSceneLibrary.create("environment/waypoint")
 	root.name = "NativeGroundWaypoint"
 	parent.add_child(root)
 	var fluid := ShaderMaterial.new()
