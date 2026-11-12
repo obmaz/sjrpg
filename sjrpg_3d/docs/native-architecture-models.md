@@ -4,12 +4,12 @@
 
 | 자산 id | 내용 | 삼각형 | 재질 역할 |
 | --- | --- | ---: | ---: |
-| shop | 상점 | 11,420 | 6 |
-| smith | 대장간 | 10,176 | 6 |
-| stable | 마구간 | 7,700 | 6 |
-| home | 주택 | 10,480 | 6 |
-| chapel | 예배당 | 6,124 | 5 |
-| fortress | 성벽·망루·성문 네 곳, 여덟 문짝 | 36,928 | 4 |
+| shop | 상점 | 11,008 | 6 |
+| smith | 대장간 | 10,476 | 6 |
+| stable | 마구간 | 8,008 | 6 |
+| home | 주택 | 10,492 | 6 |
+| chapel | 예배당 | 6,284 | 5 |
+| fortress | 성벽·망루·성문 네 곳, 여덟 문짝 | 37,472 | 4 |
 | bridge | 갑판·석조 아치·교각·난간 | 4,356 | 4 |
 
 ## 파일과 책임
@@ -32,12 +32,16 @@ GLB 임포트는 `meshes/generate_lods=false`, `meshes/force_disable_compression
 
 원래 제작 모델링 코드는 `tools/architecture_art/{house,chapel,fortress,bridge}_builder.gd`로 옮겼습니다. `bake.gd`는 운영 Game이나 기존 GLB를 열지 않고 원본 Village 데이터·공유 주택 규격으로 제작합니다. `NativeHousePlan`이 주택의 공통 수치와 재질 선택을 한 곳에 보관합니다.
 
+`tools/architecture_art/medieval_details.gd`는 마을 전체의 작은 세공을 공유하는 오프라인 도구입니다. 주택은 각 창을 실제로 덮을 수 있는 폭의 판자 덧문, 처마를 받치는 사선 버팀, 끝을 벼린 문 철띠, 직업별 길드 방패와 작은 등기구를 갖습니다. 상점 모서리의 상층 덧문은 경첩 각도를 주어 골조와 겹치지 않게 접어 엽니다. 예배당의 입구 등기구와 성문 탑의 숲 문장이 같은 세공 패밀리로 마을을 연결합니다. 벽돌·슬레이트·골조의 실제 UV는 유지하고, 참나무는 공통 풍화색을 사용합니다. 성곽의 목재는 같은 바탕에서 노출에 따른 차가운 풍화색만 더합니다.
+
+세공 부품은 기존 불투명 재질 표면에 합칩니다. 부품마다 런타임 노드·투명 그림·동적 광원·새 텍스처를 추가하지 않습니다. 문장과 등기구는 기존 건물/탑에 붙는 장식이며 지상 통로나 충돌을 바꾸지 않습니다. 외부 제작자는 이 helper를 런타임에 연결하지 않고 개별 GLB를 편집해도 됩니다.
+
 ```sh
 # 저장소 루트에서 실행. --only를 생략하면 일곱 자산을 모두 재생성합니다.
 sjrpg_3d/tools/godot.sh --headless res://tools/architecture_art/bake.tscn -- --only=shop
 sjrpg_3d/tools/import_project.sh
 python3 sjrpg_3d/tools/check_architecture_assets.py
-sjrpg_3d/tools/check.sh --only=native_architecture_assets,native_house_family,ortho_3d_chapel,ortho_3d_fortification,wild_vegetation_bridge,village_structures,player_occlusion
+sjrpg_3d/tools/check.sh --only=native_architecture_assets,native_house_family,medieval_craft_family,ortho_3d_chapel,ortho_3d_fortification,wild_vegetation_bridge,village_structures,player_occlusion
 ```
 
 실제 입력·도구·GLB/씬/재질/배치 해시는 `assets/source/architecture/<id>/model-provenance.json`에 있습니다. 기존 생성 원화와 원문 출처는 그대로 보존합니다. 원본 이미지를 편집하거나, 중립 슬롯을 완성된 PBR 재질로 표시하지 않습니다.
@@ -49,6 +53,8 @@ sjrpg_3d/tools/check.sh --only=native_architecture_assets,native_house_family,or
 ## 검수
 
 `native_architecture_assets`는 실제 가져온 씬의 출처·독립 노드·공유 메시/재질·삼각형·시각/물리 분리를 확인합니다. 기존 주택 검사, 예배당, 성문 개폐, 다리와 가림 검사는 임포트된 실제 메시를 계속 측정합니다. `tools/check.sh`가 몬스터와 건물의 자산 해시/구조 검사도 실행합니다.
+
+`medieval_craft_family`는 GLB에 가져온 덧문 각 판자의 실제 표면을 광선으로 확인하며 폭·경첩 좌표·기존 메시 수를 함께 검사합니다. 성문 탑의 문장도 실제 석조와 함께 광선을 쏴 탑 뒤에 묻히지 않는지 확인합니다. 기록된 장식 개수만으로 시각 검수를 대신하지 않습니다.
 
 네 방향 건물 렌더는 `tools/preview3d/render_facades.tscn`을 사용합니다. 실제 모바일 가로/세로에서 마을·성문·다리를 확인하고 기존 화면과 같은 카메라·광원으로 비교합니다. 일회성 비교와 진단 출력은 `build/`에 둡니다. 실제 Android 기기 실행과 로컬 브라우저 검수는 구분합니다.
 

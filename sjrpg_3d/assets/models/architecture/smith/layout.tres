@@ -7,6 +7,7 @@ metadata/report = {
 "closed_door": true,
 "collision_note": "Existing whole-house footprint remains solid; doors are closed, smith/stable recesses carry blocking worktops or rails. No enterable interior is promised.",
 "corner_quoins": 40,
+"craft_family": "woodland_oak_and_forged_iron",
 "door_approach": Rect2(0.72294235, 2.3574905, 1.34, 0.85),
 "door_height": 2.12,
 "door_width": 1.1,
@@ -14,8 +15,11 @@ metadata/report = {
 "eaves_height": 3.06,
 "footprint": Vector2(7.738569, 4.714981),
 "ground_envelope": AABB(-3.8692844, 0, -2.3574905, 7.738569, 3.06, 4.714981),
+"guild_emblem": "smith",
 "height_max": 4.985,
 "key": "ne",
+"knee_braces": 8,
+"lanterns": 1,
 "materials": ["stone", "wall", "slate", "wood", "iron", "glass"],
 "meshes": [{
 "$node": "House_ne_stone"
@@ -91,7 +95,7 @@ metadata/report = {
 "transform": Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 3.6692843, 0, 0),
 "wall_depth": 0.2
 }],
-"pieces": 294,
+"pieces": 316,
 "roof_edges": [{
 "a": Vector3(-4.0292845, 3.0955415, -2.5174906),
 "b": Vector3(0, 4.49, -2.5174906),
@@ -120,6 +124,17 @@ metadata/report = {
 "roof_overhang": 0.22921896,
 "roof_overhang_nominal": 0.22,
 "roof_rise": 1.4,
+"shutters": [{
+"bottom": 1.03,
+"height": 1.18,
+"hinge_angle": 0.0,
+"hinge_depth": 0.015,
+"panel_width": 0.43,
+"planks": 3,
+"transform": Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -3.6692843, 0, 0),
+"window_width": 0.86,
+"x": 0.0
+}],
 "slate_tile_m": 2.6,
 "slate_tiles": 350,
 "style": {
@@ -133,7 +148,7 @@ metadata/report = {
 "surfaces": 6,
 "timber_mapping": "beam-local longitudinal grain, shared existing door material; metre UVs",
 "timber_tile_m": 1.5384615384615383,
-"triangles": 10176
+"triangles": 10476
 }
 metadata/mesh_roles = {
 "House_ne_glass": "glass",

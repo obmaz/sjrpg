@@ -5,11 +5,19 @@
   "inputs": [
     {
       "path": "tools/architecture_art/bake.gd",
-      "sha256": "7f0cee342f94b2c18a001ad0a4510edf60ce0c120ce1322aaee4c987425ead0f"
+      "sha256": "931f8f1526583c995a0f5af89f9172c54155de9455ddee238c6fa7ae131064eb"
     },
     {
       "path": "tools/architecture_art/house_builder.gd",
-      "sha256": "e521b09136e72b74de8836c94acdb8633c3692f47beb742a5c6277230ce33ed2"
+      "sha256": "cbb3338372e8af2c2ce29e5280ef2a3104e0ea2efd80842f968c9a6eed97d5ef"
+    },
+    {
+      "path": "tools/architecture_art/medieval_details.gd",
+      "sha256": "5e4f5d3ecd4b74f72acee622f84bcab0b119c62b009f35d8550feb5abae8352b"
+    },
+    {
+      "path": "assets/models/materials/village_craft/surfaces.gd",
+      "sha256": "8aa72ffb1177ae1f91101f04a9bdcb34304e8d399fe975dd666d14a2dd9fe8af"
     },
     {
       "path": "scripts/iso.gd",
@@ -35,11 +43,11 @@
   "outputs": [
     {
       "path": "model.glb",
-      "sha256": "09f74ed28d9bb3c2ddc845f4a422f214c5bb0a8f1a95d779b4616f61a44e43da"
+      "sha256": "2fa983dc276eb118405b516ff5b631272e942c79afc031e1408e2d92b890a243"
     },
     {
       "path": "layout.tres",
-      "sha256": "3d00299003c231b974071ed355950270d3141887ac6e40589790b1aa87273563"
+      "sha256": "9ef7b66b8fd7576fd694a80e71f1102f6e57e65686f987694459c67b5cd60d8f"
     },
     {
       "path": "visual.tscn",
@@ -59,7 +67,7 @@
     },
     {
       "path": "materials/wood.tres",
-      "sha256": "8831dcc73202e9b83fbd2786f40b39eb8939ca7b99424fc639a98531d720454a"
+      "sha256": "9f599823aad72e124494f55d76f77493c391f8c04eeed9a0282e08e2667fd01f"
     },
     {
       "path": "materials/iron.tres",
@@ -74,7 +82,7 @@
       "sha256": "35f1298de2ce4477f948bd15fc127ef2fbb660b8eb0707b93b327390d4234dd6"
     }
   ],
-  "triangles": 10176,
+  "triangles": 10476,
   "meshes": 6,
   "materialRoles": [
     "stone",

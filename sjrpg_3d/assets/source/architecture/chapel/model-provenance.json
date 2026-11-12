@@ -5,11 +5,19 @@
   "inputs": [
     {
       "path": "tools/architecture_art/bake.gd",
-      "sha256": "7f0cee342f94b2c18a001ad0a4510edf60ce0c120ce1322aaee4c987425ead0f"
+      "sha256": "931f8f1526583c995a0f5af89f9172c54155de9455ddee238c6fa7ae131064eb"
     },
     {
       "path": "tools/architecture_art/chapel_builder.gd",
-      "sha256": "ccb5c94fce1c16190baa05a8a255a475c780670a213b0e3b0ee9eaeb84a56957"
+      "sha256": "a14975c74a26a8839d34b617e6bf0342c4f60aa0b299eb6e020f5a233e689e82"
+    },
+    {
+      "path": "tools/architecture_art/medieval_details.gd",
+      "sha256": "5e4f5d3ecd4b74f72acee622f84bcab0b119c62b009f35d8550feb5abae8352b"
+    },
+    {
+      "path": "assets/models/materials/village_craft/surfaces.gd",
+      "sha256": "8aa72ffb1177ae1f91101f04a9bdcb34304e8d399fe975dd666d14a2dd9fe8af"
     },
     {
       "path": "scripts/iso.gd",
@@ -35,11 +43,11 @@
   "outputs": [
     {
       "path": "model.glb",
-      "sha256": "cf02690a5932ed15288fb8ee5df965a7ff44d36fe5b7ba04a2a2459f6c61cf04"
+      "sha256": "722606d67ba3e44e2b28c306282302afcdeb83efb4c4ca892154faa1fba74be9"
     },
     {
       "path": "layout.tres",
-      "sha256": "16ddb332e959cadf499e1f3258b4864adbb3ae81d0cffadd4c0a8fd75760f76c"
+      "sha256": "d44ec91184627aa7885687c8fbd0bb523980899672edb0c8ae24f499264c70fd"
     },
     {
       "path": "visual.tscn",
@@ -70,7 +78,7 @@
       "sha256": "b049e629ea23852d8af43fec268a1ff973fd998a5b8627e2195a5c728b224802"
     }
   ],
-  "triangles": 6124,
+  "triangles": 6284,
   "meshes": 5,
   "materialRoles": [
     "stone",

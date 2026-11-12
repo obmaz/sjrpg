@@ -30,7 +30,7 @@
 
 진행은 `GameState`, 설정은 `Prefs`가 담당합니다. 저장은 `data.get(키, 기본값)`으로 하위 호환을 유지합니다. 3D 저장 위치는 네이티브 `sjrpg_3d`, 웹 `/userfs/sjrpg_3d`입니다. [저장 슬롯](save-slots.md)을 따릅니다.
 
-키보드·마우스·터치·Xbox 조작은 [프로젝트 안내](../README.md)를 따릅니다. 입력과 HUD는 실제 게임 상태를 읽으며 검수 observer가 게임 상태를 대신 만들지 않습니다. `PlayerActionBuffer`는100ms 단발 입력 하나만 보관하고 `TouchControls.release_all()`과 행동 취소가 이를 비웁니다. `Player.aim_target()`·`aim_range()`를 실제 시전과 `NativeAimTarget3D`가 공유합니다. `PlayerFootsteps`는 실제 보행 거리를 읽고 `SoundFx`는 CC0 PCM과 합성 악센트를8음성의 중요도 풀로 재생합니다. `RewardHudTrail`은 확정 지급 이후의 HUD 표시만 담당합니다. 현재 시간·접지·오디오 출처·표시 예산은 [타격감](juice.md)을 따릅니다.
+키보드·마우스·터치·Xbox 조작은 [프로젝트 안내](../README.md)를 따릅니다. 입력과 HUD는 실제 게임 상태를 읽으며 검수 observer가 게임 상태를 대신 만들지 않습니다. `PlayerActionBuffer`는100ms 단발 입력 하나만 보관하고 `TouchControls.release_all()`과 행동 취소가 이를 비웁니다. `DirectionalAim`의 전방±45°/각도 우선 규칙과 `Player.aim_direction()`의 최신 입력 방향을 `Player.aim_target()`·`aim_range()` 및 실제 시전·`NativeAimTarget3D`가 공유합니다. 작은 자동 보정은 다음 공격의 입력 방향으로 누적하지 않으며, 돌진/직접 대상 재선택·상자/소환석도 뒤쪽을 선택하지 않습니다. `PlayerFootsteps`는 실제 보행 거리를 읽고 `SoundFx`는 CC0 PCM과 합성 악센트를8음성의 중요도 풀로 재생합니다. `RewardHudTrail`은 확정 지급 이후의 HUD 표시만 담당합니다. 현재 시간·접지·오디오 출처·표시 예산은 [타격감](juice.md)을 따릅니다. `directional_targeting`은 네 방향·새 입력·보정 누적·근접 뒤쪽 예외·대상 상실 후 재선택을 검사합니다. 실제 브라우저 터치 검수는 `tools/screenshot.mjs --scene directional_aim --device phone`으로 네 방향 적 중 조이스틱 방향의 실제 시전/발치 링을 확인합니다(`aim_preview=1` 전용 검수 장면).
 
 `TouchControls.mobile_layout`은 세로 화면·터치 장치·네이티브 모바일을 인식합니다. 모바일 헤더/미니맵은 안전 영역 아래6단위 여백과 좌우가 같은 실제 테두리 여백을 사용하고, 세로 주 공격/조이스틱 중심은 각각 사용 가능한 높이의79%/78%입니다. 조이스틱의 기본 중심은 안전 영역 왼쪽에서 세로128단위·가로 터치136단위로, 이전보다24단위 오른쪽입니다. 가로 터치 화면은 바닥에서144단위, 데스크톱 가로는 기존178단위를 사용합니다. 실제 입력과 그림이 `_layout()`의 같은 버튼 좌표를 읽으며, 상호작용 패널도 옮긴 조이스틱·부채꼴을 피합니다. `hud_header`·`hud_layout`이 노치 여백·회전·메뉴 간격·터치 소유권을 확인합니다.
 
@@ -61,6 +61,8 @@ tools/serve.sh
 ```
 
 테스트는 `tests/run_all.tscn`에서 `tests/cases/`를 탐색합니다. 정적 호출이 없다는 이유로 테스트 파일을 삭제하지 않습니다. 제작 도구의 Python import와 명령행 진입점도 참조에 포함합니다.
+
+헤드리스 테스트 러너는 마지막 짧은 효과음의 자연 종료를 확인한 뒤 오디오 믹스와 메인 루프의 재생기 정리 경계를 기다립니다. 설정·효과음 재생기·캐시는 변경하지 않으며, 종료 대기가2초를 넘으면 검사를 실패 처리합니다.
 
 `tools/import_project.sh`는 새 캐시에서 프로젝트 폰트를 먼저 요청한 첫 임포트가 리소스 생성을 마친 뒤 종료 코드134로 중단된 경우 한 번 재검사합니다. 스크립트 오류·미완료 임포트·두 번째 실패는 통과시키지 않습니다. 이 경계는 `python3 sjrpg_3d/tools/test_import_project.py`로 검증합니다.
 

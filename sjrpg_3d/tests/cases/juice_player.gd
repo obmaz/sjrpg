@@ -51,6 +51,7 @@ func _check_lunge() -> void:
 	var foe := Enemy.new()
 	foe.setup(game, "goblin", 1)
 	foe.position = hero.position + Vector2(100, 0)
+	hero.facing = 0.0
 	foe.hp = 100000.0
 	foe.max_hp = 100000.0
 	game.world.add_child(foe)

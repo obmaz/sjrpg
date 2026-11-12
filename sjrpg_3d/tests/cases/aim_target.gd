@@ -14,6 +14,7 @@ func run() -> void:
 	game.enemies.append(foe)
 	foe.set_process(false)
 	var player: Player = game.player
+	player.facing = 0.0
 	var facing := player.facing
 	var resource := player.resource
 	var id: String = GameState.slots[0]

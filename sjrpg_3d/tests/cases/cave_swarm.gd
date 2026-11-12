@@ -82,7 +82,7 @@ func _check_real_contact_and_restore() -> void:
 	var stone: EncounterStone = runtime.stones[SITE]
 	check("new cave marker is beside the real entrance and outside the castle", stone.position.distance_to(game.dungeon.entry_point()) < 700.0 and not game.in_town(stone.position) and not game.spatial_world.blocked(game.player.position, Player.RADIUS))
 	check("walking to the marker does not automatically spawn the demonstration wave", runtime.living(SITE) == 0 and runtime.states[SITE]["initial_spawned"] and runtime.spawn_wave(SITE, true) == 0)
-	game.player.facing = (game.player.position - stone.position).angle()
+	game.player.facing = (stone.position - game.player.position).angle()
 	check("the real basic attack can target the cave marker", game.player.cast_slot(0))
 	check("an accepted button press does not spawn before its contact frame", runtime.living(SITE) == 0)
 	game.player._process(game.player._attack_duration * 0.46)

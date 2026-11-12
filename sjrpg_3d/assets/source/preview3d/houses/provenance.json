@@ -2,7 +2,7 @@
   "generator": {
     "api": "NativeHouse3D.build(presenter, root, key, width, depth, height) -> Dictionary",
     "path": "tools/architecture_art/house_builder.gd",
-    "sha256": "e521b09136e72b74de8836c94acdb8633c3692f47beb742a5c6277230ce33ed2"
+    "sha256": "cbb3338372e8af2c2ce29e5280ef2a3104e0ea2efd80842f968c9a6eed97d5ef"
   },
   "materials": {
     "textures": [

@@ -46,6 +46,8 @@ func _ready_site(game: Node, distance: float) -> void:
 	_freeze(game)
 	game.encounters.states["west"]["initial_spawned"] = true
 	game.player.position = _approach(game, distance)
+	# 공격 입력은 돌이 있는 전방을 향한다. 뒤쪽 자동 회전은 사용하지 않는다.
+	game.player.facing = (game.encounters.stones["west"].position - game.player.position).angle()
 
 
 func _projectile(game: Node, ground: Vector2, direction: Vector2, owner: Node2D) -> Effect:
@@ -113,7 +115,6 @@ func _check_real_melee_and_clear_frame() -> void:
 	var runtime: EncounterRuntime = game.encounters
 	var stone: EncounterStone = runtime.stones["west"]
 	var player: Player = game.player
-	player.facing = (player.position - stone.position).angle()
 	check("the basic attack can aim at a cleared encounter stone", player.cast_slot(0))
 	check("an accepted button press does not spend a charge during windup", int(runtime.states["west"]["charges"]) == 3 and runtime.living("west") == 0)
 	player._process(player._attack_duration * 0.46)

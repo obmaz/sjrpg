@@ -13,6 +13,7 @@ const SCENES = {
     select: '',
     town: '',
     game_feel: 'feel_preview=1',
+    directional_aim: 'aim_preview=1',
     hud: 'hud_preview=full',
     hud_low: 'hud_preview=low',
     hud_nearfull: 'hud_preview=nearfull',
@@ -309,6 +310,23 @@ if (scene === 'defender') {
     await page.waitForFunction(() => window.__sjrpgDodgeFeedback?.confirmed, null, {timeout: 30000});
     await page.waitForFunction(() => window.__sjrpg3dProbe?.native_novas?.active > 0, null, {timeout: 15000});
     console.log('DODGE_CONFIRMATION', JSON.stringify(await page.evaluate(() => ({...window.__sjrpgDodgeFeedback, native:window.__sjrpg3dProbe.native_novas}))));
+}
+if (scene === 'directional_aim') {
+    if (!device.startsWith('phone')) throw new Error('directional_aim requires a phone touch profile');
+    await page.waitForFunction(() => window.__sjrpgAimReview?.ready, null, {timeout: 30000});
+    const aim = await page.evaluate(() => window.__sjrpgAimReview);
+    const cdp = await ctx.newCDPSession(page);
+    const stick = {x: vp.width * aim.stick[0], y: vp.height * aim.stick[1], id: 5};
+    await cdp.send('Input.dispatchTouchEvent', {type:'touchStart', touchPoints:[stick]});
+    stick.y -= vp.height * aim.drag;
+    await cdp.send('Input.dispatchTouchEvent', {type:'touchMove', touchPoints:[stick]});
+    await cdp.send('Input.dispatchTouchEvent', {type:'touchStart', touchPoints:[stick, {x:vp.width * aim.button[0], y:vp.height * aim.button[1], id:6}]});
+    await page.waitForFunction(() => window.__sjrpgAimReview?.cast, null, {timeout:15000});
+    await cdp.send('Input.dispatchTouchEvent', {type:'touchEnd', touchPoints:[]});
+    await page.waitForFunction(() => window.__sjrpg3dProbe?.aim_target === window.__sjrpgAimReview.up_target, null, {timeout:15000});
+    const result = await page.evaluate(() => window.__sjrpgAimReview);
+    if (result.target !== result.up_target || result.input[1] >= -0.3 || Math.abs(result.facing + Math.PI / 2) > 0.2) throw new Error('Directional input/attack mismatch '+JSON.stringify(result));
+    console.log('DIRECTIONAL_AIM', JSON.stringify(result));
 }
 if (scene === 'game_feel') {
     await page.waitForFunction(() => window.__sjrpgFeelReview?.ready, null, {timeout: 30000});

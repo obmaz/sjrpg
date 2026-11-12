@@ -26,6 +26,8 @@ static func roof(cell: int, tint := Color.WHITE) -> ShaderMaterial:
 static func oak(triplanar := false) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
 	material.albedo_texture = load(ROOT + "oak.png")
+	# 따뜻함은 남기고 새 주황 목재보다 오래된 참나무 골조로 통일한다.
+	material.albedo_color = Color("a79b88")
 	material.roughness = 0.94
 	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	material.uv1_triplanar = triplanar

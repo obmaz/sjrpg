@@ -7,6 +7,7 @@ const ARCH_SEGMENTS := 12
 const SLATE_TILE := 2.6
 const SLATE_COURSES := 8
 const SLATE_PITCH := SLATE_TILE / SLATE_COURSES
+const MedievalDetails := preload("res://tools/architecture_art/medieval_details.gd")
 var _root: Node3D
 var _materials := {}
 var _surfaces := {}
@@ -78,6 +79,9 @@ func _build(width: float, depth: float, _height: float) -> Dictionary:
 			Vector3(rect.size.x, tall, rect.size.y),
 			"stone"
 		)
+	for side: float in [-1.0, 1.0]:
+		var fixture := Transform3D(Basis.IDENTITY, Vector3(porch_x + side * porch_width * .41, 2.18, depth * .5 + .02))
+		MedievalDetails.lantern(self, fixture, "lead", "bronze")
 	var meshes := _flush()
 	var bounds := meshes[0].mesh.get_aabb()
 	for mesh in meshes:
@@ -108,6 +112,8 @@ func _build(width: float, depth: float, _height: float) -> Dictionary:
 		"entrance_offset": porch_x,
 		"nave_front": nave_front,
 		"reference": "assets/source/style/approved-game-reference.jpg",
+		"craft_family": MedievalDetails.FAMILY,
+		"lanterns": 2,
 		"bounds": bounds
 	}
 	_root.set_meta("chapel_detail", report)

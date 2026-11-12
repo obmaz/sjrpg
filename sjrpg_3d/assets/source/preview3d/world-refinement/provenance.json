@@ -27,7 +27,8 @@
     "terrain": "모서리를 깎은 암반 선반·흙 사면의 실제 정점을 NativeTerrainForms로 표시/SOLID에 공유. 기존 상면·경사로의 높이는 유지하고 새 잔디10종의 월드 좌표 군락을 같은 2.56m로 혼합.",
     "chapel": "실제 사용자 approved-game-reference.jpg를 직접 참고한 돌출 입구·두 박공·굵은 종탑. 창·문·세공은 생성형 전체 면 원화. 바닥0.28m·왼쪽3단 계단·L자 몸체를 표시와 물리에 공유.",
     "fountain": "모든 정점·물줄기·source footprint 2배. 중심 유지, root scale 단위값.",
-    "walls": "2D 원본의 열린 원형 망루·양쪽 석조 흉벽·목재 바닥과 외측 아치 음각. 몸체 반경1.30m, 전망 바닥4.25m, 성가퀴 정상5.15m. 닫힌 원뿔 지붕은 사용하지 않는다. 상부 난간은 NativeFortressPlan.crown_parts의 같은 부피로 제작/SOLID에 연결한다. 기존 화살창·돌 받침·8개 상부 통로·독립 문짝을 유지한다."
+    "walls": "2D 원본의 열린 원형 망루·양쪽 석조 흉벽·목재 바닥과 외측 아치 음각. 몸체 반경1.30m, 전망 바닥4.25m, 성가퀴 정상5.15m. 닫힌 원뿔 지붕은 사용하지 않는다. 상부 난간은 NativeFortressPlan.crown_parts의 같은 부피로 제작/SOLID에 연결한다. 기존 화살창·돌 받침·8개 상부 통로·독립 문짝을 유지한다.",
+    "medieval_craft": "주택의 실제 폭 덧문·경첩·처마 사선 버팀·단조 문띠와 직업별 길드 문장, 예배당의 입구 등기구, 성문 탑 실제 외측 면에 붙는 숲 문장. 공통 풍화 참나무·무광 철을 기존 GLB 재질에 합치며 광원·텍스처·보행 충돌은 추가하지 않는다."
   },
   "shared_grass": {
     "manifest": "assets/source/materials/grass/provenance.json",
@@ -66,11 +67,11 @@
     },
     {
       "path": "tools/architecture_art/chapel_builder.gd",
-      "sha256": "ccb5c94fce1c16190baa05a8a255a475c780670a213b0e3b0ee9eaeb84a56957"
+      "sha256": "a14975c74a26a8839d34b617e6bf0342c4f60aa0b299eb6e020f5a233e689e82"
     },
     {
       "path": "tools/architecture_art/fortress_builder.gd",
-      "sha256": "7c4455bce47b23e02d3fe74956680335c497a1422d27e7fd442af1eb2cbd6318"
+      "sha256": "9ac54852ba98e50cc9ee503ab655623b43a750a816e7f85606692747f727e7a1"
     },
     {
       "path": "scripts/spatial_world_3d.gd",
@@ -110,7 +111,7 @@
     },
     {
       "path": "assets/models/materials/village_craft/surfaces.gd",
-      "sha256": "b17ceaa572c1281af04909e1d3bcdeb311aebd83ef134f3677627cff664ad66d"
+      "sha256": "8aa72ffb1177ae1f91101f04a9bdcb34304e8d399fe975dd666d14a2dd9fe8af"
     },
     {
       "path": "scripts/grass_variety.gdshaderinc",
@@ -119,6 +120,14 @@
     {
       "path": "assets/models/materials/terrain/surfaces.gd",
       "sha256": "0c1a1a87241b34c1bbcfb215f1fdf08c79ecfbfa4e04e6c82b79918dff72fcfc"
+    },
+    {
+      "path": "tools/architecture_art/house_builder.gd",
+      "sha256": "cbb3338372e8af2c2ce29e5280ef2a3104e0ea2efd80842f968c9a6eed97d5ef"
+    },
+    {
+      "path": "tools/architecture_art/medieval_details.gd",
+      "sha256": "5e4f5d3ecd4b74f72acee622f84bcab0b119c62b009f35d8550feb5abae8352b"
     }
   ],
   "fortress_surface_provenance": "assets/source/environment/fortress/provenance.json",
@@ -126,7 +135,7 @@
     "reference": "2D 성벽과 성문 원본의 열린 망루·돌 난간·목재 통로",
     "generator": "tools/architecture_art/fortress_builder.gd",
     "collision": "scripts/native_fortress_plan.gd + scripts/spatial_world_3d.gd",
-    "triangles_whole_family": 36928,
+    "triangles_whole_family": 37472,
     "static_surfaces": 4,
     "pivot": "Y-up, world XZ ground, corner base at Y=0, metre units, no scale transform",
     "reused_materials": [
@@ -156,6 +165,7 @@
         "path": "assets/source/style/gate-wall-design.png",
         "sha256": "32589bc30226b4d6e641bbcfd59304a4cd996119de79e28bb1b0bab102731ff3"
       }
-    ]
+    ],
+    "heraldic_plaques": 8
   }
 }

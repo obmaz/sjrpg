@@ -54,6 +54,9 @@ var _action_serial := 0
 var action_buffer := PlayerActionBuffer.new()
 var footsteps := PlayerFootsteps.new()
 var _aimed_enemy: WeakRef
+var _look_facing := 0.0
+var _assisted_facing := INF
+var _pointer_aim_at := Vector2.INF
 const CONTACT_PROGRESS := 0.45
 var contact_serial := 0
 var contact_action_serial := -1
@@ -178,7 +181,9 @@ func _process(delta: float) -> void:
 		input = pad_move
 	var pad_aim: Vector2 = Gamepad.aim_vector()
 	if pad_aim.length() > 0.0:
-		facing = pad_aim.angle()
+		_look_facing = pad_aim.angle()
+		facing = _look_facing
+		_assisted_facing = INF
 	if input.length() > 0.05:
 		clear_move_target()
 	elif has_move_target:
@@ -189,12 +194,19 @@ func _process(delta: float) -> void:
 			input = direction.normalized()
 	if input.length() > 1.0:
 		input = input.normalized()
+	if input.length() > 0.05 and pad_aim == Vector2.ZERO and not _pointer_aim_at.is_finite():
+		_look_facing = input.angle()
+		if _attack_time <= 0.0:
+			facing = _look_facing
+			_assisted_facing = INF
 
 	if _roll_time > 0.0:
 		action_buffer.clear()
 		var roll_delta := minf(delta, _roll_time)
 		_roll_time -= roll_delta
-		position = SpatialCombat3D.move_actor(game, self, position + _roll_dir * ROLL_DISTANCE / ROLL_TIME * roll_delta, RADIUS)
+		position = SpatialCombat3D.move_actor(
+			game, self, position + _roll_dir * ROLL_DISTANCE / ROLL_TIME * roll_delta, RADIUS
+		)
 		sprite.set_frame(atlas, atlas.run_frame(facing, int(_roll_time * 40.0)))
 		return
 
@@ -230,11 +242,15 @@ func _process(delta: float) -> void:
 		_lunge(delta, progress)
 		_move(input * speed() * 0.25 * (0.0 if _hitstop.remaining > 0.0 else delta))
 		if _attack_time <= 0.0:
+			facing = aim_direction().angle()
+			_assisted_facing = INF
 			_consume_buffered_action()
 		return
 
 	if input.length() > 0.05:
-		facing = pad_aim.angle() if pad_aim.length() > 0.0 else input.angle()
+		facing = aim_direction().angle()
+		_look_facing = facing
+		_assisted_facing = INF
 		var from := position
 		_move(input * speed() * delta)
 		var step := position.distance_to(from)
@@ -257,16 +273,23 @@ func clear_move_target() -> void:
 
 
 ## Point movement stops at the first obstruction; keyboard/touch retain normal wall sliding.
-## JUICE #7: close LUNGE_DISTANCE toward the nearest target over the swing's wind-up, through the normal
+## JUICE #7: close LUNGE_DISTANCE toward a forward target over the swing's wind-up, through the normal
 ## collision resolver. It adds movement only; damage, reach checks and cooldowns are unchanged.
 func _lunge(delta: float, progress: float) -> void:
-	if not _attack_lunges or Prefs.reduce_motion or progress >= LUNGE_END or not _pending.is_valid():
+	if (
+		not _attack_lunges
+		or Prefs.reduce_motion
+		or progress >= LUNGE_END
+		or not _pending.is_valid()
+	):
 		return
-	var target: Enemy = _manual_aim_target(LUNGE_SEEK) if Gamepad.aim_vector() != Vector2.ZERO else game.nearest_enemy(position, LUNGE_SEEK)
+	var target := _enemy_in_direction(LUNGE_SEEK, Vector2.from_angle(facing))
 	if target == null or position.distance_to(target.position) <= LUNGE_STOP_GAP:
 		return
 	var step := LUNGE_DISTANCE * delta / (LUNGE_END * _attack_duration)
-	position = SpatialCombat3D.move_actor(game, self, position + (target.position - position).normalized() * step, RADIUS)
+	position = SpatialCombat3D.move_actor(
+		game, self, position + (target.position - position).normalized() * step, RADIUS
+	)
 
 
 func _move(offset: Vector2) -> void:
@@ -492,48 +515,103 @@ func _movement_direction() -> Vector2:
 	var pad_move: Vector2 = Gamepad.move_vector()
 	if pad_move != Vector2.ZERO:
 		return pad_move
-	return move_input if move_input.length() > 0.1 else Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	return (
+		move_input
+		if move_input.length() > 0.1
+		else Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	)
 
 
-## Stick vectors already use the simulation's screen-projected ground coordinates.
-func _manual_aim_target(range_limit: float) -> Enemy:
-	var aim: Vector2 = Gamepad.aim_vector()
-	if aim == Vector2.ZERO:
-		return null
-	var best: Enemy = null
-	var score: float = INF
+## 직전 자동 보정이 아닌 마지막 입력 방향을 쓴다. 조회는 상태를 변경하지 않는다.
+func aim_direction() -> Vector2:
+	var aim := Gamepad.aim_vector()
+	if aim != Vector2.ZERO:
+		return aim
+	if _pointer_aim_at.is_finite() and _pointer_aim_at.distance_squared_to(position) > 1.0:
+		return (_pointer_aim_at - position).normalized()
+	var move := _movement_direction()
+	if move.length() > 0.1:
+		return move.normalized()
+	if has_move_target and move_target.distance_squared_to(position) > 9.0:
+		return (move_target - position).normalized()
+	if is_finite(_assisted_facing) and absf(angle_difference(facing, _assisted_facing)) < 0.0001:
+		return Vector2.from_angle(_look_facing)
+	return Vector2.from_angle(facing)
+
+
+func set_pointer_aim(at: Vector2) -> void:
+	_pointer_aim_at = at
+	if at.distance_squared_to(position) > 1.0:
+		_look_facing = (at - position).angle()
+		facing = _look_facing
+		_assisted_facing = INF
+
+
+func clear_pointer_aim() -> void:
+	_pointer_aim_at = Vector2.INF
+
+
+func _enemy_in_direction(reach: float, bearing: Vector2) -> Enemy:
+	var best: Enemy
+	var best_score := INF
 	for enemy: Enemy in game.enemies:
-		if not is_instance_valid(enemy) or enemy.dead:
+		if not is_instance_valid(enemy) or enemy.dead or enemy.is_queued_for_deletion():
 			continue
-		var direction: Vector2 = enemy.position - position
-		if direction.length() > range_limit:
+		var offset := enemy.position - position
+		if offset.length() > reach or not DirectionalAim.contains(offset, bearing):
 			continue
-		var angle: float = absf(aim.angle_to(direction))
-		if angle <= PI / 4.0:
-			var candidate: float = angle * range_limit + direction.length() * 0.2
-			if candidate < score:
-				best = enemy
-				score = candidate
+		var candidate := DirectionalAim.score(offset, bearing, reach)
+		if candidate < best_score:
+			best = enemy
+			best_score = candidate
 	return best
 
 
-## 표시기는 이 조회만 사용한다. 방향·자원·공격 상태를 변경하지 않는다.
 func aim_target(range_limit: float) -> Enemy:
-	return _manual_aim_target(range_limit) if Gamepad.aim_vector() != Vector2.ZERO else game.nearest_enemy(position, range_limit)
+	return _enemy_in_direction(range_limit, aim_direction())
+
+
+func _front_prop(reach: float, bearing: Vector2, stones_only := false) -> Node2D:
+	var candidates: Array = []
+	if game.encounters != null and not game.dungeon.active:
+		for stone: EncounterStone in game.encounters.stones.values():
+			if (
+				game.encounters.can_summon(stone.id)
+				and game.encounters.clear_line(position, stone.position)
+			):
+				candidates.append(stone)
+	if not stones_only:
+		candidates.append_array(game.chests)
+	var best: Node2D
+	var best_score := INF
+	for prop: Node2D in candidates:
+		if (
+			not is_instance_valid(prop)
+			or prop.is_queued_for_deletion()
+			or (prop is Chest and prop.dead)
+		):
+			continue
+		var offset := prop.position - position
+		if offset.length() > reach or not DirectionalAim.contains(offset, bearing):
+			continue
+		var score := DirectionalAim.score(offset, bearing, reach)
+		if score < best_score:
+			best = prop
+			best_score = score
+	return best
 
 
 func _aim(range_limit: float) -> Enemy:
-	var aim: Vector2 = Gamepad.aim_vector()
-	var target := aim_target(range_limit)
+	var bearing := aim_direction()
+	_look_facing = bearing.angle()
+	var target := _enemy_in_direction(range_limit, bearing)
 	_aimed_enemy = weakref(target) if target != null else null
-	if aim != Vector2.ZERO:
-		facing = aim.angle()
-	elif target != null:
-		facing = (target.position - position).angle()
-	else:
-		var prop: Node2D = game.nearest_attackable_prop(position, range_limit)
-		if prop != null:
+	facing = bearing.angle()
+	if Gamepad.aim_vector() == Vector2.ZERO:
+		var prop: Node2D = target if target != null else _front_prop(range_limit, bearing)
+		if prop != null and prop.position.distance_squared_to(position) > 0.0001:
 			facing = (prop.position - position).angle()
+	_assisted_facing = facing
 	return target
 
 
@@ -558,7 +636,17 @@ func display_aim_target() -> Enemy:
 	if dead or warp_locked or _roll_time > 0.0:
 		return null
 	if _attack_time > 0.0:
-		return _aimed_enemy.get_ref() as Enemy if _aimed_enemy != null else null
+		var selected := _aimed_enemy.get_ref() as Enemy if _aimed_enemy != null else null
+		return (
+			selected
+			if (
+				is_instance_valid(selected)
+				and DirectionalAim.contains(
+					selected.position - position, Vector2.from_angle(facing)
+				)
+			)
+			else null
+		)
 	var id: String = GameState.slots[0]
 	return aim_target(aim_range(id, SkillDefs.get_def(id))) if not id.is_empty() else null
 
@@ -587,12 +675,21 @@ func _prepare(id: String, d: Dictionary, rank: int) -> Callable:
 			return _prepare_leap(id, d, rank, power)
 		"blink":
 			var dist: float = d["distance"] + d["dist_growth"] * (rank - 1)
-			var dir: Vector2 = Gamepad.aim_vector() if Gamepad.aim_vector() != Vector2.ZERO else _movement_direction()
+			var dir: Vector2 = (
+				Gamepad.aim_vector()
+				if Gamepad.aim_vector() != Vector2.ZERO
+				else _movement_direction()
+			)
 			if dir.length() > 0.1:
 				facing = dir.angle()
 			return func():
 				var from := position
-				position = SpatialCombat3D.teleport_actor(game, self, game.find_open_point(position, Vector2.from_angle(facing), dist, RADIUS), RADIUS)
+				position = SpatialCombat3D.teleport_actor(
+					game,
+					self,
+					game.find_open_point(position, Vector2.from_angle(facing), dist, RADIUS),
+					RADIUS
+				)
 				game.spawn_nova(from, 50.0, SkillDefs.LIGHT, true)
 				game.spawn_nova(position, 60.0, SkillDefs.LIGHT, true)
 		"proj":
@@ -601,24 +698,48 @@ func _prepare(id: String, d: Dictionary, rank: int) -> Callable:
 		"orb":
 			_aim(aim_range(id, d))
 			return func():
-				game.spawn_orb(position + Vector2(0, -34), Vector2.from_angle(facing), d, damage_for(id, power), self)
+				game.spawn_orb(
+					position + Vector2(0, -34),
+					Vector2.from_angle(facing),
+					d,
+					damage_for(id, power),
+					self
+				)
 		"beam":
 			_aim(aim_range(id, d))
 			return func():
 				var lo := SkillDefs.scaled(d["mult_min"], d["growth"], rank)
 				var hi := SkillDefs.scaled(d["mult_max"], d["growth"], rank)
-				game.spawn_beam(position, facing, d["length"], damage_for(id, randf_range(lo, hi)), d["color"], self)
+				game.spawn_beam(
+					position,
+					facing,
+					d["length"],
+					damage_for(id, randf_range(lo, hi)),
+					d["color"],
+					self
+				)
 		"chain":
 			var first := _aim(aim_range(id, d))
 			if first == null:
-				var stone: EncounterStone = game.nearest_ready_stone(position, d["range"])
-				if stone != null and (Gamepad.aim_vector() == Vector2.ZERO or absf(Gamepad.aim_vector().angle_to(stone.position - position)) <= PI / 4.0):
+				var stone := _front_prop(d["range"], aim_direction(), true) as EncounterStone
+				if stone != null:
 					var stone_ref: WeakRef = weakref(stone)
 					return func():
 						var contact := stone_ref.get_ref() as EncounterStone
-						if is_instance_valid(contact) and position.distance_to(contact.position) <= float(d["range"]):
+						if (
+							is_instance_valid(contact)
+							and position.distance_to(contact.position) <= float(d["range"])
+							and DirectionalAim.contains(contact.position - position, Vector2.from_angle(facing))
+						):
 							var travel: Vector2 = contact.position - position
-							game.spawn_beam(position, travel.angle(), travel.length() + 35.0, damage_for(id, power), d["color"], self)
+							game.spawn_beam(
+								position,
+								travel.angle(),
+								travel.length() + 35.0,
+								damage_for(id, power),
+								d["color"],
+								self
+							)
 				game.toast("사거리 안에 적이 없습니다")
 				return Callable()
 			# Capture a WeakRef, not the Enemy: the VM validates strong lambda captures before entering the body.
@@ -627,16 +748,27 @@ func _prepare(id: String, d: Dictionary, rank: int) -> Callable:
 				var jumps := int(d["jumps"] + d["jump_growth"] * (rank - 1))
 				var captured_target: Enemy = anchor.get_ref() as Enemy
 				var target: Enemy
-				if is_instance_valid(captured_target) and not captured_target.dead and position.distance_to(captured_target.position) <= float(d["range"]):
+				if (
+					is_instance_valid(captured_target)
+					and not captured_target.dead
+					and position.distance_to(captured_target.position) <= float(d["range"])
+					and DirectionalAim.contains(
+						captured_target.position - position, Vector2.from_angle(facing)
+					)
+				):
 					target = captured_target
 				else:
-					target = _manual_aim_target(d["range"]) if Gamepad.aim_vector() != Vector2.ZERO else game.nearest_enemy(position, d["range"])
+					target = _enemy_in_direction(d["range"], Vector2.from_angle(facing))
 				if target != null:
-					game.chain_lightning(position, target, jumps, d["radius"], damage_for(id, power), self)
+					game.chain_lightning(
+						position, target, jumps, d["radius"], damage_for(id, power), self
+					)
 		"cone":
 			_aim(aim_range(id, d))
 			return func():
-				var hits: Array = game.enemies_in_arc(position, facing, d["range"], deg_to_rad(d["arc"]))
+				var hits: Array = game.enemies_in_arc(
+					position, facing, d["range"], deg_to_rad(d["arc"])
+				)
 				game.break_chests_in_arc(position, facing, d["range"], deg_to_rad(d["arc"]), self)
 				for e in hits:
 					e.take_damage(damage_for(id, power), self)
@@ -650,7 +782,14 @@ func _prepare(id: String, d: Dictionary, rank: int) -> Callable:
 		"summon":
 			return func():
 				var dur: float = d["duration"]
-				game.spawn_hydra(position + Vector2.from_angle(facing) * 60.0, dur, d["rate"], d["range"], damage_for(id, power), self)
+				game.spawn_hydra(
+					position + Vector2.from_angle(facing) * 60.0,
+					dur,
+					d["rate"],
+					d["range"],
+					damage_for(id, power),
+					self
+				)
 		"buff":
 			return func(): _buff(id, d, rank)
 		"corpse":
@@ -714,28 +853,45 @@ func _spin(id: String, d: Dictionary, power: float) -> void:
 
 
 func _shadow(id: String, d: Dictionary, power: float) -> void:
+	var origin := position
+	var bearing := Vector2.from_angle(facing)
 	var visited := []
 	var contacts := 0
 	for i in int(d["targets"]):
 		var next: Enemy = null
-		var best: float = d["range"]
+		var best := INF
 		for e in game.enemies_in_radius(position, d["range"]):
 			if not game.can_melee_reach(position, e.position):
 				continue
-			if visited.is_empty() and Gamepad.aim_vector() != Vector2.ZERO and absf(Gamepad.aim_vector().angle_to(e.position - position)) > PI / 4.0:
+			if (
+				not DirectionalAim.contains(e.position - origin, bearing)
+				or not DirectionalAim.contains(e.position - position, bearing)
+			):
 				continue
 			if visited.has(e):
 				continue
-			var dist := position.distance_to(e.position)
-			if dist < best:
-				best = dist
+			var score := DirectionalAim.score(e.position - position, bearing, float(d["range"]))
+			if score < best:
+				best = score
 				next = e
 		if next == null:
 			break
 		visited.append(next)
 		var from := position
-		position = SpatialCombat3D.teleport_actor(game, self, game.find_open_point(position, (next.position - position).normalized(), maxf(0.0, best - 40.0), RADIUS), RADIUS)
+		position = SpatialCombat3D.teleport_actor(
+			game,
+			self,
+			game.find_open_point(
+				position,
+				(next.position - position).normalized(),
+				maxf(0.0, position.distance_to(next.position) - 40.0),
+				RADIUS
+			),
+			RADIUS
+		)
 		facing = (next.position - position).angle()
+		_assisted_facing = facing
+		_aimed_enemy = weakref(next)
 		game.spawn_trail(from, position, Color(0.6, 0.7, 1.0))
 		if game.can_melee_reach(position, next.position):
 			next.take_damage(damage_for(id, power), self)
@@ -745,10 +901,18 @@ func _shadow(id: String, d: Dictionary, power: float) -> void:
 	if contacts >= 3:
 		if GameState.has_gift("comboFury"):
 			resource = minf(resource_max, resource + 6.0)
-			game.float_text(position + Vector2(0, -100), "연격의 격정", Color(1, 0.7, 0.4)).anchor_text_ground(position)
+			(
+				game
+				. float_text(position + Vector2(0, -100), "연격의 격정", Color(1, 0.7, 0.4))
+				. anchor_text_ground(position)
+			)
 		if GameState.has_gift("comboGuard"):
 			buffs["combo_guard"] = {"time": 0.75, "value": 0.25}
-			game.float_text(position + Vector2(0, -100), "연격의 수호", Color(0.6, 0.8, 1)).anchor_text_ground(position)
+			(
+				game
+				. float_text(position + Vector2(0, -100), "연격의 수호", Color(0.6, 0.8, 1))
+				. anchor_text_ground(position)
+			)
 
 
 func _prepare_leap(id: String, d: Dictionary, rank: int, power: float) -> Callable:
@@ -762,20 +926,37 @@ func _prepare_leap(id: String, d: Dictionary, rank: int, power: float) -> Callab
 		# A targeted leap travels to its selected body; free casts retain the exact stick bearing.
 		facing = (target.position - position).angle()
 	else:
-		var dir: Vector2 = Gamepad.aim_vector() if Gamepad.aim_vector() != Vector2.ZERO else _movement_direction()
+		var dir: Vector2 = (
+			Gamepad.aim_vector() if Gamepad.aim_vector() != Vector2.ZERO else _movement_direction()
+		)
 		if dir.length() > 0.1:
 			facing = dir.angle()
 	var anchor: WeakRef = weakref(target) if target != null else null
 	return func():
 		var current: Enemy = anchor.get_ref() as Enemy if anchor != null else null
-		if d.get("to_enemy", false) and (not is_instance_valid(current) or current.dead):
+		if (
+			d.get("to_enemy", false)
+			and (
+				not is_instance_valid(current)
+				or current.dead
+				or not DirectionalAim.contains(
+					current.position - position, Vector2.from_angle(facing)
+				)
+			)
+		):
 			return
 		var from := position
 		var reach := dist
 		if is_instance_valid(current):
 			reach = minf(dist, maxf(0.0, position.distance_to(current.position) - 36.0))
 			facing = (current.position - position).angle()
-		position = SpatialCombat3D.teleport_actor(game, self, game.find_open_point(position, Vector2.from_angle(facing), reach, RADIUS), RADIUS)
+			_assisted_facing = facing
+		position = SpatialCombat3D.teleport_actor(
+			game,
+			self,
+			game.find_open_point(position, Vector2.from_angle(facing), reach, RADIUS),
+			RADIUS
+		)
 		game.spawn_trail(from, position, SkillDefs.STEEL)
 		if id == "leapAttack":
 			game.spawn_reference_fx("slam", position, float(d["radius"]), self)
@@ -987,6 +1168,9 @@ func _armor_retaliate(attacker: Node2D) -> void:
 
 ## Death and resurrection cannot preserve a delayed skill target or old movement input.
 func _cancel_actions() -> void:
+	facing = aim_direction().angle()
+	_assisted_facing = INF
+	clear_pointer_aim()
 	action_buffer.clear()
 	_aimed_enemy = null
 	Gamepad.require_neutral()

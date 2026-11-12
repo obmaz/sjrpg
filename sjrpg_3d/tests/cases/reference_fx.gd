@@ -228,6 +228,7 @@ func _check_frost_and_cosmetic_clocks() -> void:
 		burst._process(burst.life + 0.2)
 		check("authored frost expires without extra damage", burst.is_queued_for_deletion() and enemy.hp == hp_after_contact)
 		Prefs.reduce_motion = false
+	hero.facing = (enemy.position - hero.position).angle()
 	var bolt := hero._prepare("iceBolt", SkillDefs.get_def("iceBolt"), 1)
 	seed(4832)
 	expected = hero.damage_for("iceBolt", float(SkillDefs.get_def("iceBolt")["mult"]))
@@ -277,6 +278,7 @@ func _check_meteor_transition() -> void:
 	hero.set_process(false)
 	var at := hero.position + Vector2(180, 0)
 	var enemy := _target(game, at)
+	hero.facing = (enemy.position - hero.position).angle()
 	var action := hero._prepare("meteor", SkillDefs.get_def("meteor"), 1)
 	check("meteor targeting creates no premature impact art", _authored(game, "meteor").is_empty())
 	action.call()

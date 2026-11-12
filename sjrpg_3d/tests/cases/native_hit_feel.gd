@@ -13,6 +13,7 @@ func run() -> void:
 	foe.hp = 1000.0
 	foe.max_hp = 1000.0
 	foe.position = hero.position + Vector2(65, 0)
+	hero.facing = 0.0
 	game.world.add_child(foe)
 	game.enemies.append(foe)
 	foe.set_process(false)
@@ -144,6 +145,7 @@ func _check_mage_contact() -> void:
 	foe.hp = 1000.0
 	foe.max_hp = 1000.0
 	foe.position = hero.position + Vector2(65, 0)
+	hero.facing = 0.0
 	game.world.add_child(foe)
 	game.enemies.append(foe)
 	foe.set_process(false)

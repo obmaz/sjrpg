@@ -55,6 +55,7 @@ func run() -> void:
 	enemy.sprite._process(0.12)
 	enemy.hp = 1000.0
 	enemy.max_hp = 1000.0
+	game.player.facing = (enemy.position - game.player.position).angle()
 	check("real melee attack starts", game.player.cast_slot(0))
 	enemy.take_damage(1.0, game.player)  # Storm/retaliation also use the player as their source.
 	check("passive damage during windup does not consume the contact hold", game.player.sprite.contact_hold == 0.0 and game.player.sprite._contact_recovery == 0.0)
@@ -339,6 +340,7 @@ func _check_chain_target_lifetime() -> void:
 	game.spatial_world.teleport_source_actor(game.player, game.village.spawn_point + Vector2(0, 180), Player.RADIUS)
 	game.player.set_process(false)
 	var at: Vector2 = game.player.position
+	game.player.facing = 0.0
 	var first := _fixture_enemy(game, at + Vector2(100, 0))
 	var replacement := _fixture_enemy(game, at + Vector2(200, 0))
 	var action: Callable = game.player._prepare("chainLightning", SkillDefs.get_def("chainLightning"), 1)
@@ -369,6 +371,7 @@ func _check_leap_target_lifetime() -> void:
 	hero.set_process(false)
 	var start := Iso.project(Vector2(-2800, -2800))
 	hero.position = start
+	hero.facing = 0.0
 	var target := _fixture_enemy(game, start + Vector2(100, 0))
 	var definition := {"distance": 200.0, "to_enemy": true, "radius": 40.0}
 	var pending := hero._prepare_leap("leapAttack", definition, 1, 1.0)

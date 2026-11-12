@@ -3,6 +3,7 @@
 [ext_resource type="Texture2D" path="res://assets/models/materials/village_craft/oak.png" id="1_1nbnx"]
 
 [resource]
+albedo_color = Color(0.654902, 0.60784316, 0.53333336, 1)
 albedo_texture = ExtResource("1_1nbnx")
 roughness = 0.94
 texture_filter = 5

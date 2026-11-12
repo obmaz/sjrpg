@@ -82,6 +82,14 @@ func _audio_mix_window() -> Dictionary:
 func _await_audio_shutdown_boundary() -> Dictionary:
 	var started_us: int = Time.get_ticks_usec()
 	var deadline_us: int = started_us + 2000000
+	# 마지막 실제 명중음이 끝나기 전에 엔진을 닫으면 WAV 재생기가 믹서에 남는다.
+	# 설정/재생기/캐시는 변경하지 않고 짧은 효과음의 자연 종료를 기다린다.
+	var feedback_polls := 0
+	while _feedback_playing():
+		if Time.get_ticks_usec() >= deadline_us:
+			return {"ok": false, "reason": "feedback_did_not_finish", "driver": AudioServer.get_driver_name()}
+		await get_tree().process_frame
+		feedback_polls += 1
 	var initial: Dictionary = _audio_mix_window()
 	var current: Dictionary = initial
 	var polls := 0
@@ -105,6 +113,13 @@ func _await_audio_shutdown_boundary() -> Dictionary:
 	return {"ok": finished_us < deadline_us and after_cleanup > before_cleanup,
 		"reason": "completed" if finished_us < deadline_us else "cleanup_deadline_exceeded",
 		"driver": AudioServer.get_driver_name(),
-		"waited_us": finished_us - started_us, "polls": polls,
+		"waited_us": finished_us - started_us, "polls": polls, "feedback_polls": feedback_polls,
 		"initial": initial, "observed": current, "cleanup_frame_before": before_cleanup,
 		"cleanup_frame_after": after_cleanup}
+
+
+func _feedback_playing() -> bool:
+	for voice: AudioStreamPlayer in SoundFx._players:
+		if is_instance_valid(voice) and voice.playing:
+			return true
+	return false

@@ -3,6 +3,7 @@
 [resource]
 metadata/report = {
 "bounds": AABB(-3.0501456, 0, -2.6529257, 6.1031694, 7.7999997, 6.2335014),
+"craft_family": "woodland_oak_and_forged_iron",
 "door_bottom": Vector3(-1.68, 0.28, 2.4005756),
 "door_height": 3.0,
 "door_recess": 0.0,
@@ -14,6 +15,7 @@ metadata/report = {
 "gable_count": 2,
 "gable_heights": Vector2(4.6, 6.2),
 "hybrid_facade": true,
+"lanterns": 2,
 "meshes": [{
 "$node": "ChapelDetail_stone"
 }, {
@@ -27,12 +29,12 @@ metadata/report = {
 }],
 "nave_front": 1.4403453826904296,
 "oculi": [],
-"pieces": 468,
+"pieces": 482,
 "reference": "assets/source/style/approved-game-reference.jpg",
 "roof_rows": 18,
 "surfaces": 5,
 "tower_height": 7.799999999999999,
-"triangles": 6124,
+"triangles": 6284,
 "windows": []
 }
 metadata/mesh_roles = {

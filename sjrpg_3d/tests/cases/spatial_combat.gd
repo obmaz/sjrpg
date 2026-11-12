@@ -81,6 +81,7 @@ func run() -> void:
 	var origin := SpatialWorld3D.projected(NativeFixture.remote_at(Vector3(118, 0, 120)))
 	backend.teleport_source_actor(hero, origin, Player.RADIUS)
 	var target := _target(game, NativeFixture.remote_at(Vector3(122, 0, 120)))
+	hero.facing = (target.position - origin).angle()
 	var before := target.hp
 	var shot := _bolt(game)
 	check("native spell creates its actual projectile", shot != null)

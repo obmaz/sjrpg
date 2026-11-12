@@ -337,6 +337,10 @@ func _read_debug_params() -> void:
 			NativeChestReview.run.call_deferred(self, kv[1])
 		elif kv.size() == 2 and kv[0] == "corpse_preview" and kv[1] in ["1", "bridge", "terrace", "beasts"]:
 			_corpse_preview.call_deferred(kv[1])
+		elif kv.size() == 2 and kv[0] == "aim_preview" and kv[1] == "1":
+			var review := DirectionalAimReview.new()
+			add_child(review)
+			review.start.call_deferred(self)
 		elif kv.size() == 2 and kv[0] == "feel_preview" and kv[1] == "1":
 			var review := GameFeelReview.new()
 			add_child(review)
@@ -1172,18 +1176,23 @@ func _exit_tree() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if get_tree().paused or hud.panel_open():
 		return
-	if event is InputEventMouseButton and event.device != InputEvent.DEVICE_ID_EMULATION and event.pressed:
+	if (
+		event is InputEventMouseButton
+		and event.device != InputEvent.DEVICE_ID_EMULATION
+		and event.pressed
+	):
 		if player.dead:
 			return
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			var direction := screen_to_world(event.position) - player.position
-			if direction.length() > 1.0:
-				player.facing = direction.angle()
+			player.set_pointer_aim(screen_to_world(event.position))
 			hud.controls.hold_mouse_primary()
 			get_viewport().set_input_as_handled()
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
 			# Drawn HUD buttons are not Control nodes; reserve their right-click area too.
-			if hud.controls._hit_button(event.position) == "" and not hud.minimap.get_global_rect().has_point(event.position):
+			if (
+				hud.controls._hit_button(event.position) == ""
+				and not hud.minimap.get_global_rect().has_point(event.position)
+			):
 				player.set_move_target(screen_to_world(event.position))
 			get_viewport().set_input_as_handled()
 		return
@@ -1352,11 +1361,13 @@ func enemies_in_radius(center: Vector2, radius: float, melee := false) -> Array[
 	return out
 
 
-func enemies_in_arc(center: Vector2, angle: float, radius: float, half_angle: float, melee := false) -> Array[Enemy]:
+func enemies_in_arc(
+	center: Vector2, angle: float, radius: float, half_angle: float, melee := false
+) -> Array[Enemy]:
 	var out: Array[Enemy] = []
 	for e in enemies_in_radius(center, radius, melee):
 		var d := e.position - center
-		if d.length() < 30.0 or absf(angle_difference(angle, d.angle())) <= half_angle:
+		if DirectionalAim.contains(d, Vector2.from_angle(angle), half_angle):
 			out.append(e)
 	return out
 
@@ -1370,14 +1381,31 @@ func break_chests_in_radius(center: Vector2, radius: float, source: Node2D = nul
 			c.take_damage(1.0, source)
 
 
-func break_chests_in_arc(center: Vector2, angle: float, radius: float, half_angle: float, source: Node2D = null, melee := false) -> void:
+func break_chests_in_arc(
+	center: Vector2,
+	angle: float,
+	radius: float,
+	half_angle: float,
+	source: Node2D = null,
+	melee := false
+) -> void:
 	if encounters != null:
 		encounters.in_radius(center, radius, source, angle, half_angle, melee)
 	for c in chests:
 		if c.dead:
 			continue
 		var d := c.position - center
-		if d.length() <= radius + Chest.COLLISION_RADIUS and (d.length() < 40.0 or absf(angle_difference(angle, d.angle())) <= half_angle) and (can_melee_reach(center, c.position) if melee else SpatialCombat3D.area_reaches(self, center, c.position, radius + Chest.COLLISION_RADIUS)):
+		if (
+			d.length() <= radius + Chest.COLLISION_RADIUS
+			and DirectionalAim.contains(d, Vector2.from_angle(angle), half_angle)
+			and (
+				can_melee_reach(center, c.position)
+				if melee
+				else SpatialCombat3D.area_reaches(
+					self, center, c.position, radius + Chest.COLLISION_RADIUS
+				)
+			)
+		):
 			c.take_damage(1.0, source)
 
 

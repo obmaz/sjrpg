@@ -9,6 +9,7 @@ const JOINT_OVERLAP := 0.025
 const CRENEL_SPACING := 0.86
 const WALL_FACE_RECESS := 0.045
 const PIER_SPACING := 3.44
+const MedievalDetails := preload("res://tools/architecture_art/medieval_details.gd")
 var preview: Node
 var root: Node3D
 var dynamic_root: Node3D
@@ -28,6 +29,7 @@ var _slit_frames: Array[Transform3D] = []
 var _corner_windows: Array[Dictionary] = []
 var _arcades := 0
 var _decks: Array[Dictionary] = []
+var _heraldic_frames: Array[Transform3D] = []
 
 
 static func build(presenter: Node) -> NativeFortressBuilder:
@@ -40,9 +42,9 @@ static func build(presenter: Node) -> NativeFortressBuilder:
 
 func _build() -> void:
 	_materials = preview._materials.duplicate()
-	# 성곽 통로/문은 2D 원본의 낡은 중성 참나무색을 사용하고 다른 건물과 분리한다.
+	# 같은 참나무 바탕에 노출된 성곽 목재만 더 차갑게 풍화시킨다.
 	var oak := (_materials["wood"] as StandardMaterial3D).duplicate() as StandardMaterial3D
-	oak.albedo_color = Color(.52, .55, .58)
+	oak.albedo_color *= Color(.76, .79, .80)
 	_materials["wood"] = oak
 	for key: String in ["stone", "granite"]:
 		var material := ShaderMaterial.new()
@@ -186,6 +188,9 @@ func _build() -> void:
 	report["granite"] = _materials["granite"]
 	report["wood"] = _materials["wood"]
 	report["wall_walk"] = walk
+	report["craft_family"] = MedievalDetails.FAMILY
+	report["heraldic_plaques"] = 8
+	report["heraldic_frames"] = _heraldic_frames
 
 
 func _corner_tower(at: Vector3) -> void:
@@ -692,6 +697,15 @@ func _towers(village: Village, index: int, wall_height: float) -> void:
 		var radius := minf(bounds.size.x, bounds.size.y) * 0.48
 		var height := wall_height + 2.0
 		var slit_faces := _tower_shell(center, radius, height, wall_height * 0.60)
+		# 곡면 탑의 실제 외측 면을 기준으로 달아 평면 성문 뒤에 묻히지 않는다.
+		var outward := _outward_normal(village.safe_zone, center)
+		var plaque_face: Transform3D = slit_faces[0]
+		for surface_frame: Transform3D in slit_faces:
+			if surface_frame.basis.z.dot(outward) > plaque_face.basis.z.dot(outward):
+				plaque_face = surface_frame
+		var plaque_frame := plaque_face * Transform3D(Basis.IDENTITY, Vector3(0, wall_height + .65, .018))
+		MedievalDetails.plaque(self, plaque_frame, "leaf")
+		_heraldic_frames.append(plaque_frame)
 		for level in [0.14, wall_height * 0.76, wall_height, height - 0.12]:
 			if level < 0.2 or level > height - 0.15:
 				_moulded_ring(center + Vector3(0, level, 0), radius + 0.035, 0.105)

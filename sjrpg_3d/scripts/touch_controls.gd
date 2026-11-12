@@ -236,6 +236,8 @@ func hold_mouse_primary() -> void:
 
 
 func _release(index: int) -> void:
+	if index == -1:
+		game.player.clear_pointer_aim()
 	if _held.has(index):
 		var slot_name := str(_held[index])
 		_held.erase(index)
@@ -258,6 +260,7 @@ func _drag(index: int, pos: Vector2) -> void:
 
 
 func release_all() -> void:
+	game.player.clear_pointer_aim()
 	game.player.action_buffer.clear()
 	_feedback.clear()
 	game.player.clear_move_target()

@@ -15,6 +15,7 @@ const SLATE_PITCH = NativeHousePlan.SLATE_PITCH
 const SLATE_COLUMNS = NativeHousePlan.SLATE_COLUMNS
 const SLATE_WIDTH = NativeHousePlan.SLATE_WIDTH
 const ASHLAR_COURSE = NativeHousePlan.ASHLAR_COURSE
+const MedievalDetails := preload("res://tools/architecture_art/medieval_details.gd")
 var _root: Node3D
 var _materials := {}
 var _surfaces := {}
@@ -26,6 +27,8 @@ var _roof_edges: Array[Dictionary] = []
 var _key := ""
 var _slate_tiles := 0
 var _quoins := 0
+var _shutters: Array[Dictionary] = []
+var _knee_braces := 0
 
 
 static func build(presenter: Node, root: Node3D, key: String, width: float, depth: float, height: float) -> Dictionary:
@@ -119,6 +122,10 @@ func _build(key: String, width: float, depth: float, height: float) -> Dictionar
 			_dormer(width, depth, eave_height, rise, side)
 	if key == "ne":
 		_smith_hood(width, depth, eave_height)
+	var emblem: String = STYLES[key]["wall"]
+	MedievalDetails.plaque(self, front * Transform3D(Basis.IDENTITY, Vector3(door_x, FLOOR + door_height + .45, .105)), emblem)
+	var lamp_x := clampf(door_x + door_width * .5 + .42, -body_width * .5 + .27, body_width * .5 - .27)
+	MedievalDetails.lantern(self, front * Transform3D(Basis.IDENTITY, Vector3(lamp_x, 2.04, .035)))
 	var meshes := _flush()
 	var bounds := meshes[0].mesh.get_aabb()
 	for node in meshes:
@@ -132,6 +139,7 @@ func _build(key: String, width: float, depth: float, height: float) -> Dictionar
 		"collision_note": "Existing whole-house footprint remains solid; doors are closed, smith/stable recesses carry blocking worktops or rails. No enterable interior is promised.",
 		"timber_mapping": "beam-local longitudinal grain, shared existing door material; metre UVs",
 		"timber_tile_m": TIMBER_TILE, "slate_tile_m": SLATE_TILE, "slate_tiles": _slate_tiles, "corner_quoins": _quoins,
+		"craft_family": MedievalDetails.FAMILY, "guild_emblem": emblem, "lanterns": 1, "knee_braces": _knee_braces, "shutters": _shutters,
 		"surface_mapping": "one complete facade per cell, including front/rear gables; structural trim retains metre UVs"}
 	_root.set_meta("native_house", report)
 	return report
@@ -216,7 +224,9 @@ func _door(opening: Dictionary, facade: Transform3D) -> void:
 	else:
 		_box(Vector3(x, bottom + tall + 0.065, 0.065), Vector3(width + 0.26, 0.13, 0.15), "wood", facade)
 	for level in [0.42, 1.36]:
-		_box(Vector3(x, bottom + level, -0.025), Vector3(width * 0.86, 0.06, 0.04), "iron", facade)
+		# 단조 철띠는 끝을 가늘게 벼린 실제 윤곽을 가지며 얇은 판의 면 밀도를 줄인다.
+		var strap := PackedVector2Array([Vector2(-width * .43, -.065), Vector2(width * .28, -.035), Vector2(width * .43, 0), Vector2(width * .28, .035), Vector2(-width * .43, .065)])
+		_prism(strap, .04, facade * Transform3D(Basis.IDENTITY, Vector3(x, bottom + level, -.025)), "iron")
 		for side in [-1.0, 1.0]:
 			_rivet(Vector3(x + side * width * 0.35, bottom + level, 0.001), facade)
 	for side in ([-1.0, 1.0] if _key in ["nw", "sw"] else [1.0]):
@@ -255,11 +265,19 @@ func _window(opening: Dictionary, facade: Transform3D, shutters: bool) -> void:
 		var end := clampf(start + width * 0.46, -width * 0.46, width * 0.46)
 		_beam(Vector3(x + start, bottom + 0.06, -0.032), Vector3(x + end, bottom + tall - 0.06, -0.032), 0.012, "iron", facade)
 	if shutters:
+		var panel_width := width * .50
+		# Corner windows fold their shutters forward above head height, within the eave allowance.
+		var hinge_angle := deg_to_rad(45.0) if _key == "nw" and absf(x) > .01 else 0.0
+		var hinge_depth := .115 if hinge_angle > 0.0 else .015
 		for side in [-1.0, 1.0]:
-			var at := Vector3(x + side * (width * 0.5 + 0.18), center.y, 0.015)
-			_box(at, Vector3(0.22, tall * 0.95, 0.055), "wood", facade)
+			var hinge := facade * Transform3D(Basis(Vector3.UP, -side * hinge_angle), Vector3(x + side * (width * .5 + .075), center.y, hinge_depth))
+			var at := Vector3(side * panel_width * .5, 0, 0)
+			# A half-window shutter can actually close its opening; plank gaps remain visible.
+			for plank: int in 3:
+				MedievalDetails.panel(self, Rect2(-panel_width * .5 + plank * panel_width / 3.0 + .004, -tall * .475, panel_width / 3.0 - .008, tall * .95), .055, hinge * Transform3D(Basis.IDENTITY, at), "wood")
 			for level in [-0.31, 0.31]:
-				_box(at + Vector3(0, tall * level, 0.035), Vector3(0.24, 0.033, 0.026), "iron", facade)
+				_box(at + Vector3(0, tall * level, .035), Vector3(panel_width + .025, .033, .026), "iron", hinge, false)
+		_shutters.append({"transform": facade, "x": x, "bottom": bottom, "height": tall, "window_width": width, "panel_width": panel_width, "planks": 3, "hinge_angle": hinge_angle, "hinge_depth": hinge_depth})
 	_box(Vector3(x, bottom - 0.085, 0.055), Vector3(width + 0.20, 0.07, 0.19), "stone", facade)
 
 
@@ -285,6 +303,9 @@ func _frame(width: float, top: float, facade: Transform3D, upper: bool, openings
 	var count := maxi(4, ceili(width / 0.52))
 	for index in count:
 		_box(Vector3(lerpf(-width * 0.44, width * 0.44, (index + 0.5) / count), top - 0.23, 0.11), Vector3(0.075, 0.22, 0.12), "wood", facade)
+	for side: float in [-1.0, 1.0]:
+		_beam(Vector3(side * (width * .5 - .10), top - .72, .105), Vector3(side * (width * .5 - minf(.53, width * .15)), top - .13, .105), .09, "wood", facade)
+		_knee_braces += 1
 
 
 func _corner_quoins(width: float, depth: float, top: float, wall_top: float) -> void:
