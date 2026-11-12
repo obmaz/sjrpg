@@ -94,7 +94,7 @@ static func objective() -> String:
 	return ""
 
 
-static func valid(value: Variant, cls: String) -> bool:
+static func valid(value: Variant, cls: String, hero: Dictionary) -> bool:
 	if not value is Dictionary:
 		return false
 	var state: Dictionary = value
@@ -139,7 +139,7 @@ static func valid(value: Variant, cls: String) -> bool:
 	):
 		if not profile.has(key):
 			return false
-	if not GameState._valid_save(profile):
+	if not GameState._valid_save(profile) or not ExpeditionSaveRules.profile(profile, cls):
 		return false
 	for key in ["serial", "draft_serial", "level_drafts"]:
 		if not GameState._encounter_integer(state.get(key), 0, 10000000):
@@ -229,6 +229,8 @@ static func valid(value: Variant, cls: String) -> bool:
 		state["phase"] != "starter"
 		and ExpeditionContent.skill_metadata(str(state.get("signature", "")), cls).is_empty()
 	):
+		return false
+	if not ExpeditionSaveRules.phase(state, hero):
 		return false
 	return not (
 		ExpeditionContent.contract(str(state["chapter"]), str(state.get("contract", ""))).is_empty()

@@ -24,7 +24,7 @@
 
 ## 원정 진행과 기술 확장
 
-`GameState.expedition`은 현재 원정, `expedition_meta`는 명성과 챕터 완료 기록입니다. 기존 저장 슬롯 안에 보관하며 필드가 없는 예전 저장은 기존 진행을 유지합니다. `scripts/expeditions/`에 상태 검증, 저장용 캐릭터 스냅샷, 선택/룬, 월드 어댑터, UI를 분리했습니다. 선택과 결산 저장에 실패하면 기존 상태로 되돌리고 월드를 교체하지 않습니다.
+`GameState.expedition`은 현재 원정, `expedition_meta`는 명성과 챕터 완료 기록입니다. 기존 저장 슬롯 안에 보관하며 필드가 없는 예전 저장은 기존 진행을 유지합니다. `scripts/expeditions/`에 상태 검증, 저장용 캐릭터 스냅샷, 선택/룬, 월드 어댑터, UI를 분리했습니다. `ExpeditionSaveRules`는 원본 캐릭터의 장비·의뢰·웨이포인트 자료와 현재 기술 슬롯/보상 단계의 관계를 적용 전에 검사해 부분 복구를 막습니다. `SaveStore.write()`도 새 문서를 검증한 뒤 기록해 잘못된 상태로 주 파일/백업이 교체되지 않게 합니다. 선택과 결산 저장에 실패하면 기존 상태로 되돌리고 월드를 교체하지 않습니다.
 
 챕터/계약과 룬은 `assets/data/expeditions/`, 새 기술은 `assets/abilities/<id>/ability.json`이 소유합니다. `SkillDefs.base_def()`가 기본 행동을, `RunBuild.definition()`이 원정 룬을 적용한 행동을 반환합니다. 투사체의 관통과 갈래는 실제 `Effect`에 전달하며, 흡수는 시전 식별자로 한 시전당 한 번만 지급합니다. 월드 재생성은 메뉴 재시작과 구별되는 `reload_requested`로 기존 로딩 화면을 거칩니다.
 

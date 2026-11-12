@@ -997,6 +997,7 @@ func _projectiles(id: String, d: Dictionary, rank: int, power: float) -> void:
 			"slow": d.get("slow", 0.0), "freeze": d.get("freeze", 0.0) + d.get("freeze_growth", 0.0) * (rank - 1),
 			"knock": d.get("knock", 0.0), "wiggle": d.get("wiggle", false), "throw": d.get("throw", false),
 			"pierce": d.get("pierce", false), "run_skill_id": id, "run_action_serial": _action_serial,
+			"run_contact_mods": RunBuild.modifiers(id),
 			"visual": "bolt" if id in ["iceBolt", "iceBlast", "glacialSpike", "chargedBolt"] else "",
 		}, self)
 

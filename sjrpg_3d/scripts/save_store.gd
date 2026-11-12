@@ -23,6 +23,9 @@ static func _read_one(path: String) -> Dictionary:
 
 
 static func write(path: String, data: Dictionary, valid: Callable) -> Error:
+	# 잘못된 다음 문서가 정상 주 파일과 백업을 밀어내지 않게 쓰기 전에 검증한다.
+	if not valid.call(data):
+		return ERR_INVALID_DATA
 	var temporary := path + ".tmp"
 	var file := FileAccess.open(temporary, FileAccess.WRITE)
 	if file == null:

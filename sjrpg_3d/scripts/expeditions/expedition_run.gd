@@ -1,6 +1,9 @@
 class_name ExpeditionRun
 extends Node
 ## 챕터 규칙과 기존 숲/의뢰/전투 사이의 어댑터. 영속 상태는 GameState에만 둔다.
+# 선택 정예는 저장된 무리 50개를 지우지 않고 전용 슬롯 하나만 추가한다.
+const ELITE_ACTOR_LIMIT := EncounterRuntime.CAVE_ENEMY_LIMIT + 1
+
 var game: Node
 var _shown := ""
 var _elite: Enemy
@@ -301,7 +304,7 @@ func _spawn_elite() -> void:
 	if (
 		game.dungeon.active
 		or is_instance_valid(_elite)
-		or game.enemies.size() >= EncounterRuntime.MAX_ENEMIES
+		or game.enemies.size() >= ELITE_ACTOR_LIMIT
 	):
 		return
 	var anchor: Vector2 = game.encounters.stones["deep_east"].position
@@ -348,6 +351,7 @@ func settle(success: bool) -> bool:
 			)
 		)
 	):
+		error = "마을 촌장 가까이에서 보고하세요." if success else "진행 중인 원정이 없습니다."
 		return false
 	if GameState.encounter_capture.is_valid():
 		GameState.encounter_capture.call()

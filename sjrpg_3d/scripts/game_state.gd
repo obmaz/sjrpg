@@ -636,7 +636,7 @@ func save_game() -> bool:
 
 ## Validate containers before applying a save so malformed data cannot partially replace the hero.
 func _valid_save(data: Dictionary) -> bool:
-	if not ExpeditionState.valid(data.get("expedition", {}), str(data.get("class", ""))):
+	if not ExpeditionState.valid(data.get("expedition", {}), str(data.get("class", "")), data):
 		return false
 	if not ExpeditionState.valid_meta(data.get("expedition_meta", {})):
 		return false

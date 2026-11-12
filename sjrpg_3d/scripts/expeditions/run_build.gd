@@ -63,10 +63,10 @@ static func cooldown(id: String, native: float) -> float:
 	return native * float(modifiers(id)["cooldown"])
 
 
-static func contact(player: Player, target: Enemy, id: String, serial: int) -> void:
+static func contact(player: Player, target: Enemy, id: String, serial: int, impact_mods: Dictionary = {}) -> void:
 	if not ExpeditionState.active() or id.is_empty() or player.dead:
 		return
-	var mods := modifiers(id)
+	var mods := modifiers(id) if impact_mods.is_empty() else impact_mods
 	if not target.dead and mods.has("slow"):
 		target.slow(float(mods["slow"]))
 	var gain := float(mods.get("resource_on_hit", 0))
