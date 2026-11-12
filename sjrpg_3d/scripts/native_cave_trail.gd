@@ -24,8 +24,8 @@ static func points(village: Village) -> PackedVector2Array:
 	var result := PackedVector2Array()
 	# 남쪽 필드 길에서 갈라져 암반의 남쪽을 돌아 하강로 정면에 합류한다.
 	for ground: Vector2 in [
-		Vector2(0, 6500),
-		Vector2(2200, 7200),
+		Vector2(ForestRegion.BRIDGE_U, 6000),
+		Vector2(4000, 6900),
 		Vector2(4400, 8450),
 		Vector2(6600, 9300),
 		Vector2(8500, 9500)

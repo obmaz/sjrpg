@@ -38,7 +38,7 @@ var landmarks: Array[Landmark] = []
 ## 의뢰 장소 (world px): roots 석조 정원 제단, moon 고목의 쉼터, sun 동굴.
 var quest_sites := {}
 var cave_ground := ForestRegion.CAVE_GROUND
-var boss_point := Iso.project(Vector2(-2600, 300))
+var boss_point := Iso.project(ForestRegion.BOSS_GROUND)
 ## Screen-plane rects (world px) the field scatter must keep clear.
 var clear_rects: Array[Rect2] = []
 ## Town interior (safe zone, no monster spawns).
@@ -100,16 +100,13 @@ func point(uv: Vector2) -> Vector2:
 
 func build(ground_layer: Node2D, world: Node2D) -> void:
 	_build_gates(world)
-	_build_paving(ground_layer)
 	_build_river(ground_layer, world)
+	_build_paving(ground_layer)
 	_build_walls(world)
 	_build_landmarks(world)
 	_build_quest_sites(world)
 	clear_rects.append(Rect2(boss_point - Vector2(600, 500), Vector2(1200, 1000)))
-	var beacon := create_portal(boss_point + Vector2(0, -280))
-	beacon.name = "GuardianPortal"
-	world.add_child(beacon)
-	solids.append(portal_base(beacon))
+	# 직립 워프문은 마을의 실제 이동 지점에만 둔다. 파수꾼은 지도/도전 안내를 사용한다.
 	_build_buildings(world)
 	_build_chapel_path(ground_layer)
 	_build_plaza(world)
@@ -157,20 +154,25 @@ func _build_paving(layer: Node2D) -> void:
 	stone.uv = uv
 	stone.modulate = Color.WHITE
 	group.add_child(stone)
-	# Dirt roads continue outward from the gates; the east road ends at the
-	# bridge forecourt and a narrower road crosses the bridge northwards.
+	# 마을 도로는 북쪽 강둑으로 연결하고 실제 다리만 물을 건넌다.
 	var dirt := ForestArt.texture("earth")
-	var east_end := Vector2(ForestRegion.BRIDGE_U/extent+spawn_uv.x,0.5)
+	var north_bank := Iso.unproject(bridge.axis_point(1.0))
+	var south_bank := Iso.unproject(bridge.axis_point(0.0))
 	var roads := [
-		[Vector2(0.5, 0.10), Vector2(0.5,(-3400.0/extent)+spawn_uv.y), extent * 0.055],
-		[Vector2(0.5, 0.90), Vector2(0.5,(10200.0/extent)+spawn_uv.y), extent * 0.055],
-		[Vector2(0.04, 0.5), Vector2((-3400.0/extent)+spawn_uv.x,0.5), extent * 0.055],
-		[Vector2(0.94, 0.5), east_end, extent * 0.055],
-		[east_end, east_end + Vector2(0, -2400.0 / extent), 95.0],
+		[ground(Vector2(.5,.10)), Vector2(0,-3400), 132.0],
+		[ground(Vector2(.04,.5)), Vector2(-3400,-60), 132.0],
+		[ground(Vector2(.94,.5)), Vector2(9600,-60), 132.0],
+		[ground(Vector2(.5,.90)), Vector2(0,2600), 132.0],
+		[Vector2(0,2600), Vector2(ForestRegion.BRIDGE_U,2600), 110.0],
+		[Vector2(ForestRegion.BRIDGE_U,2600), north_bank, 95.0],
+		[north_bank, south_bank, 95.0],
+		[south_bank, Vector2(ForestRegion.BRIDGE_U,6000), 110.0],
+		[Vector2(3600,-60), Vector2(3600,1100), 95.0],
+		[Vector2(7600,-60), Vector2(7600,1300), 95.0]
 	]
 	for r in roads:
-		var a := ground(r[0])
-		var b := ground(r[1])
+		var a: Vector2 = r[0]
+		var b: Vector2 = r[1]
 		var dir := (b - a).normalized()
 		var nrm := dir.orthogonal() * float(r[2])
 		var poly := Polygon2D.new()
@@ -186,7 +188,7 @@ func _build_paving(layer: Node2D) -> void:
 # ───────── river & bridge ─────────
 
 func _build_river(layer: Node2D, world: Node2D) -> void:
-	forecourt_g = Vector2(ForestRegion.BRIDGE_U,Iso.unproject(gate_points[3]).y)
+	forecourt_g = Vector2(ForestRegion.BRIDGE_U,ForestRegion.BRIDGE_V)
 	bridge = Bridge.new().setup(Iso.project(forecourt_g))
 	world.add_child(bridge)
 	# The water spans the bridge axis, tucked 70 units under each bank end.
@@ -194,10 +196,10 @@ func _build_river(layer: Node2D, world: Node2D) -> void:
 	var far_v := Iso.unproject(bridge.axis_point(1.0)).y
 	var v0 := far_v + 70.0
 	var v1 := near_v - 70.0
-	var u0 := Iso.unproject(gate_points[3]).x+200.0
+	var u0 := ForestRegion.RIVER_START_U
 	var u1 := ForestRegion.RIVER_END_U
-	river_band = Rect2(u0 - 110.0, v0, u1 - u0 + 110.0, v1 - v0)
-	river = River.new().setup(u0, u1, v0, v1, 110.0)
+	river_band = Rect2(u0, v0, u1 - u0, v1 - v0)
+	river = River.new().setup(u0, u1, v0, v1)
 	layer.add_child(river)
 	# Water blocks movement everywhere except the bridge deck.
 	var water := PackedVector2Array()
@@ -212,7 +214,7 @@ func _build_river(layer: Node2D, world: Node2D) -> void:
 
 ## True when a ground point lies on water, bank or the bridge road.
 ## 숲 랜드마크 (원본 stage-1 필드): 높이가 있는 윗면과 계단. Positions are ground units.
-const LANDMARK_SPOTS := [[2, Vector2(-2350, -900)], [1, Vector2(-1500, -2750)], [0, Vector2(1800, 1900)], [3, Vector2(-2400, 2400)]]
+const LANDMARK_SPOTS := ForestRegion.LANDMARK_SPOTS
 
 
 func _build_landmarks(world: Node2D) -> void:
@@ -443,8 +445,8 @@ func _build_plaza(world: Node2D) -> void:
 	# Authored frame points follow the same measured source projection as its stone base.
 	solids.append(fountain.atlas_polygon(data["frames"]["pool"]["ground"]))
 	# Leave room for the larger fountain and for Mira's independent interaction approach.
-	var portal := _add_warp_portal("town", point(Vector2(0.395, 0.493)), world)
-	portal_point = portal.position
+	_add_warp_portal("town", point(Vector2(0.395, 0.493)), world)
+	portal_point = warp_point("town")
 
 
 ## Join the measured doorway to the existing street on the real ground plane.
@@ -706,6 +708,7 @@ func _add_warp_portal(id: String, at: Vector2, world: Node2D) -> IsoSprite:
 	portal_points[id] = at
 	portal_sprites[id] = portal
 	world.add_child(portal)
+	portal_points[id] = warp_point(id)
 	var footprint := portal_base(portal)
 	if id != "town":
 		footprint = PackedVector2Array()
@@ -718,6 +721,20 @@ func _add_warp_portal(id: String, at: Vector2, world: Node2D) -> IsoSprite:
 	var corners := portal.atlas_polygon([[src[0], src[1]], [src[0] + src[2], src[1]], [src[0] + src[2], src[1] + src[3]], [src[0], src[1] + src[3]]])
 	clear_rects.append(Iso.poly_bounds(corners).grow(40.0))
 	return portal
+
+
+## 실제 표시/충돌의 발판 중심. 직립 문의 원화 피벗과 상호작용 좌표를 혼동하지 않는다.
+func warp_point(id: String) -> Vector2:
+	var portal: IsoSprite = portal_sprites.get(id)
+	if not is_instance_valid(portal) or portal.is_queued_for_deletion():
+		return Vector2.INF
+	if id != "town":
+		return portal.position
+	var outline := portal_base(portal)
+	var centre := Vector2.ZERO
+	for point: Vector2 in outline:
+		centre += point
+	return centre / outline.size()
 
 
 func _build_sanctuaries(world: Node2D) -> void:

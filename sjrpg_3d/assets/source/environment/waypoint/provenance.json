@@ -29,7 +29,7 @@
   "integrationInputs": [
     {
       "path": "scripts/forest_region.gd",
-      "sha256": "b3f80e6037c107a628f1cef7649fef905c4d5a44836c7a1680a3ea6a769164e9"
+      "sha256": "c1a0c16329081deff53d118b41f6ee1dd6f31d5b334c61a34eb2a924d5402e58"
     },
     {
       "path": "scripts/native_ground_relief.gd",

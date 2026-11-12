@@ -11,11 +11,7 @@ const CAVE_WAVE_SIZE := 20
 const CAVE_ENEMY_LIMIT := MAX_ENEMIES + CAVE_WAVE_SIZE
 const CAVE_VISUAL_VARIANT := "cave_crawler"
 # Screen-ground offset keeps the marker beside, not over, the entrance/NPC/gate.
-const SITES := {
-	"west": Vector2(-1700, 320), "north": Vector2(320, -1700),
-	"east": Vector2(1700, -320), "south": Vector2(-320, 1700),
-	"deep_west": Vector2(-2450, -1650), "deep_east": Vector2(2250, 1700),
-}
+const SITES := ForestRegion.ENCOUNTER_SITES
 
 var game: Node
 var states: Dictionary
@@ -39,24 +35,9 @@ func setup(world_game: Node) -> EncounterRuntime:
 	for id in sites:
 		var at := _stone_position(Iso.project(sites[id]))
 		var state: Dictionary = states.get(id, {"charges": 3, "recharge": 0.0, "initial_spawned": false, "members": []})
-		# This demonstration pack is always attack-triggered, including old saves.
+		# 이전 맵 저장의 무리도 체력·충전·구성을 유지하며 새 비석 주변으로 옮긴다.
+		_relocate_members(state, at)
 		if id == CAVE_SITE:
-			# 옮긴 동굴의 저장된 무리는 체력·구성을 유지한 채 새 비석 주변으로 옮긴다.
-			var saved_members: Array = state.get("members",[])
-			if not saved_members.is_empty():
-				var old_anchor := Vector2.ZERO
-				var old: Array = state.get("anchor",[])
-				if old.size()==2:
-					old_anchor = Vector2(old[0],old[1])
-				else:
-					for member: Dictionary in saved_members:
-						old_anchor += Vector2(member["position"][0],member["position"][1])
-					old_anchor /= saved_members.size()
-				if old_anchor.distance_to(at)>1200.0:
-					for member: Dictionary in saved_members:
-						var shifted := Vector2(member["position"][0],member["position"][1])+at-old_anchor
-						member["position"] = [shifted.x,shifted.y]
-			state["anchor"] = [at.x,at.y]
 			state["initial_spawned"] = true
 			state["charges"] = 3
 			state["recharge"] = 0.0
@@ -75,6 +56,24 @@ func setup(world_game: Node) -> EncounterRuntime:
 				enemy.hp = minf(enemy.max_hp, float(record["hp"]))
 	GameState.encounter_capture = capture
 	return self
+
+
+static func _relocate_members(state: Dictionary, at: Vector2) -> void:
+	var members: Array = state.get("members", [])
+	var old: Array = state.get("anchor", [])
+	var previous := at
+	if old.size() == 2:
+		previous = Vector2(old[0], old[1])
+	elif not members.is_empty():
+		previous = Vector2.ZERO
+		for member: Dictionary in members:
+			previous += Vector2(member["position"][0], member["position"][1])
+		previous /= members.size()
+	if previous.distance_to(at) > 1200.0:
+		for member: Dictionary in members:
+			var shifted := Vector2(member["position"][0], member["position"][1]) + at - previous
+			member["position"] = [shifted.x, shifted.y]
+	state["anchor"] = [at.x, at.y]
 
 
 func _stone_position(desired: Vector2) -> Vector2:
@@ -177,7 +176,7 @@ func spawn_wave(id: String, initial: bool) -> int:
 		var point := _spawn_position(desired, stones[id].position, index)
 		if point == Vector2.INF:
 			continue
-		var zone := clampi(int((point.length() - 1300.0) / 900.0), 0, 3)
+		var zone := ForestBalance.zone_at(point)
 		var kinds := ["goblin", "wolf", "goblin", "boar"] if zone < 2 else ["wolf", "boar", "skeleton", "goblin"]
 		var kind: String = kinds[added % kinds.size()]
 		# The first search has no chosen species; validate again with its real footprint.
@@ -217,7 +216,7 @@ func _spawn_cave_wave() -> int:
 		game.enemies.erase(enemy)
 		enemy.queue_free()
 	for point: Vector2 in positions:
-		var zone := clampi(int((point.length() - 1300.0) / 900.0), 0, 3)
+		var zone := ForestBalance.zone_at(point)
 		_create_enemy(CAVE_SITE, "goblin", ForestBalance.area_level(zone), point)
 	_record_wave(CAVE_SITE, false)
 	return CAVE_WAVE_SIZE

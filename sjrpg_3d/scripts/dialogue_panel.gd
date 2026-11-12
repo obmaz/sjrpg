@@ -115,7 +115,7 @@ func _mira() -> void:
 			_say("약초사 노아에게 꾸러미를 전달하고 보고하세요.")
 		_:
 			if not s["parcel"]:
-				_say("약초 꾸러미예요. 북쪽 숲 고목의 쉼터에 있는 노아에게 전해 주세요.")
+				_say("약초 꾸러미예요. 동쪽 숲 고목의 쉼터에 있는 노아에게 전해 주세요.")
 				_action("짐 받기", func(): game.quest_runtime.receive_parcel())
 			else:
 				_say("노아에게 꾸러미를 전달해 주세요. 고목의 쉼터는 북쪽 길에서 가까워요.")
@@ -144,7 +144,7 @@ func _noah() -> void:
 
 func _elder() -> void:
 	body.add_child(PanelFrame.section("숲의 현자"))
-	_say("“석조 정원의 엘린은 봉인을 지키고, 마을 보급원 미라는 약초 배달을 기다리네. 동굴의 조사관 로웬도 도움이 필요하다네. 세 의뢰를 해결하면 서쪽 숲 공터에서 파수꾼에게 도전할 수 있다네. 상자와 전리품을 모으고, 얻은 힘을 스스로 선택하게나. 전투를 벗어나 분수 곁에서 쉬면 생명이 회복된다네.”")
+	_say("“석조 정원의 엘린은 봉인을 지키고, 마을 보급원 미라는 약초 배달을 기다리네. 동굴의 조사관 로웬도 도움이 필요하다네. 세 의뢰를 해결하면 강 건너 남쪽 숲 공터에서 파수꾼에게 도전할 수 있다네. 상자와 전리품을 모으고, 얻은 힘을 스스로 선택하게나. 전투를 벗어나 분수 곁에서 쉬면 생명이 회복된다네.”")
 	body.add_child(PanelFrame.section("지금 할 일"))
 	body.add_child(PanelFrame.wrap_label(Quests.main_objective(), 20, Color(0.78, 0.92, 0.85)))
 	body.add_child(PanelFrame.wrap_label("숲에서 쓰러뜨린 적 %d마리 · 추가 처치 조건 없음" % GameState.stage_kills, 19, Color(1, 0.88, 0.5)))

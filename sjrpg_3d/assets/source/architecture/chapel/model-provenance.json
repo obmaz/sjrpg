@@ -5,7 +5,7 @@
   "inputs": [
     {
       "path": "tools/architecture_art/bake.gd",
-      "sha256": "3fdfcf340bea93504597404b763435e3cb1627a1480584c56faf3baadf0e0b0f"
+      "sha256": "7f0cee342f94b2c18a001ad0a4510edf60ce0c120ce1322aaee4c987425ead0f"
     },
     {
       "path": "tools/architecture_art/chapel_builder.gd",
@@ -17,7 +17,11 @@
     },
     {
       "path": "scripts/village.gd",
-      "sha256": "8768492e0bb5d95c619f4996d92d47dbf424b71ade1de429cf16f2d988e3f8c5"
+      "sha256": "b4bdba097b36659e9eb0c3eae87f0c1236a3229da7c1857a387ec166406cd59e"
+    },
+    {
+      "path": "scripts/forest_region.gd",
+      "sha256": "c1a0c16329081deff53d118b41f6ee1dd6f31d5b334c61a34eb2a924d5402e58"
     },
     {
       "path": "assets/data/village.json",

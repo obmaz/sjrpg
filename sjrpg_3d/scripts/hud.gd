@@ -627,7 +627,7 @@ func _update_layout() -> void:
 	_toast_plaque.size = confirmation.size
 	_save_warning.offset_top = origin.y + 220.0 * u
 	_save_warning.offset_bottom = origin.y + 290.0 * u
-	var name := "숲 마을" if game.in_town(game.player.position) else "숲 가장자리"
+	var name := "숲 마을" if game.in_town(game.player.position) else ForestRegion.area_name(game.player.position)
 	if not game.dungeon.active and game.village.river_band.grow(60.0).has_point(Iso.unproject(game.player.position)):
 		name = "강가"
 	if game.dungeon.active:

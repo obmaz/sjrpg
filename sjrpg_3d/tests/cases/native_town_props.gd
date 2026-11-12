@@ -63,7 +63,7 @@ func run() -> void:
 	var fountain: IsoSprite = game.village.fountain
 	var fountain_polygon := fountain.atlas_polygon(game.village.data["frames"]["pool"]["ground"])
 	var footprint_before := fountain_polygon.duplicate()
-	check("native fountain and every forest warp role replace their own source only", props.owns(fountain) and props._entries.size() == game.village.portal_sprites.size() + 2)
+	check("native fountain and every forest warp role replace their own source only", props.owns(fountain) and props._entries.size() == game.village.portal_sprites.size() + 1)
 	var fountain_entry: Dictionary = props._entries[fountain.get_instance_id()]
 	_check_geometry(fountain_entry, 3932, 3, NativeTownProps3D.FOUNTAIN_SIZE)
 	var portal: IsoSprite = game.village.portal_sprites["town"]

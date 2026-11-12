@@ -177,7 +177,7 @@ static func markers(game: Node) -> Array[Dictionary]:
 		var at: Vector2 = game.village.sanctuary_points[id]
 		var sprite: Node2D = game.village.portal_sprites.get(id)
 		if is_instance_valid(sprite):
-			at = sprite.position
+			at = game.village.warp_point(id)
 		markers.append(
 			_marker(
 				"sanctuary:" + id,

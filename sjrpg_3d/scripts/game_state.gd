@@ -689,6 +689,13 @@ func _valid_encounters(value: Variant) -> bool:
 		if not record.get("initial_spawned") is bool or not record.get("members") is Array:
 			return false
 		var members: Array = record["members"]
+		if record.has("anchor"):
+			var anchor: Variant = record["anchor"]
+			if not anchor is Array or anchor.size() != 2:
+				return false
+			for coordinate: Variant in anchor:
+				if not _number(coordinate) or absf(float(coordinate)) > ForestRegion.SAVE_COORD_LIMIT:
+					return false
 		var cave_pack := str(id) == "cave_swarm"
 		total_members += members.size()
 		if not cave_pack:
@@ -711,7 +718,7 @@ func _valid_encounters(value: Variant) -> bool:
 			if not at is Array or at.size() != 2:
 				return false
 			for coordinate in at:
-				if not _number(coordinate) or absf(float(coordinate)) > 10000.0:
+				if not _number(coordinate) or absf(float(coordinate)) > ForestRegion.SAVE_COORD_LIMIT:
 					return false
 	return true
 

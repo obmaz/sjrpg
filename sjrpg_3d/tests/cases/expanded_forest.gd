@@ -32,7 +32,7 @@ func run() -> void:
 		maximum_step = maxf(maximum_step,absf(current-previous))
 		previous = current
 	check("a continuous long downhill reaches the cave mouth",initial>-0.05 and previous< -3.0 and maximum_step<0.15 and game.player.position.distance_to(target)<6.0,"start=%f end=%f step=%f remaining=%f" % [initial,previous,maximum_step,game.player.position.distance_to(target)])
-	check("bridge stands near the far end of the extended river",game.village.forecourt_g.x>=9000.0 and game.village.river_band.size.x>9000.0)
+	check("bridge links both districts in the field-crossing river",game.village.forecourt_g == Vector2(ForestRegion.BRIDGE_U,ForestRegion.BRIDGE_V) and game.village.river_band.position.x < game.FIELD.position.x and game.village.river_band.end.x > game.FIELD.end.x)
 	var props: NativeTownProps3D = game.ortho_preview._town_props
 	props.sync()
 	var source: IsoSprite = game.village.portal_sprites["cave"]

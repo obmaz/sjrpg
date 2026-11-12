@@ -78,7 +78,7 @@
     },
     {
       "path": "scripts/village.gd",
-      "sha256": "8768492e0bb5d95c619f4996d92d47dbf424b71ade1de429cf16f2d988e3f8c5"
+      "sha256": "b4bdba097b36659e9eb0c3eae87f0c1236a3229da7c1857a387ec166406cd59e"
     },
     {
       "path": "scripts/native_ground.gdshader",

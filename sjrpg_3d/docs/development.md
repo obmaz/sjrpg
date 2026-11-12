@@ -108,7 +108,7 @@ tools/serve.sh
 
 동굴 상자·내구력·금속 표면·지역별 표시 수명은 [입체 소품](native-encounter-props.md), 크기·배치·보상 계약은 [상자 규격](native-chest-scale.md)에 정리합니다. `Ortho3DCaveRock`은 연결된 원래 벽 구간별로 안/바깥 재질을 한 가림 오브젝트로 묶습니다. 떨어진 벽을 X좌표만으로 합치지 않으며 `cave_treasure`가 실제 가림 시선·복원·몬스터 제외를 검사합니다. 바닥/벽 각각6종의 생성 원본·공유 재질·표면 검수는 [동굴 재질](native-cave-surfaces.md)에 정리합니다.
 
-강은 동쪽 경계까지 연장하고 다리의 지면X는9000으로 옮깁니다. 도로/강 거리장은 `capture_road_geometry.tscn`과 `bake_ground_field.py`로 함께 재생성합니다. `native_river.gdshader`는 시간에 따라 두 물결 표면을 이동시키고 이동 포말·수면 법선을 갱신합니다. 정적 메시를 매 프레임 다시 만들지 않으며 일시정지에는 같은 phase를 유지합니다.
+강은 마을 밖 필드의 서·동 경계를 가로지르고 다리의 교대는 지면(5200,5200)에 있습니다. 퀘스트·랜드마크·소환 위치·구역 이름은 [확장 필드 배치](field-layout.md)를 공유합니다. 도로/강 거리장은 `capture_road_geometry.tscn`과 `bake_ground_field.py`로 함께 재생성합니다. `native_river.gdshader`는 시간에 따라 두 물결 표면을 이동시키고 이동 포말·수면 법선을 갱신합니다. 정적 메시를 매 프레임 다시 만들지 않으며 일시정지에는 같은 phase를 유지합니다.
 
 일반 푸시의 CI는 검사와 로컬 웹 산출물 검수까지만 수행합니다. Pages 공개 배포는 사용자가 별도로 요청한 뒤 `web.yml`을 `workflow_dispatch`의 `publish=true`로 실행할 때만 허용합니다. 기본 “배포”는 [APK 전달 스킬](../../.agents/skills/dropbox-apk/SKILL.md)의 Dropbox 전달입니다.
 

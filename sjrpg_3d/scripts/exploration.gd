@@ -25,7 +25,7 @@ func nearby() -> String:
 
 
 func gate_point(id: String) -> Vector2:
-	return game.village.portal_points.get(id, Vector2.INF)
+	return game.village.warp_point(id)
 
 
 func gate_origin() -> String:

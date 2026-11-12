@@ -16,10 +16,22 @@ func run() -> void:
 		start.distance_to(expected) < 0.01 and points[5].y >= 38.0 and points[5].y < 48.0
 	)
 	start = SpatialWorld3D.projected(frame * Vector3(points[0].x, 0, points[0].y))
-	check(
-		"trail branches directly from the existing south field road",
-		Iso.unproject(start).distance_to(Vector2(0, 6500)) < .01
-	)
+	var attached := false
+	for road: PackedVector2Array in game.village.map_roads:
+		attached = attached or Geometry2D.is_point_in_polygon(start, road)
+		for index in road.size():
+			attached = (
+				attached
+				or (
+					start.distance_to(
+						Geometry2D.get_closest_point_to_segment(
+							start, road[index], road[(index + 1) % road.size()]
+						)
+					)
+					< .01
+				)
+			)
+	check("trail branches directly from the actual south bridge road", attached)
 	check(
 		"four actual signs guide both the field route and waypoint approach",
 		(

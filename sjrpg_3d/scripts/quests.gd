@@ -8,7 +8,7 @@ const DEFS := [
 	{"id": "roots", "title": "숲의 오래된 봉인", "kind": "cleanse", "giver": "수녀 엘린", "recipient": "수녀 엘린",
 		"desc": "의뢰를 받은 뒤 석조 정원 근처의 적 18마리를 처치하고 봉인을 정화해 주세요.", "gold": 120, "exp": 120},
 	{"id": "moon", "title": "고목 쉼터의 약초 꾸러미", "kind": "delivery", "giver": "보급원 미라", "recipient": "약초사 노아",
-		"desc": "마을에서 약초 꾸러미를 받아 북쪽 숲 고목의 쉼터에 있는 약초사에게 전해 주세요.", "gold": 80, "exp": 90},
+		"desc": "마을에서 약초 꾸러미를 받아 동쪽 숲 고목의 쉼터에 있는 약초사에게 전해 주세요.", "gold": 80, "exp": 90},
 	{"id": "sun", "title": "동굴 조사관을 지켜라", "kind": "protection", "giver": "조사관 로웬", "recipient": "조사관 로웬",
 		"desc": "조사관을 90초 동안 지키며 6마리씩 다섯 차례 습격하는 적 30마리를 모두 처치하세요.", "gold": 300, "exp": 360},
 ]
@@ -93,7 +93,7 @@ static func main_objective() -> String:
 		return objective(id)
 	if GameState.boss_defeated:
 		return "제1장을 완료했습니다."
-	return "서쪽 숲의 공터에서 파수꾼에게 도전하세요."
+	return "강을 건너 남쪽 숲의 공터에서 파수꾼에게 도전하세요."
 
 
 static func quest_progress(id: String) -> float:

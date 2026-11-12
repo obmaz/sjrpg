@@ -15,7 +15,7 @@ func run() -> void:
 		for node in child.get_children():
 			if node is PlazaWater:
 				animated.append(node)
-	check("fountain and all village gate copies animate", animated.size() == 5)
+	check("fountain and all village gate copies animate", animated.size() == game.village.portal_sprites.size() + 1)
 	var animation: PlazaWater = fountain.get_child(0)
 	var original_material: Material = fountain.material
 	var phase := animation.phase

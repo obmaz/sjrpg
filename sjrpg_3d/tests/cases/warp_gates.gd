@@ -11,13 +11,12 @@ func run() -> void:
 	game.quest_runtime.set_process(false)
 	var town_portal: IsoSprite = game.village.portal_sprites["town"]
 	var town_footprint: PackedVector2Array = game.village.portal_footprints["town"]
-	var guardian_portal: IsoSprite = game.world.get_node("GuardianPortal")
-	check("the guardian gate also uses the shared portal art scale", is_equal_approx(guardian_portal.k, town_portal.k) and guardian_portal.def == town_portal.def and game.village.solids.has(Village.portal_base(guardian_portal)))
+	check("field contains no decorative nonfunctional upright gate", game.world.get_node_or_null("GuardianPortal") == null)
 	check("exactly the three functional warp gates share a registry", game.village.portal_sprites.size() == 3)
 	for id in Exploration.NAMES:
 		var portal: IsoSprite = game.village.portal_sprites[id]
 		var base: PackedVector2Array = game.village.portal_footprints[id]
-		check("field gate matches the town gate's actual drawing scale: " + id, is_equal_approx(portal.k, town_portal.k) and portal.def == town_portal.def and portal.position == route.gate_point(id))
+		check("field gate matches the town gate's actual drawing scale: " + id, is_equal_approx(portal.k, town_portal.k) and portal.def == town_portal.def and game.village.warp_point(id) == route.gate_point(id))
 		if id == "town":
 			check("town gate keeps its upright stone blocker",game.village.solids.has(base))
 		else:

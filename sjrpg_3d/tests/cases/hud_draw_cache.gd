@@ -124,9 +124,9 @@ func run() -> void:
 		controls.redraw_requests > buttons and controls._near_name == "워프게이트")
 
 	area = hud.area_redraw_requests
-	player.position = Vector2(100000.0, 100000.0)
+	player.position = Iso.project(Vector2(1800, 0))
 	_tick(hud, controls)
-	check("a changed world area invalidates its label", hud.area_redraw_requests > area and hud._area_name == "숲 가장자리")
+	check("a changed world area invalidates its label", hud.area_redraw_requests > area and hud._area_name == "마을 외곽")
 	area = hud.area_redraw_requests
 	_tick(hud, controls)
 	check("an unchanged area label keeps its commands", hud.area_redraw_requests == area)

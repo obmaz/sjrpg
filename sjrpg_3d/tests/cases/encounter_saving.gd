@@ -138,8 +138,8 @@ func _check_rejections() -> void:
 		["short member position", _bad_member("position", [0])],
 		["long member position", _bad_member("position", [0, 0, 0])],
 		["infinite member coordinate", _bad_member("position", [0, INF])],
-		["outside positive world limit", _bad_member("position", [10000.1, 0])],
-		["outside negative world limit", _bad_member("position", [0, -10000.1])],
+		["outside positive world limit", _bad_member("position", [12500.1, 0])],
+		["outside negative world limit", _bad_member("position", [0, -12500.1])],
 	]
 	var full := _area()
 	full["charges"] = 3

@@ -3,7 +3,7 @@ extends TestCase
 
 
 func run() -> void:
-	var river := River.new().setup(-200, 200, -80, 80, 100)
+	var river := River.new().setup(-200, 200, -80, 80)
 	add_child(river)
 	await _frames(2)
 	var water_vertices := river._water.polygon.duplicate()

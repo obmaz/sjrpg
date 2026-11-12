@@ -233,6 +233,7 @@ func _record(id: String, folder: String, data: Dictionary) -> void:
 		"tools/architecture_art/" + builder,
 		"scripts/iso.gd",
 		"scripts/village.gd",
+		"scripts/forest_region.gd",
 		"assets/data/village.json"
 	]
 	if id == "chapel":

@@ -1222,7 +1222,7 @@ func _spawn_enemy(anywhere := false) -> void:
 			continue
 		if Geometry2D.is_point_in_polygon(p, _town_buffer()):
 			continue
-		var zone := clampi(int((p.length() - 1300.0) / 900.0), 0, 3)
+		var zone := ForestBalance.zone_at(p)
 		var pool := ["goblin", "goblin", "wolf"]
 		if zone >= 1:
 			pool.append_array(["wolf", "boar"])

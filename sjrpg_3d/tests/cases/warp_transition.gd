@@ -164,9 +164,18 @@ func run() -> void:
 			"a newly blocked arrival cancels without invisible or stuck controls " + hero,
 			(
 				not travel.active
-				and game.player.position == origin
+				and game.player.position.distance_to(origin) < .01
 				and not game.player.warp_locked
 				and not effect.root.visible
+			),
+			(
+				"active=%s drift=%f locked=%s fx=%s"
+				% [
+					travel.active,
+					game.player.position.distance_to(origin),
+					game.player.warp_locked,
+					effect.root.visible
+				]
 			)
 		)
 		blocker.collision_layer = 0

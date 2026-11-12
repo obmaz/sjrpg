@@ -255,7 +255,14 @@ if (scene === 'select') {
 }
 if (args.start) await tap(...args.start.split(',').map(Number));
 else await tapEntry('start');
-await page.waitForFunction(() => window.__sjrpgAdventureReady === true, null, { timeout: 90000 });
+try {
+    await page.waitForFunction(() => window.__sjrpgAdventureReady === true, null, { timeout: 90000 });
+} catch (error) {
+    console.error('Adventure startup diagnostics:', logs.join('\n'));
+    console.error('Entry state:', await page.evaluate(() => ({title:window.__sjrpgTitleReady,entry:window.__sjrpgEntryReady,stage:window.__sjrpgClassButtons?.stage,adventure:window.__sjrpgAdventureReady,probe:window.__sjrpg3dProbe})));
+    await browser.close();
+    throw error;
+}
 if (true) {
     await page.waitForFunction(() => window.__sjrpg3dReady === true && window.__sjrpg3dProbe?.simulation === '3d' && window.__sjrpg3dProbe?.physics_ticks > 0 && window.__sjrpg3dProbe?.native_active === true && window.__sjrpg3dProbe?.shadow_primitives > 0 && window.__sjrpg3dProbe?.batch_corner_error_m < 0.0001, null, {timeout: 60000});
     console.log('Native3D world:', await page.evaluate(() => window.__sjrpg3dProbe));

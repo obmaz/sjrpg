@@ -1,7 +1,6 @@
 class_name River
 extends Node2D
-## 동문 밖 강. Authored in ground units (child of the ground layer), flowing along
-## the +u axis from the field edge into a rounded pool beside the town.
+## 마을 밖 필드를 가로지르는 강. 지면 좌표로 양쪽 맵 경계 밖까지 이어진다.
 
 var polygon := PackedVector2Array()
 var _water: Polygon2D
@@ -17,17 +16,10 @@ const PX := 512.0 / TILE_UNITS
 
 
 ## u0 = west end of the straight reach, u1 = east end; v0 < v1 bound the water.
-func setup(u0: float, u1: float, v0: float, v1: float, cap_u: float) -> River:
-	var mid := (v0 + v1) / 2.0
-	var rv := (v1 - v0) / 2.0
-	var pts := PackedVector2Array([Vector2(u1, v0), Vector2(u0, v0)])
-	# Rounded west end: half ellipse bulging toward -u, from (u0, v0) to (u0, v1).
-	for i in range(1, 12):
-		var t := PI * float(i) / 12.0
-		pts.append(Vector2(u0 - cap_u * sin(t), mid - rv * cos(t)))
-	pts.append(Vector2(u0, v1))
-	pts.append(Vector2(u1, v1))
-	polygon = pts
+func setup(u0: float, u1: float, v0: float, v1: float) -> River:
+	polygon = PackedVector2Array(
+		[Vector2(u1, v0), Vector2(u0, v0), Vector2(u0, v1), Vector2(u1, v1)]
+	)
 	_build()
 	return self
 
@@ -72,5 +64,9 @@ func _process(delta: float) -> void:
 	# Godot 4.7's Polygon2D UV updates re-upload indices through a WebGL-incompatible
 	# ARRAY_BUFFER target. Keep geometry/UVs fixed and move only the texture samples.
 	var texture_size := _water.texture.get_size()
-	_water_material.set_shader_parameter("flow_offset", Vector2(_time * 38.0, _time * 6.0) / texture_size)
-	_shimmer_material.set_shader_parameter("flow_offset", Vector2(-_time * 24.0, _time * 11.0) / texture_size)
+	_water_material.set_shader_parameter(
+		"flow_offset", Vector2(_time * 38.0, _time * 6.0) / texture_size
+	)
+	_shimmer_material.set_shader_parameter(
+		"flow_offset", Vector2(-_time * 24.0, _time * 11.0) / texture_size
+	)
