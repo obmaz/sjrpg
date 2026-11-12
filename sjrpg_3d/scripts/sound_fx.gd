@@ -1,8 +1,20 @@
 extends Node
-## 전투 효과음 (원본 audio_profile.dart의 SoundProfile을 그대로 합성): 피치 스윕 + 필터링한 노이즈.
+## CC0 짧은 PCM과 원래 합성 악센트를 공유8음성으로 재생한다. 게임 RNG와 분리한다.
 
 const RATE := 22050
+const VOICE_COUNT := 8
+const BANKS := "res://assets/audio/feedback/banks.json"
+var _sample_banks := {}
+var _sample_last := {}
+var _voice_serial := 0
+var played_serial := 0
+var dropped_voices := 0
+var last_played := {}
+var _last_warning_ms := -100000
+
 const PROFILES := {
+	"warn_beast": [96.0, 54.0, 0.30, 480.0, 0.055, 0.025, "growl"],
+	"warn_goblin": [180.0, 95.0, 0.22, 650.0, 0.045, 0.018, "growl"],
 	# name: [pitch, endPitch, duration, noiseFreq, noiseGain, toneGain, wave]
 	# Godot 전용: 실제 칼 휘두름 직전의 준비음과 살·뼈·암석 접촉 악센트.
 	# 합성 PCM과 믹스 여유를 검사한다. Android 실기 청음은 별도 검수 대상이다.
@@ -57,7 +69,19 @@ var _last_hit_tier := -1
 func _ready() -> void:
 	for name in PROFILES:
 		_streams[name] = _synth(PROFILES[name])
-	for i in 8:
+	var catalog: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(BANKS))
+	for family: String in catalog:
+		var variants: Array[AudioStreamWAV] = []
+		for path: String in catalog[family]:
+			variants.append(load(path) as AudioStreamWAV)
+		_sample_banks[family] = variants
+		_streams[family] = variants[0]
+	# 준비음도 같은 석재 샘플을 낮은 피치로 읽어 중복 PCM을 만들지 않는다.
+	_sample_banks["warn_skeleton"] = _sample_banks["weapon_draw"]
+	_streams["warn_skeleton"] = _streams["weapon_draw"]
+	_sample_banks["warn_golem"] = _sample_banks["hit_stone"]
+	_streams["warn_golem"] = _streams["hit_stone"]
+	for i in VOICE_COUNT:
 		var p := AudioStreamPlayer.new()
 		add_child(p)
 		_players.append(p)
@@ -85,6 +109,11 @@ func _synth(p: Array) -> AudioStreamWAV:
 				tone = 4.0 * absf(ph - 0.5) - 1.0
 			"sawtooth":
 				tone = 2.0 * ph - 1.0
+			"growl":
+				tone = (
+					(sin(ph * TAU) + 0.35 * sin(ph * TAU * 2.0))
+					* (0.7 + 0.3 * sin(float(i) / RATE * 35.0))
+				)
 		lp += alpha * (rng.randf_range(-1.0, 1.0) - lp)
 		var env := pow(1.0 - t, 2.0) * minf(1.0, t * 40.0)
 		var v := (tone * float(p[5]) + lp * 2.0 * float(p[4])) * env * GAIN
@@ -124,12 +153,14 @@ static func streak_pitch(count: int) -> float:
 static func contact_volume_db(name: String) -> float:
 	return -8.0 if name.begins_with("impact") else -12.0
 
+
 static func material_hit_name(species: String) -> String:
 	if species == "skeleton":
 		return "hit_bone"
 	if species == "golem":
 		return "hit_stone"
-	return "hit_flesh" if species in ["goblin", "wolf", "boar"] else ""
+	return "hit_flesh" if species in ["goblin", "wolf", "boar", "cave_crawler"] else ""
+
 
 func play_hit(tier: int, element := 0, species := "") -> void:
 	var kill_pitch := _next_kill_pitch() if tier == HitTier.KILL else 1.0
@@ -142,7 +173,9 @@ func play_hit(tier: int, element := 0, species := "") -> void:
 		for voice: AudioStreamPlayer in _players:
 			if voice.get_meta("contact_voice", false):
 				voice.stop()
-		for gate in ["impact", "tick", "kill", "hit_material", "hit_fire", "hit_ice", "hit_lightning"]:
+		for gate in [
+			"impact", "tick", "kill", "hit_material", "hit_fire", "hit_ice", "hit_lightning"
+		]:
 			_last[gate] = -100000
 	_last_hit_ms = now
 	_last_hit_tier = tier
@@ -167,15 +200,158 @@ func play(name: String, preview := false, pitch_multiplier := 1.0) -> void:
 		return
 	var now := Time.get_ticks_msec()
 	# Every contact variant shares one gate so area attacks cannot layer a wall of thuds.
-	var gate := "impact" if name.begins_with("impact") else ("hit_material" if name in ["hit_flesh", "hit_bone", "hit_stone"] else name)
+	var gate := (
+		"impact"
+		if name.begins_with("impact")
+		else ("hit_material" if name in ["hit_flesh", "hit_bone", "hit_stone"] else name)
+	)
 	if not preview and now - int(_last.get(gate, 0)) < 70:
 		return
+	var priority := voice_priority(name)
+	var index := _voice_index(priority)
+	if index < 0:
+		dropped_voices += 1
+		return
 	_last[gate] = now
-	var player := _players[_next]
-	_next = (_next + 1) % _players.size()
-	player.stream = _streams[name]
-	player.pitch_scale = (_variation.randf_range(0.96, 1.04) if name in ["slash", "impact", "impact_b", "impact_c", "impact_heavy", "fire", "ice", "lightning", "hit_fire", "hit_ice", "hit_lightning"] else 1.0) * pitch_multiplier
-	var contact := name.begins_with("impact") or name.begins_with("hit_") or name in ["tick", "kill"]
+	var player := _players[index]
+	_next = (index + 1) % _players.size()
+	player.stream = sample_stream(name)
+	_voice_serial += 1
+	player.set_meta("voice_priority", priority)
+	player.set_meta("voice_serial", _voice_serial)
+	player.pitch_scale = (
+		(
+			_variation.randf_range(0.96, 1.04)
+			if (
+				name
+				in [
+					"slash",
+					"impact",
+					"impact_b",
+					"impact_c",
+					"impact_heavy",
+					"fire",
+					"ice",
+					"lightning",
+					"hit_fire",
+					"hit_ice",
+					"hit_lightning"
+				]
+			)
+			else 1.0
+		)
+		* pitch_multiplier
+	)
+	var contact := (
+		name.begins_with("impact") or name.begins_with("hit_") or name in ["tick", "kill"]
+	)
+	player.set_meta("warning", "")
 	player.set_meta("contact_voice", contact)
-	player.volume_db = contact_volume_db(name) if contact else -4.0
+	player.volume_db = playback_volume_db(name)
 	player.play()
+	played_serial += 1
+	last_played = {
+		"name": name, "voice": index, "priority": priority, "variant": _sample_last.get(name, -1)
+	}
+
+
+## 같은 샘플을 연달아 고르지 않는다. 별도 RNG이므로 드롭/공격 난수에 영향이 없다.
+func sample_stream(name: String) -> AudioStream:
+	if not _sample_banks.has(name):
+		return _streams[name]
+	var variants: Array = _sample_banks[name]
+	var previous: int = _sample_last.get(name, -1)
+	var index := (
+		_variation.randi_range(0, variants.size() - 2)
+		if previous >= 0
+		else _variation.randi_range(0, variants.size() - 1)
+	)
+	if previous >= 0 and index >= previous:
+		index += 1
+	_sample_last[name] = index
+	return variants[index]
+
+
+static func playback_volume_db(name: String) -> float:
+	if name == "weapon_draw":
+		return -13.0
+	if name.begins_with("step_"):
+		return -16.0
+	if name in ["warn_beast", "warn_goblin"]:
+		return -6.0
+	if name.begins_with("warn_"):
+		return -10.0
+	if name.begins_with("impact") or name.begins_with("hit_") or name in ["tick", "kill"]:
+		return contact_volume_db(name)
+	return -4.0
+
+
+static func voice_priority(name: String) -> int:
+	if name == "hurt":
+		return 100
+	if name in ["levelup", "warp"]:
+		return 90
+	if name.begins_with("warn_") or name in ["loot", "kill", "evade_confirm"]:
+		return 80
+	if name.begins_with("step_"):
+		return 20
+	return 65 if name.begins_with("hit_") or name.begins_with("impact") or name == "tick" else 55
+
+
+func _voice_index(priority: int) -> int:
+	var selected := -1
+	for offset: int in _players.size():
+		var index := (_next + offset) % _players.size()
+		var player := _players[index]
+		if not player.playing:
+			return index
+		var lower: int = player.get_meta("voice_priority", 0)
+		if lower > priority:
+			continue
+		if (
+			selected < 0
+			or lower < int(_players[selected].get_meta("voice_priority", 0))
+			or (
+				lower == int(_players[selected].get_meta("voice_priority", 0))
+				and (
+					int(player.get_meta("voice_serial", 0))
+					< int(_players[selected].get_meta("voice_serial", 0))
+				)
+			)
+		):
+			selected = index
+	return selected
+
+
+static func warning_name(species: String) -> String:
+	if species == "skeleton":
+		return "warn_skeleton"
+	if species == "golem":
+		return "warn_golem"
+	return "warn_goblin" if species == "goblin" else "warn_beast"
+
+
+func play_warning(species: String, distance: float) -> bool:
+	if not Prefs.sound_enabled or distance > 310.0:
+		return false
+	var now := Time.get_ticks_msec()
+	if now - _last_warning_ms < 180:
+		return false
+	var active := 0
+	for player: AudioStreamPlayer in _players:
+		if player.playing and str(player.get_meta("warning", "")).begins_with("warn_"):
+			active += 1
+	if active >= 2:
+		return false
+	var pitch := float(
+		{"wolf": 1.10, "boar": 0.72, "cave_crawler": 1.28, "golem": 0.65, "skeleton": 0.82}.get(
+			species, 1.0
+		)
+	)
+	var before := played_serial
+	play(warning_name(species), false, pitch)
+	if played_serial == before:
+		return false
+	_last_warning_ms = now
+	_players[int(last_played["voice"])].set_meta("warning", warning_name(species))
+	return true

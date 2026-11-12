@@ -23,6 +23,7 @@ echo "── 1/3 임포트"
 python3 "$ROOT/tools/check_enemy_assets.py" || exit 1
 python3 "$ROOT/tools/check_architecture_assets.py" || exit 1
 python3 "$ROOT/tools/check_prop_assets.py" || exit 1
+python3 "$ROOT/tools/check_feedback_audio.py" || exit 1
 
 echo "── 2/3 테스트"
 TEST_COMMAND=("$GODOT_SH" --headless --verbose res://tests/run_all.tscn)

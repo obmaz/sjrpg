@@ -12,6 +12,7 @@ const SCENES = {
     title: '',
     select: '',
     town: '',
+    game_feel: 'feel_preview=1',
     hud: 'hud_preview=full',
     hud_low: 'hud_preview=low',
     hud_nearfull: 'hud_preview=nearfull',
@@ -308,6 +309,16 @@ if (scene === 'defender') {
     await page.waitForFunction(() => window.__sjrpgDodgeFeedback?.confirmed, null, {timeout: 30000});
     await page.waitForFunction(() => window.__sjrpg3dProbe?.native_novas?.active > 0, null, {timeout: 15000});
     console.log('DODGE_CONFIRMATION', JSON.stringify(await page.evaluate(() => ({...window.__sjrpgDodgeFeedback, native:window.__sjrpg3dProbe.native_novas}))));
+}
+if (scene === 'game_feel') {
+    await page.waitForFunction(() => window.__sjrpgFeelReview?.ready, null, {timeout: 30000});
+    const button = await page.evaluate(() => window.__sjrpgFeelReview.button);
+    await tap(vp.width * button[0], vp.height * button[1]);
+    await page.waitForFunction(() => window.__sjrpgFeelReview?.consumed, null, {timeout: 15000});
+    await page.waitForFunction(() => window.__sjrpg3dProbe?.aim_target === window.__sjrpgFeelReview.target, null, {timeout: 15000});
+    const feel = await page.evaluate(() => window.__sjrpgFeelReview);
+    if (!(feel.queued && feel.foot_contacts > 0 && feel.warnings === 1 && feel.reward_flights === 1)) throw new Error('Incomplete actual game feel flow: ' + JSON.stringify(feel));
+    console.log('GAME_FEEL', JSON.stringify(feel));
 }
 if (scene.startsWith('chest_')) {
     await page.waitForFunction(() => window.__sjrpgChestResponse, null, {timeout: 30000});

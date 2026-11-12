@@ -95,6 +95,7 @@ var _trees: Node3D
 var _fortification: Ortho3DFortification
 var _houses := {}
 var _forest_stage: Node3D
+var _aim_target: NativeAimTarget3D
 var _hit_feel: NativeHitFeel3D
 var _contact_duration := 0.16
 var _occlusion: NativePlayerOcclusion
@@ -198,6 +199,7 @@ func _ready() -> void:
 	_world_environment = Ortho3DEnvironment.new().setup(self, _forest_stage)
 	_occlusion = NativePlayerOcclusion.new().setup(self)
 	_hit_feel = NativeHitFeel3D.new().setup(self)
+	_aim_target = NativeAimTarget3D.new().setup(self)
 	_affordances.sync()
 
 
@@ -460,6 +462,7 @@ func _process(delta: float) -> void:
 	_warp_fx.sync()
 	_enemy_models.sync(0.0 if frozen else delta)
 	_enemy_feedback.sync()
+	_aim_target.sync()
 	_sync_cards()
 	_hit_feel.sync(0.0 if frozen else delta)
 	_native_residents.sync()
@@ -585,6 +588,7 @@ func _publish_probe() -> void:
 		"enemy_feedback": _enemy_feedback.snapshot() if _enemy_feedback != null else {},
 		"native_zones": _zone_fx.snapshot() if _zone_fx != null else {},
 		"native_novas": _nova_fx.snapshot() if _nova_fx != null else {},
+		"aim_target": _aim_target.target_id if _aim_target != null else 0,
 		"hit_feel": _hit_feel.snapshot() if _hit_feel != null else {},
 		"player_occluders": _occlusion._active.size() if _occlusion != null else 0,
 		"occlusion_warmed_materials": _occlusion.warmed_materials,

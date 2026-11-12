@@ -20,6 +20,7 @@ var _toast_owner: WeakRef
 const TOAST_PENDING_LIMIT := 4
 const TOAST_MAX_AGE := 8.0
 var _death: Control
+var reward_trail: RewardHudTrail
 var controls: TouchControls
 var minimap: Minimap
 var _area: Control
@@ -72,6 +73,9 @@ func _ready() -> void:
 	controls = TouchControls.new()
 	controls.game = game
 	add_child(controls)
+	reward_trail = RewardHudTrail.new()
+	reward_trail.game = game
+	add_child(reward_trail)
 
 	minimap = Minimap.new()
 	minimap.game = game
@@ -220,6 +224,7 @@ func _open(panel: PanelFrame) -> void:
 		panel.free()
 		return
 	controls.release_all()
+	reward_trail.clear()
 	_toast_plaque.hide()
 	if _level_up != null:
 		_level_up.hide()

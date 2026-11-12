@@ -337,6 +337,10 @@ func _read_debug_params() -> void:
 			NativeChestReview.run.call_deferred(self, kv[1])
 		elif kv.size() == 2 and kv[0] == "corpse_preview" and kv[1] in ["1", "bridge", "terrace", "beasts"]:
 			_corpse_preview.call_deferred(kv[1])
+		elif kv.size() == 2 and kv[0] == "feel_preview" and kv[1] == "1":
+			var review := GameFeelReview.new()
+			add_child(review)
+			review.start.call_deferred(self)
 		elif kv.size() == 2 and kv[0] == "reward_preview" and kv[1] in ["1", "levelup"]:
 			_reward_preview.call_deferred(kv[1])
 		elif kv.size() == 2 and kv[0] == "gold":
@@ -1183,7 +1187,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				player.set_move_target(screen_to_world(event.position))
 			get_viewport().set_input_as_handled()
 		return
-	if event.is_action_pressed("skill"):
+	if event.is_action_pressed("attack") and not event.is_echo():
+		player.cast_slot(0)
+	elif event.is_action_pressed("skill") and not event.is_echo():
 		player.cast_slot(1)
 	elif event.is_action_pressed("potion"):
 		player.use_potion()
@@ -1297,7 +1303,7 @@ func nearest_enemy(from: Vector2, max_range: float) -> Enemy:
 	var best: Enemy = null
 	var best_d := max_range
 	for e in enemies:
-		if e.dead:
+		if not is_instance_valid(e) or e.dead or e.is_queued_for_deletion():
 			continue
 		var d := from.distance_to(e.position)
 		if d < best_d:
@@ -1398,6 +1404,7 @@ func on_chest_broken(chest: Chest) -> void:
 		gold += 20 + GameState.level * 5
 	GameState.gold += gold
 	if gold > 0:
+		hud.reward_trail.offer("gold", chest.position)
 		RewardFx.spawn(self, chest.position + Vector2(0, -35), 0)
 	float_text(chest.position + Vector2(0, -70), "+%d G" % gold, Color(1, 0.88, 0.45)).anchor_text_ground(chest.position)
 	# 원본: 보급 상자와 숲의 첫 상자는 치유·자원 물약을 하나씩 줌.
@@ -1414,12 +1421,14 @@ func on_chest_broken(chest: Chest) -> void:
 		if chest.index == 8:
 			g = GameState.new_gear("shortsword" if GameState.hero_class == "warrior" else "wand", 2, 4, 8)
 		if GameState.add_gear(g):
+			hud.reward_trail.offer("gear", chest.position)
 			if g.rarity >= 2:
 				RewardFx.spawn(self, chest.position + Vector2(0, -42), 2)
 			toast("획득: %s" % g.display_name())
 			player.refresh_stats()
 		else:
 			GameState.gold += g.sale_value()
+			hud.reward_trail.offer("gold", chest.position)
 			toast("보관함이 가득 차 %s을(를) %d G에 팔았습니다" % [g.display_name(), g.sale_value()])
 	if GameState.collect_memory_reward():
 		toast("세 기억을 모았습니다 · 스킬 포인트 +1")
@@ -1521,11 +1530,13 @@ func on_enemy_killed(enemy: Enemy) -> void:
 	# 원본: 몬스터 처치로는 물약이 나오지 않음 (상자·구매·물약 발견만).
 	# Every death has a body; the original 30% skill-search eligibility remains independent.
 	add_corpse(enemy, _rng.randf() < 0.3)
-	grant_xp(enemy.xp_reward)
+	grant_xp(enemy.xp_reward, enemy.position)
 
 
-func grant_xp(amount: int) -> void:
+func grant_xp(amount: int, source_point := Vector2.INF) -> void:
 	var gained := GameState.add_xp(amount)
+	if amount > 0:
+		hud.reward_trail.offer("xp", source_point if source_point.is_finite() else player.position)
 	if gained > 0:
 		player.refresh_stats(true)
 		RewardFx.spawn(self, player.position + Vector2(0, -32), 1, true)

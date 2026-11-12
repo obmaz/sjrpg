@@ -1,0 +1,3 @@
+# 외부 원본의 줄바꿈·공백을 보존해 출처 바이트가 OS별로 변하지 않게 한다.
+*/License.txt -text whitespace=-trailing-space,-space-before-tab
+*/source-page.html -text whitespace=-trailing-space,-space-before-tab

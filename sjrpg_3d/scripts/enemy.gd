@@ -334,6 +334,8 @@ func _process(delta: float) -> void:
 				_state = "idle"
 			elif dist <= attack_range and game.can_melee_reach(position, position + to_player):
 				_state = "windup"
+				if not guard and not player.dead:
+					SoundFx.play_warning(str(get_meta("visual_variant", kind)), position.distance_to(player.position))
 				# JUICE #9: ordinary enemies get a brief warning flash so the swing can be read and dodged.
 				# Bosses already show their danger ring; the colour differs from hit and hurt flashes.
 				if not is_boss:

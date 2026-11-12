@@ -258,6 +258,7 @@ func _drag(index: int, pos: Vector2) -> void:
 
 
 func release_all() -> void:
+	game.player.action_buffer.clear()
 	_feedback.clear()
 	game.player.clear_move_target()
 	for index in _held.keys():

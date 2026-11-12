@@ -1,0 +1,37 @@
+{
+  "weapon_draw": [
+    "res://assets/audio/feedback/weapon_draw_0.wav",
+    "res://assets/audio/feedback/weapon_draw_1.wav",
+    "res://assets/audio/feedback/weapon_draw_2.wav"
+  ],
+  "hit_flesh": [
+    "res://assets/audio/feedback/hit_flesh_0.wav",
+    "res://assets/audio/feedback/hit_flesh_1.wav",
+    "res://assets/audio/feedback/hit_flesh_2.wav"
+  ],
+  "hit_bone": [
+    "res://assets/audio/feedback/hit_bone_0.wav",
+    "res://assets/audio/feedback/hit_bone_1.wav",
+    "res://assets/audio/feedback/hit_bone_2.wav"
+  ],
+  "hit_stone": [
+    "res://assets/audio/feedback/hit_stone_0.wav",
+    "res://assets/audio/feedback/hit_stone_1.wav",
+    "res://assets/audio/feedback/hit_stone_2.wav"
+  ],
+  "step_stone": [
+    "res://assets/audio/feedback/step_stone_0.wav",
+    "res://assets/audio/feedback/step_stone_1.wav",
+    "res://assets/audio/feedback/step_stone_2.wav"
+  ],
+  "step_grass": [
+    "res://assets/audio/feedback/step_grass_0.wav",
+    "res://assets/audio/feedback/step_grass_1.wav",
+    "res://assets/audio/feedback/step_grass_2.wav"
+  ],
+  "step_earth": [
+    "res://assets/audio/feedback/step_earth_0.wav",
+    "res://assets/audio/feedback/step_earth_1.wav",
+    "res://assets/audio/feedback/step_earth_2.wav"
+  ]
+}

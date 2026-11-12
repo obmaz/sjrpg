@@ -1,0 +1,164 @@
+{
+  "license": "CC0-1.0",
+  "author": "Kenney",
+  "sources": [
+    {
+      "url": "https://kenney.nl/assets/impact-sounds",
+      "archive_sha256": "029d734af1582474edf3a694d1b0cebc97c1c152f2f39fa34d4c2bafc5de77f8"
+    },
+    {
+      "url": "https://kenney.nl/assets/rpg-audio",
+      "archive_sha256": "6dbeaf8544da958d8f2adcb4a4a4b76c1ade34a05f8ab9edccd327da7375f38b"
+    }
+  ],
+  "mapping_note": "brittle wood/plank is designed as a dry bone accent; no claim of recorded bones. Earth uses the RPG footsteps. Files are trimmed, mono 22.05kHz, normalized with headroom. Skeleton warning shares the knife-draw bank at lower pitch; unused wood-floor and creak takes are excluded.",
+  "samples": [
+    {
+      "family": "weapon_draw",
+      "source": "assets/source/audio/game-feel-six/rpg-audio/drawKnife1.ogg",
+      "sha256": "276403e72c3b71c47bc24db3083970c23f8e5551ffa78f436f83483c56f3f0bb",
+      "output": "weapon_draw_0.wav",
+      "max_seconds": 0.3
+    },
+    {
+      "family": "weapon_draw",
+      "source": "assets/source/audio/game-feel-six/rpg-audio/drawKnife2.ogg",
+      "sha256": "d5df6a4130cbb016f97b4883769a418917b9629cb4c21717030b186e0c73281a",
+      "output": "weapon_draw_1.wav",
+      "max_seconds": 0.3
+    },
+    {
+      "family": "weapon_draw",
+      "source": "assets/source/audio/game-feel-six/rpg-audio/drawKnife3.ogg",
+      "sha256": "a11ae62fb1a628425769d11a9de394980ad8909c31f4c9a4316f226963e21caf",
+      "output": "weapon_draw_2.wav",
+      "max_seconds": 0.3
+    },
+    {
+      "family": "hit_flesh",
+      "source": "assets/source/audio/game-feel-six/impact-sounds/impactPunch_medium_000.ogg",
+      "sha256": "486988aa2d6440ffc4c62a0e8ccf3c23673ba84424bd4723378d451b7255eb5c",
+      "output": "hit_flesh_0.wav",
+      "max_seconds": 0.3
+    },
+    {
+      "family": "hit_flesh",
+      "source": "assets/source/audio/game-feel-six/impact-sounds/impactPunch_medium_001.ogg",
+      "sha256": "e71d23abcc3f10d9d6bc9615b2a431fff70b12333a5fcdd9964457564ace4349",
+      "output": "hit_flesh_1.wav",
+      "max_seconds": 0.3
+    },
+    {
+      "family": "hit_flesh",
+      "source": "assets/source/audio/game-feel-six/impact-sounds/impactPunch_medium_002.ogg",
+      "sha256": "6492f9ccbc8d24dcef607bb1b48790b7870961474561f7fe5601e1c73a3018ef",
+      "output": "hit_flesh_2.wav",
+      "max_seconds": 0.3
+    },
+    {
+      "family": "hit_bone",
+      "source": "assets/source/audio/game-feel-six/impact-sounds/impactPlank_medium_000.ogg",
+      "sha256": "8403cd7a043f0391574c88c55dd205743725b5363d2407f6de145f201690b68f",
+      "output": "hit_bone_0.wav",
+      "max_seconds": 0.3
+    },
+    {
+      "family": "hit_bone",
+      "source": "assets/source/audio/game-feel-six/impact-sounds/impactPlank_medium_001.ogg",
+      "sha256": "d7c304319f8beac616231b62041fa8da74045b62d7155965516efb9b19303df4",
+      "output": "hit_bone_1.wav",
+      "max_seconds": 0.3
+    },
+    {
+      "family": "hit_bone",
+      "source": "assets/source/audio/game-feel-six/impact-sounds/impactPlank_medium_002.ogg",
+      "sha256": "f6a14da45994229676b4f29e6a35f504b5c2ec2b8166fb1a3b1aa004bc6911ef",
+      "output": "hit_bone_2.wav",
+      "max_seconds": 0.3
+    },
+    {
+      "family": "hit_stone",
+      "source": "assets/source/audio/game-feel-six/impact-sounds/impactMining_000.ogg",
+      "sha256": "36b4ea107222d073c67ca64dde26944975609202d5090b2f2021213c1a7e35cd",
+      "output": "hit_stone_0.wav",
+      "max_seconds": 0.3
+    },
+    {
+      "family": "hit_stone",
+      "source": "assets/source/audio/game-feel-six/impact-sounds/impactMining_001.ogg",
+      "sha256": "61235a18de3f3d92118235398222dbf51d448f1be70b1c8bc962b10b86f2d9c6",
+      "output": "hit_stone_1.wav",
+      "max_seconds": 0.3
+    },
+    {
+      "family": "hit_stone",
+      "source": "assets/source/audio/game-feel-six/impact-sounds/impactMining_002.ogg",
+      "sha256": "059558ec751115ca6b1441e00f0adc837c1a3eeb0a066b109e0fd879fc5d0b0c",
+      "output": "hit_stone_2.wav",
+      "max_seconds": 0.3
+    },
+    {
+      "family": "step_stone",
+      "source": "assets/source/audio/game-feel-six/impact-sounds/footstep_concrete_000.ogg",
+      "sha256": "d7267e183067757c92c169de2a379abea592cfca6b39bb2e8feea15221ad79fe",
+      "output": "step_stone_0.wav",
+      "max_seconds": 0.3
+    },
+    {
+      "family": "step_stone",
+      "source": "assets/source/audio/game-feel-six/impact-sounds/footstep_concrete_001.ogg",
+      "sha256": "507a75eb19b897087855a3be3cf11a12d7fa37d143ad535eeebe0b8031c7325d",
+      "output": "step_stone_1.wav",
+      "max_seconds": 0.3
+    },
+    {
+      "family": "step_stone",
+      "source": "assets/source/audio/game-feel-six/impact-sounds/footstep_concrete_002.ogg",
+      "sha256": "b21fa546d74941196b25da8a20b7010abd8c05c4fcf93545d1f344e66a664e13",
+      "output": "step_stone_2.wav",
+      "max_seconds": 0.3
+    },
+    {
+      "family": "step_grass",
+      "source": "assets/source/audio/game-feel-six/impact-sounds/footstep_grass_000.ogg",
+      "sha256": "9d49497777405d78d7cf7f2888e28277f3a23192300cfd1d79d54876b20f479f",
+      "output": "step_grass_0.wav",
+      "max_seconds": 0.3
+    },
+    {
+      "family": "step_grass",
+      "source": "assets/source/audio/game-feel-six/impact-sounds/footstep_grass_001.ogg",
+      "sha256": "fb28781bd22b2eefdc14077f1adf5c94d7fe9c3a130194633b55f3e0d39d9f04",
+      "output": "step_grass_1.wav",
+      "max_seconds": 0.3
+    },
+    {
+      "family": "step_grass",
+      "source": "assets/source/audio/game-feel-six/impact-sounds/footstep_grass_002.ogg",
+      "sha256": "73a520139f5be716a403bfe9c80e0e94d1e61d8e9de04a354b336392164b53dc",
+      "output": "step_grass_2.wav",
+      "max_seconds": 0.3
+    },
+    {
+      "family": "step_earth",
+      "source": "assets/source/audio/game-feel-six/rpg-audio/footstep00.ogg",
+      "sha256": "6fe61ef1fc3bcf0e253bf2eb64759db6cb69e2fe452f4d88cc597ecf78a3d601",
+      "output": "step_earth_0.wav",
+      "max_seconds": 0.3
+    },
+    {
+      "family": "step_earth",
+      "source": "assets/source/audio/game-feel-six/rpg-audio/footstep01.ogg",
+      "sha256": "313472dba31fd0c855376069fa368bb5a198c27251cc8398ef464578b7047a4c",
+      "output": "step_earth_1.wav",
+      "max_seconds": 0.3
+    },
+    {
+      "family": "step_earth",
+      "source": "assets/source/audio/game-feel-six/rpg-audio/footstep02.ogg",
+      "sha256": "2d9575b7dead6e1217ca113991fc5229e9b6d998ea0726ebbb277e7398ab888f",
+      "output": "step_earth_2.wav",
+      "max_seconds": 0.3
+    }
+  ]
+}

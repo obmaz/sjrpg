@@ -1,0 +1,111 @@
+{
+  "recipe_sha256": "1fbb84f08d431eee4e5aea64949648d69343ce7d859e1f1c9fa5be90f38bdae0",
+  "generator_sha256": "6d8aa6d3cbe0b402a577c06a8972438746fc949b98971a49f7bfea0f71a3116a",
+  "outputs": [
+    {
+      "path": "res://assets/audio/feedback/weapon_draw_0.wav",
+      "sha256": "821e77e238dd83a1e96b94756e021e23014358c6dd13be912abcd114f2b7a090",
+      "frames": 5933
+    },
+    {
+      "path": "res://assets/audio/feedback/weapon_draw_1.wav",
+      "sha256": "e618c777f50774edc1afc4b650e0caedd39cfb5111da02d3ace8f8eaf2be4c60",
+      "frames": 6615
+    },
+    {
+      "path": "res://assets/audio/feedback/weapon_draw_2.wav",
+      "sha256": "a4c84efd00d743053a4f0012662093a2dcdfaf5fe559cc859da6422eec019f1d",
+      "frames": 5986
+    },
+    {
+      "path": "res://assets/audio/feedback/hit_flesh_0.wav",
+      "sha256": "8d585ee7553082a13cb7e58fb3b62605d30fec90610e0a7bb4c87c32bd5f0657",
+      "frames": 4938
+    },
+    {
+      "path": "res://assets/audio/feedback/hit_flesh_1.wav",
+      "sha256": "eb292705b08bb8d035c3c1a920e7215f49e2743d1a22149ca050e4492af1fdae",
+      "frames": 4657
+    },
+    {
+      "path": "res://assets/audio/feedback/hit_flesh_2.wav",
+      "sha256": "107928c1f469722162e3cf604b280002dbb9466e41614e9c343cda71b36b67b8",
+      "frames": 5733
+    },
+    {
+      "path": "res://assets/audio/feedback/hit_bone_0.wav",
+      "sha256": "fd0bf031019fd671913fcd021bcadd493fcbd9697f6344080740ac8f0c20150e",
+      "frames": 2946
+    },
+    {
+      "path": "res://assets/audio/feedback/hit_bone_1.wav",
+      "sha256": "f62f25da9b599c2e12f4d3dee99f40bc82e0a2fb8a8f56161bee2dd671fe8fdb",
+      "frames": 3676
+    },
+    {
+      "path": "res://assets/audio/feedback/hit_bone_2.wav",
+      "sha256": "1e22eb34f034d8f3216be199b59c0757645365633ac248dad5d35d99a3669679",
+      "frames": 3655
+    },
+    {
+      "path": "res://assets/audio/feedback/hit_stone_0.wav",
+      "sha256": "3c8136722256df0bf5fced94e42874cbce867b35e0f1f645235b2547a90de2e1",
+      "frames": 6615
+    },
+    {
+      "path": "res://assets/audio/feedback/hit_stone_1.wav",
+      "sha256": "b9c4c8371d8df3813d796faf9e8ccd1a4628b06407abfb584e5f0bf62ad67a66",
+      "frames": 6615
+    },
+    {
+      "path": "res://assets/audio/feedback/hit_stone_2.wav",
+      "sha256": "a7bf3d1ed03a002f7dac1af1fa669fecac34e6b26accbd2a1c07bd4911dd78e4",
+      "frames": 6615
+    },
+    {
+      "path": "res://assets/audio/feedback/step_stone_0.wav",
+      "sha256": "ef43a2dd53d6c4ccad5d50b265ba3ec515303e9a41aefdffc548d3aacc7ebb06",
+      "frames": 960
+    },
+    {
+      "path": "res://assets/audio/feedback/step_stone_1.wav",
+      "sha256": "6502ebfeb2d0ad3e3c171078b983b090c897acd546e4af737fe760cb0a10f6c2",
+      "frames": 1173
+    },
+    {
+      "path": "res://assets/audio/feedback/step_stone_2.wav",
+      "sha256": "858e21f0caf46aed4104cb4a339ec0cd83b715b7331743a3d5438de8c8841070",
+      "frames": 1179
+    },
+    {
+      "path": "res://assets/audio/feedback/step_grass_0.wav",
+      "sha256": "fb7f9b00064ef11279951172b2e0535d82748962335101f5129df4b7986bcf79",
+      "frames": 1832
+    },
+    {
+      "path": "res://assets/audio/feedback/step_grass_1.wav",
+      "sha256": "3d2ca6c9e5aadfdd0a57e8e06779a1225078edeb70f51de9acbaa60b4698a33d",
+      "frames": 3154
+    },
+    {
+      "path": "res://assets/audio/feedback/step_grass_2.wav",
+      "sha256": "be33bada6296078b3268fdff637672d3c1c3f2fa420f572f73c24ca34e29ec27",
+      "frames": 3079
+    },
+    {
+      "path": "res://assets/audio/feedback/step_earth_0.wav",
+      "sha256": "3f35d42acba64b2ba6828eedb1fd3a437c039d9a863f7bf8ff812bf8be47ab28",
+      "frames": 3845
+    },
+    {
+      "path": "res://assets/audio/feedback/step_earth_1.wav",
+      "sha256": "77a135843b09187438e649681a36db72ca5644b0d924cde9fba32e8d7175c327",
+      "frames": 4277
+    },
+    {
+      "path": "res://assets/audio/feedback/step_earth_2.wav",
+      "sha256": "63534af127f8b7cd0967a4c7e9bad17cb0bb2de9acedafa8e24ebe45ae7fbe9d",
+      "frames": 4022
+    }
+  ]
+}

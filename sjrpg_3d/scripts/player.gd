@@ -51,6 +51,9 @@ var _attack_lunges := false
 var _resolving_melee_contact := false
 var _pending: Callable
 var _action_serial := 0
+var action_buffer := PlayerActionBuffer.new()
+var footsteps := PlayerFootsteps.new()
+var _aimed_enemy: WeakRef
 const CONTACT_PROGRESS := 0.45
 var contact_serial := 0
 var contact_action_serial := -1
@@ -148,7 +151,9 @@ func damage_for(id: String, mult: float) -> float:
 
 func _process(delta: float) -> void:
 	if dead:
+		action_buffer.clear()
 		return
+	action_buffer.advance(delta)
 	_tick_timers(delta)
 	var regen := 7.0 * (1.0 + passive("regen"))
 	if is_mage:
@@ -158,6 +163,7 @@ func _process(delta: float) -> void:
 	hp = minf(max_hp, hp + max_hp * 0.006 * delta)
 	# 워프는 조작만 잠근다. 쿨다운/버프/회복은 월드와 같은 시간으로 흐른다.
 	if warp_locked:
+		action_buffer.clear()
 		return
 
 	delta = _hitstop.consume(delta)
@@ -185,12 +191,14 @@ func _process(delta: float) -> void:
 		input = input.normalized()
 
 	if _roll_time > 0.0:
+		action_buffer.clear()
 		var roll_delta := minf(delta, _roll_time)
 		_roll_time -= roll_delta
 		position = SpatialCombat3D.move_actor(game, self, position + _roll_dir * ROLL_DISTANCE / ROLL_TIME * roll_delta, RADIUS)
 		sprite.set_frame(atlas, atlas.run_frame(facing, int(_roll_time * 40.0)))
 		return
 
+	_consume_buffered_action()
 	if Input.is_action_pressed("attack"):
 		cast_slot(0, true)
 	for pad_slot: int in Gamepad.held_slots():
@@ -221,6 +229,8 @@ func _process(delta: float) -> void:
 			_resolving_melee_contact = false
 		_lunge(delta, progress)
 		_move(input * speed() * 0.25 * (0.0 if _hitstop.remaining > 0.0 else delta))
+		if _attack_time <= 0.0:
+			_consume_buffered_action()
 		return
 
 	if input.length() > 0.05:
@@ -229,6 +239,7 @@ func _process(delta: float) -> void:
 		_move(input * speed() * delta)
 		var step := position.distance_to(from)
 		_run_distance += step
+		footsteps.observe(self, step)
 		_drop_blaze(step)
 		sprite.set_frame(atlas, atlas.run_frame(facing, int(_run_distance / 16.0)))
 	else:
@@ -324,7 +335,11 @@ func slot_cooldown_ratio(index: int) -> float:
 
 ## Returns true when the skill was cast. `repeat` is set for held buttons.
 func cast_slot(index: int, repeat := false) -> bool:
-	if dead or warp_locked or _roll_time > 0.0:
+	if index < 0 or index >= GameState.slots.size():
+		return false
+	if not repeat:
+		action_buffer.clear()
+	if dead or warp_locked or _roll_time > 0.0 or (is_inside_tree() and get_tree().paused):
 		return false
 	var id: String = GameState.slots[index]
 	if id == "":
@@ -339,10 +354,11 @@ func cast_slot(index: int, repeat := false) -> bool:
 	# Held buttons only repeat attacks, never buffs or movement.
 	if repeat and d["type"] in ["buff", "leap", "blink", "corpse"]:
 		return false
-	if _attack_time > 0.0 or cooldowns.get(id, 0.0) > 0.0:
-		# The skill button already shows readiness; repeated taps must not queue notices.
-		return false
 	var cost := SkillDefs.cost(s, rank)
+	if _attack_time > 0.0 or cooldowns.get(id, 0.0) > 0.0:
+		if not repeat and resource >= cost:
+			action_buffer.offer(index, id, maxf(_attack_time + _hitstop.remaining, float(cooldowns.get(id, 0.0))))
+		return false
 	if resource < cost:
 		if not repeat:
 			game.toast("%s이(가) 부족합니다" % GameState.class_info()["resource"])
@@ -350,6 +366,7 @@ func cast_slot(index: int, repeat := false) -> bool:
 	var pad_aim: Vector2 = Gamepad.aim_vector()
 	if pad_aim != Vector2.ZERO:
 		facing = pad_aim.angle()
+	_aimed_enemy = null
 	var action := _prepare(id, d, rank)
 	if not action.is_valid():
 		return false
@@ -368,6 +385,20 @@ func cast_slot(index: int, repeat := false) -> bool:
 	_release_pending = is_mage and d["type"] in ["proj", "orb", "beam", "cone"]
 	_cast_feedback(d)
 	return true
+
+
+## 같은 프레임의 held 반복보다 예약된 마지막 단발 입력을 먼저 처리한다.
+func _consume_buffered_action() -> void:
+	var index := action_buffer.slot
+	if index < 0:
+		return
+	if index >= GameState.slots.size() or GameState.slots[index] != action_buffer.skill or dead or warp_locked or _roll_time > 0.0:
+		action_buffer.clear()
+		return
+	if _attack_time > 0.0 or float(cooldowns.get(action_buffer.skill, 0.0)) > 0.0:
+		return
+	action_buffer.clear()
+	cast_slot(index)
 
 
 func _cast_feedback(d: Dictionary) -> void:
@@ -397,6 +428,7 @@ func _cast_feedback(d: Dictionary) -> void:
 
 
 func try_roll() -> void:
+	action_buffer.clear()
 	if dead or warp_locked or _roll_time > 0.0 or _roll_cooldown > 0.0:
 		return
 	var dir: Vector2 = _movement_direction()
@@ -485,19 +517,50 @@ func _manual_aim_target(range_limit: float) -> Enemy:
 	return best
 
 
+## 표시기는 이 조회만 사용한다. 방향·자원·공격 상태를 변경하지 않는다.
+func aim_target(range_limit: float) -> Enemy:
+	return _manual_aim_target(range_limit) if Gamepad.aim_vector() != Vector2.ZERO else game.nearest_enemy(position, range_limit)
+
+
 func _aim(range_limit: float) -> Enemy:
 	var aim: Vector2 = Gamepad.aim_vector()
+	var target := aim_target(range_limit)
+	_aimed_enemy = weakref(target) if target != null else null
 	if aim != Vector2.ZERO:
 		facing = aim.angle()
-		return _manual_aim_target(range_limit)
-	var target: Enemy = game.nearest_enemy(position, range_limit)
-	if target:
+	elif target != null:
 		facing = (target.position - position).angle()
 	else:
 		var prop: Node2D = game.nearest_attackable_prop(position, range_limit)
 		if prop != null:
 			facing = (prop.position - position).angle()
 	return target
+
+
+func aim_range(id: String, definition: Dictionary) -> float:
+	match str(definition.get("type", "")):
+		"melee":
+			return float(weapon_melee()["range"]) + 60.0 if id == "cleave" else 170.0
+		"proj", "orb":
+			return 560.0
+		"beam":
+			return 600.0
+		"shadow", "chain":
+			return float(definition["range"])
+		"cone":
+			return float(definition["range"]) + 40.0
+		"zone":
+			return 480.0
+	return 0.0
+
+
+func display_aim_target() -> Enemy:
+	if dead or warp_locked or _roll_time > 0.0:
+		return null
+	if _attack_time > 0.0:
+		return _aimed_enemy.get_ref() as Enemy if _aimed_enemy != null else null
+	var id: String = GameState.slots[0]
+	return aim_target(aim_range(id, SkillDefs.get_def(id))) if not id.is_empty() else null
 
 
 func _gain_rage(hits: int) -> void:
@@ -511,12 +574,12 @@ func _prepare(id: String, d: Dictionary, rank: int) -> Callable:
 	var power := SkillDefs.scaled(d.get("mult", 1.0), d.get("growth", 0.0), rank)
 	match d["type"]:
 		"melee":
-			_aim(170.0 if id != "cleave" else float(weapon_melee()["range"]) + 60.0)
+			_aim(aim_range(id, d))
 			return func(): _melee(id, d, rank, power)
 		"spin":
 			return func(): _spin(id, d, power)
 		"shadow":
-			if _aim(d["range"]) == null:
+			if _aim(aim_range(id, d)) == null:
 				game.toast("가까운 적이 없습니다")
 				return Callable()
 			return func(): _shadow(id, d, power)
@@ -533,20 +596,20 @@ func _prepare(id: String, d: Dictionary, rank: int) -> Callable:
 				game.spawn_nova(from, 50.0, SkillDefs.LIGHT, true)
 				game.spawn_nova(position, 60.0, SkillDefs.LIGHT, true)
 		"proj":
-			_aim(560.0)
+			_aim(aim_range(id, d))
 			return func(): _projectiles(id, d, rank, power)
 		"orb":
-			_aim(560.0)
+			_aim(aim_range(id, d))
 			return func():
 				game.spawn_orb(position + Vector2(0, -34), Vector2.from_angle(facing), d, damage_for(id, power), self)
 		"beam":
-			_aim(600.0)
+			_aim(aim_range(id, d))
 			return func():
 				var lo := SkillDefs.scaled(d["mult_min"], d["growth"], rank)
 				var hi := SkillDefs.scaled(d["mult_max"], d["growth"], rank)
 				game.spawn_beam(position, facing, d["length"], damage_for(id, randf_range(lo, hi)), d["color"], self)
 		"chain":
-			var first := _aim(d["range"])
+			var first := _aim(aim_range(id, d))
 			if first == null:
 				var stone: EncounterStone = game.nearest_ready_stone(position, d["range"])
 				if stone != null and (Gamepad.aim_vector() == Vector2.ZERO or absf(Gamepad.aim_vector().angle_to(stone.position - position)) <= PI / 4.0):
@@ -571,7 +634,7 @@ func _prepare(id: String, d: Dictionary, rank: int) -> Callable:
 				if target != null:
 					game.chain_lightning(position, target, jumps, d["radius"], damage_for(id, power), self)
 		"cone":
-			_aim(d["range"] + 40.0)
+			_aim(aim_range(id, d))
 			return func():
 				var hits: Array = game.enemies_in_arc(position, facing, d["range"], deg_to_rad(d["arc"]))
 				game.break_chests_in_arc(position, facing, d["range"], deg_to_rad(d["arc"]), self)
@@ -581,7 +644,7 @@ func _prepare(id: String, d: Dictionary, rank: int) -> Callable:
 		"nova":
 			return func(): _nova(id, d, rank, power)
 		"zone":
-			var target := _aim(480.0)
+			var target := _aim(aim_range(id, d))
 			var at := target.position if target else position + Vector2.from_angle(facing) * 200.0
 			return func(): _zone(id, d, rank, power, at)
 		"summon":
@@ -924,6 +987,8 @@ func _armor_retaliate(attacker: Node2D) -> void:
 
 ## Death and resurrection cannot preserve a delayed skill target or old movement input.
 func _cancel_actions() -> void:
+	action_buffer.clear()
+	_aimed_enemy = null
 	Gamepad.require_neutral()
 	_hitstop.clear()
 	_action_serial += 1

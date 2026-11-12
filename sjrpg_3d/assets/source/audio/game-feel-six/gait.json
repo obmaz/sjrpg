@@ -1,0 +1,13 @@
+{
+  "model": "assets/art/preview3d/mage.glb",
+  "sha256": "40f5cc5fc77aa35d934c7c764cdcd0f9b9fa8b5012def66ab638b0c4f910fe48",
+  "clip": "run",
+  "samples": 64,
+  "minimum_y_phases": {
+    "foot_l": 0.0625,
+    "foot_r": 0.5625
+  },
+  "cycle_projected_units": 128,
+  "contact_offset_units": 8,
+  "method": "Manual AnimationPlayer seeks; foot bone global pose minimum Y in original model space. Warrior phase remains sin(distance/23), contacts at multiples of PI."
+}
