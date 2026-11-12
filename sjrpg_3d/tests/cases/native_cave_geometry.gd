@@ -229,7 +229,7 @@ func run() -> void:
 			var toe := Vector2(section[0].x, section[0].z)
 			toes_match = (
 				toes_match
-				and absf((toe - source_point / SpatialWorld3D.UNITS).dot(outward) + 0.04) < 0.0001
+				and absf((toe - source_point / WorldSpace3D.GROUND_UNITS_PER_METER).dot(outward) + 0.04) < 0.0001
 			)
 			for vertex in section:
 				toes_match = toes_match and vertices_present.has(_point_key(vertex))
@@ -255,13 +255,13 @@ func run() -> void:
 		var a: Vector2 = profile["a"]
 		var b: Vector2 = profile["b"]
 		var outward: Vector2 = profile["outward"]
-		var middle := (a + b) * 0.5 / SpatialWorld3D.UNITS
-		var from := Iso.project((middle - outward * 0.60) * SpatialWorld3D.UNITS)
-		var to := Iso.project((middle + outward * 0.60) * SpatialWorld3D.UNITS)
+		var middle := (a + b) * 0.5 / WorldSpace3D.GROUND_UNITS_PER_METER
+		var from := Iso.project((middle - outward * 0.60) * WorldSpace3D.GROUND_UNITS_PER_METER)
+		var to := Iso.project((middle + outward * 0.60) * WorldSpace3D.GROUND_UNITS_PER_METER)
 		if game.spatial_world.blocked(from, Player.RADIUS):
 			continue
 		var stopped: Vector2 = game.spatial_world.move_actor(from, to, Player.RADIUS)
-		var native := Iso.unproject(stopped) / SpatialWorld3D.UNITS
+		var native := Iso.unproject(stopped) / WorldSpace3D.GROUND_UNITS_PER_METER
 		var limit := (
 			-SpatialWorld3D.radius_metres(Player.RADIUS) - CaveWallGeometry3D.COLLISION_INSET + 0.015
 		)

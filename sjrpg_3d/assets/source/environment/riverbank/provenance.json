@@ -21,11 +21,11 @@
   "integrationInputs": [
     {
       "path": "scripts/world/forest_region.gd",
-      "sha256": "c1a0c16329081deff53d118b41f6ee1dd6f31d5b334c61a34eb2a924d5402e58"
+      "sha256": "eeb8073035af2c97ed4d0b3e8b2a9f7160a2195d2e92c1a6b95fc43b59cca6c7"
     },
     {
       "path": "scripts/world/geometry/ground_relief_3d.gd",
-      "sha256": "e7528044cd6d63b0d2dc876cb3be81816e1920681eaf91cd1cce6a49cd485095"
+      "sha256": "cc14f5e1537fe834bcd2d6e94cf4cec95f99f74a8a4232b383faea059ab925bb"
     },
     {
       "path": "assets/materials/terrain/ground.gdshader",

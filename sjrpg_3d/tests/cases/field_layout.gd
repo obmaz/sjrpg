@@ -12,7 +12,7 @@ func run() -> void:
 	props.sync()
 	var portal: IsoSprite = village.portal_sprites["town"]
 	var visual: Node3D = props._entries[portal.get_instance_id()]["root"]
-	var shown := SpatialWorld3D.projected(visual.position)
+	var shown := WorldSpace3D.world_to_projected(visual.position)
 	print(
 		"FIELD_GATE ",
 		JSON.stringify(

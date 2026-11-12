@@ -1,7 +1,7 @@
 class_name EnvironmentRenderer3D
 extends RefCounted
-## Stage-one spatial environment. Existing authored art is individual fixed cutout
-## geometry with measured pivots; no captured Canvas/SubViewport is used as scenery.
+## 숲·동굴의 입체 환경과 시체 표시를 원본 게임 상태에 맞춰 동기화한다.
+## 전투·충돌 상태를 소유하지 않으며 정지된 이전 영역의 연출도 따라오지 않는다.
 
 const CUTOUT_CODE := """
 shader_type spatial;
@@ -73,7 +73,7 @@ func _append(texture: Texture2D, geometry: Dictionary, foot: Vector2, tint: Colo
 		minimum = minf(minimum, (basis * point).y)
 	# Move on the viewing ray, preserving the exact screen projection while keeping
 	# source roots below the painted pivot from being clipped by the real floor.
-	var origin := WorldRenderer3D.ground_position(foot, height) + basis.z * (-minimum / basis.z.y + 0.018)
+	var origin := WorldSpace3D.projected_to_world(foot, height) + basis.z * (-minimum / basis.z.y + 0.018)
 	var start := vertices.size()
 	for index in incoming.size():
 		vertices.append(origin + basis * incoming[index])
@@ -89,7 +89,7 @@ func _append(texture: Texture2D, geometry: Dictionary, foot: Vector2, tint: Colo
 
 
 func _sprite(sprite: IsoSprite, buckets: Dictionary) -> void:
-	var geometry: Dictionary = renderer._affordances._sprite_geometry(sprite)
+	var geometry: Dictionary = renderer._sprite_fallbacks._sprite_geometry(sprite)
 	var mesh: ArrayMesh = geometry["mesh"]
 	var arrays := mesh.surface_get_arrays(0)
 	geometry["uv"] = arrays[Mesh.ARRAY_TEX_UV]
@@ -123,7 +123,7 @@ func _floor(polygon: PackedVector2Array, texture: Texture2D, parent: Node3D, hei
 	var uv := PackedVector2Array()
 	var normals := PackedVector3Array()
 	for point in polygon:
-		var at := WorldRenderer3D.ground_position(point, height)
+		var at := WorldSpace3D.projected_to_world(point, height)
 		flat.append(Vector2(at.x, at.z))
 		vertices.append(at)
 		uv.append(Vector2(at.x, at.z) / tile)
@@ -199,14 +199,14 @@ func _build_forest() -> void:
 		var sprite: IsoSprite = stone.art
 		var texture: Texture2D = sprite.texture
 		var card: MeshInstance3D = renderer._new_card(texture, Rect2(Vector2.ZERO, texture.get_size()), false)
-		var geometry: Dictionary = renderer._affordances._sprite_geometry(sprite)
+		var geometry: Dictionary = renderer._sprite_fallbacks._sprite_geometry(sprite)
 		card.mesh = geometry["mesh"]
 		card.reparent(forest, true)
 		var header := Label3D.new()
 		header.font = UiKit.BOLD_FONT
 		header.font_size = 17
 		header.outline_size = 4
-		header.pixel_size = 1.0 / (WorldRenderer3D.GROUND_PER_METER * WorldRenderer3D.PROJECTION_FACTOR)
+		header.pixel_size = 1.0 / (WorldSpace3D.GROUND_UNITS_PER_METER * WorldSpace3D.GROUND_PROJECTION_FACTOR)
 		header.no_depth_test = true
 		header.modulate = Color("d4e3cd")
 		forest.add_child(header)
@@ -224,7 +224,7 @@ func _source_record(source: Node2D) -> Dictionary:
 	return result
 
 func _landmark(source: Landmark, buckets: Dictionary) -> void:
-	var factor := WorldRenderer3D.GROUND_PER_METER * WorldRenderer3D.PROJECTION_FACTOR
+	var factor := WorldSpace3D.GROUND_UNITS_PER_METER * WorldSpace3D.GROUND_PROJECTION_FACTOR
 	var vertices := PackedVector3Array()
 	var uv := PackedVector2Array()
 	var indices := PackedInt32Array()
@@ -250,7 +250,7 @@ func _build_river() -> void:
 	var water := PackedVector2Array()
 	for point in river.polygon:
 		water.append(Iso.project(point))
-	var surface := _floor(water, load("res://assets/sprites/village/water.webp"), forest, GroundRelief3D.WATER_LEVEL, Color(0.78, 0.91, 0.96), River.TILE_UNITS / WorldRenderer3D.GROUND_PER_METER)
+	var surface := _floor(water, load("res://assets/sprites/village/water.webp"), forest, GroundRelief3D.WATER_LEVEL, Color(0.78, 0.91, 0.96), River.TILE_UNITS / WorldSpace3D.GROUND_UNITS_PER_METER)
 	var record: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(GroundRenderer3D.FIELD))
 	_water_material = ShaderMaterial.new()
 	_water_material.shader = load("res://assets/materials/water/river.gdshader")
@@ -494,7 +494,7 @@ func sync(delta: float, frozen: bool) -> void:
 		var minimum := 0.0
 		for vertex: Vector3 in entry["vertices"]:
 			minimum = minf(minimum, (basis * vertex).y)
-		var foot := WorldRenderer3D.ground_position(
+		var foot := WorldSpace3D.projected_to_world(
 			owner.position, renderer.surface_height(owner.position)
 		)
 		card.position = foot + basis.z * (-minimum / basis.z.y + 0.018)

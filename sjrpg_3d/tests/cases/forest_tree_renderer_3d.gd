@@ -45,7 +45,7 @@ func run() -> void:
 		var local: Transform3D = entry["local_transform"]
 		var position: Vector3 = entry["position"]
 		var actual_floor := renderer.surface_height(source.global_position)
-		roots_match = roots_match and position.distance_to(WorldRenderer3D.ground_position(source.global_position, actual_floor)) < 0.00001
+		roots_match = roots_match and position.distance_to(WorldSpace3D.projected_to_world(source.global_position, actual_floor)) < 0.00001
 		roots_match = roots_match and (batch.position + local.origin).distance_to(transform.origin) < 0.00001 and transform.basis.determinant() > 0.0
 		var source_radius := ForestTreeRenderer3D._collision_radius(source, game.village.circles)
 		collisions_match = collisions_match and source_radius > 0.0 and is_equal_approx(float(entry["collision_radius_pixels"]), source_radius) and is_equal_approx(float(entry["collision_radius_metres"]), SpatialWorld3D.radius_metres(source_radius))

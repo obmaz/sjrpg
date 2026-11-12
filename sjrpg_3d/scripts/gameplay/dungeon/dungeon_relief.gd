@@ -1,7 +1,6 @@
 class_name DungeonRelief
 extends RefCounted
 ## 동굴 XZ 합집합과 높이 꺾임을 같은 격자로 나눠 표시/충돌의 바닥을 공유한다.
-const UNITS := 65.0
 const X_PROFILE := [
 	Vector2(-220, 0),
 	Vector2(400, 0),
@@ -60,7 +59,7 @@ static func at(projected: Vector2) -> float:
 
 
 static func vertex(xz: Vector2) -> Vector3:
-	return Vector3(xz.x, flat_height(xz * UNITS), xz.y)
+	return Vector3(xz.x, flat_height(xz * WorldSpace3D.GROUND_UNITS_PER_METER), xz.y)
 
 
 func setup(polygons: Array[PackedVector2Array]) -> DungeonRelief:
@@ -76,7 +75,7 @@ func setup(polygons: Array[PackedVector2Array]) -> DungeonRelief:
 	for polygon in polygons:
 		var flat := PackedVector2Array()
 		for point: Vector2 in polygon:
-			flat.append(Iso.unproject(point) / UNITS)
+			flat.append(Iso.unproject(point) / WorldSpace3D.GROUND_UNITS_PER_METER)
 		var box := Iso.poly_bounds(flat)
 		var minimum := box.position.snapped(Vector2.ONE * .001)
 		var maximum := box.end.snapped(Vector2.ONE * .001)
@@ -90,11 +89,11 @@ func setup(polygons: Array[PackedVector2Array]) -> DungeonRelief:
 			if not zs.has(key):
 				zs.append(key)
 	for point: Vector2 in X_PROFILE:
-		var x := roundi(point.x / UNITS * 1000)
+		var x := roundi(point.x / WorldSpace3D.GROUND_UNITS_PER_METER * 1000)
 		if not xs.has(x):
 			xs.append(x)
 	for point: Vector2 in Z_PROFILE:
-		var z := roundi(point.x / UNITS * 1000)
+		var z := roundi(point.x / WorldSpace3D.GROUND_UNITS_PER_METER * 1000)
 		if not zs.has(z):
 			zs.append(z)
 	xs.sort()
@@ -221,7 +220,7 @@ func _emit_edge(group: Dictionary, first: float, last: float) -> void:
 
 
 func _boundary(a: Vector2, b: Vector2, outward: Vector2) -> void:
-	boundary_segments.append({"a": a * UNITS, "b": b * UNITS, "outward": outward})
+	boundary_segments.append({"a": a * WorldSpace3D.GROUND_UNITS_PER_METER, "b": b * WorldSpace3D.GROUND_UNITS_PER_METER, "outward": outward})
 
 
 func mesh() -> ArrayMesh:

@@ -1,8 +1,8 @@
 class_name StaticMeshBatch3D
 extends RefCounted
-## Optional comparison-only batching. Call after constructing static village geometry,
-## before adding actors. A material group is culled as one AABB, trading fine object
-## culling for fewer draw submissions; this alone makes no frame-rate claim.
+## 정적 마을 기하를 구성한 뒤 배우를 추가하기 전에 배칭한다.
+## 같은 재질의 그룹을 하나의 AABB로 컬링하므로 드로 콜은 줄고 개별 오브젝트 컬링 정밀도는 낮아진다.
+## 실제 프레임 성능은 카메라에 보이는 그룹 수와 가림 상태를 함께 측정한다.
 
 
 static func apply(stage: Node3D) -> Dictionary:

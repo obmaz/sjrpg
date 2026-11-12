@@ -34,12 +34,12 @@ func run() -> void:
 			rock_count += 1
 			var transform: Transform3D = entry["transform"]
 			var point: Vector2 = entry["source_foot"]
-			check("field rock keeps its original native foot", transform.origin.is_equal_approx(WorldRenderer3D.ground_position(point, renderer.surface_height(point))))
+			check("field rock keeps its original native foot", transform.origin.is_equal_approx(WorldSpace3D.projected_to_world(point, renderer.surface_height(point))))
 		elif entry["role"] == "entrance":
 			entrance_count += 1
 			var transform: Transform3D = entry["transform"]
 			var source_foot: Vector2 = entry["source_foot"]
-			var body_centre := WorldRenderer3D.ground_position(source_foot + NativeCavePlan.CENTER_OFFSET)
+			var body_centre := WorldSpace3D.projected_to_world(source_foot + NativeCavePlan.CENTER_OFFSET)
 			var native_mesh: ArrayMesh = entry["mesh"]
 			check("cave is a broad hill with a large entrance", native_mesh.get_aabb().size.x > 10.0 and native_mesh.get_aabb().end.y > 4.5 and float(entry["clear_width"]) > 3.0)
 			var arrays := native_mesh.surface_get_arrays(0)
@@ -77,7 +77,7 @@ func run() -> void:
 	for step: int in 100:
 		game.spatial_world.move_source_actor(game.player, game.player.position.move_toward(hill_center, 4.0), Player.RADIUS)
 	var cave_frame := NativeCavePlan.frame(game.dungeon.entry_point())
-	var local := cave_frame.affine_inverse() * WorldRenderer3D.ground_position(game.player.position)
+	var local := cave_frame.affine_inverse() * WorldSpace3D.projected_to_world(game.player.position)
 	check("real capsule descends into the recess and stops at the rear rock", absf(local.x) < 1.96 and local.z < -2.0 and local.z > -3.5 and game.spatial_world.height_at(game.player.position) < -0.75,"local=%s height=%f" % [local,game.spatial_world.height_at(game.player.position)])
 	var side_ray := PhysicsRayQueryParameters3D.create(cave_frame * Vector3(0,1.0,-1.0), cave_frame * Vector3(3.0,1.0,-1.0), SpatialWorld3D.SOLID)
 	check("the actual entrance has solid rock at its side rather than a full circular blocker", not game.spatial_world.get_world_3d().direct_space_state.intersect_ray(side_ray).is_empty())

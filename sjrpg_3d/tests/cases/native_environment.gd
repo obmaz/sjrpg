@@ -30,14 +30,14 @@ func run() -> void:
 	if entered:
 		check("source cave stays hidden before its first draw", not game.dungeon._root.visible and not game.world.is_visible_in_tree() and game.player.visible)
 		renderer._sync_scope()
-		renderer._affordances.sync()
+		renderer._sprite_fallbacks.sync()
 		environment.sync(0.0, true)
 		check("cave switches spatial groups without a2D fallback", not environment.forest.visible and environment.cave.visible and renderer.display.visible and game.dungeon._root.visibility_layer == 0)
 		check("cave uses actual textured spatial floors and wall volumes", int(environment.report["cave_walls"]) > 10 and int(environment.report["cave_sprites"]) == 0 and int(environment.report.get("native_cave_lanterns", 0)) == 10 and int(environment.report["cave_groups"]) == 0 and int(environment.report.get("native_cave_scenery", 0)) == 6)
 		check("native cave lamps follow the ten authored lantern pivots", environment._cave_lights.size() == 10)
-		check("native cave labels and portals exclude the town", environment.report["scope"] == "cave" and renderer._affordances._art.is_empty())
+		check("native cave labels and portals exclude the town", environment.report["scope"] == "cave" and renderer._sprite_fallbacks._art.is_empty())
 		var hidden_headers := true
-		for header: Dictionary in renderer._affordances._headers.values():
+		for header: Dictionary in renderer._sprite_fallbacks._headers.values():
 			hidden_headers = hidden_headers and not (header["root"] as Node3D).visible
 		check("town resident headers remain hidden in cave", hidden_headers)
 		var rock: Dictionary = environment.cave.get_meta("native_cave_rock")

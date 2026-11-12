@@ -31,7 +31,7 @@ func run() -> void:
 	var bounds: AABB = ResidentRenderer3D.local_bounds(model)
 	check("merchant soles use the shared actor ground pivot", absf(bounds.position.y) <= 0.015)
 	check("bareheaded merchant has the measured adult height", absf(bounds.size.y - 1.78) <= 0.04 and bounds.size.x > 0.3 and bounds.size.z > 0.15)
-	var meshes: Array[MeshInstance3D] = ResidentRenderer3D.descendant_meshes(model)
+	var meshes: Array[MeshInstance3D] = ModelTree3D.meshes_including_root(model)
 	var skinned := false
 	var triangles := 0
 	for mesh: MeshInstance3D in meshes:
@@ -50,7 +50,7 @@ func run() -> void:
 	check("visual import creates no physics body", model.find_children("*", "CollisionObject3D", true, false).is_empty())
 	print("ART_AUDIT imported_merchant " + JSON.stringify({"bounds": str(bounds), "meshes": meshes.size(), "triangles": triangles}))
 	var animator: AnimationPlayer = ResidentRenderer3D.idle_player(model)
-	var skeleton: Skeleton3D = ResidentRenderer3D._find_skeleton(model)
+	var skeleton: Skeleton3D = ModelTree3D.first_skeleton(model)
 	if not check("import retains a real skeleton and AnimationPlayer", animator != null and skeleton != null and skeleton.get_bone_count() >= 20):
 		model.queue_free()
 		await _frames(2)
@@ -73,7 +73,7 @@ func run() -> void:
 	await _frames(2)
 	var game: Node = await make_game("mage")
 	await _frames(3)
-	var renderer: ResidentRenderer3D = game.world_renderer._native_residents
+	var renderer: ResidentRenderer3D = game.world_renderer._resident_renderer
 	renderer.sync()
 	var merchant: Villager
 	for candidate: Villager in game.village.npc_nodes.values():

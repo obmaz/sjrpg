@@ -86,7 +86,7 @@ func _sync_source(source: Node2D, role: String, current: Dictionary) -> void:
 	_source_ids[sprite.get_instance_id()] = true
 	var entry: Dictionary = _entries[id]
 	var root: Node3D = entry["root"]
-	root.position = WorldRenderer3D.ground_position(source.position, _renderer.surface_height(source.position))
+	root.position = WorldSpace3D.projected_to_world(source.position, _renderer.surface_height(source.position))
 	var in_realm: bool = source.get_parent() == _game.world
 	root.visible = in_realm and source.visible and sprite.visible
 	if role == "stone":
@@ -124,7 +124,7 @@ func _create(source: Node2D, role: String) -> Dictionary:
 		header.font = UiKit.BOLD_FONT
 		header.font_size = 17
 		header.outline_size = 4
-		header.pixel_size = 1.0 / (WorldRenderer3D.GROUND_PER_METER * WorldRenderer3D.PROJECTION_FACTOR)
+		header.pixel_size = 1.0 / (WorldSpace3D.GROUND_UNITS_PER_METER * WorldSpace3D.GROUND_PROJECTION_FACTOR)
 		header.no_depth_test = true  # Existing status UI convention, never a prop depth override.
 		header.modulate = Color("d4e3cd")
 		header.position = Vector3(0, EncounterGeometry3D.STONE_SIZE.y + 0.26, 0)

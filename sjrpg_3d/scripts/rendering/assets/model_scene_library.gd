@@ -1,14 +1,14 @@
 class_name ModelSceneLibrary
 extends RefCounted
 ## 고정 소품·배우의 씬 캐시. 게임 규칙과 물리 상태를 소유하지 않는다.
-const ROOT := "res://assets/models/"
+const MODEL_SCENE_ROOT := "res://assets/models/"
 static var _scenes := {}
 static var _meshes := {}
 
 
 static func create(asset_id: String) -> Node3D:
 	if not _scenes.has(asset_id):
-		_scenes[asset_id] = load(ROOT + asset_id + "/visual.tscn") as PackedScene
+		_scenes[asset_id] = load(MODEL_SCENE_ROOT + asset_id + "/visual.tscn") as PackedScene
 	var scene: PackedScene = _scenes[asset_id]
 	return scene.instantiate() as Node3D if scene != null else null
 

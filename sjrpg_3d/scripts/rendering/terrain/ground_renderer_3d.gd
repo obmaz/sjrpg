@@ -41,7 +41,7 @@ static func build(renderer: Node) -> MeshInstance3D:
 		)
 	var town := PackedVector2Array()
 	for point: Vector2 in renderer.game.village.safe_zone:
-		town.append(Iso.unproject(point) / WorldRenderer3D.GROUND_PER_METER)
+		town.append(Iso.unproject(point) / WorldSpace3D.GROUND_UNITS_PER_METER)
 	var town_bounds := Iso.poly_bounds(town)
 	material.set_shader_parameter(
 		"town_bounds",
@@ -114,7 +114,7 @@ static func roads_match(roads: Array[PackedVector2Array]) -> bool:
 			return false
 		for j: int in roads[i].size():
 			var expected: Array = polygon[j]
-			var actual := Iso.unproject(roads[i][j]) / WorldRenderer3D.GROUND_PER_METER
+			var actual := Iso.unproject(roads[i][j]) / WorldSpace3D.GROUND_UNITS_PER_METER
 			if actual.distance_to(Vector2(expected[0], expected[1])) > 0.0001:
 				return false
 	return true

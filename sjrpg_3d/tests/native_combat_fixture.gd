@@ -5,8 +5,8 @@ extends RefCounted
 static func prism(parent: Node3D, polygon: PackedVector2Array, bottom := -2.0, top := 12.0) -> StaticBody3D:
 	var points := PackedVector3Array()
 	for at in polygon:
-		points.append(SpatialWorld3D.native_point(at, bottom))
-		points.append(SpatialWorld3D.native_point(at, top))
+		points.append(WorldSpace3D.projected_to_world(at, bottom))
+		points.append(WorldSpace3D.projected_to_world(at, top))
 	var shape := ConvexPolygonShape3D.new()
 	shape.points = points
 	return _body(parent, shape, Vector3.ZERO, SpatialWorld3D.SOLID)

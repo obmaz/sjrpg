@@ -2,7 +2,6 @@ class_name WildVegetationRenderer3D
 extends RefCounted
 ## 고정된 입체 가지와 곡면 바늘잎. 원래 나무의 충돌은 그대로 유지한다.
 const NEEDLES := "res://assets/materials/shared/needle_sprays.webp"
-const TREE_PATHS := ["res://assets/models/vegetation/dark_fir/visual.tscn", "res://assets/models/vegetation/black_pine/visual.tscn", "res://assets/models/vegetation/spire_cypress/visual.tscn"]
 const SHRUB_PATHS := ["res://assets/models/vegetation/juniper/visual.tscn", "res://assets/models/vegetation/thorn_bramble/visual.tscn"]
 static var _shrubs: Array[Mesh] = []
 
@@ -12,8 +11,8 @@ static func build_shrubs(renderer: Node, parent: Node3D, trees: Array) -> Node3D
 		for path: String in SHRUB_PATHS:
 			var id := path.trim_prefix("res://assets/models/").trim_suffix("/visual.tscn")
 			var mesh := ModelSceneLibrary.mesh(id, "Body").duplicate() as Mesh
-			mesh.surface_set_material(0, TreeGeometry3D._bark_ink)
-			mesh.surface_set_material(1, TreeGeometry3D._needle_ink)
+			mesh.surface_set_material(0, TreeGeometry3D._bark_material)
+			mesh.surface_set_material(1, TreeGeometry3D._needle_material)
 			_shrubs.append(mesh)
 	var root := Node3D.new()
 	root.name = "NativeUnderbrush"
@@ -30,7 +29,7 @@ static func build_shrubs(renderer: Node, parent: Node3D, trees: Array) -> Node3D
 			continue
 		var seed := ForestTreeRenderer3D.placement_seed(ForestTreeRenderer3D.source_key(tree))
 		var variant := seed % _shrubs.size()
-		var at := WorldRenderer3D.ground_position(point, renderer.surface_height(point))
+		var at := WorldSpace3D.projected_to_world(point, renderer.surface_height(point))
 		var chunk := Vector2i(floori(at.x / 24.0), floori(at.z / 24.0))
 		var key := "%d,%d:%d" % [chunk.x, chunk.y, variant]
 		if not buckets.has(key):

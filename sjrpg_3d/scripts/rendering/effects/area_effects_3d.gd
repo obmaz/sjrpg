@@ -117,7 +117,7 @@ static func footprint(source: Effect) -> PackedVector2Array:
 
 
 static func _local_ground(point: Vector2) -> Vector3:
-	return SpatialCombat3D.point(point, 0.0)
+	return WorldSpace3D.projected_to_world(point, 0.0)
 
 
 static func _vertex(tool: SurfaceTool, point: Vector2, alpha: float) -> void:
@@ -177,7 +177,7 @@ func _update(entry: Dictionary, source: Effect, at: Vector3) -> void:
 	instances.visible_instance_count = count
 	var offsets: Array = entry["glow_offsets"]
 	var camera_basis: Basis = _renderer.camera.global_transform.basis
-	var factor := WorldRenderer3D.GROUND_PER_METER * WorldRenderer3D.PROJECTION_FACTOR
+	var factor := WorldSpace3D.GROUND_UNITS_PER_METER * WorldSpace3D.GROUND_PROJECTION_FACTOR
 	for index in count:
 		var offset := Vector3.ZERO
 		var width := 17.0

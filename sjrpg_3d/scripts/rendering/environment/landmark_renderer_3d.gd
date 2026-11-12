@@ -43,7 +43,7 @@ static func _prism(polygon: PackedVector2Array, bottom: float, top: float, mater
 	var flat := PackedVector2Array()
 	var center := Vector3.ZERO
 	for point in polygon:
-		var p := WorldRenderer3D.ground_position(point, top)
+		var p := WorldSpace3D.projected_to_world(point, top)
 		native.append(p)
 		flat.append(Vector2(p.x, p.z))
 		center += p
@@ -137,8 +137,8 @@ static func build(renderer: Node, parent: Node3D) -> Dictionary:
 			for edge in 3:
 				var a := points[triangle + edge]
 				var b := points[triangle + (edge + 1) % 3]
-				var from := SpatialWorld3D.projected(a)
-				var to := SpatialWorld3D.projected(b)
+				var from := WorldSpace3D.world_to_projected(a)
+				var to := WorldSpace3D.world_to_projected(b)
 				var on_boundary := false
 				for i in top.size():
 					if Geometry2D.get_closest_point_to_segment(from, top[i], top[(i + 1) % top.size()]).distance_squared_to(from) < 0.0001 and Geometry2D.get_closest_point_to_segment(to, top[i], top[(i + 1) % top.size()]).distance_squared_to(to) < 0.0001:
@@ -154,7 +154,7 @@ static func build(renderer: Node, parent: Node3D) -> Dictionary:
 				used[key] = true
 				var normal := Vector3(b.z - a.z, 0, a.x - b.x).normalized()
 				var middle := (from + to) * 0.5
-				var test_point := middle + Iso.project(Vector2(normal.x, normal.z) * WorldRenderer3D.GROUND_PER_METER).normalized()
+				var test_point := middle + Iso.project(Vector2(normal.x, normal.z) * WorldSpace3D.GROUND_UNITS_PER_METER).normalized()
 				if Geometry2D.is_point_in_polygon(test_point, top):
 					normal = -normal
 				var low_a := Vector3(a.x, -0.02, a.z)
@@ -220,9 +220,9 @@ static func _weathered_rock(polygon: PackedVector2Array, bottom: float, top: flo
 	var outline := PackedVector2Array()
 	var lower := PackedVector3Array()
 	var upper := PackedVector3Array()
-	var centre := WorldRenderer3D.ground_position(Iso.poly_bounds(polygon).get_center())
+	var centre := WorldSpace3D.projected_to_world(Iso.poly_bounds(polygon).get_center())
 	for i in polygon.size():
-		var a := WorldRenderer3D.ground_position(polygon[i], bottom)
+		var a := WorldSpace3D.projected_to_world(polygon[i], bottom)
 		lower.append(a)
 		var b := a.lerp(Vector3(centre.x, bottom, centre.z), 0.12)
 		b.y = top - 0.08 - 0.14 * (0.5 + 0.5 * sin(i * 2.4))
@@ -263,7 +263,7 @@ static func _ancient_tree(renderer: Node, parent: Node3D, polygon: PackedVector2
 		return
 	var bounds := mesh.get_aabb()
 	var source := Iso.poly_bounds(polygon).get_center()
-	var centre := WorldRenderer3D.ground_position(source, base)
+	var centre := WorldSpace3D.projected_to_world(source, base)
 	var factor := 7.2 / maxf(0.1, bounds.size.y)
 	var tree := MeshInstance3D.new()
 	tree.name = "AncientOak"
@@ -276,7 +276,7 @@ static func _ancient_tree(renderer: Node, parent: Node3D, polygon: PackedVector2
 		bark = renderer._materials["wood"]
 	var native_polygon := PackedVector2Array()
 	for point in polygon:
-		var native := WorldRenderer3D.ground_position(point)
+		var native := WorldSpace3D.projected_to_world(point)
 		native_polygon.append(Vector2(native.x, native.z))
 	var radius := 1000.0
 	var native_center := Vector2(centre.x, centre.z)
@@ -306,14 +306,14 @@ static func _ancient_tree(renderer: Node, parent: Node3D, polygon: PackedVector2
 static func _inset_water(polygon: PackedVector2Array, distance: float) -> PackedVector2Array:
 	var native := PackedVector2Array()
 	for point in polygon:
-		var p := WorldRenderer3D.ground_position(point)
+		var p := WorldSpace3D.projected_to_world(point)
 		native.append(Vector2(p.x, p.z))
 	var offset := Geometry2D.offset_polygon(native, -distance)
 	if offset.is_empty():
 		return polygon
 	var result := PackedVector2Array()
 	for point in offset[0]:
-		result.append(Iso.project(point * SpatialWorld3D.UNITS))
+		result.append(Iso.project(point * WorldSpace3D.GROUND_UNITS_PER_METER))
 	return result
 
 static func _water_material(falling: bool) -> ShaderMaterial:
@@ -337,7 +337,7 @@ static func _shore_stones(polygon: PackedVector2Array, height: float, material: 
 	var bounds := AABB()
 	for i in polygon.size():
 		var source := polygon[i].lerp(center, 0.07)
-		var position := WorldRenderer3D.ground_position(source, height + 0.025)
+		var position := WorldSpace3D.projected_to_world(source, height + 0.025)
 		var transform := Transform3D(Basis.IDENTITY, position)
 		multi.set_instance_transform(i, transform)
 		var box: AABB = transform * primitive.get_aabb()
@@ -377,20 +377,20 @@ static func _waterfall(renderer: Node, source: Landmark, parent: Node3D) -> Shad
 		var to: PackedVector2Array = lower if direction == 0 else upper
 		for point in from:
 			for i in to.size():
-				var p := WorldRenderer3D.ground_position(point)
-				var a := WorldRenderer3D.ground_position(to[i])
-				var b := WorldRenderer3D.ground_position(to[(i + 1) % to.size()])
+				var p := WorldSpace3D.projected_to_world(point)
+				var a := WorldSpace3D.projected_to_world(to[i])
+				var b := WorldSpace3D.projected_to_world(to[(i + 1) % to.size()])
 				var closest := Geometry2D.get_closest_point_to_segment(Vector2(p.x, p.z), Vector2(a.x, a.z), Vector2(b.x, b.z))
 				var gap := Vector2(p.x, p.z).distance_squared_to(closest)
 				if gap < distance:
 					distance = gap
-					var projected := Iso.project(closest * SpatialWorld3D.UNITS)
+					var projected := Iso.project(closest * WorldSpace3D.GROUND_UNITS_PER_METER)
 					top = point if direction == 0 else projected
 					bottom = projected if direction == 0 else point
 	var top_centre := Iso.poly_bounds(upper).get_center()
 	var bottom_centre := Iso.poly_bounds(lower).get_center()
-	var a := WorldRenderer3D.ground_position(top, SpatialWorld3D.surface_height_at(renderer.game.village, top_centre) + 0.052)
-	var b := WorldRenderer3D.ground_position(bottom, SpatialWorld3D.surface_height_at(renderer.game.village, bottom_centre) + 0.052)
+	var a := WorldSpace3D.projected_to_world(top, SpatialWorld3D.surface_height_at(renderer.game.village, top_centre) + 0.052)
+	var b := WorldSpace3D.projected_to_world(bottom, SpatialWorld3D.surface_height_at(renderer.game.village, bottom_centre) + 0.052)
 	var side := Vector3(b.z - a.z, 0, a.x - b.x).normalized()
 	var tool := SurfaceTool.new()
 	tool.begin(Mesh.PRIMITIVE_TRIANGLES)

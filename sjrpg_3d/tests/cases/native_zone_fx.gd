@@ -32,7 +32,7 @@ func run() -> void:
 	var fx: AreaEffects3D = renderer._zone_fx
 	var floor_body := Fixture.box(game.spatial_world, Fixture.remote_at(Vector3(120, 2.5, 120)), Vector3(30, 1, 30), SpatialWorld3D.FLOOR)
 	await Fixture.settle(get_tree())
-	game.spatial_world.teleport_source_actor(game.player, SpatialWorld3D.projected(Fixture.remote_at(Vector3(120, 3, 120))), Player.RADIUS)
+	game.spatial_world.teleport_source_actor(game.player, WorldSpace3D.world_to_projected(Fixture.remote_at(Vector3(120, 3, 120))), Player.RADIUS)
 	game.player.facing = 0.0
 	var meteor := _cast(game, "meteor")
 	if not check("real meteor creates the skipped persistent source", meteor != null and str(meteor.params["visual"]) == "meteor"):
@@ -55,7 +55,7 @@ func run() -> void:
 	for point in points:
 		matches = matches and absf(point.length() - meteor.radius) < 0.001
 		var native := AreaEffects3D._local_ground(point)
-		matches = matches and SpatialWorld3D.projected(native).distance_to(point) < 0.001
+		matches = matches and WorldSpace3D.world_to_projected(native).distance_to(point) < 0.001
 	check("warning perimeter inverse-projects the actual source distance budget", matches and points.size() == AreaEffects3D.SEGMENTS)
 	var before_age := meteor.age
 	var before_params := meteor.params.duplicate(true)

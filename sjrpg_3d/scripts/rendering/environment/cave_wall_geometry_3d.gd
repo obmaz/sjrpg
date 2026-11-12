@@ -49,7 +49,7 @@ func _build(layout: DungeonLayout, parent: Node3D, segments: Array[Dictionary]) 
 		var height := _base_height(segment)
 		if height == FRONT_HEIGHT:
 			cutaways += 1
-		var count := maxi(1, ceili(a.distance_to(b) / (SpatialWorld3D.UNITS * STRIP_METRES)))
+		var count := maxi(1, ceili(a.distance_to(b) / (WorldSpace3D.GROUND_UNITS_PER_METER * STRIP_METRES)))
 		var last := PackedVector3Array()
 		var first := PackedVector3Array()
 		var sections: Array[PackedVector3Array] = []
@@ -68,8 +68,8 @@ func _build(layout: DungeonLayout, parent: Node3D, segments: Array[Dictionary]) 
 			native_height *= 0.92 + 0.08 * absf(sin(point.dot(Vector2(0.017, 0.031))))
 			var section := PackedVector3Array()
 			for offset: Vector2 in PROFILE:
-				var flat := point / SpatialWorld3D.UNITS + direction * offset.x
-				section.append(Vector3(flat.x, DungeonRelief.flat_height(flat * SpatialWorld3D.UNITS) + native_height * offset.y, flat.y))
+				var flat := point / WorldSpace3D.GROUND_UNITS_PER_METER + direction * offset.x
+				section.append(Vector3(flat.x, DungeonRelief.flat_height(flat * WorldSpace3D.GROUND_UNITS_PER_METER) + native_height * offset.y, flat.y))
 			sections.append(section)
 			if station == 0:
 				first = section

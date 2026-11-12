@@ -9,8 +9,8 @@ const BARK := "res://assets/materials/shared/bark.webp"
 const CAMERA_UP := Vector3(-0.408248290463863, 0.816496580927726, -0.408248290463863)
 const CAMERA_RIGHT := Vector3(0.707106781186548, 0, -0.707106781186548)
 static var _default_library: Array[Dictionary] = []
-static var _bark_ink: StandardMaterial3D
-static var _needle_ink: StandardMaterial3D
+static var _bark_material: StandardMaterial3D
+static var _needle_material: StandardMaterial3D
 
 static func crown_ratio(variant: int) -> float:
 	return [1.0, 1.0, 0.68, 0.86, 0.52][variant]
@@ -63,8 +63,8 @@ static func mesh_library(leaf_texture_path: String = LEAVES) -> Array[Dictionary
 	var needle_material := _material(load(WildVegetationRenderer3D.NEEDLES) if leaf_texture_path == LEAVES else leaf_texture, true)
 	needle_material.alpha_scissor_threshold = 0.28
 	if leaf_texture_path == LEAVES:
-		_bark_ink = bark_material
-		_needle_ink = needle_material
+		_bark_material = bark_material
+		_needle_material = needle_material
 	for path: String in PATHS:
 		var entry := {"path": path, "mesh": null, "points": PackedVector3Array()}
 		library.append(entry)
@@ -139,7 +139,7 @@ static func build(renderer: Node, leaf_texture_path: String = LEAVES) -> Node3D:
 	var library := mesh_library(leaf_texture_path)
 	var report := {"trees": [], "groups": 0, "triangles_per_tree": 4358, "billboards": false, "source_count": renderer.game.village.town_trees.size(), "leaf_texture": leaf_texture_path, "max_fit_error": 0.0}
 	var source_trees: Array = renderer.game.village.town_trees
-	var factor: float = WorldRenderer3D.GROUND_PER_METER * WorldRenderer3D.PROJECTION_FACTOR
+	var factor: float = WorldSpace3D.GROUND_UNITS_PER_METER * WorldSpace3D.GROUND_PROJECTION_FACTOR
 	for variant in PATHS.size():
 		var selected: Array[IsoSprite] = []
 		for index in source_trees.size():
@@ -170,7 +170,7 @@ static func build(renderer: Node, leaf_texture_path: String = LEAVES) -> Node3D:
 			var top: float = (float(foot[1]) - float(frame[1])) * tree.k / factor
 			var yaw := fmod(float(index) * 2.39996322973 + float(variant) * 0.71, TAU)
 			var basis := fit_basis(points, width, top, yaw)
-			var position := WorldRenderer3D.ground_position(tree.position)
+			var position := WorldSpace3D.projected_to_world(tree.position)
 			var transform := Transform3D(basis, position)
 			multi.set_instance_transform(index, transform)
 			multi.set_instance_color(index, tree.modulate_color)

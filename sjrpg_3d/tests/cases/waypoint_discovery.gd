@@ -71,7 +71,7 @@ func run() -> void:
 			root.name == "WaypointDiscovery"
 			and (ring.mesh as TorusMesh).inner_radius > NativeWaypoint3D.RADIUS
 			and (
-				anchor.distance_to(WorldRenderer3D.ground_position(at, renderer.surface_height(at)))
+				anchor.distance_to(WorldSpace3D.projected_to_world(at, renderer.surface_height(at)))
 				< 0.01
 			)
 		)

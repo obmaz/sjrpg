@@ -158,7 +158,7 @@ func _process(delta: float) -> void:
 	for axis: Vector3 in [Vector3.RIGHT, Vector3.FORWARD, Vector3.UP]:
 		var point := inspection_camera.unproject_position(inspection_camera.global_position - eye * 20.0 + axis) - origin
 		axes.append([point.x, point.y])
-	var data := {"mode": mode, "role": role, "face": face, "frame": Engine.get_process_frames(), "requested_frame": requested_frame, "terrain": terrain_cache, "physics": _physical_surfaces(game), "projection": "orthographic" if inspection_camera.projection == Camera3D.PROJECTION_ORTHOGONAL else "perspective", "azimuth": fposmod(rad_to_deg(atan2(eye.x, eye.z)), 360.0), "elevation": rad_to_deg(asin(eye.y)), "axes": axes, "player": [game.player.position.x, game.player.position.y], "residents": renderer._native_residents.review_snapshot(), "quality": "low" if Prefs.low_resolution else "high", "render_size": [renderer.viewport.size.x, renderer.viewport.size.y], "hud_hidden": not game.hud.visible, "static_physics_sha256": sampled_physics_digest, "initial_static_physics_sha256": static_physics_digest, "static_physics_shapes": static_physics_count, "static_physics_delta": static_physics_delta, "camera_size": inspection_camera.size, "camera_position": _plain(inspection_camera.global_position)}
+	var data := {"mode": mode, "role": role, "face": face, "frame": Engine.get_process_frames(), "requested_frame": requested_frame, "terrain": terrain_cache, "physics": _physical_surfaces(game), "projection": "orthographic" if inspection_camera.projection == Camera3D.PROJECTION_ORTHOGONAL else "perspective", "azimuth": fposmod(rad_to_deg(atan2(eye.x, eye.z)), 360.0), "elevation": rad_to_deg(asin(eye.y)), "axes": axes, "player": [game.player.position.x, game.player.position.y], "residents": renderer._resident_renderer.review_snapshot(), "quality": "low" if Prefs.low_resolution else "high", "render_size": [renderer.viewport.size.x, renderer.viewport.size.y], "hud_hidden": not game.hud.visible, "static_physics_sha256": sampled_physics_digest, "initial_static_physics_sha256": static_physics_digest, "static_physics_shapes": static_physics_count, "static_physics_delta": static_physics_delta, "camera_size": inspection_camera.size, "camera_position": _plain(inspection_camera.global_position)}
 	if architecture_mode:
 		data["architecture"] = _architecture_report(renderer)
 	if mode == "residents" and is_instance_valid(gallery):
@@ -261,7 +261,7 @@ func _frame_bounds(renderer: Node, bounds: AABB, margin: Vector2) -> void:
 
 func _native_poses(renderer: Node) -> Dictionary:
 	var result := {}
-	for entry: Dictionary in renderer._native_residents.entries.values():
+	for entry: Dictionary in renderer._resident_renderer.entries.values():
 		if str(entry["source"]) != "cc0_import":
 			continue
 		var body: Node3D = entry["node"]

@@ -149,7 +149,7 @@ func run() -> void:
 		var cylinder := CylinderShape3D.new()
 		cylinder.radius = SpatialWorld3D.radius_metres(350)
 		cylinder.height = 8
-		var at := SpatialWorld3D.native_point(route.gate_point("town"), 4)
+		var at := WorldSpace3D.projected_to_world(route.gate_point("town"), 4)
 		var blocker: StaticBody3D = game.spatial_world._shape_body(
 			cylinder,
 			Transform3D(Basis.IDENTITY, at),

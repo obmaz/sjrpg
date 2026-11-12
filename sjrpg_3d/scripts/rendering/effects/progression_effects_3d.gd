@@ -96,7 +96,7 @@ func _update(entry: Dictionary, source: Effect) -> void:
 	if is_instance_valid(source.owner_node) and is_instance_valid(spatial):
 		root.position = spatial.actor_foot(source.owner_node)
 	else:
-		root.position = WorldRenderer3D.ground_position(foot, _renderer.surface_height(foot))
+		root.position = WorldSpace3D.projected_to_world(foot, _renderer.surface_height(foot))
 	var phase := clampf(source.age / maxf(source.life, 0.001), 0.0, 1.0)
 	var pose := 0.25 if Prefs.reduce_motion else phase
 	var alpha := pow(1.0 - phase, 0.9) * (0.35 if Prefs.reduce_motion else 0.85)

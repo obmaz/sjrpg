@@ -28,11 +28,11 @@ func run() -> void:
 			Prefs.set_low_resolution(low)
 			await _frames(5)
 			check("actual viewport uses render budget in either quality", renderer.viewport.size == WorldRenderer3D.render_size(Vector2(dimensions), low))
-			var expected_height := game.scene_view.get_visible_rect().size.y / WorldRenderer3D.pixels_per_meter(game.camera.zoom.y)
+			var expected_height := game.scene_view.get_visible_rect().size.y / WorldSpace3D.pixels_per_meter(game.camera.zoom.y)
 			check("render cap never changes orthographic world height", is_equal_approx(renderer.camera.size, expected_height))
 			for offset: Vector2 in [Vector2.ZERO, Vector2(40,-30), Vector2(-30,20)]:
 				var point: Vector2 = game.player.position + offset
-				var native := SpatialWorld3D.native_point(point, game.spatial_world.height_at(point))
+				var native := WorldSpace3D.projected_to_world(point, game.spatial_world.height_at(point))
 				var screen := renderer.camera.unproject_position(native)
 				screen *= game.get_viewport_rect().size / Vector2(renderer.viewport.size)
 				check("capped raster targeting round-trips through real spatial floor", game.screen_to_world(screen).distance_to(point) < 0.02)
@@ -49,7 +49,7 @@ func run() -> void:
 	game.player.facing += 0.3
 	game.player.sprite.flash = 0.4
 	await _frames(3)
-	var expected := renderer.actor_foot(game.player) + WorldRenderer3D.ground_position(game.player.sprite.position)
+	var expected := renderer.actor_foot(game.player) + WorldSpace3D.projected_to_world(game.player.sprite.position)
 	check("paused dirty actor position updates with zero time", renderer.actor.position.distance_to(expected) < 0.001 and is_equal_approx(renderer._world_environment._clock, clock))
 	check("paused source mutation causes a bounded new sync", int(renderer.render_activity()["full_syncs"]) > syncs)
 	syncs = int(renderer.render_activity()["full_syncs"])

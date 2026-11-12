@@ -190,7 +190,7 @@ func _make_corpses() -> void:
 
 func _snapshot() -> Dictionary:
 	var actors: Array = []
-	for entry: Dictionary in _renderer._enemy_models.entries.values():
+	for entry: Dictionary in _renderer._enemy_renderer.entries.values():
 		var enemy: Enemy = (entry["owner"] as WeakRef).get_ref()
 		if not is_instance_valid(enemy):
 			continue
@@ -220,9 +220,9 @@ func _snapshot() -> Dictionary:
 				var shape: CylinderShape3D = (body.get_child(0) as CollisionShape3D).shape as CylinderShape3D
 				var player_body: CharacterBody3D = _game.spatial_world.actor_bodies.get(_game.player.get_instance_id())
 				var player_radius: float = float(_capsule(player_body).get("radius_m", 0))
-				collision = {"center_m": _vec3(body.global_position), "radius_m": shape.radius, "height_m": shape.height, "radius_px": shape.radius * SpatialWorld3D.HORIZONTAL, "layer": body.collision_layer, "player_distance_m": Vector2(player_body.position.x - body.position.x, player_body.position.z - body.position.z).length(), "contact_min_m": player_radius + shape.radius}
+				collision = {"center_m": _vec3(body.global_position), "radius_m": shape.radius, "height_m": shape.height, "radius_px": shape.radius * WorldSpace3D.HORIZONTAL_PIXELS_PER_METER, "layer": body.collision_layer, "player_distance_m": Vector2(player_body.position.x - body.position.x, player_body.position.z - body.position.z).length(), "contact_min_m": player_radius + shape.radius}
 		var root: Node3D = entry["root"]
-		chests.append({"index": chest.index, "selected": chest == _chest, "opened": chest.dead, "foot": _vec2(chest.position), "screen_foot": _vec2(_project(WorldRenderer3D.ground_position(chest.position, _renderer.surface_height(chest.position)))), "model": _measure(root), "collision": collision, "lid_angle": (entry["lid"] as Node3D).rotation.x, "splinters_visible": (entry["splinters"] as MeshInstance3D).visible})
+		chests.append({"index": chest.index, "selected": chest == _chest, "opened": chest.dead, "foot": _vec2(chest.position), "screen_foot": _vec2(_project(WorldSpace3D.projected_to_world(chest.position, _renderer.surface_height(chest.position)))), "model": _measure(root), "collision": collision, "lid_angle": (entry["lid"] as Node3D).rotation.x, "splinters_visible": (entry["splinters"] as MeshInstance3D).visible})
 	var logical_view: Vector2 = _game.get_viewport_rect().size
 	return {"logical_view": _vec2(logical_view), "minimap": [_game.hud.minimap.global_position.x, _game.hud.minimap.global_position.y, _game.hud.minimap.size.x, _game.hud.minimap.size.y], "scene": _scene, "phase": _phase, "frame": Engine.get_process_frames(), "paused": get_tree().paused, "world_zoom": Prefs.world_zoom, "debug_zoom": _game._debug_zoom, "legacy_zoom": _game.camera.zoom.x, "native_camera_size": _renderer.camera.size, "player": _vec2(_game.player.position), "player_moving": _game.player.has_move_target, "player_radius_px": Player.RADIUS, "enemy_default_radius_px": Enemy.RADIUS, "hero": _measure(_renderer.actor), "actors": actors, "corpses": corpses, "chests": chests, "opened_chests": GameState.opened_chests, "gold": GameState.gold, "physics_ticks": _game.spatial_world.physics_ticks, "bounds_kind": "CPU mesh AABB with actual hierarchy transforms; hero skinned envelope is an upper bound, not a GPU silhouette"}
 

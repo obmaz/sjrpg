@@ -24,7 +24,7 @@ func run() -> void:
 		overhead = (
 			overhead and not hit.is_empty() and absf((hit["position"] as Vector3).y - at.y) < 0.005
 		)
-		ground_clear = ground_clear and absf(spatial.height_at(SpatialWorld3D.projected(at))) < 0.01
+		ground_clear = ground_clear and absf(spatial.height_at(WorldSpace3D.world_to_projected(at))) < 0.01
 		# 지상 머리 위 여유는 새 통로의 충돌만 따로 검사해 기존 집/벽과 구별한다.
 		var body := spatial._geometry.get_node("WallWalkStructure") as StaticBody3D
 		var query := PhysicsShapeQueryParameters3D.new()

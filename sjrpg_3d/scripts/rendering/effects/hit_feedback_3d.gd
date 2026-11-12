@@ -143,7 +143,7 @@ func sync(delta: float) -> void:
 		JavaScriptBridge.eval("window.__sjrpgHitFeelReview = {actual_hit:true, paused:true}")
 
 func _update(node: MultiMeshInstance3D, source: Effect, at: Vector3, tier: int) -> void:
-	var forward := WorldRenderer3D.ground_position(Vector2.from_angle(source.angle)).normalized()
+	var forward := WorldSpace3D.projected_to_world(Vector2.from_angle(source.angle)).normalized()
 	var side := Vector3(-forward.z, 0.0, forward.x)
 	var view := renderer.camera.global_basis.z
 	var colors := [Color(1.0, 0.87, 0.63), Color(1.0, 0.34, 0.08), Color(0.70, 0.62, 1.0), Color(0.50, 0.84, 1.0)]

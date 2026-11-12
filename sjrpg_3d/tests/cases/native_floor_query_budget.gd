@@ -35,7 +35,7 @@ func run() -> void:
 		var clear := true
 		for step in range(1, 9):
 			var point := foot + Vector3(candidate.x, 0.0, candidate.y) * 0.02 * step
-			var projected := SpatialWorld3D.projected(point)
+			var projected := WorldSpace3D.world_to_projected(point)
 			if spatial.blocked(projected, Player.RADIUS) or absf(spatial.height_at(projected) - foot.y) > 0.0001:
 				clear = false
 				break
@@ -45,10 +45,10 @@ func run() -> void:
 	if check("native ray-budget fixture finds an actually clear supported walking lane", direction.length_squared() > 0.5):
 		measured.floor_queries = 0
 		for step in range(1, 9):
-			var destination := SpatialWorld3D.projected(foot + Vector3(direction.x, 0.0, direction.y) * 0.02 * step)
+			var destination := WorldSpace3D.world_to_projected(foot + Vector3(direction.x, 0.0, direction.y) * 0.02 * step)
 			measured._move_body(body, destination)
 		var actual_foot := body.position - Vector3.UP * (dimensions.y * 0.5 + SpatialWorld3D.SKIN)
-		var actual_floor := spatial.height_at(SpatialWorld3D.projected(body.position))
+		var actual_floor := spatial.height_at(WorldSpace3D.world_to_projected(body.position))
 		check("eight unobstructed native steps make eight FLOOR rays instead of sixteen", measured.floor_queries == 8, "actual rays=%d" % measured.floor_queries)
 		check("ray reuse retains actual motion and FLOOR support", Vector2(body.position.x - origin.x, body.position.z - origin.z).length() > 0.15 and absf(actual_foot.y - actual_floor) < 0.00001)
 

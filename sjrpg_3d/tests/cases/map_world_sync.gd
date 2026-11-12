@@ -42,7 +42,7 @@ func run() -> void:
 	root.position += displacement
 	model.refresh(true)
 	var after: PackedVector2Array = _shape(game, "building:nw")["poly"]
-	var delta := SpatialWorld3D.projected(displacement)
+	var delta := WorldSpace3D.world_to_projected(displacement)
 	var moved := before.size() == after.size()
 	for index in before.size():
 		moved = moved and after[index].distance_to(before[index] + delta) < .001

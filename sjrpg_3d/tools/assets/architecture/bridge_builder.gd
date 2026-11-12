@@ -26,9 +26,9 @@ static func _box(tool: SurfaceTool, at: Vector3, size: Vector3) -> void:
 static func build(renderer: Node, parent: Node3D) -> Node3D:
 	var bridge: Bridge = renderer.game.village.bridge
 	var deck := bridge.deck_polygon()
-	var a := WorldRenderer3D.ground_position(deck[0])
-	var b := WorldRenderer3D.ground_position(deck[1])
-	var c := WorldRenderer3D.ground_position(deck[3])
+	var a := WorldSpace3D.projected_to_world(deck[0])
+	var b := WorldSpace3D.projected_to_world(deck[1])
+	var c := WorldSpace3D.projected_to_world(deck[3])
 	var length := a.distance_to(b)
 	var width := a.distance_to(c)
 	var root := Node3D.new()

@@ -9,7 +9,7 @@ static var _faces_cache := {}
 static func river_outline(village: Village) -> PackedVector2Array:
 	var result := PackedVector2Array()
 	for point: Vector2 in village.river.polygon:
-		result.append(point / SpatialWorld3D.UNITS)
+		result.append(point / WorldSpace3D.GROUND_UNITS_PER_METER)
 	return result
 
 static func river_distance(p: Vector2, outline: PackedVector2Array) -> float:
@@ -44,11 +44,11 @@ static func height(p: Vector2, river: PackedVector2Array, cave_frame: Transform3
 static func bridge_outline(village: Village) -> PackedVector2Array:
 	var result := PackedVector2Array()
 	for point: Vector2 in village.bridge.deck_polygon():
-		result.append(Iso.unproject(point)/SpatialWorld3D.UNITS)
+		result.append(Iso.unproject(point)/WorldSpace3D.GROUND_UNITS_PER_METER)
 	return result
 
 static func at(village: Village, point: Vector2) -> float:
-	var p := Iso.unproject(point)/SpatialWorld3D.UNITS
+	var p := Iso.unproject(point)/WorldSpace3D.GROUND_UNITS_PER_METER
 	var river := river_outline(village)
 	var deck := bridge_outline(village)
 	var frame := NativeCavePlan.frame(Iso.project(village.cave_ground)+NativeCavePlan.ENTRY_OFFSET)

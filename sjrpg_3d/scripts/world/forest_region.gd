@@ -27,7 +27,7 @@ const ENCOUNTER_SITES := {
 
 
 static func native_bounds() -> Rect2:
-	return Rect2(FIELD.position / 65.0, FIELD.size / 65.0)
+	return Rect2(FIELD.position / WorldSpace3D.GROUND_UNITS_PER_METER, FIELD.size / WorldSpace3D.GROUND_UNITS_PER_METER)
 
 
 static func area_name(projected: Vector2) -> String:

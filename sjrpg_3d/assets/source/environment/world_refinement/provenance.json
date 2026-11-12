@@ -39,7 +39,7 @@
   "implementation": [
     {
       "path": "assets/models/environment/cave_entrance/plan.gd",
-      "sha256": "4707f8e6b013f694bd2dc2086b79eb8506724fd4538ebcc4e8dcb7233dfbb1ab"
+      "sha256": "4a3f986ffa52cda343d3b731f8041b25c4c6768437e9637af3d7af07071aa266"
     },
     {
       "path": "scripts/world/geometry/chapel_plan_3d.gd",
@@ -47,11 +47,11 @@
     },
     {
       "path": "scripts/world/geometry/fortress_plan_3d.gd",
-      "sha256": "72927c91779ef214b246f14221ef57e424754b3133aad094e51ef995831e4dfe"
+      "sha256": "2ef4ef473119e7f4b44322b606ba6b328a8eba1087c0faeff1be07ef26989523"
     },
     {
       "path": "scripts/world/geometry/terrain_forms_3d.gd",
-      "sha256": "e8b8faff326aae765715fb8d428c1d8bededcf4d564bd3bd4bfaf68c37a19227"
+      "sha256": "aed57b80ca94cae4262d1dcf222df952811e4f4fc39a0439d80679877015149d"
     },
     {
       "path": "assets/materials/terrain/terrain.gdshader",
@@ -59,11 +59,11 @@
     },
     {
       "path": "scripts/rendering/environment/scenery_renderer_3d.gd",
-      "sha256": "ba210dc8824f62dc0ca8c9b1e80f15979b080a9d94aca9bc1e4da4307a9191bd"
+      "sha256": "b45d95d9d6ed3fdb830bcbb36ef35b16229412281cf2f5c0b7ccbee4c9ab0ae4"
     },
     {
       "path": "scripts/rendering/environment/landmark_renderer_3d.gd",
-      "sha256": "e1fa265fb373edfea7b6fc795b534c910ac216c81e32298f5f6b4bcf3abe68c0"
+      "sha256": "ba35e003febbc3df2556963955e4ef140ddc4e46b1685ce2307bd2e2f570210b"
     },
     {
       "path": "tools/assets/architecture/chapel_builder.gd",
@@ -71,15 +71,15 @@
     },
     {
       "path": "tools/assets/architecture/fortress_builder.gd",
-      "sha256": "6683fee734311ab5f0f00c06c959a3d32c769eda42321a95b63c8bf6dbe25927"
+      "sha256": "82ea7bd8f78b27a6f08db1c8e3d64c1f7137a57ae03883f1b546f4ed3a985fc1"
     },
     {
       "path": "scripts/world/physics/spatial_world_3d.gd",
-      "sha256": "edaeafefcf6d81915cdccfc73dc99854f8aebb07417ebae243f92d7c05079974"
+      "sha256": "859373abd971f459a7566ab444e5e28b4fde535067356dae7a1fc163feb0c1d1"
     },
     {
       "path": "scripts/world/village.gd",
-      "sha256": "a69c967119892ffcd86448d6413ef9edacb8554f760470e2ff2126b005e27f77"
+      "sha256": "0f525b52acc3d77f3aa1d201ba47401bb9148b66fbd640412817a5ef92f78edf"
     },
     {
       "path": "assets/materials/terrain/ground.gdshader",
@@ -87,7 +87,7 @@
     },
     {
       "path": "scripts/rendering/terrain/ground_renderer_3d.gd",
-      "sha256": "a14ebc6c9c1db828597a834863f5419810f3351900b4b810eb8fde1b4a333060"
+      "sha256": "3bd11ca1df804782a974082cef3ab360c05c59f45947a4aeb56143d4740af126"
     },
     {
       "path": "assets/materials/water/river.gdshader",
@@ -103,11 +103,11 @@
     },
     {
       "path": "scripts/world/geometry/bridge_plan_3d.gd",
-      "sha256": "e0c5b4b2d0062aed7b04456dcee9216a5697e0ffb60804dac323539411c3cf90"
+      "sha256": "011a662d3a1ba5021ae95fa620667883579ed3083adeecf6cd6daa3227cac680"
     },
     {
       "path": "tools/assets/architecture/bridge_builder.gd",
-      "sha256": "abd72a5f951ec6eea7bd62ccb3c03807651b7ba6b0e511787d335728ab946a5c"
+      "sha256": "159f5906091944e7b7ca0714805dcb535c11e47df66c7abc4c18e7806132d4ad"
     },
     {
       "path": "assets/materials/village_craft/surfaces.gd",

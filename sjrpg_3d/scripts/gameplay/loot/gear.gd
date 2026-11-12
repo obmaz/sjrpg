@@ -4,7 +4,6 @@ extends RefCounted
 ## Rare/unique gifts and weapon profiles are shared by combat and the bag.
 
 const SLOT_NAMES := {"weapon": "무기", "armor": "방어구", "charm": "부적"}
-const RARITY_NAMES := ["일반", "마법", "희귀", "고유"]
 const RARITY_COLORS := [Color("e3dfce"), Color("82c9ff"), Color("ffd877"), Color("efa971")]
 const WEAPON_ATTACK_PER_LEVEL := 2.0
 const CAPACITY := 24

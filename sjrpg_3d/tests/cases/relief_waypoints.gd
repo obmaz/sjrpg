@@ -14,7 +14,7 @@ func run() -> void:
 		var entry: Dictionary = props._entries[source.get_instance_id()]
 		var material: ShaderMaterial = entry["fluid"]
 		check("unvisited field waypoint stays dark: "+id,float(material.get_shader_parameter("strength"))==0.0 and not entry["motes"].visible and entry["lights"].size()==4 and entry["lights"].all(func(light: OmniLight3D): return not light.visible))
-		game.player.position = at+Iso.project(Vector2(1.8,0)*SpatialWorld3D.UNITS)
+		game.player.position = at+Iso.project(Vector2(1.8,0)*WorldSpace3D.GROUND_UNITS_PER_METER)
 		game.exploration.discover_current()
 		check("walking beside the seal does not activate it: "+id,not GameState.discovered_sanctuaries.has(id))
 		game.spatial_world.teleport_source_actor(game.player,at,Player.RADIUS)
@@ -35,8 +35,8 @@ func run() -> void:
 	check("waypoint discoveries survive reload",GameState.load_game() and GameState.discovered_sanctuaries.has("tree") and GameState.discovered_sanctuaries.has("cave"))
 	var river := GroundRelief3D.river_outline(game.village)
 	var mid := (river[0]+river[1])*0.5
-	var dry := Iso.project((mid-Vector2(0,2.1))*SpatialWorld3D.UNITS)
-	var wet := Iso.project((mid-Vector2(0,0.65))*SpatialWorld3D.UNITS)
+	var dry := Iso.project((mid-Vector2(0,2.1))*WorldSpace3D.GROUND_UNITS_PER_METER)
+	var wet := Iso.project((mid-Vector2(0,0.65))*WorldSpace3D.GROUND_UNITS_PER_METER)
 	game.spatial_world.teleport_source_actor(game.player,dry,Player.RADIUS)
 	for i: int in 40:
 		game.spatial_world.move_source_actor(game.player,game.player.position.move_toward(wet,4.0),Player.RADIUS)

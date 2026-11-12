@@ -1,7 +1,6 @@
 class_name WarriorRenderer3D
 extends Node3D
-## Adult anatomical lofts and forged plate profiles, sharing the resident face
-## family and painted atlas. Joint poses still observe the original Player clocks.
+## 전사 GLB 씬의 관절·무기·피격 표시를 갱신한다. 이동·공격 시계는 Player가 소유한다.
 var torso: Node3D
 var legs: Array[Node3D] = []
 var arms: Array[Node3D] = []
@@ -22,9 +21,9 @@ func build() -> WarriorRenderer3D:
 		legs.append(torso.get_node("Leg%d" % index))
 		arms.append(torso.get_node("Arm%d" % index))
 	weapon = arms[1].get_node("Sword")
-	meshes = ResidentRenderer3D.descendant_meshes(model)
+	meshes = ModelTree3D.meshes_including_root(model)
 	var shader := Shader.new()
-	shader.code = WorldRenderer3D.ACTOR_FLASH_CODE
+	shader.code = WorldRenderer3D.ACTOR_FLASH_SHADER_SOURCE
 	_flash = ShaderMaterial.new()
 	_flash.shader = shader
 	return self

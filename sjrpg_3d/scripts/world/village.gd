@@ -6,7 +6,6 @@ extends RefCounted
 ## the river and the bridge.
 
 const DATA_PATH := "res://assets/data/village.json"
-const ROAD_HALF := 0.047  # paved road half width in uv
 ## Preserve the reviewed generated material colors; scene light is a separate layer.
 const FOLIAGE := Color.WHITE
 ## Six to seven irregular stones per tile, around a quarter to a third of hero height.
@@ -713,7 +712,7 @@ func _add_warp_portal(id: String, at: Vector2, world: Node2D) -> IsoSprite:
 	if id != "town":
 		footprint = PackedVector2Array()
 		for i: int in 24:
-			footprint.append(at+Iso.project(Vector2.from_angle(TAU*i/24.0)*NativeWaypoint3D.RADIUS*SpatialWorld3D.UNITS))
+			footprint.append(at+Iso.project(Vector2.from_angle(TAU*i/24.0)*NativeWaypoint3D.RADIUS*WorldSpace3D.GROUND_UNITS_PER_METER))
 	portal_footprints[id] = footprint
 	if id == "town":
 		solids.append(footprint)

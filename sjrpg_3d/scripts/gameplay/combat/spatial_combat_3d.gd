@@ -3,10 +3,7 @@ extends RefCounted
 ## Combat adapters query the same native floors, capsules and solid sweeps as movement.
 ## Legacy skill ranges remain screen-world units; native elevation is measured in metres.
 
-const GROUND_PER_METER := 65.0
-const HEIGHT_PIXELS := GROUND_PER_METER * Iso.S
-const HORIZONTAL_PIXELS := GROUND_PER_METER * 1.224744871391589 * Iso.S
-const PROJECTILE_LIFT := 34.0 / HEIGHT_PIXELS
+const PROJECTILE_LIFT := 34.0 / WorldSpace3D.VERTICAL_PIXELS_PER_METER
 const PROJECTILE_RADIUS := 26.0
 
 
@@ -14,11 +11,6 @@ static func world(game: Node) -> Node:
 	if not is_instance_valid(game):
 		return null
 	return game.get("spatial_world") as Node
-
-
-static func point(at: Vector2, height: float) -> Vector3:
-	var flat := Iso.unproject(at) / GROUND_PER_METER
-	return Vector3(flat.x, height, flat.y)
 
 
 static func floor_at(game: Node, at: Vector2) -> float:
@@ -59,7 +51,7 @@ static func wall_fraction(game: Node, from: Vector2, to: Vector2, height: float,
 	if backend == null:
 		return 1.0
 	backend.sync_scope()
-	return clampf(float(backend.projectile_fraction(point(from, height), point(to, height), radius_pixels / HORIZONTAL_PIXELS)), 0.0, 1.0)
+	return clampf(float(backend.projectile_fraction(WorldSpace3D.projected_to_world(from, height), WorldSpace3D.projected_to_world(to, height), radius_pixels / WorldSpace3D.HORIZONTAL_PIXELS_PER_METER)), 0.0, 1.0)
 
 
 static func line_clear(game: Node, from: Vector2, to: Vector2, from_floor := INF, to_floor := INF) -> bool:
@@ -69,7 +61,7 @@ static func line_clear(game: Node, from: Vector2, to: Vector2, from_floor := INF
 	backend.sync_scope()
 	var a := floor_at(game, from) if is_inf(from_floor) else from_floor
 	var b := floor_at(game, to) if is_inf(to_floor) else to_floor
-	return float(backend.projectile_fraction(point(from, a + PROJECTILE_LIFT), point(to, b + PROJECTILE_LIFT), 0.015)) >= 0.9999
+	return float(backend.projectile_fraction(WorldSpace3D.projected_to_world(from, a + PROJECTILE_LIFT), WorldSpace3D.projected_to_world(to, b + PROJECTILE_LIFT), 0.015)) >= 0.9999
 
 
 ## Keep the authored horizontal range, adding the real vertical separation to its budget.
@@ -78,7 +70,7 @@ static func area_reaches(game: Node, from: Vector2, to: Vector2, radius: float, 
 		return true
 	var base := floor_at(game, from) if is_inf(from_floor) else from_floor
 	var destination := floor_at(game, to)
-	var rise := (destination - base) * HEIGHT_PIXELS
+	var rise := (destination - base) * WorldSpace3D.VERTICAL_PIXELS_PER_METER
 	return from.distance_squared_to(to) + rise * rise <= radius * radius + 0.001 and line_clear(game, from, to, base, destination)
 
 
@@ -91,14 +83,14 @@ static func target_fraction(game: Node, from: Vector2, to: Vector2, height: floa
 		var chest := target as Chest
 		if chest.dead:
 			return INF
-		return cylinder_fraction(point(from, height), point(to, height), point(chest.position, floor_at(game, chest.position)), SpatialWorld3D.radius_metres(Chest.COLLISION_RADIUS), EncounterGeometry3D.CHEST_COLLISION_HEIGHT, radius_pixels / HORIZONTAL_PIXELS)
+		return cylinder_fraction(WorldSpace3D.projected_to_world(from, height), WorldSpace3D.projected_to_world(to, height), WorldSpace3D.projected_to_world(chest.position, floor_at(game, chest.position)), SpatialWorld3D.radius_metres(Chest.COLLISION_RADIUS), EncounterGeometry3D.CHEST_COLLISION_HEIGHT, radius_pixels / WorldSpace3D.HORIZONTAL_PIXELS_PER_METER)
 	var bodies: Dictionary = backend.actor_bodies
-	var foot: Vector3 = backend.actor_foot(target) if bodies.has(target.get_instance_id()) else point(target.position, floor_at(game, target.position))
+	var foot: Vector3 = backend.actor_foot(target) if bodies.has(target.get_instance_id()) else WorldSpace3D.projected_to_world(target.position, floor_at(game, target.position))
 	var resolved_radius: float = target_radius if target_radius >= 0.0 else (target as Enemy).radius if target is Enemy else 20.0
 	var dimensions: Vector2 = backend.actor_dimensions(target, resolved_radius)
 	var bottom := foot + Vector3(0, dimensions.x, 0)
 	var top := foot + Vector3(0, dimensions.y - dimensions.x, 0)
-	return capsule_fraction(point(from, height), point(to, height), bottom, top, dimensions.x + radius_pixels / HORIZONTAL_PIXELS)
+	return capsule_fraction(WorldSpace3D.projected_to_world(from, height), WorldSpace3D.projected_to_world(to, height), bottom, top, dimensions.x + radius_pixels / WorldSpace3D.HORIZONTAL_PIXELS_PER_METER)
 
 
 ## Swept sphere against the same finite upright chest cylinder used by native movement.

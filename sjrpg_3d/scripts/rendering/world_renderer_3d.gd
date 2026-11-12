@@ -1,18 +1,15 @@
 class_name WorldRenderer3D
 extends Node
-## Stage-one native3D presentation. Source gameplay/HUD are adapters; the spatial
-## world owns resolved actor feet and terrain height throughout forest and cave.
+## 숲·동굴의 운영 표시기. 발치·지형 높이·충돌의 기준은 SpatialWorld3D이며 UI와 진행은 원본 좌표 어댑터를 읽는다.
 
-const GROUND_PER_METER := 65.0
 const MAX_RENDER_EDGE := 1920.0
 const MAX_RENDER_PIXELS := 1536000.0
-const PROJECTION_FACTOR := 1.224744871391589 * Iso.S
 const CAMERA_DIRECTION := Vector3(1, 1, 1)
 const MAGE_SCENE_PATH := "res://assets/models/heroes/mage/visual.tscn"
 const SHARED_MATERIAL_ROOT := "res://assets/materials/shared/"
 const WALL_TEXTURES := ["chapel_stone", "brick", "rubble", "plaster", "planks"]
 const ROOF_TEXTURES := ["slate", "clay", "shingle"]
-const CARD_CODE := """
+const SPRITE_CARD_SHADER_SOURCE := """
 shader_type spatial;
 render_mode unshaded, blend_mix, depth_draw_never, cull_disabled;
 uniform sampler2D atlas_texture : source_color, filter_linear_mipmap;
@@ -32,7 +29,7 @@ void fragment() {
 	ALPHA = ink.a * tint.a;
 }
 """
-const ACTOR_FLASH_CODE := """
+const ACTOR_FLASH_SHADER_SOURCE := """
 shader_type spatial;
 render_mode unshaded, blend_mix, depth_draw_never;
 uniform vec4 flash_color : source_color = vec4(1.0);
@@ -57,8 +54,8 @@ var _layer: CanvasLayer
 var _materials := {}
 var _encounter_props: EncounterPropRenderer3D
 var _cards := {}
-var _native_residents: ResidentRenderer3D
-var _enemy_models: EnemyRenderer3D
+var _resident_renderer: ResidentRenderer3D
+var _enemy_renderer: EnemyRenderer3D
 var _enemy_feedback: EnemyHitFeedback3D
 var _zone_fx: AreaEffects3D
 var _nova_fx: NovaEffects3D
@@ -78,16 +75,16 @@ var _card_pool: Array[MeshInstance3D] = []
 var _label_pool: Array[Label3D] = []
 var card_builds := 0
 var label_builds := 0
-var _native_mage := false
+var _uses_mage_model := false
 var _contact_fresh := false
 var _actor_meshes: Array[MeshInstance3D] = []
 var _actor_flash: ShaderMaterial
 var _town_props: TownPropRenderer3D
-var _affordances: SpriteFallbacks3D
+var _sprite_fallbacks: SpriteFallbacks3D
 var _was_paused := false
 var _static_batch := {}
 var _batch_gpu_error := -1.0
-var _hero_motion: HeroAnimation3D
+var _hero_animation: HeroAnimation3D
 var _warp_fx: WarpEffects3D
 var _level_up_fx: ProgressionEffects3D
 var _combat_fx: CombatEffects3D
@@ -116,21 +113,6 @@ var _paused_reduced := false
 func setup(world_game: Node2D) -> WorldRenderer3D:
 	game = world_game
 	return self
-
-
-## This conversion is the inverse of the real game's ground projection, not an eyeballed camera.
-static func ground_position(point: Vector2, height := 0.0) -> Vector3:
-	var flat := Iso.unproject(point) / GROUND_PER_METER
-	return Vector3(flat.x, height, flat.y)
-
-
-static func pixels_per_meter(camera_zoom: float) -> float:
-	return GROUND_PER_METER * PROJECTION_FACTOR * camera_zoom
-
-
-## A source point may already include a projected chest height. Undo it before placing a real3D light.
-static func spatial_position(point: Vector2, height: float) -> Vector3:
-	return ground_position(point + Vector2(0, height * GROUND_PER_METER * Iso.S), height)
 
 
 func _ready() -> void:
@@ -184,11 +166,11 @@ func _ready() -> void:
 			child.reparent(_forest_stage, true)
 	_load_actor()
 	_build_residents()
-	_affordances = SpriteFallbacks3D.new().setup(self)
+	_sprite_fallbacks = SpriteFallbacks3D.new().setup(self)
 	_level_up_fx = ProgressionEffects3D.new().setup(self)
 	_warp_fx = WarpEffects3D.new().setup(self)
 	_combat_fx = CombatEffects3D.new().setup(self)
-	_enemy_models = EnemyRenderer3D.new().setup(self)
+	_enemy_renderer = EnemyRenderer3D.new().setup(self)
 	_enemy_feedback = EnemyHitFeedback3D.new().setup(self)
 	_zone_fx = AreaEffects3D.new().setup(self)
 	_nova_fx = NovaEffects3D.new().setup(self)
@@ -200,7 +182,7 @@ func _ready() -> void:
 	_occlusion = NativePlayerOcclusion.new().setup(self)
 	_hit_feel = HitFeedback3D.new().setup(self)
 	_aim_target = AimTargetRenderer3D.new().setup(self)
-	_affordances.sync()
+	_sprite_fallbacks.sync()
 
 
 func _exit_tree() -> void:
@@ -363,7 +345,7 @@ func _building_bounds(key: String) -> Rect2:
 	var points := sprite.atlas_polygon(frame["ground"])
 	var flat := PackedVector2Array()
 	for point in points:
-		flat.append(Iso.unproject(point) / GROUND_PER_METER)
+		flat.append(Iso.unproject(point) / WorldSpace3D.GROUND_UNITS_PER_METER)
 	return Iso.poly_bounds(flat)
 
 
@@ -390,53 +372,41 @@ func _build_house(key: String) -> void:
 	_houses[key] = HouseRenderer3D.build(self, root, key, width, depth, height)
 
 func _build_residents() -> void:
-	_native_residents = ResidentRenderer3D.new().setup(self)
+	_resident_renderer = ResidentRenderer3D.new().setup(self)
 
 func _load_actor() -> void:
-	_native_mage = GameState.hero_class == "mage"
-	if not _native_mage:
+	_uses_mage_model = GameState.hero_class == "mage"
+	if not _uses_mage_model:
 		actor = WarriorRenderer3D.new().build()
 		stage.add_child(actor)
 		return
 	if not ResourceLoader.exists(MAGE_SCENE_PATH):
-		push_warning("3D comparison awaits its verified skeletal mage asset")
+		push_warning("Mage visual scene is missing: " + MAGE_SCENE_PATH)
 		return
 	var scene := load(MAGE_SCENE_PATH) as PackedScene
 	actor = scene.instantiate() as Node3D
 	stage.add_child(actor)
-	# Preserve the verified imported skeletal transform. Runtime down-scaling
-	# currently loses the model in Compatibility; final proportion needs an
-	# offline rig/mesh bake instead of changing this root's scale.
+	# 씬에 구운 미터 단위 크기를 유지한다. 같은 발 기준을 관절 모션과 실제 충돌체가 공유한다.
 	for child in actor.find_children("*", "MeshInstance3D", true, false):
 		_actor_meshes.append(child as MeshInstance3D)
 	if _actor_flash_shader == null:
 		_actor_flash_shader = Shader.new()
-		_actor_flash_shader.code = ACTOR_FLASH_CODE
+		_actor_flash_shader.code = ACTOR_FLASH_SHADER_SOURCE
 	_actor_flash = ShaderMaterial.new()
 	_actor_flash.shader = _actor_flash_shader
-	animation = _find_animation(actor)
+	animation = ModelTree3D.first_animation_player(actor)
 	if animation != null:
-		_hero_motion = HeroAnimation3D.new().setup(animation, actor)
-
-
-func _find_animation(node: Node) -> AnimationPlayer:
-	if node is AnimationPlayer:
-		return node as AnimationPlayer
-	for child in node.get_children():
-		var found := _find_animation(child)
-		if found != null:
-			return found
-	return null
+		_hero_animation = HeroAnimation3D.new().setup(animation, actor)
 
 
 func _sync_camera() -> void:
 	var focus_point: Vector2 = game.camera.get_screen_center_position()
-	var focus := ground_position(focus_point, surface_height(game.player.position))
+	var focus := WorldSpace3D.projected_to_world(focus_point, surface_height(game.player.position))
 	camera.position = focus + CAMERA_DIRECTION * 30.0
 	camera.look_at(focus, Vector3.UP)
 	# Read the actual2D rendering viewport/zoom; low-quality's half-size cancels its half zoom.
 	var source_view: Vector2 = game.scene_view.get_visible_rect().size
-	camera.size = source_view.y / pixels_per_meter(game.camera.zoom.y)
+	camera.size = source_view.y / WorldSpace3D.pixels_per_meter(game.camera.zoom.y)
 	# Orthographic directional shadows ignore max_distance and cover the entire
 	# camera depth slab. Fit visible flat ground plus up to11.5m architecture so
 	# the1024 map resolves feet without clipping tall roofs at minimum zoom.
@@ -460,12 +430,12 @@ func _process(delta: float) -> void:
 	_sync_camera()
 	_sync_actor(0.0 if frozen else delta)
 	_warp_fx.sync()
-	_enemy_models.sync(0.0 if frozen else delta)
+	_enemy_renderer.sync(0.0 if frozen else delta)
 	_enemy_feedback.sync()
 	_aim_target.sync()
 	_sync_cards()
 	_hit_feel.sync(0.0 if frozen else delta)
-	_native_residents.sync()
+	_resident_renderer.sync()
 	_fortification.sync()
 	_level_up_fx.sync()
 	_combat_fx.sync()
@@ -473,7 +443,7 @@ func _process(delta: float) -> void:
 	_nova_fx.sync()
 	_town_props.sync()
 	_encounter_props.sync()
-	_affordances.sync()
+	_sprite_fallbacks.sync()
 	_world_environment.sync(0.0 if frozen else delta, frozen)
 	# 측정은 가림 전 원본 배치에서 한다. 임시 분리 슬롯은 의도적으로 숨겨진다.
 	if OS.has_feature("web") and _probe_enabled and _batch_gpu_error < 0.0:
@@ -503,7 +473,7 @@ func _tick_probe(delta: float) -> void:
 		_publish_probe()
 
 
-## This independent project has one spatial renderer in every stage-one scope.
+## 숲과 동굴 전환은 같은 표시기를 재사용하고 영역에 속한 표현 상태만 갱신한다.
 func _sync_scope() -> bool:
 	if _scope_is_cave != game.dungeon.active:
 		_scope_is_cave = game.dungeon.active
@@ -525,9 +495,9 @@ func refresh() -> void:
 
 ## 피드백 표시가 살아 있는 GLB의 위쪽 이동을 읽는 경계. AI의 바닥/판정 높이는 유지한다.
 func enemy_pose_lift(enemy: Enemy) -> float:
-	if _enemy_models == null:
+	if _enemy_renderer == null:
 		return 0.0
-	var model: Dictionary = _enemy_models.entries.get(enemy.get_instance_id(), {})
+	var model: Dictionary = _enemy_renderer.entries.get(enemy.get_instance_id(), {})
 	var visual: NativeEnemyVisual = model.get("visual")
 	return visual.pose_lift_metres() if is_instance_valid(visual) else 0.0
 
@@ -556,7 +526,7 @@ func _publish_probe() -> void:
 	_static_batch.erase("sources")
 	var calls := viewport.get_render_info(Viewport.RENDER_INFO_TYPE_VISIBLE, Viewport.RENDER_INFO_DRAW_CALLS_IN_FRAME)
 	var physics: SpatialWorld3D = game.get("spatial_world")
-	var ready := actor != null and (animation != null or not _native_mage) and (calls > 0 or _ready_published) and physics != null and physics.physics_ticks > 0
+	var ready := actor != null and (animation != null or not _uses_mage_model) and (calls > 0 or _ready_published) and physics != null and physics.physics_ticks > 0
 	if not _probe_enabled:
 		# Players only need the one-time readiness flag, not a report twice a second.
 		if ready and not _ready_published:
@@ -582,9 +552,9 @@ func _publish_probe() -> void:
 		"waypoint_discoveries": _level_up_fx._entries.values().filter(func(entry: Dictionary): return entry["root"].name == "WaypointDiscovery").size(),
 		"announcement": game.hud._level_up.heading if is_instance_valid(game.hud._level_up) and game.hud._level_up.active else "",
 		"generic_projectiles": _combat_fx.snapshot() if _combat_fx != null else {},
-		"native_residents": _native_residents.snapshot() if _native_residents != null else {},
+		"native_residents": _resident_renderer.snapshot() if _resident_renderer != null else {},
 		"native_corpses": _world_environment._corpses.size() if _world_environment != null else 0,
-		"native_enemies": _enemy_models.snapshot() if _enemy_models != null else {},
+		"native_enemies": _enemy_renderer.snapshot() if _enemy_renderer != null else {},
 		"enemy_feedback": _enemy_feedback.snapshot() if _enemy_feedback != null else {},
 		"native_zones": _zone_fx.snapshot() if _zone_fx != null else {},
 		"native_novas": _nova_fx.snapshot() if _nova_fx != null else {},
@@ -606,9 +576,9 @@ func _publish_probe() -> void:
 		"actor_scale": [actor.scale.x, actor.scale.y, actor.scale.z],
 		"actor_position": [actor.position.x, actor.position.y, actor.position.z],
 		"azimuth": rad_to_deg(atan2(eye.x, eye.z)), "elevation": rad_to_deg(asin(eye.y)),
-		"projection": "orthographic", "simulation": "3d", "scope": "cave" if game.dungeon.active else "forest", "skeletal_actor": _native_mage and actor != null and animation != null,
-		"actor_mode": "skeletal_mage" if _native_mage else "native_warrior",
-		"animation": _hero_motion.snapshot() if _hero_motion != null else (actor as WarriorRenderer3D).review_snapshot() if actor is WarriorRenderer3D else {}}
+		"projection": "orthographic", "simulation": "3d", "scope": "cave" if game.dungeon.active else "forest", "skeletal_actor": _uses_mage_model and actor != null and animation != null,
+		"actor_mode": "skeletal_mage" if _uses_mage_model else "native_warrior",
+		"animation": _hero_animation.snapshot() if _hero_animation != null else (actor as WarriorRenderer3D).review_snapshot() if actor is WarriorRenderer3D else {}}
 	JavaScriptBridge.eval("window.__sjrpg3dProbe = " + JSON.stringify(report))
 	if ready and not _ready_published:
 		_ready_published = true
@@ -619,13 +589,13 @@ func _sync_actor(delta: float) -> void:
 	var player: Player = game.player
 	if actor == null:
 		return
-	if not _native_mage:
-		actor.position = actor_foot(player) + ground_position(player.sprite.position)
-		var heading := ground_position(Vector2.from_angle(player.facing))
+	if not _uses_mage_model:
+		actor.position = actor_foot(player) + WorldSpace3D.projected_to_world(player.sprite.position)
+		var heading := WorldSpace3D.projected_to_world(Vector2.from_angle(player.facing))
 		actor.rotation.y = atan2(heading.x, heading.z)
 		(actor as WarriorRenderer3D).sync(player)
 		return
-	actor.position = actor_foot(player) + ground_position(player.sprite.position)
+	actor.position = actor_foot(player) + WorldSpace3D.projected_to_world(player.sprite.position)
 	if _actor_flash != null:
 		var overlay: Material = _actor_flash if player.sprite.flash > 0.0 else null
 		if overlay != null:
@@ -634,26 +604,26 @@ func _sync_actor(delta: float) -> void:
 		for mesh in _actor_meshes:
 			if mesh.material_overlay != overlay:
 				mesh.material_overlay = overlay
-	var direction := ground_position(Vector2.from_angle(player.facing))
+	var direction := WorldSpace3D.projected_to_world(Vector2.from_angle(player.facing))
 	actor.rotation.y = atan2(direction.x, direction.z)
-	if _hero_motion != null:
-		_hero_motion.sync(player, delta, get_tree().paused)
+	if _hero_animation != null:
+		_hero_animation.sync(player, delta, get_tree().paused)
 
 
 func actor_foot(source: Node2D) -> Vector3:
 	var spatial := game.get("spatial_world") as SpatialWorld3D
 	if is_instance_valid(spatial):
 		return spatial.actor_foot(source)
-	return ground_position(source.position, surface_height(source.position))
+	return WorldSpace3D.projected_to_world(source.position, surface_height(source.position))
 
 
 func _new_card(texture: Texture2D, frame: Rect2, additive: bool) -> MeshInstance3D:
 	if _card_shader == null:
 		_card_shader = Shader.new()
-		_card_shader.code = CARD_CODE
+		_card_shader.code = SPRITE_CARD_SHADER_SOURCE
 		_add_shader = Shader.new()
 		# Only authored VFX retain overlay ordering below/above their foot pivot.
-		_add_shader.code = CARD_CODE.replace("blend_mix, depth_draw_never", "blend_add, depth_draw_never, depth_test_disabled")
+		_add_shader.code = SPRITE_CARD_SHADER_SOURCE.replace("blend_mix, depth_draw_never", "blend_add, depth_draw_never, depth_test_disabled")
 	var ink := ShaderMaterial.new()
 	ink.shader = _add_shader if additive else _card_shader
 	if _card_quad == null:
@@ -675,7 +645,7 @@ func _set_card_frame(card: MeshInstance3D, texture: Texture2D, frame: Rect2) -> 
 
 
 func _place_card(card: MeshInstance3D, at: Vector2, rect: Rect2, angle := 0.0, native_foot := Vector3(INF, INF, INF)) -> void:
-	var factor := GROUND_PER_METER * PROJECTION_FACTOR
+	var factor := WorldSpace3D.GROUND_UNITS_PER_METER * WorldSpace3D.GROUND_PROJECTION_FACTOR
 	var mesh_size: Vector2 = (card.mesh as QuadMesh).size
 	var desired_size := rect.size / factor
 	var offset := rect.get_center() / factor
@@ -685,21 +655,21 @@ func _place_card(card: MeshInstance3D, at: Vector2, rect: Rect2, angle := 0.0, n
 	# unscaled camera basis, preserving every original billboard corner.
 	card.global_transform.basis = Basis(basis.x * (desired_size.x / mesh_size.x),
 		basis.y * (desired_size.y / mesh_size.y), basis.z)
-	var foot := native_foot if native_foot.is_finite() else ground_position(at, surface_height(at))
+	var foot := native_foot if native_foot.is_finite() else WorldSpace3D.projected_to_world(at, surface_height(at))
 	card.position = foot + basis.x * offset.x - basis.y * offset.y
 
 
 ## 배우에 연결된 문자는 실제 발과 카메라 평면에서 띄운다. 사망 뒤에는 마지막 바닥을 쓴다.
 func _text_position(effect: Effect) -> Vector3:
 	if not effect.has_text_ground_anchor():
-		return ground_position(effect.position, surface_height(effect.position))
+		return WorldSpace3D.projected_to_world(effect.position, surface_height(effect.position))
 	var point := effect.text_ground_point()
 	var actor := effect.text_actor()
-	var foot := actor_foot(actor) if actor != null else ground_position(point, surface_height(point))
+	var foot := actor_foot(actor) if actor != null else WorldSpace3D.projected_to_world(point, surface_height(point))
 	if actor is Enemy:
 		foot.y += enemy_pose_lift(actor)
 	var offset := effect.position - point
-	var factor := GROUND_PER_METER * PROJECTION_FACTOR
+	var factor := WorldSpace3D.GROUND_UNITS_PER_METER * WorldSpace3D.GROUND_PROJECTION_FACTOR
 	return foot + camera.global_basis.x * (offset.x / factor) - camera.global_basis.y * (offset.y / factor)
 
 
@@ -730,7 +700,7 @@ func _sync_cards() -> void:
 					fresh_label.font = UiKit.BOLD_FONT
 					fresh_label.font_size = 22
 					fresh_label.outline_size = 5
-					fresh_label.pixel_size = 1.0 / (GROUND_PER_METER * PROJECTION_FACTOR)
+					fresh_label.pixel_size = 1.0 / (WorldSpace3D.GROUND_UNITS_PER_METER * WorldSpace3D.GROUND_PROJECTION_FACTOR)
 					fresh_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 					fresh_label.no_depth_test = true
 					# Combat text sits above foreground foliage, like the source2D z20.
@@ -757,7 +727,7 @@ func _sync_cards() -> void:
 				_contact_time = _contact_duration
 				_contact_fresh = true
 				_contact_energy = energy
-				contact_light.position = spatial_position(effect.position, 0.9) + Vector3.UP * surface_height(effect.position)
+				contact_light.position = WorldSpace3D.elevated_projected_to_world(effect.position, 0.9) + Vector3.UP * surface_height(effect.position)
 				if effect.has_method("native_position"):
 					contact_light.position = effect.native_position() + Vector3.UP * (0.15 if is_finite(effect.spatial_height) else 0.9)
 				if effect.params.has("contact_position"):

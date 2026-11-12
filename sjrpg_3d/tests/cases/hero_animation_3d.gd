@@ -21,7 +21,7 @@ func run() -> void:
 	game._create_world_renderer()
 	await _frames(3)
 	var renderer: WorldRenderer3D = game.world_renderer
-	var motion: HeroAnimation3D = renderer._hero_motion
+	var motion: HeroAnimation3D = renderer._hero_animation
 	game.player.move_input = Vector2.LEFT
 	await _frames(4)
 	var position: Vector2 = game.player.position

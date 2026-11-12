@@ -57,7 +57,7 @@ static func build(renderer: Node, parent: Node3D, world: Node2D) -> Node3D:
 	parent.add_child(root)
 	var library := TreeGeometry3D.mesh_library()
 	var selected := sources(world, renderer.game.village.town_trees)
-	var factor: float = WorldRenderer3D.GROUND_PER_METER * WorldRenderer3D.PROJECTION_FACTOR
+	var factor: float = WorldSpace3D.GROUND_UNITS_PER_METER * WorldSpace3D.GROUND_PROJECTION_FACTOR
 	var buckets := {}
 	var report := {"trees": [], "owned_source_ids": {}, "source_count": selected.size(), "groups": 0, "chunks": 0, "chunk_metres": CHUNK_METRES, "triangles_per_tree": 4358, "billboards": false, "max_fit_error": 0.0, "recipe": RECIPE}
 	var record := {"recipe": RECIPE, "chunk_metres": CHUNK_METRES, "placements": []}
@@ -86,7 +86,7 @@ static func build(renderer: Node, parent: Node3D, world: Node2D) -> Node3D:
 			continue
 		# Read the actual native floor. Do not infer height from screen y or assume Y=0.
 		var point := tree.global_position
-		var position := WorldRenderer3D.ground_position(point, renderer.surface_height(point))
+		var position := WorldSpace3D.projected_to_world(point, renderer.surface_height(point))
 		var chunk := Vector2i(floori(position.x / CHUNK_METRES), floori(position.z / CHUNK_METRES))
 		var bucket_key := "%d,%d:%d" % [chunk.x, chunk.y, variant]
 		if not buckets.has(bucket_key):

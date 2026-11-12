@@ -25,7 +25,7 @@ func run() -> void:
 	renderer._sync_cards()
 	var label: Label3D = renderer._labels[text.get_instance_id()]["node"]
 	var foot := renderer.actor_foot(game.player)
-	var factor := WorldRenderer3D.GROUND_PER_METER * WorldRenderer3D.PROJECTION_FACTOR
+	var factor := WorldSpace3D.GROUND_UNITS_PER_METER * WorldSpace3D.GROUND_PROJECTION_FACTOR
 	var pixels_per_source := renderer.viewport.size.y / renderer.camera.size / factor
 	var expected: Vector2 = (
 		renderer.camera.unproject_position(foot)
@@ -43,7 +43,7 @@ func run() -> void:
 	text = game.cosmetic_effects.back()
 	renderer._sync_cards()
 	label = renderer._labels[text.get_instance_id()]["node"]
-	var chest_foot := WorldRenderer3D.ground_position(iron.position, DungeonRelief.at(iron.position))
+	var chest_foot := WorldSpace3D.projected_to_world(iron.position, DungeonRelief.at(iron.position))
 	expected = (
 		renderer.camera.unproject_position(chest_foot)
 		+ (text.position - iron.position) * pixels_per_source

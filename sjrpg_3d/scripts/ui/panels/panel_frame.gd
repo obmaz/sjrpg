@@ -205,11 +205,6 @@ func set_compact() -> void:
 	_layout.call_deferred()
 
 
-func is_portrait() -> bool:
-	var view := get_viewport().get_visible_rect().size
-	return view.y > view.x
-
-
 func set_header(title: String, subtitle := "") -> void:
 	title_label.text = title
 	subtitle_label.text = subtitle

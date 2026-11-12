@@ -23,7 +23,7 @@ func run() -> void:
 		check("every tree is a rooted two-surface 3D mesh", mesh != null and mesh.get_surface_count() == 2 and absf(mesh.get_aabb().position.y) < 0.001 and mesh.get_aabb().size.z > 1.0)
 		if i >= 2:
 			var leaves := mesh.surface_get_material(1) as StandardMaterial3D
-			check("new conifers use shared dark needle cutouts with real lighting", leaves == TreeGeometry3D._needle_ink and leaves.albedo_texture.resource_path == WildVegetationRenderer3D.NEEDLES and leaves.billboard_mode == BaseMaterial3D.BILLBOARD_DISABLED and leaves.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR)
+			check("new conifers use shared dark needle cutouts with real lighting", leaves == TreeGeometry3D._needle_material and leaves.albedo_texture.resource_path == WildVegetationRenderer3D.NEEDLES and leaves.billboard_mode == BaseMaterial3D.BILLBOARD_DISABLED and leaves.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR)
 	var game := await make_game("mage")
 	var before: Array = game.village.bridge.solids().duplicate(true)
 	var environment: EnvironmentRenderer3D = game.world_renderer._world_environment

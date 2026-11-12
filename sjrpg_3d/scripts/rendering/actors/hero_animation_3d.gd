@@ -32,7 +32,7 @@ func setup(animator: AnimationPlayer, model: Node = null) -> HeroAnimation3D:
 				_clips[key] = str(clip)
 				break
 	var root: Node = model if model != null else animator.get_parent()
-	_skeleton = _find_skeleton(root)
+	_skeleton = ModelTree3D.first_skeleton(root)
 	if _skeleton != null:
 		for bone_name: String in ["thigh_l", "calf_r", "Head"]:
 			var index := _skeleton.find_bone(bone_name)
@@ -101,14 +101,3 @@ func _remember(player: Player) -> void:
 	_last_position = player.position
 	_last_run_distance = player._run_distance
 	_has_source = true
-
-
-func _find_skeleton(node: Node) -> Skeleton3D:
-	if node is Skeleton3D:
-		return node as Skeleton3D
-	if node != null:
-		for child in node.get_children():
-			var found := _find_skeleton(child)
-			if found != null:
-				return found
-	return null

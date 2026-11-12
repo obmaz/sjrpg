@@ -37,7 +37,7 @@ func offer(kind: String, ground: Vector2) -> void:
 	var renderer := game.world_renderer as WorldRenderer3D
 	if renderer == null or not is_instance_valid(renderer.camera):
 		return
-	var native := WorldRenderer3D.ground_position(ground, renderer.surface_height(ground) + 0.65)
+	var native := WorldSpace3D.projected_to_world(ground, renderer.surface_height(ground) + 0.65)
 	var screen := (
 		renderer.display.position
 		+ (

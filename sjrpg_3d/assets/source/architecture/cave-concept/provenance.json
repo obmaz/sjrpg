@@ -27,7 +27,7 @@
     },
     {
       "path": "assets/models/environment/cave_entrance/plan.gd",
-      "sha256": "4707f8e6b013f694bd2dc2086b79eb8506724fd4538ebcc4e8dcb7233dfbb1ab"
+      "sha256": "4a3f986ffa52cda343d3b731f8041b25c4c6768437e9637af3d7af07071aa266"
     },
     {
       "path": "tools/assets/props/cave_builder.gd",
@@ -47,7 +47,7 @@
     },
     {
       "path": "assets/models/environment/cave_entrance/geometry.json",
-      "sha256": "362dcff3f0e56ab13130bf0ffb8ef627ce022b11bc6cbee0d8499eb33332c3bb"
+      "sha256": "545fe860c0b99210d96d68a99eba25173ebaa62aa78f6fb784bdd14965540588"
     }
   ]
 }

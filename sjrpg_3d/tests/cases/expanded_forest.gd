@@ -18,8 +18,8 @@ func run() -> void:
 			var b := Iso.unproject(road[(i+1)%road.size()])/65.0
 			road_distance = minf(road_distance,centre.distance_to(Geometry2D.get_closest_point_to_segment(centre,a,b)))
 	check("cave rocky district is separated from every paved road",road_distance>NativeCavePlan.SITE_RADIUS+8.0)
-	var start := SpatialWorld3D.projected(frame*Vector3(0,0,22))
-	var target := SpatialWorld3D.projected(frame*Vector3(0,0,0.4))
+	var start := WorldSpace3D.world_to_projected(frame*Vector3(0,0,22))
+	var target := WorldSpace3D.world_to_projected(frame*Vector3(0,0,0.4))
 	game.spatial_world.teleport_source_actor(game.player,start,Player.RADIUS)
 	var previous: float = game.spatial_world.height_at(game.player.position)
 	var initial := previous

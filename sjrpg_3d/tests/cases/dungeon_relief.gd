@@ -63,7 +63,7 @@ func run() -> void:
 			"real cave FLOOR reaches the measured chamber height %d" % index,
 			absf(spatial.height_at(at) - float(expected[index])) < .002
 		)
-	var slope := SpatialWorld3D.native_point(Iso.project(Vector2(1975, 17)))
+	var slope := WorldSpace3D.projected_to_world(Iso.project(Vector2(1975, 17)))
 	var ray := PhysicsRayQueryParameters3D.create(
 		slope + Vector3.UP * 20, slope - Vector3.UP * 20, SpatialWorld3D.FLOOR
 	)

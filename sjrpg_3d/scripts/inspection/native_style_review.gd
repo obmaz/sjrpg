@@ -167,8 +167,8 @@ func _merchant_review(game: Node, renderer: Node) -> Dictionary:
 		return {}
 	var residents: Object
 	for property: Dictionary in renderer.get_property_list():
-		if property["name"] == "_native_residents":
-			residents = renderer.get("_native_residents")
+		if property["name"] == "_resident_renderer":
+			residents = renderer.get("_resident_renderer")
 			break
 	if not is_instance_valid(residents):
 		return {}
@@ -199,12 +199,12 @@ func _merchant_review(game: Node, renderer: Node) -> Dictionary:
 				if "foot" in bone_name.to_lower() or "toe" in bone_name.to_lower():
 					var world_pose: Transform3D = skeleton.global_transform * skeleton.get_bone_global_pose(index)
 					foot_origins.append({"name": bone_name, "world": [world_pose.origin.x, world_pose.origin.y, world_pose.origin.z]})
-		var native_foot: Vector3 = WorldRenderer3D.ground_position(source.position, renderer.surface_height(source.position))
+		var native_foot: Vector3 = WorldSpace3D.projected_to_world(source.position, renderer.surface_height(source.position))
 		var approaches: Array = []
 		for offset: Vector2 in [Vector2(-160, 50), Vector2(-150, 75), Vector2(160, 50), Vector2(150, 75), Vector2(-130, 60), Vector2(130, 60)]:
 			var point: Vector2 = source.position + offset
 			var legal: bool = not game.spatial_world.blocked(point, Player.RADIUS)
-			var native: Vector3 = WorldRenderer3D.ground_position(point, renderer.surface_height(point))
+			var native: Vector3 = WorldSpace3D.projected_to_world(point, renderer.surface_height(point))
 			var display_box: Rect2 = renderer.display.get_global_rect()
 			var projected: Vector2 = display_box.position + renderer.camera.unproject_position(native) / Vector2(renderer.viewport.size) * display_box.size
 			approaches.append({"point": [point.x, point.y], "projected": [projected.x, projected.y], "legal": legal})
@@ -214,14 +214,5 @@ func _merchant_review(game: Node, renderer: Node) -> Dictionary:
 			if point.distance_squared_to(source.position) < 0.01:
 				circle = {"position": [point.x, point.y], "radius": value[1]}
 				break
-		return {"identity": "merchant", "source": entry.get("source", "authored"), "asset": model.get_meta("resident_asset", ""), "scene_paths": _model_scene_paths(model), "meshes": meshes.size(), "skinned_meshes": skinned, "bone_count": bone_count, "bone_poses": poses, "foot_bone_origins": foot_origins, "floor_height": renderer.surface_height(source.position), "clip": entry.get("clip", ""), "sample_time": entry.get("sample_time", 0.0), "source_time": source._time, "source_position": [source.position.x, source.position.y], "review_approaches": approaches, "native_foot": [native_foot.x, native_foot.y, native_foot.z], "model_position": [model.global_position.x, model.global_position.y, model.global_position.z], "model_scale": [model.scale.x, model.scale.y, model.scale.z], "circle": circle, "near_name": game.near_npc(), "quests": GameState.quests.duplicate(true)}
+		return {"identity": "merchant", "source": entry.get("source", "authored"), "asset": model.get_meta("resident_asset", ""), "scene_paths": ModelTree3D.scene_paths(model), "meshes": meshes.size(), "skinned_meshes": skinned, "bone_count": bone_count, "bone_poses": poses, "foot_bone_origins": foot_origins, "floor_height": renderer.surface_height(source.position), "clip": entry.get("clip", ""), "sample_time": entry.get("sample_time", 0.0), "source_time": source._time, "source_position": [source.position.x, source.position.y], "review_approaches": approaches, "native_foot": [native_foot.x, native_foot.y, native_foot.z], "model_position": [model.global_position.x, model.global_position.y, model.global_position.z], "model_scale": [model.scale.x, model.scale.y, model.scale.z], "circle": circle, "near_name": game.near_npc(), "quests": GameState.quests.duplicate(true)}
 	return {}
-
-func _model_scene_paths(root: Node3D) -> Array[String]:
-	var paths: Array[String] = []
-	var nodes: Array[Node] = root.find_children("*", "Node3D", true, false)
-	nodes.append(root)
-	for node: Node in nodes:
-		if not node.scene_file_path.is_empty() and not paths.has(node.scene_file_path):
-			paths.append(node.scene_file_path)
-	return paths

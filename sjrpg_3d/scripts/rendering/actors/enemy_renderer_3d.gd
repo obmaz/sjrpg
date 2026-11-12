@@ -65,7 +65,7 @@ static func hit_reaction(model: Dictionary, enemy: Enemy) -> void:
 	if enemy.dead or Prefs.reduce_motion or enemy.hit_reaction_age >= 0.30:
 		return
 	var root: Node3D = model["root"]
-	var direction := WorldRenderer3D.ground_position(enemy._recoil_direction).normalized()
+	var direction := WorldSpace3D.projected_to_world(enemy._recoil_direction).normalized()
 	var local := root.basis.orthonormalized().inverse() * direction
 	var envelope := (
 		exp(-10.0 * enemy.hit_reaction_age) * (1.0 - smoothstep(0.16, 0.30, enemy.hit_reaction_age))
@@ -116,14 +116,14 @@ func sync(delta := 0.0) -> void:
 			continue
 		var size := (
 			enemy.sprite.body_height
-			/ (WorldRenderer3D.GROUND_PER_METER * Iso.S)
+			/ (WorldSpace3D.GROUND_UNITS_PER_METER * Iso.S)
 			/ float(model["base_height"])
 		)
 		# JUICE #4: the 3D body follows the sprite's contact squash (feet stay planted at the root origin).
 		var squash := enemy.sprite.squash_scale()
 		root.scale = Vector3(size * squash.x, size * squash.y, size * squash.x)
 		root.position = (
-			renderer.actor_foot(enemy) + WorldRenderer3D.ground_position(enemy.sprite.position)
+			renderer.actor_foot(enemy) + WorldSpace3D.projected_to_world(enemy.sprite.position)
 		)
 		root.visible = enemy.get_parent() == renderer.game.world and enemy.sprite.visible
 		var attack := 0.0
@@ -197,7 +197,7 @@ func snapshot() -> Dictionary:
 				root.position.distance_to(
 					(
 						renderer.actor_foot(enemy)
-						+ WorldRenderer3D.ground_position(enemy.sprite.position)
+						+ WorldSpace3D.projected_to_world(enemy.sprite.position)
 					)
 				)
 			}
@@ -215,11 +215,11 @@ static func place_corpse(presenter: Node, model: Dictionary, corpse: Dictionary)
 	var key: Array = [at, facing, height, floor_height]
 	if model.get("_corpse_placement_key", []) != key:
 		var ratio: float = (
-			height / (WorldRenderer3D.GROUND_PER_METER * Iso.S) / float(model["base_height"])
+			height / (WorldSpace3D.GROUND_UNITS_PER_METER * Iso.S) / float(model["base_height"])
 		)
 		root.scale = Vector3.ONE * ratio
 		pose(model, facing, 0.0, 0.0, true)
-		root.position = WorldRenderer3D.ground_position(at, floor_height + 0.012)
+		root.position = WorldSpace3D.projected_to_world(at, floor_height + 0.012)
 		model["_corpse_placement_key"] = key
 		model["_corpse_placement_updates"] = int(model.get("_corpse_placement_updates", 0)) + 1
 	var opacity := CorpseArt.opacity(

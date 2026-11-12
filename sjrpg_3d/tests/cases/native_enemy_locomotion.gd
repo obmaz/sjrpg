@@ -51,7 +51,7 @@ func run() -> void:
 	)
 	var enemy := Enemy.new()
 	enemy.setup(game, "wolf", 1)
-	enemy.position = SpatialWorld3D.projected(centre)
+	enemy.position = WorldSpace3D.world_to_projected(centre)
 	game.world.add_child(enemy)
 	game.enemies.append(enemy)
 	enemy.set_process(false)
@@ -60,7 +60,7 @@ func run() -> void:
 	game.camera.reset_smoothing()
 	game.camera.force_update_scroll()
 	for axis in [Vector2.RIGHT, Vector2.DOWN, Vector2(1, 1).normalized()]:
-		backend.teleport_source_actor(enemy, SpatialWorld3D.projected(centre), enemy.radius, true)
+		backend.teleport_source_actor(enemy, WorldSpace3D.world_to_projected(centre), enemy.radius, true)
 		var start := enemy._run_distance_m
 		var walked := 0.0
 		for step in 10:
@@ -79,11 +79,11 @@ func run() -> void:
 	for step in 5:
 		enemy._step(Iso.project(Vector2.RIGHT).normalized(), 0.02)
 	check("blocked pursuit never pedals in place", absf(enemy._run_distance_m - stopped) < 0.0001)
-	backend.teleport_source_actor(enemy, SpatialWorld3D.projected(centre), enemy.radius, true)
+	backend.teleport_source_actor(enemy, WorldSpace3D.world_to_projected(centre), enemy.radius, true)
 	check("teleport does not count as a stride", is_equal_approx(enemy._run_distance_m, stopped))
 	enemy._state = "chase"
-	game.world_renderer._enemy_models.sync()
-	var live: Dictionary = game.world_renderer._enemy_models.entries[enemy.get_instance_id()]
+	game.world_renderer._enemy_renderer.sync()
+	var live: Dictionary = game.world_renderer._enemy_renderer.entries[enemy.get_instance_id()]
 	var rendered: NativeEnemyVisual = live["visual"]
 	check(
 		"production presenter uses measured metres instead of the old 70px cycle",
@@ -97,12 +97,12 @@ func run() -> void:
 	)
 	var held := rendered.sample_time
 	get_tree().paused = true
-	game.world_renderer._enemy_models.sync(1.0)
+	game.world_renderer._enemy_renderer.sync(1.0)
 	check("pause holds gait pose", is_equal_approx(rendered.sample_time, held))
 	get_tree().paused = false
 	enemy._state = "windup"
 	enemy._timer = enemy._windup_duration * 0.3
-	game.world_renderer._enemy_models.sync()
+	game.world_renderer._enemy_renderer.sync()
 	check("distance never overrides attack timing", rendered.active_clip == "attack")
 	Fixture.remove([floor_body, wall])
 	game.queue_free()

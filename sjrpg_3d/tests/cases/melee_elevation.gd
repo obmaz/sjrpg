@@ -70,9 +70,9 @@ func _area_arena(game: Node) -> Dictionary:
 	bodies.append(NativeFixture.box(game.spatial_world, NativeFixture.remote_at(Vector3(120, -0.5, 120)), Vector3(20, 1, 20), SpatialWorld3D.FLOOR))
 	bodies.append(NativeFixture.box(game.spatial_world, NativeFixture.remote_at(Vector3(122, 4.9, 120)), Vector3(4, 0.2, 4), SpatialWorld3D.FLOOR))
 	await NativeFixture.settle(get_tree())
-	var upper := SpatialWorld3D.projected(NativeFixture.remote_at(Vector3(120.6, 5, 120)))
-	var lower := SpatialWorld3D.projected(NativeFixture.remote_at(Vector3(119.4, 0, 120)))
-	var center := SpatialWorld3D.projected(NativeFixture.remote_at(Vector3(122, 5, 120)))
+	var upper := WorldSpace3D.world_to_projected(NativeFixture.remote_at(Vector3(120.6, 5, 120)))
+	var lower := WorldSpace3D.world_to_projected(NativeFixture.remote_at(Vector3(119.4, 0, 120)))
+	var center := WorldSpace3D.world_to_projected(NativeFixture.remote_at(Vector3(122, 5, 120)))
 	var anchor := _target(game, upper.lerp(center, 0.08))
 	game.spatial_world.teleport_source_actor(anchor, anchor.position, Enemy.RADIUS, true)
 	check("area fixture uses a real five-metre native floor separation", is_equal_approx(game.spatial_world.height_at(upper), 5.0) and is_zero_approx(game.spatial_world.height_at(lower)))
@@ -98,7 +98,7 @@ func run() -> void:
 	var upper := pair[0]
 	var lower := pair[1]
 	var center := pair[2]
-	check("measured raised surface has actual native floor separation", absf(game.spatial_world.height_at(upper) - game.spatial_world.height_at(lower)) > TerrainLevels.STEP_REACH / SpatialWorld3D.VERTICAL)
+	check("measured raised surface has actual native floor separation", absf(game.spatial_world.height_at(upper) - game.spatial_world.height_at(lower)) > TerrainLevels.STEP_REACH / WorldSpace3D.VERTICAL_PIXELS_PER_METER)
 	check("melee reach is symmetric across the raised ledge", not game.can_melee_reach(upper, lower) and not game.can_melee_reach(lower, upper))
 	hero.position = upper
 	hero.z_index = 0  # Deliberately wrong drawing Z must not change physical reach.
@@ -194,9 +194,9 @@ func _check_walls_and_flat_faces(game: Node) -> void:
 	var far := center + axis.normalized() * (axis.length() * 0.5 + 8.0)
 	check("permanent wall occlusion preserves the actual open gate passage", game.can_melee_reach(near, far) and game.can_melee_reach(far, near))
 	var flat_faces: Array[PackedVector2Array] = []
-	check("absent cliff faces cannot invent a raised height", is_zero_approx(TerrainLevels._rise(flat_faces)))
+	check("absent cliff faces cannot invent a raised height", is_zero_approx(TerrainLevels.measured_rise(flat_faces)))
 	var slope: Array[PackedVector2Array] = [PackedVector2Array([Vector2(0, 0), Vector2(30, 0), Vector2(50, 40), Vector2(20, 40)])]
-	check("sloped cliff walls retain measured top-to-bottom rise", is_equal_approx(TerrainLevels._rise(slope), 40.0))
+	check("sloped cliff walls retain measured top-to-bottom rise", is_equal_approx(TerrainLevels.measured_rise(slope), 40.0))
 
 
 func _coin_chest(game: Node, at: Vector2) -> Chest:

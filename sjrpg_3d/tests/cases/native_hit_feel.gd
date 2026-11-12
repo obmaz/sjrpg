@@ -33,8 +33,8 @@ func run() -> void:
 	check("local hold does not freeze the whole game or extend damage callbacks", Engine.time_scale == 1.0 and hero._attack_time < clock and hero.contact_serial == 1)
 	var at := foe.position
 	foe.take_damage(350.0, hero)
-	renderer._enemy_models.sync()
-	var model: Dictionary = renderer._enemy_models.entries[foe.get_instance_id()]
+	renderer._enemy_renderer.sync()
+	var model: Dictionary = renderer._enemy_renderer.entries[foe.get_instance_id()]
 	var torso: Node3D = model["torso"]
 	var first_lean := Vector2(torso.rotation.x, torso.rotation.z)
 	check("confirmed hit tilts real chest and head while keeping the collision foot", first_lean.length() > 0.15 and foe.position == at and float(model["hit_lean"]) > 0.2)
@@ -60,7 +60,7 @@ func run() -> void:
 	projectile.velocity = Vector2(-300, 0)
 	projectile.owner_node = hero
 	foe.take_damage(350.0, projectile)
-	renderer._enemy_models.sync()
+	renderer._enemy_renderer.sync()
 	var reverse := Vector2(torso.rotation.x, torso.rotation.z)
 	check("opposite travel reverses the body's hit response", first_lean.dot(reverse) < 0.0)
 	projectile.free()
@@ -105,7 +105,7 @@ func run() -> void:
 	check("new impacts reuse expired streak batches", fx.entries.size() == 1 and fx.builds == builds)
 	Prefs.reduce_motion = true
 	foe.take_damage(1.0, hero)
-	renderer._enemy_models.sync()
+	renderer._enemy_renderer.sync()
 	renderer._sync_cards()
 	fx.sync(0.0)
 	check("reduced motion removes the extra flinch, sparks and focus", float(model["hit_lean"]) == 0.0 and fx.entries.is_empty() and float(fx.snapshot()["pulse"]) == 0.0 and label.scale == Vector3.ONE)
@@ -152,7 +152,7 @@ func _check_mage_contact() -> void:
 	GameState.slots[0] = "sorceressAttack"
 	check("actual mage melee starter attack starts", hero.cast_slot(0))
 	hero._process(hero._attack_duration * 0.52)
-	var motion: HeroAnimation3D = game.world_renderer._hero_motion
+	var motion: HeroAnimation3D = game.world_renderer._hero_animation
 	motion.sync(hero, 0.0)
 	var clip: Animation = game.world_renderer.animation.get_animation(motion.active_clip)
 	check("GLB first confirmed contact seeks the contact key before holding", hero.contact_serial > 0 and motion.active_clip.to_lower().contains("cast") and is_equal_approx(motion.sample_time, Player.CONTACT_PROGRESS * clip.length))

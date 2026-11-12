@@ -50,7 +50,7 @@ func run() -> void:
 	var trail := CaveTrailPlan3D.points(game.village)
 	var frame := CaveTrailPlan3D.frame(game.village)
 	var midpoint := trail[3].lerp(trail[4], 0.5)
-	var point := SpatialWorld3D.projected(frame * Vector3(midpoint.x, 0, midpoint.y))
+	var point := WorldSpace3D.world_to_projected(frame * Vector3(midpoint.x, 0, midpoint.y))
 	check(
 		"the shared cave trail produces earth footsteps",
 		PlayerFootsteps.surface_at(game, point) == "earth"

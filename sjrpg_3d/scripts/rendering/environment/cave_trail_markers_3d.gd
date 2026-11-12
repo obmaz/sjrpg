@@ -11,7 +11,7 @@ static func build(renderer: Node, parent: Node3D) -> void:
 		root.name = "CaveTrailSign_%d" % index
 		index += 1
 		parent.add_child(root)
-		root.position = WorldRenderer3D.ground_position(
+		root.position = WorldSpace3D.projected_to_world(
 			plan["point"], renderer.surface_height(plan["point"])
 		)
 		NativePlayerOcclusion.mark_object(root)

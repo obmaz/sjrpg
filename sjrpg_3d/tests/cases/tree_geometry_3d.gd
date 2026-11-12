@@ -32,7 +32,7 @@ func run() -> void:
 	for entry: Dictionary in report["trees"]:
 		var original: IsoSprite = entry["source"].get_ref()
 		var position: Vector3 = entry["position"]
-		roots_match = roots_match and position.distance_to(WorldRenderer3D.ground_position(original.position)) < 0.00001 and absf(position.y) < 0.00001
+		roots_match = roots_match and position.distance_to(WorldSpace3D.projected_to_world(original.position)) < 0.00001 and absf(position.y) < 0.00001
 	for child: Node in trees.get_children():
 		if not child is MultiMeshInstance3D:
 			continue

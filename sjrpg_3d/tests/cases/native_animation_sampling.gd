@@ -18,8 +18,8 @@ func _legacy_sample(player: AnimationPlayer, clip: String, sample: float) -> voi
 
 
 func _compare(label: String, actual: Node3D, reference: Node3D) -> void:
-	var actual_bones: Skeleton3D = ResidentRenderer3D._find_skeleton(actual)
-	var reference_bones: Skeleton3D = ResidentRenderer3D._find_skeleton(reference)
+	var actual_bones: Skeleton3D = ModelTree3D.first_skeleton(actual)
+	var reference_bones: Skeleton3D = ModelTree3D.first_skeleton(reference)
 	if not check(label + " retains both complete imported skeletons", actual_bones != null and reference_bones != null):
 		return
 	check(label + " preserves all 65 bone poses", actual_bones.get_bone_count() == 65 and reference_bones.get_bone_count() == 65)
@@ -42,12 +42,12 @@ func _check_work(label: String, actual: AnimationPlayer, reference: AnimationPla
 func run() -> void:
 	var game := await make_game("mage")
 	var renderer: WorldRenderer3D = game.world_renderer
-	var motion: HeroAnimation3D = renderer._hero_motion
+	var motion: HeroAnimation3D = renderer._hero_animation
 	game.process_mode = Node.PROCESS_MODE_DISABLED
 	renderer.set_process(false)
 	var reference := (load(WorldRenderer3D.MAGE_SCENE_PATH) as PackedScene).instantiate() as Node3D
 	add_child(reference)
-	var reference_player: AnimationPlayer = ResidentRenderer3D._find_animation(reference)
+	var reference_player: AnimationPlayer = ModelTree3D.first_animation_player(reference)
 	HeroAnimation3D.new().setup(reference_player, reference)
 	_instrument(renderer.animation)
 	_instrument(reference_player)

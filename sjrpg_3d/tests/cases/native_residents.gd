@@ -36,7 +36,7 @@ func run() -> void:
 	check("unknown identity is not falsely claimed as converted", ResidentRenderer3D.build("unknown") == null)
 	var game := await make_game("mage")
 	var world_renderer: WorldRenderer3D = game.world_renderer
-	var residents: ResidentRenderer3D = world_renderer._native_residents
+	var residents: ResidentRenderer3D = world_renderer._resident_renderer
 	residents.sync()
 	check("every actual villager has a native owner", residents.entries.size() == game.village.npc_nodes.size())
 	var body_count: int = game.spatial_world.actor_bodies.size()

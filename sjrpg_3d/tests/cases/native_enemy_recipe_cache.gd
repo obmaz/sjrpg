@@ -215,7 +215,7 @@ func run() -> void:
 	placements += 1
 	corpse["pos"] = Vector2(300, -40)
 	EnemyRenderer3D.place_corpse(presenter, corpse_model, corpse)
-	var floor_point: Vector3 = WorldRenderer3D.ground_position(corpse["pos"])
+	var floor_point: Vector3 = WorldSpace3D.projected_to_world(corpse["pos"])
 	check(
 		"moved corpse follows the current projected ground",
 		(

@@ -3,7 +3,7 @@ extends TestCase
 
 
 func _corner_error(card: MeshInstance3D, basis: Basis, foot: Vector3, rect: Rect2) -> float:
-	var factor := WorldRenderer3D.GROUND_PER_METER * WorldRenderer3D.PROJECTION_FACTOR
+	var factor := WorldSpace3D.GROUND_UNITS_PER_METER * WorldSpace3D.GROUND_PROJECTION_FACTOR
 	var expected: Array[Vector3] = []
 	for point: Vector2 in [rect.position, rect.position + Vector2(rect.size.x, 0), rect.end, rect.position + Vector2(0, rect.size.y)]:
 		expected.append(foot + basis.x * (point.x / factor) - basis.y * (point.y / factor))

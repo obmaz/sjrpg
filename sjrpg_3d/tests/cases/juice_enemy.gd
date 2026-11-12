@@ -168,14 +168,14 @@ func _check_squash() -> void:
 	check("a weaker hit cannot cut a stronger squash short", is_equal_approx(foe.sprite.squash_amount, 0.1))
 	foe.sprite._process(0.5)
 	var renderer = game.world_renderer
-	if renderer != null and renderer._enemy_models != null:
+	if renderer != null and renderer._enemy_renderer != null:
 		var rest := _foe(game, 340.0)
-		renderer._enemy_models.sync()
-		var rest_model: Dictionary = renderer._enemy_models.entries[rest.get_instance_id()]
+		renderer._enemy_renderer.sync()
+		var rest_model: Dictionary = renderer._enemy_renderer.entries[rest.get_instance_id()]
 		var rest_scale: Vector3 = (rest_model["root"] as Node3D).scale
 		check("an unstruck 3D body keeps its uniform scale", is_equal_approx(rest_scale.x, rest_scale.y) and is_equal_approx(rest_scale.x, rest_scale.z))
 		rest.take_damage(40.0, game.player)
-		renderer._enemy_models.sync()
+		renderer._enemy_renderer.sync()
 		var hit_scale: Vector3 = (rest_model["root"] as Node3D).scale
 		check("a struck 3D body is wider and shorter, with depth matching width", hit_scale.x > rest_scale.x and hit_scale.y < rest_scale.y and is_equal_approx(hit_scale.x, hit_scale.z))
 	Prefs.reduce_motion = true

@@ -2,9 +2,10 @@
 	"forward": "+Z",
 	"id": "environment/waypoint",
 	"inputs": {
-		"res://scripts/rendering/environment/landmark_renderer_3d.gd": "e1fa265fb373edfea7b6fc795b534c910ac216c81e32298f5f6b4bcf3abe68c0",
-		"res://scripts/rendering/environment/scenery_renderer_3d.gd": "ba210dc8824f62dc0ca8c9b1e80f15979b080a9d94aca9bc1e4da4307a9191bd",
-		"res://tools/assets/props/bake.gd": "0e065c0f49b939e462f4a0bed2384b21a71ac32477bdb7f824d5c8bdc4708dc4",
+		"res://scripts/core/world_space_3d.gd": "59a32f64790e612a4528ddc2934ddb4aa6f59c309f090ad2bcbeea7b07568892",
+		"res://scripts/rendering/environment/landmark_renderer_3d.gd": "ba35e003febbc3df2556963955e4ef140ddc4e46b1685ce2307bd2e2f570210b",
+		"res://scripts/rendering/environment/scenery_renderer_3d.gd": "b45d95d9d6ed3fdb830bcbb36ef35b16229412281cf2f5c0b7ccbee4c9ab0ae4",
+		"res://tools/assets/props/bake.gd": "81d6e6b8fe14ba139a3c7ebd332feba2fdbbd5a7f0a1dabb6d17dbb48571c01c",
 		"res://tools/assets/props/waypoint_builder.gd": "83ad19b855b759a50920776d66ebe1da7212c508e0cec2e61ad08d0fd4017dbb"
 	},
 	"layout_sha256": "5f292e2ee789440fb99195d192636e8a6998cd0cd756b21aa9a9cb15082e2785",

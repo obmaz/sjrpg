@@ -35,7 +35,7 @@ static func build(village: Village) -> Array[Dictionary]:
 		var projected := PackedVector2Array()
 		for point in index:
 			projected.append(
-				SpatialWorld3D.projected(
+				WorldSpace3D.world_to_projected(
 					CaveTrailPlan3D.frame(village) * Vector3(point.x, 0, point.y)
 				)
 			)

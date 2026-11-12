@@ -63,7 +63,7 @@ func dangerous() -> bool:
 
 
 func contains_foot(foot: Vector3, radius: float) -> bool:
-	var flat := Iso.unproject(position) / 65.0
+	var flat := Iso.unproject(position) / WorldSpace3D.GROUND_UNITS_PER_METER
 	var centre := Vector3(flat.x, DungeonRelief.at(position), flat.y)
 	if absf(foot.y - centre.y) > .55:
 		return false

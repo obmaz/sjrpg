@@ -89,37 +89,37 @@ func run() -> void:
 	var radius := SpatialWorld3D.radius_metres(float(Player.RADIUS))
 	var center := Vector3.ZERO
 	for point in native_building:
-		center += SpatialWorld3D.native_point(point)
+		center += WorldSpace3D.projected_to_world(point)
 	center /= native_building.size()
-	check("native chapel threshold is the model's small three-step plinth", str(native_surface["id"]) == "chapel" and is_equal_approx(float(native_surface["rise"]) / SpatialWorld3D.VERTICAL, 0.28))
+	check("native chapel threshold is the model's small three-step plinth", str(native_surface["id"]) == "chapel" and is_equal_approx(float(native_surface["rise"]) / WorldSpace3D.VERTICAL_PIXELS_PER_METER, 0.28))
 	for edge in [1, 2]:
-		var a := SpatialWorld3D.native_point(native_building[edge])
-		var b := SpatialWorld3D.native_point(native_building[(edge + 1) % native_building.size()])
+		var a := WorldSpace3D.projected_to_world(native_building[edge])
+		var b := WorldSpace3D.projected_to_world(native_building[(edge + 1) % native_building.size()])
 		var outward := Vector3.UP.cross(b - a).normalized()
 		var mid := (a + b) * 0.5
 		if outward.dot(mid - center) < 0.0:
 			outward = -outward
 		var clearance := radius + 0.85
-		var from := SpatialWorld3D.projected(a.lerp(b, 0.3) + outward * clearance)
-		var to := SpatialWorld3D.projected(a.lerp(b, 0.7) + outward * clearance)
+		var from := WorldSpace3D.world_to_projected(a.lerp(b, 0.3) + outward * clearance)
+		var to := WorldSpace3D.world_to_projected(a.lerp(b, 0.7) + outward * clearance)
 		check("native wall approaches begin on clear ground on axis %s" % edge, not game._blocked(from, Player.RADIUS) and not game._blocked(to, Player.RADIUS))
 		player.position = from
 		await _walk(player, to, 180)
 		check("both native wall faces allow normal parallel walking", player.position.distance_to(to) < 8.0, str(player.position))
 		await _frames(2)
 		check("walking beside the church follows its actual ground or stair tread", absf(game.spatial_world.actor_foot(player).y - game.spatial_world.height_at(player.position)) < 0.03)
-		player.position = SpatialWorld3D.projected(mid + outward * clearance)
-		await _walk(player, SpatialWorld3D.projected(mid - outward), 180)
-		var foot := SpatialWorld3D.native_point(player.position)
+		player.position = WorldSpace3D.world_to_projected(mid + outward * clearance)
+		await _walk(player, WorldSpace3D.world_to_projected(mid - outward), 180)
+		var foot := WorldSpace3D.projected_to_world(player.position)
 		check("each actual native wall blocks the full capsule", not Geometry2D.is_point_in_polygon(player.position, native_building) and (foot - mid).dot(outward) >= radius - 0.025)
 		# The old high yard no longer exists; its0.28m curb is below MAX_STEP.
 		# Preserve the fast-sweep protection on the real solid nave instead.
 		for along in [0.35, 0.65]:
 			var wall := a.lerp(b, along)
-			var probe := SpatialWorld3D.projected(wall + outward * clearance)
+			var probe := WorldSpace3D.world_to_projected(wall + outward * clearance)
 			check("native fast-sweep probe begins outside the solid wall", not game._blocked(probe, Player.RADIUS))
-			var stopped: Vector2 = game.move_actor(probe, SpatialWorld3D.projected(wall - outward), Player.RADIUS)
-			var stopped_foot := SpatialWorld3D.native_point(stopped)
+			var stopped: Vector2 = game.move_actor(probe, WorldSpace3D.world_to_projected(wall - outward), Player.RADIUS)
+			var stopped_foot := WorldSpace3D.projected_to_world(stopped)
 			check("fast sweeps cannot tunnel through either native chapel wall", not Geometry2D.is_point_in_polygon(stopped, native_building) and (stopped_foot - wall).dot(outward) >= radius - 0.025)
 	game.queue_free()
 	await _frames(2)

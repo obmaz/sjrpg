@@ -84,8 +84,8 @@ func run() -> void:
 		game.enemies.append(enemy)
 		enemy.set_process(false)
 		await _frames(2)
-		renderer._enemy_models.sync()
-		var model: Dictionary = renderer._enemy_models.entries[enemy.get_instance_id()]
+		renderer._enemy_renderer.sync()
+		var model: Dictionary = renderer._enemy_renderer.entries[enemy.get_instance_id()]
 		var root: Node3D = model["root"]
 		var metres: float = Enemy.NATIVE_HEIGHT_METRES[kind]
 		var old_heights := {
@@ -116,7 +116,7 @@ func run() -> void:
 		check(
 			"species source, mesh and capsule share native metres " + kind,
 			(
-				is_equal_approx(enemy.sprite.body_height / SpatialWorld3D.VERTICAL, metres)
+				is_equal_approx(enemy.sprite.body_height / WorldSpace3D.VERTICAL_PIXELS_PER_METER, metres)
 				and is_equal_approx(dimensions.y, metres)
 				and is_equal_approx(shape.height, metres)
 				and absf(bounds.end.y - metres) < 0.001
@@ -164,14 +164,14 @@ func run() -> void:
 		)
 		enemy.force_chase()
 		enemy._step(Vector2.RIGHT, 0.04)
-		renderer._enemy_models.sync()
+		renderer._enemy_renderer.sync()
 		check(
 			"walking keeps native feet and canonical collider size " + kind,
 			(
 				root.position.is_equal_approx(
 					(
 						renderer.actor_foot(enemy)
-						+ WorldRenderer3D.ground_position(enemy.sprite.position)
+						+ WorldSpace3D.projected_to_world(enemy.sprite.position)
 					)
 				)
 				and is_equal_approx(shape.height, metres)
@@ -179,7 +179,7 @@ func run() -> void:
 			)
 		)
 		enemy.take_damage(1.0, null)
-		renderer._enemy_models.sync()
+		renderer._enemy_renderer.sync()
 		var ratio: float = metres / float(model["base_height"])
 		var squash: Vector2 = enemy.sprite.squash_scale()
 		check(
@@ -191,20 +191,20 @@ func run() -> void:
 				and root.position.is_equal_approx(
 					(
 						renderer.actor_foot(enemy)
-						+ WorldRenderer3D.ground_position(enemy.sprite.position)
+						+ WorldSpace3D.projected_to_world(enemy.sprite.position)
 					)
 				)
 			)
 		)
 		enemy.take_damage(enemy.max_hp * 2.0, null)
-		renderer._enemy_models.sync()
+		renderer._enemy_renderer.sync()
 		check(
 			"death retains native model without rescaling canonical height " + kind,
 			(
 				enemy.dead
 				and not game.enemies.has(enemy)
-				and renderer._enemy_models.entries.has(enemy.get_instance_id())
-				and is_equal_approx(enemy.sprite.body_height / SpatialWorld3D.VERTICAL, metres)
+				and renderer._enemy_renderer.entries.has(enemy.get_instance_id())
+				and is_equal_approx(enemy.sprite.body_height / WorldSpace3D.VERTICAL_PIXELS_PER_METER, metres)
 			)
 		)
 		var corpse: Dictionary = game.corpses.back()
@@ -250,7 +250,7 @@ func run() -> void:
 		game.enemies.erase(enemy)
 		enemy.queue_free()
 		await _frames(2)
-		renderer._enemy_models.sync()
+		renderer._enemy_renderer.sync()
 		renderer._world_environment._sync_corpses()
 	game.queue_free()
 	await _frames(2)

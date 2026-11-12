@@ -70,15 +70,15 @@ func _build() -> void:
 	var village: Village = renderer.game.village
 	# The original200-unit wall datum includes battlements, and projects to
 	#200*Iso.S pixels. Do not add another merlon height on top of that datum.
-	var total_height := village.wall_height / WorldRenderer3D.GROUND_PER_METER
+	var total_height := village.wall_height / WorldSpace3D.GROUND_UNITS_PER_METER
 	var height := total_height - 0.57
-	var thickness := village.wall_thick / WorldRenderer3D.GROUND_PER_METER
+	var thickness := village.wall_thick / WorldSpace3D.GROUND_UNITS_PER_METER
 	var polygons: Array[PackedVector2Array] = []
 	for footprint in village.wall_footprints:
 		polygons.append(_flat_polygon(footprint))
 	var town_center := Vector3.ZERO
 	for point in village.safe_zone:
-		town_center += WorldRenderer3D.ground_position(point)
+		town_center += WorldSpace3D.projected_to_world(point)
 	town_center /= village.safe_zone.size()
 	var wings: Array[Dictionary] = []
 	for index in village.gate_points.size():
@@ -106,14 +106,14 @@ func _build() -> void:
 			"width": width,
 			"depth": gate_depth,
 			"shoulder": shoulder,
-			"point": WorldRenderer3D.ground_position(village.gate_points[index]),
+			"point": WorldSpace3D.projected_to_world(village.gate_points[index]),
 			"outward": outward,
 			"opening_sign": opening_sign,
 			"leaves": [],
 			"progress": 0.0
 		}
 		for native_end: Vector2 in village.gate_ends[index]:
-			var join := Vector3(native_end.x, 0, native_end.y) / WorldRenderer3D.GROUND_PER_METER
+			var join := Vector3(native_end.x, 0, native_end.y) / WorldSpace3D.GROUND_UNITS_PER_METER
 			var end := inverse * join
 			var side := signf(end.x)
 			var start := end + Vector3(side * JOINT_OVERLAP, 0, 0)
@@ -156,7 +156,7 @@ func _build() -> void:
 	report = {
 		"wall_height": height,
 		"wall_top": total_height,
-		"projected_top_pixels": total_height * WorldRenderer3D.GROUND_PER_METER * Iso.S,
+		"projected_top_pixels": total_height * WorldSpace3D.GROUND_UNITS_PER_METER * Iso.S,
 		"wall_thickness": thickness,
 		"wall_polygons": merged,
 		"wing_joins": wings,
@@ -360,7 +360,7 @@ static func _outward_normal(safe_zone: PackedVector2Array, point: Vector3) -> Ve
 static func _flat_polygon(source: PackedVector2Array) -> PackedVector2Array:
 	var result := PackedVector2Array()
 	for point in source:
-		var flat := Iso.unproject(point) / WorldRenderer3D.GROUND_PER_METER
+		var flat := Iso.unproject(point) / WorldSpace3D.GROUND_UNITS_PER_METER
 		result.append(flat)
 	return result
 

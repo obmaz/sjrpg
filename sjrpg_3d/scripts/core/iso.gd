@@ -9,17 +9,17 @@ const COS := 0.8660254037844386
 const SIN := 0.5
 const S := 0.97
 const HERO_HEIGHT := 56.64  # SceneScale.heroHeight in original units
-const PAVING := 24.0  # IsometricTileGrid.pavingStoneSide
 
 
 ## Ground (u, v) in original units → screen-plane world position.
-static func project(p: Vector2) -> Vector2:
-	return Vector2((p.x - p.y) * COS, (p.x + p.y) * SIN) * S
+static func project(ground_point: Vector2) -> Vector2:
+	return Vector2((ground_point.x - ground_point.y) * COS, (ground_point.x + ground_point.y) * SIN) * S
 
 
-static func unproject(p: Vector2) -> Vector2:
-	var q := p / S
-	return Vector2(q.x / COS + q.y / SIN, q.y / SIN - q.x / COS) / 2.0
+## 투영된 Node2D 월드 위치를 원본 지면 단위로 되돌린다.
+static func unproject(projected_point: Vector2) -> Vector2:
+	var scaled_point := projected_point / S
+	return Vector2(scaled_point.x / COS + scaled_point.y / SIN, scaled_point.y / SIN - scaled_point.x / COS) / 2.0
 
 
 ## Transform that maps ground units directly onto the screen plane.
@@ -27,31 +27,30 @@ static func ground_transform() -> Transform2D:
 	return Transform2D(Vector2(COS, SIN) * S, Vector2(-COS, SIN) * S, Vector2.ZERO)
 
 
-## Pushes `p` (circle of radius r) out of a convex-or-concave polygon. Returns p
-## unchanged when outside.
-static func push_out(p: Vector2, poly: PackedVector2Array, r: float) -> Vector2:
-	var inside := Geometry2D.is_point_in_polygon(p, poly)
-	var best := INF
-	var best_point := p
-	for i in poly.size():
-		var a := poly[i]
-		var b := poly[(i + 1) % poly.size()]
-		var c := Geometry2D.get_closest_point_to_segment(p, a, b)
-		var d := p.distance_to(c)
-		if d < best:
-			best = d
-			best_point = c
+## 원의 중심이 다각형 내부에 있거나 경계와 반경보다 가까우면 바깥쪽으로 밀어낸다.
+static func push_out(center: Vector2, polygon: PackedVector2Array, radius: float) -> Vector2:
+	var inside := Geometry2D.is_point_in_polygon(center, polygon)
+	var nearest_distance := INF
+	var nearest_point := center
+	for i in polygon.size():
+		var edge_start := polygon[i]
+		var edge_end := polygon[(i + 1) % polygon.size()]
+		var closest := Geometry2D.get_closest_point_to_segment(center, edge_start, edge_end)
+		var distance := center.distance_to(closest)
+		if distance < nearest_distance:
+			nearest_distance = distance
+			nearest_point = closest
 	if inside:
-		var n := (best_point - p).normalized() if best > 0.001 else Vector2.DOWN
-		return best_point + n * r
-	if best < r:
-		var n2 := (p - best_point).normalized() if best > 0.001 else Vector2.DOWN
-		return best_point + n2 * r
-	return p
+		var inside_normal := (nearest_point - center).normalized() if nearest_distance > 0.001 else Vector2.DOWN
+		return nearest_point + inside_normal * radius
+	if nearest_distance < radius:
+		var outside_normal := (center - nearest_point).normalized() if nearest_distance > 0.001 else Vector2.DOWN
+		return nearest_point + outside_normal * radius
+	return center
 
 
-static func poly_bounds(poly: PackedVector2Array) -> Rect2:
-	var r := Rect2(poly[0], Vector2.ZERO)
-	for p in poly:
-		r = r.expand(p)
-	return r
+static func poly_bounds(polygon: PackedVector2Array) -> Rect2:
+	var bounds := Rect2(polygon[0], Vector2.ZERO)
+	for point in polygon:
+		bounds = bounds.expand(point)
+	return bounds

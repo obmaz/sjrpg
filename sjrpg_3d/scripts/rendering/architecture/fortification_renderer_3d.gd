@@ -75,6 +75,6 @@ static func _outward_normal(safe_zone: PackedVector2Array, point: Vector3) -> Ve
 static func _flat_polygon(source: PackedVector2Array) -> PackedVector2Array:
 	var result := PackedVector2Array()
 	for point in source:
-		var flat := Iso.unproject(point) / WorldRenderer3D.GROUND_PER_METER
+		var flat := Iso.unproject(point) / WorldSpace3D.GROUND_UNITS_PER_METER
 		result.append(flat)
 	return result

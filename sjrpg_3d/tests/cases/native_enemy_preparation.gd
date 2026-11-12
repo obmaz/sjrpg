@@ -47,7 +47,7 @@ func run() -> void:
 		"the bar reads the real attack timer",
 		ratios.distance_to(Vector2.ONE * .25) < .0001 and material.get_shader_parameter("preparing")
 	)
-	var factor := WorldRenderer3D.GROUND_PER_METER * WorldRenderer3D.PROJECTION_FACTOR
+	var factor := WorldSpace3D.GROUND_UNITS_PER_METER * WorldSpace3D.GROUND_PROJECTION_FACTOR
 	var anchor := (
 		renderer.actor_foot(foe)
 		+ (
@@ -156,9 +156,9 @@ func run() -> void:
 	jumper.take_damage(1, null)
 	var old_camera_size := renderer.camera.size
 	renderer.camera.size = 2.0
-	renderer._enemy_models.sync(0)
+	renderer._enemy_renderer.sync(0)
 	# 도약의 크기를 특정 납품 클립에 고정하지 않고 실제 골격 입력으로 가장자리를 검사한다.
-	var jumping_model: Dictionary = renderer._enemy_models.entries[jumper.get_instance_id()]
+	var jumping_model: Dictionary = renderer._enemy_renderer.entries[jumper.get_instance_id()]
 	var visual: NativeEnemyVisual = jumping_model["visual"]
 	var hips := visual.skeleton.find_bone("ORG-hips")
 	visual.skeleton.set_bone_pose_position(

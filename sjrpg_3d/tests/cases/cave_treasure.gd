@@ -159,14 +159,14 @@ func _check_wall_ownership(game: Node) -> void:
 			{"found": sample_found, "solid": unrelated_stays_solid, "surfaces": all_surfaces_match}
 		)
 	)
-	renderer._enemy_models.sync()
+	renderer._enemy_renderer.sync()
 	var dynamic_models := true
-	for model: Dictionary in renderer._enemy_models.entries.values():
+	for model: Dictionary in renderer._enemy_renderer.entries.values():
 		for mesh: MeshInstance3D in (model["root"] as Node3D).find_children(
 			"*", "MeshInstance3D", true, false
 		):
 			dynamic_models = dynamic_models and NativePlayerOcclusion.static_owner(mesh) == null
 	check(
 		"all actual cave monster model parts remain outside static fade ownership",
-		dynamic_models and not renderer._enemy_models.entries.is_empty()
+		dynamic_models and not renderer._enemy_renderer.entries.is_empty()
 	)

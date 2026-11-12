@@ -25,7 +25,7 @@ func _settle() -> void:
 func _target(game: Node, at: Vector3) -> Enemy:
 	var enemy := Enemy.new()
 	enemy.setup(game, "goblin", 1)
-	enemy.position = SpatialWorld3D.projected(at)
+	enemy.position = WorldSpace3D.world_to_projected(at)
 	enemy.hp = 100000.0
 	enemy.max_hp = enemy.hp
 	game.world.add_child(enemy)
@@ -78,7 +78,7 @@ func run() -> void:
 	var wall := _box(arena, NativeFixture.remote_at(Vector3(120, 1.5, 120)), Vector3(0.12, 3, 5), SpatialWorld3D.SOLID)
 	await _settle()
 	var hero: Player = game.player
-	var origin := SpatialWorld3D.projected(NativeFixture.remote_at(Vector3(118, 0, 120)))
+	var origin := WorldSpace3D.world_to_projected(NativeFixture.remote_at(Vector3(118, 0, 120)))
 	backend.teleport_source_actor(hero, origin, Player.RADIUS)
 	var target := _target(game, NativeFixture.remote_at(Vector3(122, 0, 120)))
 	hero.facing = (target.position - origin).angle()
@@ -117,14 +117,14 @@ func run() -> void:
 	check("projectile capsule sweep cannot jump onto another storey", is_inf(SpatialCombat3D.target_fraction(game, origin, upper.position, fixed_y, upper)))
 	wall.collision_layer = SpatialWorld3D.SOLID
 	await _settle()
-	backend.teleport_source_actor(hero, SpatialWorld3D.projected(NativeFixture.remote_at(Vector3(118, 0, 121))), Player.RADIUS)
+	backend.teleport_source_actor(hero, WorldSpace3D.world_to_projected(NativeFixture.remote_at(Vector3(118, 0, 121))), Player.RADIUS)
 	var hero_body: CharacterBody3D = backend.actor_bodies[hero.get_instance_id()]
-	hero._move(SpatialWorld3D.projected(NativeFixture.remote_at(Vector3(124, 0, 121))) - hero.position)
+	hero._move(WorldSpace3D.world_to_projected(NativeFixture.remote_at(Vector3(124, 0, 121))) - hero.position)
 	var moved_foot := backend.actor_foot(hero)
-	check("actual player movement resolves through its persistent native capsule", backend.actor_bodies[hero.get_instance_id()] == hero_body and moved_foot.x < wall.position.x and SpatialWorld3D.projected(moved_foot).is_equal_approx(hero.position))
+	check("actual player movement resolves through its persistent native capsule", backend.actor_bodies[hero.get_instance_id()] == hero_body and moved_foot.x < wall.position.x and WorldSpace3D.world_to_projected(moved_foot).is_equal_approx(hero.position))
 	var direction := (origin - target.position).normalized()
 	var walk_cycle := target._walk_cycle
 	target._step(direction, 1.0)
-	check("actual enemy movement uses native wall collision and preserves walking animation", backend.actor_foot(target).x > wall.position.x and SpatialWorld3D.projected(backend.actor_foot(target)).is_equal_approx(target.position) and target._walk_cycle > walk_cycle)
+	check("actual enemy movement uses native wall collision and preserves walking animation", backend.actor_foot(target).x > wall.position.x and WorldSpace3D.world_to_projected(backend.actor_foot(target)).is_equal_approx(target.position) and target._walk_cycle > walk_cycle)
 	game.queue_free()
 	await _frames(2)

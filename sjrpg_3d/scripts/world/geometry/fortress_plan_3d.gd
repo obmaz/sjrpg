@@ -14,16 +14,16 @@ const WALK_HEADROOM := 2.02
 static func wall_walk(village: Village) -> Dictionary:
 	var centre := Vector3.ZERO
 	for point: Vector2 in village.safe_zone:
-		centre += WorldRenderer3D.ground_position(point)
+		centre += WorldSpace3D.projected_to_world(point)
 	centre /= village.safe_zone.size()
-	var floor_y := village.wall_height / 65.0 - 0.70
+	var floor_y := village.wall_height / WorldSpace3D.GROUND_UNITS_PER_METER - 0.70
 	var parts: Array[Dictionary] = []
 	var routes: Array[Transform3D] = []
 	var lengths: Array[float] = []
 	for footprint: PackedVector2Array in village.wall_footprints:
 		var polygon := PackedVector2Array()
 		for point: Vector2 in footprint:
-			polygon.append(Iso.unproject(point) / 65.0)
+			polygon.append(Iso.unproject(point) / WorldSpace3D.GROUND_UNITS_PER_METER)
 		var bounds := Iso.poly_bounds(polygon)
 		var along := Vector3.RIGHT if bounds.size.x > bounds.size.y else Vector3.BACK
 		var inward := along.cross(Vector3.UP)
@@ -139,6 +139,6 @@ static func corners(village: Village) -> Array[Vector3]:
 	var result: Array[Vector3] = []
 	for run: Array in village.data["wall_runs"]:
 		var point: Array = run[1]
-		var native := Iso.unproject(village.point(Vector2(point[0], point[1]))) / 65.0
+		var native := Iso.unproject(village.point(Vector2(point[0], point[1]))) / WorldSpace3D.GROUND_UNITS_PER_METER
 		result.append(Vector3(native.x, 0, native.y))
 	return result

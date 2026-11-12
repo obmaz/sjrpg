@@ -113,7 +113,7 @@ func run() -> void:
 	var shape := CylinderShape3D.new()
 	shape.radius = SpatialWorld3D.radius_metres(10.0)
 	shape.height = 2.0
-	var at := SpatialWorld3D.native_point(origin + Vector2(40, 0), game.spatial_world.height_at(origin) + 1.0)
+	var at := WorldSpace3D.projected_to_world(origin + Vector2(40, 0), game.spatial_world.height_at(origin) + 1.0)
 	var fixture: StaticBody3D = game.spatial_world._shape_body(shape, Transform3D(Basis.IDENTITY, at), SpatialWorld3D.SOLID, "DesktopMovementFixture")
 	await get_tree().physics_frame
 	await get_tree().physics_frame

@@ -72,7 +72,7 @@ static func _ground_quad() -> ArrayMesh:
 	for point: Vector2 in [
 		Vector2(-1, -0.55), Vector2(1, -0.55), Vector2(1, 0.55), Vector2(-1, 0.55)
 	]:
-		vertices.append(WorldRenderer3D.ground_position(point))
+		vertices.append(WorldSpace3D.projected_to_world(point))
 	var arrays := []
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = vertices
@@ -180,7 +180,7 @@ func sync() -> void:
 			if float(entry["width"]) != width:
 				ink.set_shader_parameter("bar_width", width)
 				entry["width"] = width
-			var factor := WorldRenderer3D.GROUND_PER_METER * WorldRenderer3D.PROJECTION_FACTOR
+			var factor := WorldSpace3D.GROUND_UNITS_PER_METER * WorldSpace3D.GROUND_PROJECTION_FACTOR
 			var basis: Basis = _renderer.camera.global_transform.basis
 			# Original eight-pixel background spans [-body_height-15, -body_height-7].
 			var anchor := _billboard_anchor(enemy, foot, 11.0, factor)
@@ -231,7 +231,7 @@ func _sync_preparation(entry: Dictionary, enemy: Enemy, foot: Vector3) -> void:
 			"health_ratios", Vector2(progress, progress)
 		)
 		entry["preparation_progress"] = progress
-	var factor := WorldRenderer3D.GROUND_PER_METER * WorldRenderer3D.PROJECTION_FACTOR
+	var factor := WorldSpace3D.GROUND_UNITS_PER_METER * WorldSpace3D.GROUND_PROJECTION_FACTOR
 	var basis: Basis = _renderer.camera.global_basis
 	var at := _billboard_anchor(enemy, foot, PREPARATION_LIFT, factor)
 	bar.global_transform = Transform3D(

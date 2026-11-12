@@ -80,7 +80,7 @@ static func measure(presenter: Node) -> Dictionary:
 	var hero: Dictionary = _bounds(actor, camera, true)
 	var npc_heights: Array[float] = []
 	var residents: Array[Dictionary] = []
-	var renderer: RefCounted = presenter.get("_native_residents")
+	var renderer: RefCounted = presenter.get("_resident_renderer")
 	if renderer != null:
 		var entries: Dictionary = renderer.get("entries")
 		for entry: Dictionary in entries.values():
@@ -92,7 +92,7 @@ static func measure(presenter: Node) -> Dictionary:
 			report["label"] = source.display_name
 			report["identity"] = NpcArt.identity(source.display_name)
 			report["source"] = entry.get("source", "authored")
-			report["scene_paths"] = _scene_paths(model)
+			report["scene_paths"] = ModelTree3D.scene_paths(model)
 			report["current_skeleton"] = _bones(model)
 			residents.append(report)
 			if bool(report.get("valid", false)):
@@ -106,13 +106,3 @@ static func measure(presenter: Node) -> Dictionary:
 		"interpretation": "CPU rest AABB is not posed/skinned silhouette and includes hidden geometry; bone origins are current pose. Screen AABB is an upper bound, not pixel visibility/occlusion. No GPU bake performed."}
 	_cache[id] = report
 	return report
-
-
-static func _scene_paths(root: Node3D) -> Array[String]:
-	var paths: Array[String] = []
-	var nodes: Array[Node] = root.find_children("*", "Node3D", true, false)
-	nodes.append(root)
-	for node: Node in nodes:
-		if not node.scene_file_path.is_empty() and not paths.has(node.scene_file_path):
-			paths.append(node.scene_file_path)
-	return paths

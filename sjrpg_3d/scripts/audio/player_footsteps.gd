@@ -41,7 +41,7 @@ static func surface_at(game: Node, point: Vector2) -> String:
 		if Geometry2D.is_point_in_polygon(point, road):
 			return "stone"
 	var native := (
-		CaveTrailPlan3D.frame(game.village).affine_inverse() * WorldRenderer3D.ground_position(point)
+		CaveTrailPlan3D.frame(game.village).affine_inverse() * WorldSpace3D.projected_to_world(point)
 	)
 	var local := Vector2(native.x, native.z)
 	var trail := CaveTrailPlan3D.points(game.village)

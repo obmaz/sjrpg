@@ -53,7 +53,7 @@ func run() -> void:
 		check("geological silhouette uses the actual solid shell " + str(role), _same_vertices(geology.mesh.get_faces(), TerrainForms3D.faces(surface), Vector3.ZERO))
 		var outside := 0
 		for point: Vector3 in geology.mesh.get_faces():
-			if not Geometry2D.is_point_in_polygon(SpatialWorld3D.projected(point), surface["top"]):
+			if not Geometry2D.is_point_in_polygon(WorldSpace3D.world_to_projected(point), surface["top"]):
 				outside += 1
 		check("natural slopes extend beyond the old vertical cliff " + str(role), outside > 20)
 		print("ART_AUDIT geological_shell " + JSON.stringify({"role": role, "faces": geology.mesh.get_faces().size(), "outside": outside, "bounds": str(geology.mesh.get_aabb())}))
@@ -190,8 +190,8 @@ func _physical_boundary(surface: Dictionary) -> Array[Dictionary]:
 			var b := points[triangle + (edge + 1) % 3]
 			if maxf(a.y, b.y) < 0.001:
 				continue
-			var from := SpatialWorld3D.projected(a)
-			var to := SpatialWorld3D.projected(b)
+			var from := WorldSpace3D.world_to_projected(a)
+			var to := WorldSpace3D.world_to_projected(b)
 			var perimeter := false
 			for side in outline.size():
 				var p := outline[side]
@@ -209,7 +209,7 @@ func _physical_boundary(surface: Dictionary) -> Array[Dictionary]:
 			if along.length_squared() < 0.00000001:
 				continue
 			var normal := Vector3(along.y, 0, -along.x).normalized()
-			var outside := (from + to) * 0.5 + Iso.project(Vector2(normal.x, normal.z) * WorldRenderer3D.GROUND_PER_METER).normalized()
+			var outside := (from + to) * 0.5 + Iso.project(Vector2(normal.x, normal.z) * WorldSpace3D.GROUND_UNITS_PER_METER).normalized()
 			if Geometry2D.is_point_in_polygon(outside, outline):
 				normal = -normal
 			result.append({"a": a, "b": b, "axis": along.normalized(), "length": along.length(), "normal": normal, "pieces": [], "area": 0.0, "earth_area": 0.0})

@@ -392,12 +392,12 @@ func _read_debug_params() -> void:
 					var trail := CaveTrailPlan3D.points(village)
 					var index := 0 if kv[1] == "cave_trail" else 3
 					var frame := CaveTrailPlan3D.frame(village)
-					player.position = SpatialWorld3D.projected(frame*Vector3(trail[index].x,0,trail[index].y))
+					player.position = WorldSpace3D.world_to_projected(frame*Vector3(trail[index].x,0,trail[index].y))
 					_fx_review_focus = player.position
 				"cave_descent":
 					var cave_frame := NativeCavePlan.frame(dungeon.entry_point())
-					player.position = SpatialWorld3D.projected(cave_frame*Vector3(0,0,18))
-					_fx_review_focus = SpatialWorld3D.projected(cave_frame*Vector3(0,0,6))
+					player.position = WorldSpace3D.world_to_projected(cave_frame*Vector3(0,0,18))
+					_fx_review_focus = WorldSpace3D.world_to_projected(cave_frame*Vector3(0,0,6))
 				"cave_exterior":
 					player.position = dungeon.entry_point() + Vector2(0, 180)
 					_fx_review_focus = dungeon.entry_point() + Vector2(0, -180)
@@ -415,7 +415,7 @@ func _read_debug_params() -> void:
 					player.position = lmk.position + Vector2(0, 140)
 				"tree_occlusion":
 					var tree: IsoSprite = village.town_trees[0]
-					player.position = SpatialWorld3D.projected(WorldRenderer3D.ground_position(tree.position) - Vector3(1.7, 0, 1.7))
+					player.position = WorldSpace3D.world_to_projected(WorldSpace3D.projected_to_world(tree.position) - Vector3(1.7, 0, 1.7))
 				"occlusion":
 					var building: IsoSprite = village.buildings["nw"]
 					var footprint := building.atlas_polygon(village.data["frames"]["nw"]["ground"])
@@ -1149,7 +1149,7 @@ func screen_to_world(screen: Vector2) -> Vector2:
 		query.hit_back_faces = true
 		var hit := spatial_world.get_world_3d().direct_space_state.intersect_ray(query)
 		if not hit.is_empty():
-			return SpatialWorld3D.projected(hit["position"])
+			return WorldSpace3D.world_to_projected(hit["position"])
 	var render_position := screen * scene_view.get_visible_rect().size / get_viewport_rect().size
 	return scene_view.canvas_transform.affine_inverse() * render_position
 
@@ -1488,13 +1488,6 @@ func _spawn_enemy_near(at: Vector2) -> void:
 		return
 	world.add_child(enemy)
 	enemies.append(enemy)
-
-
-func enemy_hit_by_point(p: Vector2, r: float) -> Enemy:
-	for e in enemies:
-		if not e.dead and p.distance_to(e.position) <= r + e.radius:
-			return e
-	return null
 
 
 func rng_int(a: int, b: int) -> int:

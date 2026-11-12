@@ -2,7 +2,7 @@ class_name TouchControls
 extends Control
 ## Reference-style controls: 마법진 조이스틱 (left), 주 슬롯 + 보조 슬롯 4 + 구르기 ring
 ## (right), 체력/마나 포션 above it and the bottom icon bar (가방 · 스킬 · 퀘스트 · 설정).
-## Multi-touch plus clickable HUD buttons. Empty slots open the skill tree.
+## 멀티터치와 클릭 입력을 지원한다. 빈 슬롯은 현재 원정의 빌드/기술 패널을 연다.
 
 var game: Node
 var _paint_state: Array = []
@@ -32,7 +32,6 @@ var _cooldown_samples := {}
 var _last_potions := Vector2i(-1, -1)
 var _interaction_normal: StyleBox
 var _interaction_pressed: StyleBox
-static var _reference_buttons: Texture2D
 
 
 func _ready() -> void:
@@ -73,14 +72,8 @@ func slot_visual_radius(index: int) -> float:
 	return radius * 0.82 if str(GameState.slots[index]).is_empty() else radius
 
 
-func css_scale() -> float:
-	if OS.has_feature("web"):
-		var width: Variant = JavaScriptBridge.eval("window.innerWidth", true)
-		if (width is float or width is int) and float(width) > 0.0:
-			return get_viewport().get_visible_rect().size.x / float(width)
-	if DisplayServer.get_name() == "headless":
-		return 1.0
-	return get_viewport().get_visible_rect().size.x / maxf(1.0, float(get_window().size.x))
+func display_pixel_scale() -> float:
+	return UiMetrics.units_per_display_pixel(get_viewport())
 
 
 static func mobile_layout(view: Vector2) -> bool:
@@ -107,17 +100,17 @@ func _layout() -> void:
 		_buttons["slot%d" % (i + 1)] = _button(main + offsets[i] * u, radii[i] * u, radii[i] * 0.92 * u)
 	_buttons["roll"] = _button(main + Vector2(114, 0) * u, 32.0 * u, 31.0 * u)
 	# Keep visible art compact while giving both vials independent 44-CSS-pixel targets.
-	var potion_touch := maxf(32.0 * u, 22.0 * css_scale())
+	var potion_touch := maxf(32.0 * u, 22.0 * display_pixel_scale())
 	var potion_gap := maxf(77.0 * u, potion_touch * 2.0 + 8.0 * u)
 	var potion_y := main.y - maxf(198.0 * u, 163.0 * u + potion_touch + 12.0 * u)
 	var potion_right := maxf(41.0 * u, potion_touch + 8.0 * u)
-	var potion_visual := maxf(30.0 * u, 20.0 * css_scale())
+	var potion_visual := maxf(30.0 * u, 20.0 * display_pixel_scale())
 	_buttons["potion_hp"] = _button(Vector2(size.x - potion_right - potion_gap, potion_y), potion_touch, potion_visual)
 	_buttons["potion_mp"] = _button(Vector2(size.x - potion_right, potion_y), potion_touch, potion_visual)
 	var bar_y := size.y * 0.902 if portrait else size.y - 44.0 * u
 	var names := ["bar_bag", "bar_skills", "bar_quests", "bar_gear"]
-	var menu_visual := maxf((34.1 if portrait else 31.0) * u, 20.0 * css_scale())
-	var menu_touch := maxf((35.0 if portrait else 32.0) * u, 22.0 * css_scale())
+	var menu_visual := maxf((34.1 if portrait else 31.0) * u, 20.0 * display_pixel_scale())
+	var menu_touch := maxf((35.0 if portrait else 32.0) * u, 22.0 * display_pixel_scale())
 	var menu_gap := maxf(79.0 * u, menu_touch * 2.0 + 8.0 * u)
 	bar_y = minf(bar_y, size.y - menu_touch - 8.0 * u)
 	for i in 4:
@@ -128,7 +121,7 @@ func _layout() -> void:
 		var text_width := HudArt.FONT.get_string_size(interaction_text(), HORIZONTAL_ALIGNMENT_LEFT, -1, interaction_font_size()).x
 		var folded := portrait and size.x / size.y > 0.8
 		var half := Vector2(maxf((90.0 if folded else 94.0) * u, text_width * 0.5 + 20.0 * u), maxf(32.0, 38.0 * u))
-		half.y = maxf(half.y, 22.0 * css_scale())
+		half.y = maxf(half.y, 22.0 * display_pixel_scale())
 		var rise := maxf(78.0 * u, half.y + menu_touch + 10.0 * u)
 		var stick := stick_anchor
 		if _stick_index != -2:
@@ -313,7 +306,7 @@ func _refresh_drawing() -> void:
 			pressed.append(name)
 	var base_state: Array = [_unit, _buttons, _near_name, pressed,
 		GameState.potions, GameState.mana_potions, GameState.available_skill_choices(),
-		Gamepad.using_gamepad, css_scale()]
+		Gamepad.using_gamepad, display_pixel_scale()]
 	var overlay_state: Array = [_unit, _buttons, _success_feedback.duplicate(),
 		_denied_feedback.duplicate(), Prefs.reduce_motion]
 	for slot in GameState.slots.size():
@@ -322,7 +315,7 @@ func _refresh_drawing() -> void:
 		base_state.append([id, affordable])
 		overlay_state.append([id, player.slot_cooldown_ratio(slot), slot_cooldown_remaining(slot)])
 	var stick_state: Array = [_unit, _stick_center, _stick_knob, _stick_index != -2, Gamepad.using_gamepad]
-	var hints_state: Array = [_unit, _buttons, Gamepad.using_gamepad, css_scale()]
+	var hints_state: Array = [_unit, _buttons, Gamepad.using_gamepad, display_pixel_scale()]
 	var changed := false
 	if base_state != _paint_state:
 		_paint_state = base_state
@@ -507,25 +500,18 @@ func _draw_empty_socket(center: Vector2, radius: float) -> void:
 		draw_polyline(PackedVector2Array([base - side, tip, base + side]), etching, 0.8 * u, true)
 
 
-func _draw_reference_button(index: int, center: Vector2, radius: float, tint := Color.WHITE) -> void:
-	if _reference_buttons == null:
-		_reference_buttons = load("res://assets/ui/hud/reference-buttons.webp")
-	var source := Rect2(float(index) * 256.0, 0, 256, 256)
-	draw_texture_rect_region(_reference_buttons, Rect2(center - Vector2.ONE * radius, Vector2.ONE * radius * 2.0), source, tint)
-
-
 func interaction_text() -> String:
 	return ("LT · " if Gamepad.using_gamepad else "") + {"워프게이트": "워프 이동", "바람 동굴": "동굴 탐험", "동굴 출구": "동굴 나가기", "안식처": "안식처", "숲의 파수꾼": "도전하기", "상인": "상점", "대장장이": "대장간", "촌장": "대화", "보급원 미라": "대화"}.get(_near_name, "대화")
 
 
 ## Shared type and plaque metrics for every contextual action, independent of world zoom.
 func interaction_font_size() -> int:
-	return roundi(maxf(22.0 * _unit, 18.0 * css_scale()))
+	return roundi(maxf(22.0 * _unit, 18.0 * display_pixel_scale()))
 
 
 func interaction_visual_rect(center: Vector2, half: Vector2) -> Rect2:
 	var text_width := HudArt.FONT.get_string_size(interaction_text(), HORIZONTAL_ALIGNMENT_LEFT, -1, interaction_font_size()).x
-	var size := Vector2(minf(half.x * 2.0, maxf(184.0 * _unit, text_width + 32.0 * _unit)), minf(half.y * 2.0, maxf(56.0 * _unit, 44.0 * css_scale())))
+	var size := Vector2(minf(half.x * 2.0, maxf(184.0 * _unit, text_width + 32.0 * _unit)), minf(half.y * 2.0, maxf(56.0 * _unit, 44.0 * display_pixel_scale())))
 	return Rect2(center - size * 0.5, size)
 
 
@@ -539,7 +525,7 @@ static func skill_points_geometry(center: Vector2, radius: float, points: int, s
 
 
 func _draw_skill_points(center: Vector2, radius: float, hit_radius: float) -> void:
-	var geometry := skill_points_geometry(center, radius, GameState.available_skill_choices(), css_scale(), hit_radius)
+	var geometry := skill_points_geometry(center, radius, GameState.available_skill_choices(), display_pixel_scale(), hit_radius)
 	var rect: Rect2 = geometry["rect"]
 	var skin := StyleBoxFlat.new()
 	skin.bg_color = Color(UiToneArt.CHARCOAL, 0.96)
@@ -631,7 +617,7 @@ func _draw_gamepad_hints(canvas: CanvasItem = null) -> void:
 	var labels := {"slot0": "A", "slot1": "X", "slot2": "Y", "slot3": "RB", "slot4": "RT",
 		"roll": "B", "potion_hp": "LB", "potion_mp": "↑", "bar_bag": "←",
 		"bar_skills": "↓", "bar_quests": "→", "bar_gear": "Menu"}
-	var font_size := ceili(maxf(14.0 * _unit, 12.0 * css_scale()))
+	var font_size := ceili(maxf(14.0 * _unit, 12.0 * display_pixel_scale()))
 	for key: String in labels:
 		if not _buttons.has(key):
 			continue
@@ -656,7 +642,7 @@ func _draw_gamepad_hints(canvas: CanvasItem = null) -> void:
 		target.draw_style_box(skin, rect)
 		var ink := Color("b8cfab") if text == "A" else Color("dba49a") if text == "B" else Color("a4bdd7") if text == "X" else Color("dec38a") if text == "Y" else UiToneArt.IVORY
 		HudArt.text_in_rect(target, text, rect, font_size, ink)
-		last_drawn_gamepad_hints.append({"name": key, "text": text, "rect": [rect.position.x, rect.position.y, rect.size.x, rect.size.y], "font_size": font_size, "css_scale": css_scale()})
+		last_drawn_gamepad_hints.append({"name": key, "text": text, "rect": [rect.position.x, rect.position.y, rect.size.x, rect.size.y], "font_size": font_size, "css_scale": display_pixel_scale()})
 	var move_width := HudArt.FONT.get_string_size("LS 이동 · RS 조준", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x + 8.0 * _unit
 	var move_left := maxf(8.0 * _unit, _stick_center.x - move_width * 0.5)
 	var move_rect := Rect2(Vector2(move_left, _stick_center.y), Vector2(move_width, maxf(34.0 * _unit, font_size + 4.0)))
@@ -710,4 +696,3 @@ func _clear_interaction_center(preferred: Vector2, half: Vector2, stick: Vector2
 			break
 		center.y = next_y
 	return center
-

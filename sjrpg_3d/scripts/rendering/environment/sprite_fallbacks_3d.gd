@@ -1,6 +1,6 @@
 class_name SpriteFallbacks3D
 extends RefCounted
-## Existing-art fallbacks for live village interactions in the optional native comparison.
+## 운영 월드의 NPC 이름·상호작용 표시용 평면 원화 어댑터.
 ## Preserve measured sprite meshes; these cards are not native portal/chest models.
 
 var _renderer: Node
@@ -70,7 +70,7 @@ func _sync_art(sprite: IsoSprite, current: Dictionary) -> void:
 	# Slide toward the orthographic camera without moving the projected art. This keeps
 	# the small painted base below its foot pivot from being cut in half by the native floor.
 	var lift := -minimum_y / maxf(basis.z.y, 0.001) + 0.015
-	card.position = WorldRenderer3D.ground_position(sprite.global_position, _renderer.surface_height(sprite.global_position)) + basis.z * lift
+	card.position = WorldSpace3D.projected_to_world(sprite.global_position, _renderer.surface_height(sprite.global_position)) + basis.z * lift
 
 
 func _sprite_geometry(sprite: IsoSprite) -> Dictionary:
@@ -99,7 +99,7 @@ func _sprite_geometry(sprite: IsoSprite) -> Dictionary:
 			uvs.append(corner / sprite.texture.get_size())
 		indices = PackedInt32Array([0, 1, 2, 0, 2, 3])
 	var vertices := PackedVector3Array()
-	var factor := WorldRenderer3D.GROUND_PER_METER * WorldRenderer3D.PROJECTION_FACTOR
+	var factor := WorldSpace3D.GROUND_UNITS_PER_METER * WorldSpace3D.GROUND_PROJECTION_FACTOR
 	for pixel in pixels:
 		# Preserve the source node's scale/rotation as well as its authored affine/warp mesh.
 		var offset: Vector2 = sprite.global_transform.basis_xform(Vector2(pixel.x, pixel.y))
@@ -121,7 +121,7 @@ func _label(parent: Node3D, size: int, color: Color) -> Label3D:
 	label.modulate = color
 	label.outline_size = 4
 	label.outline_modulate = Color(0, 0, 0, 0.85)
-	label.pixel_size = 1.0 / (WorldRenderer3D.GROUND_PER_METER * WorldRenderer3D.PROJECTION_FACTOR)
+	label.pixel_size = 1.0 / (WorldSpace3D.GROUND_UNITS_PER_METER * WorldSpace3D.GROUND_PROJECTION_FACTOR)
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.no_depth_test = true
 	label.render_priority = 10
@@ -172,11 +172,11 @@ func _sync_header(resident: Villager) -> void:
 	var name_y: float = layout["name_y"]
 	var center_y := name_y - UiKit.BOLD_FONT.get_ascent(14) + UiKit.BOLD_FONT.get_height(14) * 0.5
 	var elevation: float = _renderer.surface_height(resident.global_position)
-	name_label.position = WorldRenderer3D.ground_position(resident.global_position + Vector2(0, center_y), elevation)
+	name_label.position = WorldSpace3D.projected_to_world(resident.global_position + Vector2(0, center_y), elevation)
 	var show_marker := resident.marker.is_valid() and bool(resident.marker.call())
 	var bob := 0.0 if Prefs.reduce_motion else sin(resident._time * 4.0) * 3.0
 	var marker_y: float = layout["marker_y"]
-	var marker_at := WorldRenderer3D.ground_position(resident.global_position + Vector2(0, marker_y + bob), elevation)
+	var marker_at := WorldSpace3D.projected_to_world(resident.global_position + Vector2(0, marker_y + bob), elevation)
 	var badge: Label3D = entry["badge"]
 	var marker: Label3D = entry["marker"]
 	badge.visible = show_marker

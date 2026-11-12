@@ -91,7 +91,7 @@ func run() -> void:
 	for source: Node2D in game.dungeon.art.visuals:
 		if str(source.get_meta("cave_role", "")) != "lantern":
 			continue
-		var expected := WorldRenderer3D.ground_position(
+		var expected := WorldSpace3D.projected_to_world(
 			source.global_position, DungeonRelief.at(source.global_position)
 		)
 		same_sources = (

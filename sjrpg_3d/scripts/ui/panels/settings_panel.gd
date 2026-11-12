@@ -31,7 +31,7 @@ func _ready() -> void:
 	set_header("모험 설정")
 	_rebuild()
 	add_footer("모험 계속하기", func(): closed.emit(), true)
-	get_viewport().size_changed.connect(_fit_zoom_targets)
+	get_viewport().size_changed.connect(_fit_display_option_targets)
 
 
 func _rebuild() -> void:
@@ -111,7 +111,7 @@ func _rebuild() -> void:
 	body.add_child(PanelFrame.wrap_label("LS 이동 · RS 조준\nA 기본 공격 / 확인 · B 회피 / 뒤로\nX · Y · RB · RT 보조 기술 1–4\nLT 대화 / 상호작용 · LB 체력 물약 · ↑ 자원 물약\n← 가방 · → 의뢰 · ↓ 스킬\nMenu 설정 · View 지도\n메뉴에서는 LS / 방향키로 선택하고 A로 확인합니다.", 16, UiKit.MUTED))
 	body.add_child(UiKit.divider())
 	_add_asset_credits()
-	_fit_zoom_targets()
+	_fit_display_option_targets()
 	_publish_version_buttons.call_deferred()
 
 
@@ -217,7 +217,7 @@ func _world_zoom_card() -> Control:
 	_zoom_grid.columns = 3
 	_zoom_grid.add_theme_constant_override("h_separation", 12)
 	_zoom_grid.add_theme_constant_override("v_separation", 12)
-	_zoom_grid.resized.connect(_fit_zoom_targets)
+	_zoom_grid.resized.connect(_fit_display_option_targets)
 	column.add_child(_zoom_grid)
 	var group := ButtonGroup.new()
 	for amount: float in Prefs.WORLD_ZOOMS:
@@ -283,18 +283,12 @@ func _refresh_screen_orientation() -> void:
 			button.disabled = bool(state.get("pending", false))
 
 
-func zoom_css_scale() -> float:
-	if OS.has_feature("web"):
-		var width: Variant = JavaScriptBridge.eval("window.innerWidth", true)
-		if (width is float or width is int) and float(width) > 0.0:
-			return get_viewport().get_visible_rect().size.x / float(width)
-	if DisplayServer.get_name() == "headless":
-		return 1.0
-	return get_viewport().get_visible_rect().size.x / maxf(1.0, float(get_window().size.x))
+func display_pixel_scale() -> float:
+	return UiMetrics.units_per_display_pixel(get_viewport())
 
 
-func _fit_zoom_targets() -> void:
-	var touch := 44.0 * zoom_css_scale()
+func _fit_display_option_targets() -> void:
+	var touch := 44.0 * display_pixel_scale()
 	var minimum_width := touch
 	for button: Button in _zoom_buttons + _screen_orientation_buttons:
 		if is_instance_valid(button) and not button.is_queued_for_deletion():

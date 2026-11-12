@@ -18,7 +18,7 @@ func run() -> void:
 		if not check("fixed asset has two editable scene instances " + id, a != null and b != null):
 			return
 		var proof: Dictionary = JSON.parse_string(
-			FileAccess.get_file_as_string(ModelSceneLibrary.ROOT + id + "/geometry.json")
+			FileAccess.get_file_as_string(ModelSceneLibrary.MODEL_SCENE_ROOT + id + "/geometry.json")
 		)
 		var triangles := 0
 		var geometry := true

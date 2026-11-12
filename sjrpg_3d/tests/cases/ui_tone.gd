@@ -10,7 +10,7 @@ class PhoneTree:
 
 class PhoneSettings:
 	extends SettingsPanel
-	func zoom_css_scale() -> float:
+	func display_pixel_scale() -> float:
 		return 720.0 / 320.0
 
 
@@ -85,6 +85,6 @@ func run() -> void:
 	await _frames(5)
 	check("all real supported zoom choices are present", settings._zoom_buttons.size() == Prefs.WORLD_ZOOMS.size())
 	for button in settings._zoom_buttons:
-		check("actual zoom controls retain 44 CSS pixel targets", button.size.x / settings.zoom_css_scale() >= 44.0 and button.size.y / settings.zoom_css_scale() >= 44.0)
+		check("actual zoom controls retain 44 CSS pixel targets", button.size.x / settings.display_pixel_scale() >= 44.0 and button.size.y / settings.display_pixel_scale() >= 44.0)
 	view.queue_free()
 	await _frames(2)

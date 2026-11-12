@@ -12,7 +12,7 @@ static func frame(village: Village) -> Transform3D:
 
 static func proposal(village: Village) -> Vector2:
 	var at := frame(village) * Vector3(5.0, 0.0, 40.0)
-	return Iso.project(Vector2(at.x, at.z) * SpatialWorld3D.UNITS)
+	return Iso.project(Vector2(at.x, at.z) * WorldSpace3D.GROUND_UNITS_PER_METER)
 
 
 static func points(village: Village) -> PackedVector2Array:
@@ -30,9 +30,9 @@ static func points(village: Village) -> PackedVector2Array:
 		Vector2(6600, 9300),
 		Vector2(8500, 9500)
 	]:
-		var local := inverse * Vector3(ground.x / 65.0, 0, ground.y / 65.0)
+		var local := inverse * Vector3(ground.x / WorldSpace3D.GROUND_UNITS_PER_METER, 0, ground.y / WorldSpace3D.GROUND_UNITS_PER_METER)
 		result.append(Vector2(local.x, local.z))
-	var local := inverse * WorldRenderer3D.ground_position(anchor)
+	var local := inverse * WorldSpace3D.projected_to_world(anchor)
 	result.append_array(
 		PackedVector2Array(
 			[
@@ -64,12 +64,12 @@ static func signs(village: Village) -> Array[Dictionary]:
 		var local := trail[index] + side * 2.6
 		var at := transform * Vector3(local.x, 0, local.y)
 		var direction := transform.basis * Vector3(forward.x, 0, forward.y)
-		result.append({"point": SpatialWorld3D.projected(at), "direction": direction})
+		result.append({"point": WorldSpace3D.world_to_projected(at), "direction": direction})
 	return result
 
 
 static func distance_to(village: Village, ground: Vector2) -> float:
-	var at := frame(village).affine_inverse() * Vector3(ground.x / 65.0, 0, ground.y / 65.0)
+	var at := frame(village).affine_inverse() * Vector3(ground.x / WorldSpace3D.GROUND_UNITS_PER_METER, 0, ground.y / WorldSpace3D.GROUND_UNITS_PER_METER)
 	var trail := points(village)
 	var distance := INF
 	for index in trail.size() - 1:

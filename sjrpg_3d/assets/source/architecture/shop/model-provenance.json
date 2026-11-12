@@ -5,7 +5,7 @@
   "inputs": [
     {
       "path": "tools/assets/architecture/bake.gd",
-      "sha256": "f4ca89e250a3158b6cefdfb452d7fbfe0439fd6f59937201df0fd5a4d84e5dc7"
+      "sha256": "d355919aecf937643d25faa45a1cecd5a32032978cfc775139a2545e6e0281a8"
     },
     {
       "path": "tools/assets/architecture/house_builder.gd",
@@ -21,15 +21,19 @@
     },
     {
       "path": "scripts/core/iso.gd",
-      "sha256": "2b727818d9bdf36c7aa6308d24c785ba9474aa217b10c82ba67c54c1a1404bfd"
+      "sha256": "0fc49826e593a8057ea0a7edbd75997feeddb191b65f412a11e7f1a510ac9730"
+    },
+    {
+      "path": "scripts/core/world_space_3d.gd",
+      "sha256": "59a32f64790e612a4528ddc2934ddb4aa6f59c309f090ad2bcbeea7b07568892"
     },
     {
       "path": "scripts/world/village.gd",
-      "sha256": "a69c967119892ffcd86448d6413ef9edacb8554f760470e2ff2126b005e27f77"
+      "sha256": "0f525b52acc3d77f3aa1d201ba47401bb9148b66fbd640412817a5ef92f78edf"
     },
     {
       "path": "scripts/world/forest_region.gd",
-      "sha256": "c1a0c16329081deff53d118b41f6ee1dd6f31d5b334c61a34eb2a924d5402e58"
+      "sha256": "eeb8073035af2c97ed4d0b3e8b2a9f7160a2195d2e92c1a6b95fc43b59cca6c7"
     },
     {
       "path": "assets/data/village.json",

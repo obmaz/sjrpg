@@ -386,8 +386,8 @@ func _ground() -> Vector2:
 
 func native_position() -> Vector3:
 	if not is_inf(spatial_height):
-		return SpatialCombat3D.point(_ground(), spatial_height)
-	return SpatialCombat3D.point(position, 0.0 if is_inf(spatial_floor_height) else spatial_floor_height)
+		return WorldSpace3D.projected_to_world(_ground(), spatial_height)
+	return WorldSpace3D.projected_to_world(position, 0.0 if is_inf(spatial_floor_height) else spatial_floor_height)
 
 
 ## Ordered continuous circle contacts prevent tunneling and do not let an already-hit front enemy hide others.

@@ -23,7 +23,7 @@ static func build(renderer: Node, parent: Node3D, sources: Array) -> Dictionary:
 	for source in sources:
 		if not source is IsoSprite or str(source.get_meta("cave_role", "")) != "lantern":
 			continue
-		var anchor := WorldRenderer3D.ground_position(source.global_position, DungeonRelief.at(source.global_position))
+		var anchor := WorldSpace3D.projected_to_world(source.global_position, DungeonRelief.at(source.global_position))
 		var mount := _wall_mount(anchor, profiles)
 		if mount.is_empty():
 			push_error("Cave torch has no supporting rendered wall")

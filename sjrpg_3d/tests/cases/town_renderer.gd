@@ -33,14 +33,14 @@ func run() -> void:
 	game.hud.open_settings()
 	var panel: SettingsPanel = game.hud._panel
 	await _frames(2)
-	var pose_time: float = renderer._hero_motion.sample_time
-	var pose_updates: int = renderer._hero_motion.pose_updates
+	var pose_time: float = renderer._hero_animation.sample_time
+	var pose_updates: int = renderer._hero_animation.pose_updates
 	Prefs.set_low_resolution(not old_quality)
 	panel._rebuild()
 	await _frames(3)
 	check("paused settings reuse the live native world", get_tree().paused and _native_active(game) and game.world_renderer == renderer)
 	check("paused settings preserve identity position health and attack clock", game.player.get_instance_id() == player_id and game.player.position == position and game.player.hp == hp and is_equal_approx(game.player._attack_time, attack_time) and GameState.hero_class == "mage")
-	check("paused menu changes do not advance the native cast pose", renderer._hero_motion.sample_time == pose_time and renderer._hero_motion.pose_updates == pose_updates)
+	check("paused menu changes do not advance the native cast pose", renderer._hero_animation.sample_time == pose_time and renderer._hero_animation.pose_updates == pose_updates)
 	var current: Label = panel.find_child("CurrentEdition", true, false)
 	var select_link: Button = panel.find_child("VersionSelect", true, false)
 	check("settings omit technical edition text and direct renderer switches", current == null and panel.find_child("Version2D", true, false) == null and panel.find_child("Version3D", true, false) == null and panel.find_child("Town2D", true, false) == null)

@@ -165,7 +165,7 @@ func _sync_map() -> void:
 		_selected.text = "밝음: 높은 길 · 어두움: 낮은 길" if game.dungeon.active else "흰 화살표: 내 위치 · 빨강: 적"
 	for marker in markers:
 		var distance := (
-			Iso.unproject(marker["pos"] - game.player.position).length() / SpatialWorld3D.UNITS
+			Iso.unproject(marker["pos"] - game.player.position).length() / WorldSpace3D.GROUND_UNITS_PER_METER
 		)
 		(_rows[marker["id"]] as MapPlaceRow).update_state(
 			marker, distance, marker["id"] == selected_id

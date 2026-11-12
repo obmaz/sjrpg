@@ -1,9 +1,8 @@
 class_name Villager
 extends Node2D
-## Named residents have distinct generated bodies at the same human scale as the hero.
+## NPC의 이름·방향·피격·상호작용 상태. 실제 외형과 미터 단위 크기는 ResidentRenderer3D가 표시한다.
 
-## Hero nominal84 paints roughly117–118worldpixels in the idle atlas.
-## Residents use112visiblepixels rather than the miniature legacy74px bodies.
+## Node2D 상호작용/UI 어댑터의 기준 높이이며 GLB의 실제 키나 충돌 높이를 뜻하지 않는다.
 const BODY_HEIGHT := 112.0
 
 var kind := 0

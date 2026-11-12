@@ -2,9 +2,10 @@
 	"forward": "+Z",
 	"id": "residents/stable",
 	"inputs": {
+		"res://scripts/core/world_space_3d.gd": "59a32f64790e612a4528ddc2934ddb4aa6f59c309f090ad2bcbeea7b07568892",
 		"res://scripts/rendering/materials/actor_surface_materials.gd": "a77dd0072a45339ef91694c421c24ded85d5522a00d1bc32de094491d56a5d8d",
 		"res://tools/assets/props/actor_shapes.gd": "d1f946445f433d9596aec997af3612fab9395c5b809dddd341283e59e05eb36f",
-		"res://tools/assets/props/bake.gd": "0e065c0f49b939e462f4a0bed2384b21a71ac32477bdb7f824d5c8bdc4708dc4",
+		"res://tools/assets/props/bake.gd": "81d6e6b8fe14ba139a3c7ebd332feba2fdbbd5a7f0a1dabb6d17dbb48571c01c",
 		"res://tools/assets/props/resident_builder.gd": "018b9794804fcde50cd49b9edc72935774e2b1a84b732245f3afd3875465b132"
 	},
 	"layout_sha256": "2082d106d0fa60d08539139646e1b84ff40fd5a866f7c0ea10fa1acd3f4e8f77",

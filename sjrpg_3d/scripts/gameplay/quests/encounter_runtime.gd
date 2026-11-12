@@ -27,7 +27,7 @@ func setup(world_game: Node) -> EncounterRuntime:
 	var sites := SITES.duplicate()
 	var cave_frame := NativeCavePlan.frame(game.dungeon.entry_point())
 	# 넓고 완만한 골짜기 바닥에서 비석을 공격할 수 있게 한다.
-	sites[CAVE_SITE] = Iso.unproject(SpatialWorld3D.projected(cave_frame*Vector3(1.5,0,8.0)))
+	sites[CAVE_SITE] = Iso.unproject(WorldSpace3D.world_to_projected(cave_frame*Vector3(1.5,0,8.0)))
 	for key in states.keys():
 		if not sites.has(key):
 			states.erase(key)

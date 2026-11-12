@@ -45,7 +45,7 @@ func gate_origin() -> String:
 
 func on_waypoint(id: String) -> bool:
 	return (
-		(Iso.unproject(game.player.position - gate_point(id)) / SpatialWorld3D.UNITS).length()
+		(Iso.unproject(game.player.position - gate_point(id)) / WorldSpace3D.GROUND_UNITS_PER_METER).length()
 		<= NativeWaypoint3D.RADIUS * 0.86
 	)
 

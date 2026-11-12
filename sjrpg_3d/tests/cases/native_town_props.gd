@@ -72,11 +72,11 @@ func run() -> void:
 	var mote: MultiMeshInstance3D = portal_entry["motes"]
 	check("portal uses one bounded shared mote mesh", mote.multimesh.instance_count == TownPropRenderer3D.MOTE_COUNT and mote.multimesh.mesh == props._mote_mesh)
 	var centre := _centre(fountain_polygon)
-	var expected := WorldRenderer3D.ground_position(centre, renderer.surface_height(centre))
-	check("fountain uses measured base centre rather than its front source-foot pivot", (fountain_entry["root"] as Node3D).position.is_equal_approx(expected) and not expected.is_equal_approx(WorldRenderer3D.ground_position(fountain.position)))
-	renderer._affordances.sync()
+	var expected := WorldSpace3D.projected_to_world(centre, renderer.surface_height(centre))
+	check("fountain uses measured base centre rather than its front source-foot pivot", (fountain_entry["root"] as Node3D).position.is_equal_approx(expected) and not expected.is_equal_approx(WorldSpace3D.projected_to_world(fountain.position)))
+	renderer._sprite_fallbacks.sync()
 	for source in game.village.portal_sprites.values():
-		check("a native gate has no duplicate fallback art card", props.owns(source) and not renderer._affordances._art.has(source.get_instance_id()))
+		check("a native gate has no duplicate fallback art card", props.owns(source) and not renderer._sprite_fallbacks._art.has(source.get_instance_id()))
 	var clock := _phase(fountain)
 	clock._process(0.2)
 	props.sync()

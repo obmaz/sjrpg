@@ -13,7 +13,7 @@ func _ready() -> void:
 	for polygon: PackedVector2Array in village.map_roads:
 		var points: Array = []
 		for point: Vector2 in polygon:
-			var native := Iso.unproject(point) / WorldRenderer3D.GROUND_PER_METER
+			var native := Iso.unproject(point) / WorldSpace3D.GROUND_UNITS_PER_METER
 			points.append([native.x, native.y])
 		roads.append(points)
 		var contour := PackedVector2Array()

@@ -155,7 +155,7 @@ func _sync_baseline() -> void:
 		current[id] = true
 		if not _cards.has(id):
 			var card := _renderer._new_card(sprite.texture, Rect2(Vector2.ZERO, sprite.texture.get_size()), false)
-			var geometry := _renderer._affordances._sprite_geometry(sprite)
+			var geometry := _renderer._sprite_fallbacks._sprite_geometry(sprite)
 			card.mesh = geometry["mesh"]
 			_cards[id] = {"card": card, "vertices": geometry["vertices"]}
 			if source is EncounterStone:
@@ -167,7 +167,7 @@ func _sync_baseline() -> void:
 		var minimum := 0.0
 		for vertex: Vector3 in _cards[id]["vertices"]:
 			minimum = minf(minimum, (card.basis * vertex).y)
-		card.position = WorldRenderer3D.ground_position(sprite.global_position, _renderer.surface_height(sprite.global_position)) + card.basis.z * (-minimum / card.basis.z.y + 0.018)
+		card.position = WorldSpace3D.projected_to_world(sprite.global_position, _renderer.surface_height(sprite.global_position)) + card.basis.z * (-minimum / card.basis.z.y + 0.018)
 		(card.material_override as ShaderMaterial).set_shader_parameter("tint", sprite.modulate_color * sprite.modulate * sprite.self_modulate)
 		card.visible = _baseline and not _game.dungeon.active and source.visible and sprite.visible
 		if _cards[id].has("header"):

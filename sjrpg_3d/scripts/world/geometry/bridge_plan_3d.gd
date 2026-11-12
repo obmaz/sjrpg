@@ -5,19 +5,19 @@ extends RefCounted
 
 static func frame(bridge: Bridge) -> Transform3D:
 	var deck := bridge.deck_polygon()
-	var a := WorldRenderer3D.ground_position(deck[0])
-	var along := (WorldRenderer3D.ground_position(deck[1]) - a).normalized()
-	var across := (WorldRenderer3D.ground_position(deck[3]) - a).normalized()
+	var a := WorldSpace3D.projected_to_world(deck[0])
+	var along := (WorldSpace3D.projected_to_world(deck[1]) - a).normalized()
+	var across := (WorldSpace3D.projected_to_world(deck[3]) - a).normalized()
 	return Transform3D(Basis(along, Vector3.UP, across), a)
 
 
 static func foundations(bridge: Bridge) -> Array[Dictionary]:
 	var deck := bridge.deck_polygon()
-	var length := WorldRenderer3D.ground_position(deck[0]).distance_to(
-		WorldRenderer3D.ground_position(deck[1])
+	var length := WorldSpace3D.projected_to_world(deck[0]).distance_to(
+		WorldSpace3D.projected_to_world(deck[1])
 	)
-	var width := WorldRenderer3D.ground_position(deck[0]).distance_to(
-		WorldRenderer3D.ground_position(deck[3])
+	var width := WorldSpace3D.projected_to_world(deck[0]).distance_to(
+		WorldSpace3D.projected_to_world(deck[3])
 	)
 	var parts: Array[Dictionary] = []
 	for pier in 3:

@@ -5,7 +5,7 @@ static func outline(surface: Dictionary) -> PackedVector2Array:
 	var original: PackedVector2Array = surface["top"]
 	var native := PackedVector2Array()
 	for point: Vector2 in original:
-		native.append(Iso.unproject(point) / 65.0)
+		native.append(Iso.unproject(point) / WorldSpace3D.GROUND_UNITS_PER_METER)
 	var ramp: PackedVector2Array = surface.get("ramp", PackedVector2Array())
 	var result := PackedVector2Array()
 	for i: int in native.size():
@@ -20,8 +20,8 @@ static func outline(surface: Dictionary) -> PackedVector2Array:
 			result.append(original[i])
 		else:
 			var bevel := minf(0.52, minf(a.distance_to(b), b.distance_to(c)) * 0.18)
-			result.append(Iso.project(b.move_toward(a, bevel) * 65.0))
-			result.append(Iso.project(b.move_toward(c, bevel * 0.84) * 65.0))
+			result.append(Iso.project(b.move_toward(a, bevel) * WorldSpace3D.GROUND_UNITS_PER_METER))
+			result.append(Iso.project(b.move_toward(c, bevel * 0.84) * WorldSpace3D.GROUND_UNITS_PER_METER))
 	# 불규칙한 모서리 깎기는 상면/경사로·절벽/사면 모두에 같은 경계가 된다.
 	return result
 
@@ -35,8 +35,8 @@ static func faces(surface: Dictionary) -> PackedVector3Array:
 		for edge: int in 3:
 			var a := source[triangle + edge]
 			var b := source[triangle + (edge + 1) % 3]
-			var from := SpatialWorld3D.projected(a)
-			var to := SpatialWorld3D.projected(b)
+			var from := WorldSpace3D.world_to_projected(a)
+			var to := WorldSpace3D.world_to_projected(b)
 			var boundary := false
 			for i: int in top.size():
 				if Geometry2D.get_closest_point_to_segment(from, top[i], top[(i + 1) % top.size()]).distance_squared_to(from) < 0.0001 and Geometry2D.get_closest_point_to_segment(to, top[i], top[(i + 1) % top.size()]).distance_squared_to(to) < 0.0001:
@@ -48,7 +48,7 @@ static func faces(surface: Dictionary) -> PackedVector3Array:
 				continue
 			used[key] = true
 			var normal := Vector3(b.z - a.z, 0, a.x - b.x).normalized()
-			var test := (from + to) * 0.5 + Iso.project(Vector2(normal.x, normal.z) * 65.0).normalized()
+			var test := (from + to) * 0.5 + Iso.project(Vector2(normal.x, normal.z) * WorldSpace3D.GROUND_UNITS_PER_METER).normalized()
 			if Geometry2D.is_point_in_polygon(test, top):
 				normal = -normal
 			var segments := maxi(1, ceili(a.distance_to(b) / 1.20))

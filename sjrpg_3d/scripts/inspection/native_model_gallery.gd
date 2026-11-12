@@ -95,7 +95,7 @@ func _ready() -> void:
 	for kind: String in ["goblin", "wolf", "boar", "skeleton", "golem"]:
 		var model := EnemyRenderer3D.build(kind)
 		var root: Node3D = model["root"]
-		var legacy_height: float = float(Enemy.KINDS[kind]["height"]) / (WorldRenderer3D.GROUND_PER_METER * Iso.S)
+		var legacy_height: float = float(Enemy.KINDS[kind]["height"]) / (WorldSpace3D.GROUND_UNITS_PER_METER * Iso.S)
 		var height_metres: float = float(native_heights.get(kind, legacy_height))
 		root.scale = Vector3.ONE * height_metres / float(model["base_height"])
 		_add(root, kind)
@@ -218,7 +218,7 @@ func review_snapshot() -> Dictionary:
 		for candidate: Node in meshes:
 			if (candidate as MeshInstance3D).skin != null:
 				skinned += 1
-		models.append({"asset": model.get_meta("resident_asset", ""), "scene_paths": _model_scene_paths(model), "skeletons": model.find_children("*", "Skeleton3D", true, false).size(), "skinned_meshes": skinned, "sample": _resident_samples.get(_keys[index], {}), "identity": _keys[index], "triangles": triangles, "surfaces": surfaces, "bounds_min": [envelope.position.x, envelope.position.y, envelope.position.z], "bounds_max": [envelope.end.x, envelope.end.y, envelope.end.z], "scale": [model.scale.x, model.scale.y, model.scale.z]})
+		models.append({"asset": model.get_meta("resident_asset", ""), "scene_paths": ModelTree3D.scene_paths(model), "skeletons": model.find_children("*", "Skeleton3D", true, false).size(), "skinned_meshes": skinned, "sample": _resident_samples.get(_keys[index], {}), "identity": _keys[index], "triangles": triangles, "surfaces": surfaces, "bounds_min": [envelope.position.x, envelope.position.y, envelope.position.z], "bounds_max": [envelope.end.x, envelope.end.y, envelope.end.z], "scale": [model.scale.x, model.scale.y, model.scale.z]})
 	return {"face": face, "azimuth": 45 + face * 90, "elevation": ELEVATION, "projection": "orthographic", "models": models, "mapped": ["merchant"] if merchant_only else _keys, "merchant_only": merchant_only, "count": models.size(), "visible": visible, "requested_frame": requested_frame, "current_frame": Engine.get_process_frames()}
 
 
@@ -252,12 +252,3 @@ func _process(_delta: float) -> void:
 	# Other inspection modes retain their one-frame rendering behavior.
 	if merchant_only and visible and _sample_residents():
 		viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
-
-func _model_scene_paths(root: Node3D) -> Array[String]:
-	var paths: Array[String] = []
-	var nodes: Array[Node] = root.find_children("*", "Node3D", true, false)
-	nodes.append(root)
-	for node: Node in nodes:
-		if not node.scene_file_path.is_empty() and not paths.has(node.scene_file_path):
-			paths.append(node.scene_file_path)
-	return paths

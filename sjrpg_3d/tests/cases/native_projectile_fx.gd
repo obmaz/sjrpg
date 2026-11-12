@@ -30,7 +30,7 @@ func run() -> void:
 	var fx: CombatEffects3D = renderer._combat_fx
 	var floor_body := Fixture.box(game.spatial_world, Fixture.remote_at(Vector3(120, 2.5, 120)), Vector3(30, 1, 30), SpatialWorld3D.FLOOR)
 	await Fixture.settle(get_tree())
-	game.spatial_world.teleport_source_actor(game.player, SpatialWorld3D.projected(Fixture.remote_at(Vector3(120, 3, 120))), Player.RADIUS)
+	game.spatial_world.teleport_source_actor(game.player, WorldSpace3D.world_to_projected(Fixture.remote_at(Vector3(120, 3, 120))), Player.RADIUS)
 	game.player.facing = 0.0
 	check("fresh mage actually equips starter firebolt", str(GameState.slots[0]) == "firebolt")
 	var shot := _cast(game, "firebolt")
@@ -65,7 +65,7 @@ func run() -> void:
 	shot.set_process(false)
 	Prefs.reduce_motion = true
 	fx.sync()
-	check("reduced motion removes tail/flicker while preserving the real body", not (entry["tail"] as MeshInstance3D).visible and body.visible and is_equal_approx((body.mesh as QuadMesh).size.x * body.global_transform.basis.x.length(), 44.0 / (65.0 * WorldRenderer3D.PROJECTION_FACTOR)))
+	check("reduced motion removes tail/flicker while preserving the real body", not (entry["tail"] as MeshInstance3D).visible and body.visible and is_equal_approx((body.mesh as QuadMesh).size.x * body.global_transform.basis.x.length(), 44.0 / (65.0 * WorldSpace3D.GROUND_PROJECTION_FACTOR)))
 	Prefs.reduce_motion = false
 	shot._process(shot.life + 0.1)
 	fx.sync()

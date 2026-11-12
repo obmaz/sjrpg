@@ -10,12 +10,12 @@ func run() -> void:
 	var frame := CaveTrailPlan3D.frame(game.village)
 	var points := CaveTrailPlan3D.points(game.village)
 	var start: Vector2 = game.village.sanctuary_points["cave"]
-	var expected := SpatialWorld3D.projected(frame * Vector3(points[5].x, 0, points[5].y))
+	var expected := WorldSpace3D.world_to_projected(frame * Vector3(points[5].x, 0, points[5].y))
 	check(
 		"field trail joins the cave waypoint before the descent",
 		start.distance_to(expected) < 0.01 and points[5].y >= 38.0 and points[5].y < 48.0
 	)
-	start = SpatialWorld3D.projected(frame * Vector3(points[0].x, 0, points[0].y))
+	start = WorldSpace3D.world_to_projected(frame * Vector3(points[0].x, 0, points[0].y))
 	var attached := false
 	for road: PackedVector2Array in game.village.map_roads:
 		attached = attached or Geometry2D.is_point_in_polygon(start, road)
@@ -52,7 +52,7 @@ func run() -> void:
 	game.spatial_world.teleport_source_actor(game.player, start, Player.RADIUS)
 	var reached := true
 	for index in range(1, points.size()):
-		var destination := SpatialWorld3D.projected(
+		var destination := WorldSpace3D.world_to_projected(
 			frame * Vector3(points[index].x, 0, points[index].y)
 		)
 		for step in 1100:
@@ -70,7 +70,7 @@ func run() -> void:
 		"the real player can walk from the field road through every trail bend downhill",
 		reached and game.spatial_world.height_at(game.player.position) < -1.0
 	)
-	var mouth := SpatialWorld3D.projected(frame * Vector3(0, 0, 0.4))
+	var mouth := WorldSpace3D.world_to_projected(frame * Vector3(0, 0, 0.4))
 	for step in 1100:
 		if game.player.position.distance_to(mouth) < 3.0:
 			break

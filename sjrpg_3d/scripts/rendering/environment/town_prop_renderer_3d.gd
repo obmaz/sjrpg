@@ -93,10 +93,10 @@ func _sync_source(source: IsoSprite, role: String, current: Dictionary) -> void:
 		centre += at
 	centre /= footprint.size()
 	var edge := (
-		WorldRenderer3D.ground_position(footprint[1]) - WorldRenderer3D.ground_position(footprint[0])
+		WorldSpace3D.projected_to_world(footprint[1]) - WorldSpace3D.projected_to_world(footprint[0])
 	)
 	var side := (
-		WorldRenderer3D.ground_position(footprint[2]) - WorldRenderer3D.ground_position(footprint[1])
+		WorldSpace3D.projected_to_world(footprint[2]) - WorldSpace3D.projected_to_world(footprint[1])
 	)
 	var model_size := FOUNTAIN_SIZE if role == "fountain" else PORTAL_SIZE
 	if model_size.x > edge.length() + 0.001 or model_size.z > side.length() + 0.001:
@@ -106,7 +106,7 @@ func _sync_source(source: IsoSprite, role: String, current: Dictionary) -> void:
 		_entries[id] = _create(source, role)
 	var entry: Dictionary = _entries[id]
 	var root: Node3D = entry["root"]
-	root.position = WorldRenderer3D.ground_position(centre, _renderer.surface_height(centre))
+	root.position = WorldSpace3D.projected_to_world(centre, _renderer.surface_height(centre))
 	root.rotation.y = -atan2(edge.z, edge.x)
 	root.visible = source.visible
 	var phase := _source_phase(source)
@@ -185,7 +185,7 @@ func _sync_waypoint(source: IsoSprite, current: Dictionary) -> void:
 		_entries[id]["source"] = weakref(source)
 	var entry: Dictionary = _entries[id]
 	var root: Node3D = entry["root"]
-	root.position = WorldRenderer3D.ground_position(
+	root.position = WorldSpace3D.projected_to_world(
 		source.position, GroundRelief3D.at(_game.village, source.position)
 	)
 	root.visible = source.visible

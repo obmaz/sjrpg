@@ -1,7 +1,7 @@
 class_name HudArt
 extends RefCounted
 ## Shared HUD drawing in the reference style: dark bronze-rimmed round plaques
-## from the original sheets (cinematic-interface.webp), slanted bars and rune rings.
+## from assets/ui/hud/icons.webp, slanted bars and rune rings.
 
 const FONT := preload("res://assets/fonts/NanumGothic-Regular.ttf")
 const BAR_STEPS := 16

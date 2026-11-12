@@ -128,8 +128,8 @@ static func build(renderer: Node, parent: Node3D, world: Node2D, cave: bool, exc
 		var role := role_of(source, renderer.game.village)
 		if role.is_empty():
 			continue
-		var at := WorldRenderer3D.ground_position(source.global_position, renderer.surface_height(source.global_position))
-		var height := float(source.def["height"]) * source.k / SpatialWorld3D.VERTICAL
+		var at := WorldSpace3D.projected_to_world(source.global_position, renderer.surface_height(source.global_position))
+		var height := float(source.def["height"]) * source.k / WorldSpace3D.VERTICAL_PIXELS_PER_METER
 		var basis := Basis.IDENTITY
 		var mesh: ArrayMesh
 		var opening := 0.0
@@ -137,8 +137,8 @@ static func build(renderer: Node, parent: Node3D, world: Node2D, cave: bool, exc
 			var corners: Array = source.def["opening"]
 			var left := source.atlas_point(Vector2(corners[0][0], corners[0][1]))
 			var right := source.atlas_point(Vector2(corners[1][0], corners[1][1]))
-			var a := WorldRenderer3D.ground_position(left)
-			var b := WorldRenderer3D.ground_position(right)
+			var a := WorldSpace3D.projected_to_world(left)
+			var b := WorldSpace3D.projected_to_world(right)
 			at = (a + b) * 0.5
 			at.y = renderer.surface_height((left+right)*.5)
 			var axis := (b - a).normalized()

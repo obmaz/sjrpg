@@ -294,7 +294,7 @@ func _publish(ready: bool) -> void:
 		var zones: Variant = presenter.get("_zone_fx")
 		if is_instance_valid(zones):
 			result["native_zones"] = zones.snapshot()
-		result["enemy_models"] = presenter._enemy_models.snapshot()
+		result["enemy_models"] = presenter._enemy_renderer.snapshot()
 		var environment: Variant = presenter.get("_world_environment")
 		if is_instance_valid(environment):
 			var visible_corpses := 0
@@ -312,7 +312,7 @@ func _publish(ready: bool) -> void:
 					for mount: Transform3D in torches_report.get("mount_transforms", []):
 						heights.append(mount.origin.y)
 					for anchor: Vector3 in torches_report.get("anchors", []):
-						floor_heights.append(game.spatial_world.height_at(SpatialWorld3D.projected(anchor)))
+						floor_heights.append(game.spatial_world.height_at(WorldSpace3D.world_to_projected(anchor)))
 					result["torches"] = {"count": torches_report["count"], "mounting": torches_report.get("mounting", "floor"),
 						"scale": torches_report.get("scale", 1.0), "heights": heights, "floor_heights": floor_heights, "batches": torches_report["batches"].size()}
 

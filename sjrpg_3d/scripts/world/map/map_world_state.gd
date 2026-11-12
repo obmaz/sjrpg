@@ -164,7 +164,7 @@ func refresh(force_check := false) -> bool:
 static func _project(points: PackedVector2Array, frame: Transform3D) -> PackedVector2Array:
 	var result := PackedVector2Array()
 	for point in points:
-		result.append(SpatialWorld3D.projected(frame * Vector3(point.x, 0, point.y)))
+		result.append(WorldSpace3D.world_to_projected(frame * Vector3(point.x, 0, point.y)))
 	return result
 
 

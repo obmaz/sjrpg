@@ -111,7 +111,7 @@ func sync() -> void:
 		return
 	for display in displays:
 		var trap := display.trap
-		display.root.position = WorldRenderer3D.ground_position(
+		display.root.position = WorldSpace3D.projected_to_world(
 			trap.position, DungeonRelief.at(trap.position)
 		)
 		var ink := Color(.08, .07, .05, .28)

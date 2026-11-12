@@ -13,7 +13,7 @@ func setup(presenter: Node) -> CombatEffects3D:
 	if _shader == null:
 		_shader = Shader.new()
 		# Spatial shots use real depth, unlike the authored overlay-style skill cards.
-		_shader.code = WorldRenderer3D.CARD_CODE.replace("blend_mix", "blend_add")
+		_shader.code = WorldRenderer3D.SPRITE_CARD_SHADER_SOURCE.replace("blend_mix", "blend_add")
 	return self
 
 static func supports(source: Effect) -> bool:
@@ -66,7 +66,7 @@ func _update(entry: Dictionary, source: Effect, at: Vector3) -> void:
 	if movement.length_squared() > 0.00000001:
 		entry["direction"] = movement.normalized()
 	elif (Vector3(entry["direction"])).is_zero_approx():
-		entry["direction"] = WorldRenderer3D.ground_position(source.velocity).normalized()
+		entry["direction"] = WorldSpace3D.projected_to_world(source.velocity).normalized()
 	entry["last"] = at
 	var body: MeshInstance3D = entry["body"]
 	var tail: MeshInstance3D = entry["tail"]
@@ -79,7 +79,7 @@ func _update(entry: Dictionary, source: Effect, at: Vector3) -> void:
 	_renderer._place_card(body, source.position, Rect2(Vector2.ONE * -width * 0.5, Vector2.ONE * width), 0.0, at)
 	(body.material_override as ShaderMaterial).set_shader_parameter("tint", Color(1, 1, 1, 0.65 if Prefs.reduce_motion else 0.9))
 	var direction: Vector3 = entry["direction"]
-	var speed := WorldRenderer3D.ground_position(source.velocity).length()
+	var speed := WorldSpace3D.projected_to_world(source.velocity).length()
 	var distance := minf(maxf(source.age, 0.0) * speed, 0.32)
 	tail.visible = not Prefs.reduce_motion and distance > 0.001 and not direction.is_zero_approx()
 	if tail.visible:

@@ -78,10 +78,10 @@ func run() -> void:
 		if trap.kind != "flame":
 			continue
 		for chest: Chest in game.chests:
-			var foot := SpatialWorld3D.native_point(chest.position)
+			var foot := WorldSpace3D.projected_to_world(chest.position)
 			foot.y = DungeonRelief.at(chest.position)
 			clear_vents = clear_vents and not trap.contains_foot(foot, 1.2)
-		var source := SpatialWorld3D.native_point(trap.position)
+		var source := WorldSpace3D.projected_to_world(trap.position)
 		source.y = DungeonRelief.at(trap.position) + .8
 		var ray := PhysicsRayQueryParameters3D.create(
 			source, source + Vector3(0, 0, -.8), SpatialWorld3D.SOLID

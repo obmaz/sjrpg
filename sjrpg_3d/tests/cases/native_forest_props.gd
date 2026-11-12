@@ -34,7 +34,7 @@ func run() -> void:
 	for placement: Dictionary in report["placements"]:
 		var transform: Transform3D = placement["transform"]
 		var foot: Vector2 = placement["source_foot"]
-		check("plant roots use actual native height and preserve uniform scale", transform.origin.is_equal_approx(WorldRenderer3D.ground_position(foot, renderer.surface_height(foot))) and is_equal_approx(transform.basis.x.length(), transform.basis.y.length()) and is_equal_approx(transform.basis.y.length(), transform.basis.z.length()))
+		check("plant roots use actual native height and preserve uniform scale", transform.origin.is_equal_approx(WorldSpace3D.projected_to_world(foot, renderer.surface_height(foot))) and is_equal_approx(transform.basis.x.length(), transform.basis.y.length()) and is_equal_approx(transform.basis.y.length(), transform.basis.z.length()))
 	var native_landmarks: Node3D = environment.forest.get_node("NativeLandmarks")
 	var landmarks: Dictionary = native_landmarks.get_meta("native_landmark_report")
 	check("all four landmark art cards have native source owners", landmarks["entries"].size() == 4 and landmarks["owned_source_ids"].size() == 4)
@@ -109,8 +109,8 @@ func run() -> void:
 	var waterfall := native_landmarks.get_node("Landmark3/FallingWater") as MeshInstance3D
 	var shores: Array = waterfall.get_meta("source_shores")
 	var waterfall_source: Landmark = game.village.landmarks[3]
-	var old_span := WorldRenderer3D.ground_position(Iso.poly_bounds(waterfall_source.water[0]).get_center()).distance_squared_to(WorldRenderer3D.ground_position(Iso.poly_bounds(waterfall_source.water[1]).get_center()))
-	var new_span := WorldRenderer3D.ground_position(shores[0]).distance_squared_to(WorldRenderer3D.ground_position(shores[1]))
+	var old_span := WorldSpace3D.projected_to_world(Iso.poly_bounds(waterfall_source.water[0]).get_center()).distance_squared_to(WorldSpace3D.projected_to_world(Iso.poly_bounds(waterfall_source.water[1]).get_center()))
+	var new_span := WorldSpace3D.projected_to_world(shores[0]).distance_squared_to(WorldSpace3D.projected_to_world(shores[1]))
 	check("cascade connects the actual nearest shores instead of crossing both pond centres", new_span < old_span)
 	var children := environment.forest.get_child_count()
 	environment.sync(0.0, true)

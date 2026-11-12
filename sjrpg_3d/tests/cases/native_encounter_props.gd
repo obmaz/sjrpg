@@ -51,7 +51,7 @@ func _chest_clearance(game: Node, props: EncounterPropRenderer3D) -> void:
 			colliders_match = false
 			continue
 		var collider: CylinderShape3D = (body.get_child(0) as CollisionShape3D).shape
-		var anchor := world.native_point(chest.position, world.height_at(chest.position))
+		var anchor := WorldSpace3D.projected_to_world(chest.position, world.height_at(chest.position))
 		colliders_match = colliders_match and is_equal_approx(collider.radius, world.radius_metres(Chest.COLLISION_RADIUS)) and absf(collider.height - EncounterGeometry3D.CHEST_COLLISION_HEIGHT) < 0.001 and absf(body.position.y - collider.height * 0.5 - anchor.y) < 0.001
 		# Conservative cylinder contains fixed geometry plus every continuous lid pose.
 		# Floor is deliberately not an obstruction; cliff side faces remain SOLID.
@@ -70,7 +70,7 @@ func _chest_clearance(game: Node, props: EncounterPropRenderer3D) -> void:
 		var ring := collider.radius + world.radius_metres(Player.RADIUS) + 0.18
 		for index in 16:
 			var direction := Vector3(cos(TAU * index / 16.0), 0, sin(TAU * index / 16.0))
-			var point := world.projected(anchor + direction * ring)
+			var point := WorldSpace3D.world_to_projected(anchor + direction * ring)
 			points.append(point)
 			clear.append(not world.blocked(point, Player.RADIUS) and absf(world.height_at(point) - anchor.y) <= SpatialWorld3D.MAX_STEP)
 		var walkable_arc := false
@@ -80,7 +80,7 @@ func _chest_clearance(game: Node, props: EncounterPropRenderer3D) -> void:
 				continue
 			var reached := world.move_actor(points[index], points[next], Player.RADIUS)
 			var returned := world.move_actor(points[next], points[index], Player.RADIUS)
-			if world.native_point(reached).distance_to(world.native_point(points[next])) < 0.04 and world.native_point(returned).distance_to(world.native_point(points[index])) < 0.04:
+			if WorldSpace3D.projected_to_world(reached).distance_to(WorldSpace3D.projected_to_world(points[next])) < 0.04 and WorldSpace3D.projected_to_world(returned).distance_to(WorldSpace3D.projected_to_world(points[index])) < 0.04:
 				walkable_arc = true
 				break
 		all_approachable = all_approachable and walkable_arc
@@ -117,7 +117,7 @@ func _chest_clearance(game: Node, props: EncounterPropRenderer3D) -> void:
 	var route_finish := Iso.project(Vector2(1530, 360))
 	var route_forward := world.move_actor(route_start, route_finish, Player.RADIUS)
 	var route_backward := world.move_actor(route_finish, route_start, Player.RADIUS)
-	check("the east memory chest keeps the existing exterior corridor walkable both ways", not game.in_town(route_start) and not game.in_town(route_finish) and world.native_point(route_forward).distance_to(world.native_point(route_finish)) < 0.04 and world.native_point(route_backward).distance_to(world.native_point(route_start)) < 0.04)
+	check("the east memory chest keeps the existing exterior corridor walkable both ways", not game.in_town(route_start) and not game.in_town(route_finish) and WorldSpace3D.projected_to_world(route_forward).distance_to(WorldSpace3D.projected_to_world(route_finish)) < 0.04 and WorldSpace3D.projected_to_world(route_backward).distance_to(WorldSpace3D.projected_to_world(route_start)) < 0.04)
 	print("NATIVE_CHEST_PLACEMENT_METRICS " + JSON.stringify(reports))
 
 
@@ -174,8 +174,8 @@ func run() -> void:
 	for entry: Dictionary in props._entries.values():
 		no_colliders = no_colliders and (entry["root"] as Node3D).find_children("*", "CollisionObject3D", true, false).is_empty()
 	check("native display introduces no replacement physics or interaction blockers", no_colliders)
-	renderer._affordances.sync()
-	check("native encounter models have no duplicate stone or chest cards", renderer._world_environment._stone_cards.is_empty() and renderer._affordances._art.is_empty())
+	renderer._sprite_fallbacks.sync()
+	check("native encounter models have no duplicate stone or chest cards", renderer._world_environment._stone_cards.is_empty() and renderer._sprite_fallbacks._art.is_empty())
 	var stone: EncounterStone = game.encounters.stones["west"]
 	var original_body := stone.body()
 	var state: Dictionary = game.encounters.states["west"]
@@ -202,7 +202,7 @@ func run() -> void:
 	var header: Label3D = entry["header"]
 	check("native recharge seconds come only from the source runtime", header.text == "충전까지 2초" and state == state_before and stone._flash == flash_before)
 	var root: Node3D = entry["root"]
-	check("stone display keeps its source body and actual ground anchor", stone.body() == original_body and root.position.is_equal_approx(WorldRenderer3D.ground_position(stone.position, renderer.surface_height(stone.position))))
+	check("stone display keeps its source body and actual ground anchor", stone.body() == original_body and root.position.is_equal_approx(WorldSpace3D.projected_to_world(stone.position, renderer.surface_height(stone.position))))
 	stone.visible = false
 	props.sync()
 	check("source-local hiding removes the native stone and its header", not root.visible and not header.is_visible_in_tree())
@@ -215,20 +215,20 @@ func run() -> void:
 	# A missing/unsupported native owner uses the actual individual card, and
 	# respects the Chest's own visibility independently of hidden adapter parents.
 	props._source_ids.erase(old_art_id)
-	renderer._affordances.sync()
-	check("unowned chest retains its measured individual source card", renderer._affordances._art.has(old_art_id))
+	renderer._sprite_fallbacks.sync()
+	check("unowned chest retains its measured individual source card", renderer._sprite_fallbacks._art.has(old_art_id))
 	chest.visible = false
-	renderer._affordances.sync()
-	check("fallback ownership respects source-local hiding", not renderer._affordances._art.has(old_art_id))
+	renderer._sprite_fallbacks.sync()
+	check("fallback ownership respects source-local hiding", not renderer._sprite_fallbacks._art.has(old_art_id))
 	chest.visible = true
 	props.sync()
-	renderer._affordances.sync()
+	renderer._sprite_fallbacks.sync()
 	check("unopened native chest starts closed with an intact capsule blocker", not chest.dead and is_zero_approx((chest_entry["lid"] as Node3D).rotation.x) and game.spatial_world.blocked(chest.position, 1.0))
 	var chest_floor := SpatialCombat3D.floor_at(game, chest.position)
 	var horizontal := Vector3.RIGHT
-	var native_center := SpatialWorld3D.native_point(chest.position)
-	var start := SpatialWorld3D.projected(native_center - horizontal)
-	var finish := SpatialWorld3D.projected(native_center + horizontal)
+	var native_center := WorldSpace3D.projected_to_world(chest.position)
+	var start := WorldSpace3D.world_to_projected(native_center - horizontal)
+	var finish := WorldSpace3D.world_to_projected(native_center + horizontal)
 	var projectile_radius := 8.0
 	var above := chest_floor + EncounterGeometry3D.CHEST_COLLISION_HEIGHT + SpatialWorld3D.radius_metres(projectile_radius) + 0.02
 	check("overhead shots miss the actual closed chest cylinder", is_inf(SpatialCombat3D.target_fraction(game, start, finish, above, chest, projectile_radius, Chest.COLLISION_RADIUS)))
@@ -238,18 +238,18 @@ func run() -> void:
 	game.break_chests_at(rim, 1.0, game.player, false)
 	check("the enlarged target rim receives the real chest attack path", chest.dead)
 	props.sync()
-	renderer._affordances.sync()
+	renderer._sprite_fallbacks.sync()
 	game.spatial_world.sync_scope()
 	await get_tree().physics_frame
 	check("consumed chests are absent from the projectile target volume", is_inf(SpatialCombat3D.target_fraction(game, start, finish, chest_floor + 0.25, chest, projectile_radius, Chest.COLLISION_RADIUS)))
 	var gold_after := GameState.gold
 	props.sync()
 	chest.take_damage(1.0, game.player)
-	check("real consumed chest opens once without duplicating art rewards or blockers", chest.dead and GameState.opened_chests.has(chest.index) and GameState.gold == gold_after and not game.spatial_world.blocked(chest.position, 1.0) and props.owns(chest.body_sprite) and not props.source_ids().has(old_art_id) and renderer._affordances._art.is_empty())
+	check("real consumed chest opens once without duplicating art rewards or blockers", chest.dead and GameState.opened_chests.has(chest.index) and GameState.gold == gold_after and not game.spatial_world.blocked(chest.position, 1.0) and props.owns(chest.body_sprite) and not props.source_ids().has(old_art_id) and renderer._sprite_fallbacks._art.is_empty())
 	# 실제 개봉 시계를 끝까지 진행한 뒤 원래 완전 개방/충돌 범위를 검사한다.
 	chest._process(Chest.OPEN_SECONDS)
 	props.sync()
-	check("opened native chest keeps its source anchor and a real empty lid pose", chest.position == original_anchor and is_equal_approx((chest_entry["lid"] as Node3D).rotation.x, deg_to_rad(EncounterGeometry3D.OPEN_ANGLE)) and (chest_entry["splinters"] as MeshInstance3D).visible and chest_root.position.is_equal_approx(WorldRenderer3D.ground_position(chest.position, renderer.surface_height(chest.position))))
+	check("opened native chest keeps its source anchor and a real empty lid pose", chest.position == original_anchor and is_equal_approx((chest_entry["lid"] as Node3D).rotation.x, deg_to_rad(EncounterGeometry3D.OPEN_ANGLE)) and (chest_entry["splinters"] as MeshInstance3D).visible and chest_root.position.is_equal_approx(WorldSpace3D.projected_to_world(chest.position, renderer.surface_height(chest.position))))
 	var empty := EncounterPropRenderer3D.new().setup(renderer, {})
 	empty.sync()
 	check("missing native material family leaves source-art ownership available", empty._entries.is_empty() and not empty.owns(stone.art) and not empty.owns(chest.body_sprite))
@@ -257,13 +257,13 @@ func run() -> void:
 	game.spatial_world.teleport_source_actor(game.player, game.dungeon.entry_point(), Player.RADIUS)
 	check("prop lifetime fixture enters the existing cave", game.dungeon.enter())
 	props.sync()
-	renderer._affordances.sync()
+	renderer._sprite_fallbacks.sync()
 	var hidden := true
 	for item: Dictionary in props._entries.values():
 		var owner: Node2D = (item["owner"] as WeakRef).get_ref()
 		var in_cave: bool = owner.get_parent() == game.world
 		hidden = hidden and (item["root"] as Node3D).visible == in_cave
-	check("only current cave chest models are visible while forest props stay hidden", hidden and renderer._affordances._art.is_empty())
+	check("only current cave chest models are visible while forest props stay hidden", hidden and renderer._sprite_fallbacks._art.is_empty())
 	game.dungeon.leave("")
 	props.sync()
 	check("cave return restores the same forest models and consumed chest state", root.visible and chest_root.visible and chest.dead and props._entries.size() == expected)
@@ -272,8 +272,8 @@ func run() -> void:
 	var removed_root: WeakRef = weakref(chest_root)
 	chest.queue_free()
 	props.sync()
-	renderer._affordances.sync()
-	check("a queued source cannot briefly reappear through a fallback card", not renderer._affordances._art.has(removed_art))
+	renderer._sprite_fallbacks.sync()
+	check("a queued source cannot briefly reappear through a fallback card", not renderer._sprite_fallbacks._art.has(removed_art))
 	game.chests.erase(chest)
 	await _frames(2)
 	check("a removed source cleans native ownership instead of leaving a ghost prop", not props._entries.has(removed_id) and removed_root.get_ref() == null)

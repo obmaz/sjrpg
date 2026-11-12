@@ -3,9 +3,6 @@ extends Node3D
 ## Native3D authority. Node2D positions are projected-ground gameplay/HUD adapters.
 ## Source polygons construct collision shapes once; movement never calls Iso.push_out.
 
-const UNITS := 65.0
-const VERTICAL := UNITS * Iso.S
-const HORIZONTAL := UNITS * 1.224744871391589 * Iso.S
 const SOLID := 1
 const FLOOR := 2
 const MONSTER_BOUNDARY := 4
@@ -59,15 +56,6 @@ func setup(world_game: Node, stage: Node3D) -> SpatialWorld3D:
 	return self
 
 
-static func native_point(point: Vector2, height := 0.0) -> Vector3:
-	var flat := Iso.unproject(point) / UNITS
-	return Vector3(flat.x, height, flat.y)
-
-
-static func projected(point: Vector3) -> Vector2:
-	return Iso.project(Vector2(point.x, point.z) * UNITS)
-
-
 static func actor_dimensions(source: Node2D, radius_pixels: float) -> Vector2:
 	var radius := radius_metres(radius_pixels)
 	var authored_height := 84.0
@@ -76,13 +64,13 @@ static func actor_dimensions(source: Node2D, radius_pixels: float) -> Vector2:
 		authored_height = sprite.body_height
 	var height_factor: float = 1.0 if source is Enemy else 1.25
 	# Enemy source height is already canonical native metres; no second hidden enlargement.
-	return Vector2(radius, maxf(radius * 2.0 + 0.05, authored_height / VERTICAL * height_factor))
+	return Vector2(radius, maxf(radius * 2.0 + 0.05, authored_height / WorldSpace3D.VERTICAL_PIXELS_PER_METER * height_factor))
 
 
 static func radius_metres(radius_pixels: float) -> float:
 	# A horizontal isometric ground-circle silhouette spans sqrt(3/2)*S pixels
 	# per ground unit; vertical elevation uses S instead and is a different unit.
-	return radius_pixels / HORIZONTAL
+	return radius_pixels / WorldSpace3D.HORIZONTAL_PIXELS_PER_METER
 
 
 func register_actor(source: Node2D, radius := -1.0, monster := false) -> CharacterBody3D:
@@ -98,7 +86,7 @@ func register_actor(source: Node2D, radius := -1.0, monster := false) -> Charact
 	body.set_meta("monster", monster)
 	body.set_meta("height", dimensions.y)
 	body.set_meta("projected", source.position)
-	body.position = native_point(source.position, _construction_height(source.position) + dimensions.y * 0.5 + SKIN)
+	body.position = WorldSpace3D.projected_to_world(source.position, _construction_height(source.position) + dimensions.y * 0.5 + SKIN)
 	actor_bodies[id] = body
 	_sources[id] = weakref(source)
 	return body
@@ -127,7 +115,7 @@ func _new_body(label: String, dimensions: Vector2, monster: bool) -> CharacterBo
 
 func actor_foot(source: Node2D, radius := -1.0, monster := false) -> Vector3:
 	if source is Enemy and not game.enemies.has(source):
-		return native_point(source.position, height_at(source.position))
+		return WorldSpace3D.projected_to_world(source.position, height_at(source.position))
 	var body := register_actor(source, radius, monster)
 	var last: Vector2 = body.get_meta("projected")
 	if source.position.distance_squared_to(last) > 0.01:
@@ -142,7 +130,7 @@ func move_source_actor(source: Node2D, to: Vector2, radius: float, monster := fa
 	if source.position.distance_squared_to(last) > 0.01:
 		teleport_source_actor(source, source.position, radius, monster)
 	_move_body(body, to)
-	var result := projected(body.position)
+	var result := WorldSpace3D.world_to_projected(body.position)
 	body.set_meta("projected", result)
 	source.position = result
 	return result
@@ -154,7 +142,7 @@ func teleport_source_actor(source: Node2D, point: Vector2, radius: float, monste
 	var landing := _free_landing(point, radius, monster)
 	var sample := _floor_sample(landing)
 	var height: float = sample.get("height", _construction_height(landing))
-	body.position = native_point(landing, height + float(body.get_meta("height")) * 0.5 + SKIN)
+	body.position = WorldSpace3D.projected_to_world(landing, height + float(body.get_meta("height")) * 0.5 + SKIN)
 	body.velocity = Vector3.ZERO
 	body.set_meta("projected", landing)
 	source.position = landing
@@ -163,13 +151,13 @@ func teleport_source_actor(source: Node2D, point: Vector2, radius: float, monste
 
 func _move_body(body: CharacterBody3D, destination: Vector2) -> void:
 	var start := body.position
-	var finish := native_point(destination)
+	var finish := WorldSpace3D.projected_to_world(destination)
 	var horizontal := Vector2(finish.x - start.x, finish.z - start.z)
 	var steps := maxi(1, ceili(horizontal.length() / 0.20))
 	var height := float(body.get_meta("height", _resolver_shape.height))
 	for index in steps:
 		var point := Vector2(start.x, start.z) + horizontal * (float(index + 1) / steps)
-		var screen := Iso.project(point * UNITS)
+		var screen := Iso.project(point * WorldSpace3D.GROUND_UNITS_PER_METER)
 		var floor_info := _floor_sample(screen)
 		if not bool(floor_info.get("found", false)):
 			break
@@ -237,7 +225,7 @@ func _settle_support(body: CharacterBody3D, previous: Vector3, height: float, va
 
 
 func _supported_pose(point: Vector3, origin_foot: float, height: float) -> Dictionary:
-	var sample := _floor_sample(projected(point))
+	var sample := _floor_sample(WorldSpace3D.world_to_projected(point))
 	if not bool(sample.get("found", false)) or absf(float(sample["height"]) - origin_foot) > MAX_STEP:
 		return {}
 	return {"position": Vector3(point.x, float(sample["height"]) + height * 0.5 + SKIN, point.z)}
@@ -257,9 +245,9 @@ func move_actor(from: Vector2, to: Vector2, radius: float, monster := false) -> 
 	_resolver_shape.height = dimensions.y
 	_resolver.collision_mask = SOLID | PROP | (MONSTER_BOUNDARY if monster else 0)
 	_resolver.set_meta("height", dimensions.y)
-	_resolver.position = native_point(from, height_at(from) + dimensions.y * 0.5 + SKIN)
+	_resolver.position = WorldSpace3D.projected_to_world(from, height_at(from) + dimensions.y * 0.5 + SKIN)
 	_move_body(_resolver, to)
-	return projected(_resolver.position)
+	return WorldSpace3D.world_to_projected(_resolver.position)
 
 
 func resolve_movement(from: Vector2, to: Vector2, radius: float, monster := false) -> Vector2:
@@ -287,7 +275,7 @@ func blocked(point: Vector2, radius: float, monster := false) -> bool:
 	var capsule := _blocked_shape
 	capsule.radius = radius_metres(radius)
 	capsule.height = maxf(1.65, capsule.radius * 2.0 + 0.05)
-	var query := _query(capsule, native_point(point, float(floor_info["height"]) + capsule.height * 0.5 + SKIN),
+	var query := _query(capsule, WorldSpace3D.projected_to_world(point, float(floor_info["height"]) + capsule.height * 0.5 + SKIN),
 		SOLID | PROP | (MONSTER_BOUNDARY if monster else 0))
 	return not get_world_3d().direct_space_state.intersect_shape(query, 1).is_empty()
 
@@ -312,16 +300,16 @@ func contains(point: Vector2, radius := 0.0) -> bool:
 	sync_scope()
 	if not bool(_floor_sample(point).get("found", false)):
 		return false
-	var center := native_point(point)
+	var center := WorldSpace3D.projected_to_world(point)
 	for sample in 8:
 		var offset := Vector2.from_angle(sample * TAU / 8.0) * radius_metres(radius)
-		if not bool(_floor_sample(projected(center + Vector3(offset.x, 0, offset.y))).get("found", false)):
+		if not bool(_floor_sample(WorldSpace3D.world_to_projected(center + Vector3(offset.x, 0, offset.y))).get("found", false)):
 			return false
 	return true
 
 
 func _floor_sample(point: Vector2) -> Dictionary:
-	var at := native_point(point)
+	var at := WorldSpace3D.projected_to_world(point)
 	var ray := _floor_query
 	ray.from = at + Vector3.UP * 40.0
 	ray.to = at - Vector3.UP * 10.0
@@ -347,9 +335,9 @@ func can_melee(from: Vector2, to: Vector2) -> bool:
 	sync_scope()
 	var a := height_at(from)
 	var b := height_at(to)
-	if absf(a - b) > TerrainLevels.STEP_REACH / VERTICAL:
+	if absf(a - b) > TerrainLevels.STEP_REACH / WorldSpace3D.VERTICAL_PIXELS_PER_METER:
 		return false
-	var ray := PhysicsRayQueryParameters3D.create(native_point(from, a + 0.70), native_point(to, b + 0.70), SOLID)
+	var ray := PhysicsRayQueryParameters3D.create(WorldSpace3D.projected_to_world(from, a + 0.70), WorldSpace3D.projected_to_world(to, b + 0.70), SOLID)
 	var exclusions: Array[RID] = []
 	for circle in _circles:
 		var at: Vector2 = circle["point"]
@@ -395,7 +383,7 @@ func _physics_process(_delta: float) -> void:
 		if source.position.distance_squared_to(last) > 0.01:
 			teleport_source_actor(source, source.position, float(body.get_meta("radius_pixels")), bool(body.get_meta("monster")))
 		else:
-			source.position = projected(body.position)
+			source.position = WorldSpace3D.world_to_projected(body.position)
 
 
 func sync_scope(force := false) -> void:
@@ -457,7 +445,7 @@ func _rebuild(force := false) -> void:
 		var source: Node2D = _sources[id].get_ref()
 		if source != null:
 			var body: CharacterBody3D = actor_bodies[id]
-			body.position = native_point(source.position, _construction_height(source.position) + float(body.get_meta("height")) * 0.5 + SKIN)
+			body.position = WorldSpace3D.projected_to_world(source.position, _construction_height(source.position) + float(body.get_meta("height")) * 0.5 + SKIN)
 			body.set_meta("projected", source.position)
 
 
@@ -478,7 +466,7 @@ func _build_forest() -> void:
 	_triangle_body(GroundRelief3D.faces(game.village), FLOOR, "Ground")
 	var boundary := PackedVector2Array([field.position, Vector2(field.end.x, field.position.y), field.end, Vector2(field.position.x, field.end.y)])
 	for index in boundary.size():
-		_segment(Vector3(boundary[index].x, 0, boundary[index].y) / UNITS, Vector3(boundary[(index + 1) % boundary.size()].x, 0, boundary[(index + 1) % boundary.size()].y) / UNITS, 0.0, 8.0, SOLID)
+		_segment(Vector3(boundary[index].x, 0, boundary[index].y) / WorldSpace3D.GROUND_UNITS_PER_METER, Vector3(boundary[(index + 1) % boundary.size()].x, 0, boundary[(index + 1) % boundary.size()].y) / WorldSpace3D.GROUND_UNITS_PER_METER, 0.0, 8.0, SOLID)
 	var terrain_blockers: Array[PackedVector2Array] = []
 	for surface in _surfaces:
 		var faces := surface_faces(surface)
@@ -494,8 +482,8 @@ func _build_forest() -> void:
 		for edge in top.size():
 			if _is_entrance(surface, top[edge], top[(edge + 1) % top.size()]):
 				continue
-			var a := native_point(top[edge], _surface_height(surface, top[edge]))
-			var b := native_point(top[(edge + 1) % top.size()], _surface_height(surface, top[(edge + 1) % top.size()]))
+			var a := WorldSpace3D.projected_to_world(top[edge], _surface_height(surface, top[edge]))
+			var b := WorldSpace3D.projected_to_world(top[(edge + 1) % top.size()], _surface_height(surface, top[(edge + 1) % top.size()]))
 			if maxf(a.y, b.y) <= 0.01:
 				continue
 			_triangle_body(PackedVector3Array([Vector3(a.x, 0, a.z), a, b, Vector3(a.x, 0, a.z), b, Vector3(b.x, 0, b.z)]), SOLID, "CliffFace")
@@ -510,7 +498,7 @@ func _build_forest() -> void:
 		var pole := CylinderShape3D.new()
 		pole.radius = .14
 		pole.height = 1.55
-		_shape_body(pole,Transform3D(Basis.IDENTITY,native_point(point,_construction_height(point)+.775)),SOLID,"CaveTrailSign")
+		_shape_body(pole,Transform3D(Basis.IDENTITY,WorldSpace3D.projected_to_world(point,_construction_height(point)+.775)),SOLID,"CaveTrailSign")
 	var chapel := _native_chapel(game.village)
 	# L자 건물은 두 직교 상자로 구성해 내부 삼각형 이음새의 회복 접촉을 없앤다.
 	for rect: Rect2 in chapel["native_bodies"]:
@@ -552,7 +540,7 @@ func _build_forest() -> void:
 		shape.radius = radius_metres(radius)
 		shape.height = EncounterGeometry3D.CHEST_COLLISION_HEIGHT if chest != null else 2.2
 		var base := _construction_height(point)
-		var body := _shape_body(shape, Transform3D(Basis.IDENTITY, native_point(point, base + shape.height * 0.5)), PROP if chest != null else SOLID, "TrunkOrResident")
+		var body := _shape_body(shape, Transform3D(Basis.IDENTITY, WorldSpace3D.projected_to_world(point, base + shape.height * 0.5)), PROP if chest != null else SOLID, "TrunkOrResident")
 		if chest != null:
 			_props.append({"owner": weakref(chest), "body": body})
 		else:
@@ -561,7 +549,7 @@ func _build_forest() -> void:
 		_gates.append(_prism_body(polygon, 0.0, 4.5, 0, "ClosedGate"))
 	var safe: PackedVector2Array = game.village.safe_zone
 	for edge in safe.size():
-		_segment(native_point(safe[edge]), native_point(safe[(edge + 1) % safe.size()]), -1.0, 12.0, MONSTER_BOUNDARY)
+		_segment(WorldSpace3D.projected_to_world(safe[edge]), WorldSpace3D.projected_to_world(safe[(edge + 1) % safe.size()]), -1.0, 12.0, MONSTER_BOUNDARY)
 
 
 func _attackable_polygon(polygon: PackedVector2Array) -> bool:
@@ -596,7 +584,7 @@ func _build_cave() -> void:
 		var points := PackedVector3Array()
 		for endpoint: Vector2 in [segment["a"], segment["b"]]:
 			for side: float in [-1.0, 1.0]:
-				var at := DungeonRelief.vertex(endpoint / UNITS + normal * .04 * side)
+				var at := DungeonRelief.vertex(endpoint / WorldSpace3D.GROUND_UNITS_PER_METER + normal * .04 * side)
 				points.append(at - Vector3.UP * .08)
 				points.append(at + Vector3.UP * 3.5)
 		var wall := ConvexPolygonShape3D.new()
@@ -611,7 +599,7 @@ func _build_cave() -> void:
 			shape,
 			Transform3D(
 				Basis.IDENTITY,
-				native_point(
+				WorldSpace3D.projected_to_world(
 					chest.position, _construction_height(chest.position) + shape.height * 0.5
 				)
 			),
@@ -645,14 +633,14 @@ static func _contains(polygon: PackedVector2Array, point: Vector2) -> bool:
 
 static func _surface_height(surface: Dictionary, point: Vector2) -> float:
 	if surface.has("native_steps"):
-		var flat := Iso.unproject(point) / UNITS
+		var flat := Iso.unproject(point) / WorldSpace3D.GROUND_UNITS_PER_METER
 		var step_height := 0.0
 		for tier: Dictionary in surface["native_steps"]:
 			var rect: Rect2 = tier["rect"]
 			if rect.has_point(flat):
 				step_height = maxf(step_height, float(tier["height"]))
 		return step_height if step_height > 0.0 else ChapelPlan3D.FLOOR
-	var height := float(surface["rise"]) / VERTICAL
+	var height := float(surface["rise"]) / WorldSpace3D.VERTICAL_PIXELS_PER_METER
 	if surface.has("ramp") and _contains(surface["ramp"], point):
 		var bottom: Vector2 = surface["bottom"]
 		var upper: Vector2 = surface["upper"]
@@ -675,14 +663,14 @@ static func terrain_surfaces(village: Village) -> Array[Dictionary]:
 		var cached: Array[Dictionary] = village.get_meta("native_terrain_surfaces")
 		return cached
 	var result: Array[Dictionary] = []
-	for surface in TerrainLevels._surfaces(village):
+	for surface in TerrainLevels.surfaces(village):
 		if str(surface["id"]) != "chapel":
 			if str(surface["id"]) in ["landmark_0", "landmark_2", "landmark_3"]:
 				surface = surface.duplicate()
 				surface["top"] = TerrainForms3D.outline(surface)
 			result.append(surface)
 	for id: String in ["tree","cave"]:
-		result.push_front({"id":"waypoint_"+id,"top":village.portal_footprints[id],"rise":NativeWaypoint3D.HEIGHT*VERTICAL,"blockers":[]})
+		result.push_front({"id":"waypoint_"+id,"top":village.portal_footprints[id],"rise":NativeWaypoint3D.HEIGHT*WorldSpace3D.VERTICAL_PIXELS_PER_METER,"blockers":[]})
 	result.push_front(_native_chapel(village))
 	village.set_meta("native_terrain_surfaces", result)
 	return result
@@ -702,7 +690,7 @@ static func _native_chapel(village: Village) -> Dictionary:
 	var definition: Dictionary = village.data["frames"]["chapel"]
 	var ground := PackedVector2Array()
 	for point in sprite.atlas_polygon(definition["ground"]):
-		ground.append(Iso.unproject(point) / UNITS)
+		ground.append(Iso.unproject(point) / WorldSpace3D.GROUND_UNITS_PER_METER)
 	var bounds := Iso.poly_bounds(ground)
 	var center := bounds.get_center()
 	var width := maxf(3.5, bounds.size.x) * ChapelPlan3D.FOOTPRINT_SCALE
@@ -718,16 +706,16 @@ static func _native_chapel(village: Village) -> Dictionary:
 	var top := PackedVector2Array()
 	var projected_ramp := PackedVector2Array()
 	for point in top_native:
-		top.append(Iso.project(point * UNITS))
+		top.append(Iso.project(point * WorldSpace3D.GROUND_UNITS_PER_METER))
 	for point in ramp:
-		projected_ramp.append(Iso.project(point * UNITS))
+		projected_ramp.append(Iso.project(point * WorldSpace3D.GROUND_UNITS_PER_METER))
 	var building := PackedVector2Array()
 	for point in ChapelPlan3D.body_polygon(center, width, depth):
-		building.append(Iso.project(point * UNITS))
-	return {"id": "chapel", "top": top, "ramp": projected_ramp, "rise": 0.28 * VERTICAL,
+		building.append(Iso.project(point * WorldSpace3D.GROUND_UNITS_PER_METER))
+	return {"id": "chapel", "top": top, "ramp": projected_ramp, "rise": 0.28 * WorldSpace3D.VERTICAL_PIXELS_PER_METER,
 		"native_steps": ChapelPlan3D.tiers(center, width, depth),
 		"native_bodies": [Rect2(center+Vector2(-width*0.5,-depth*0.5),Vector2(width*0.4,depth)),Rect2(center+Vector2(-width*0.1,-depth*0.5),Vector2(width*0.6,depth*ChapelPlan3D.NAVE_DEPTH_FRACTION))],
-		"bottom": Iso.project(Vector2(door_x, front + 0.04 + ChapelPlan3D.RUN) * UNITS), "upper": Iso.project(Vector2(door_x, front + 0.04) * UNITS),
+		"bottom": Iso.project(Vector2(door_x, front + 0.04 + ChapelPlan3D.RUN) * WorldSpace3D.GROUND_UNITS_PER_METER), "upper": Iso.project(Vector2(door_x, front + 0.04) * WorldSpace3D.GROUND_UNITS_PER_METER),
 		"entrance": PackedVector2Array([projected_ramp[0], projected_ramp[1]]), "blockers": [] as Array[PackedVector2Array], "building": building}
 
 
@@ -749,7 +737,7 @@ static func surface_faces(surface: Dictionary) -> PackedVector3Array:
 				rect.size.y = original.end.y - next.end.y
 			var polygon := PackedVector2Array()
 			for point: Vector2 in ChapelPlan3D.polygon(rect):
-				polygon.append(Iso.project(point * UNITS))
+				polygon.append(Iso.project(point * WorldSpace3D.GROUND_UNITS_PER_METER))
 			result.append_array(_floor_region(polygon, surface, float(tiers[i]["height"])))
 		return result
 	var flat: Array[PackedVector2Array] = [top]
@@ -758,7 +746,7 @@ static func surface_faces(surface: Dictionary) -> PackedVector3Array:
 		flat = Geometry2D.clip_polygons(top, surface["ramp"])
 		ramp = Geometry2D.intersect_polygons(top, surface["ramp"])
 	for polygon in flat:
-		result.append_array(_floor_region(polygon, surface, float(surface["rise"]) / VERTICAL))
+		result.append_array(_floor_region(polygon, surface, float(surface["rise"]) / WorldSpace3D.VERTICAL_PIXELS_PER_METER))
 	for polygon in ramp:
 		var bottom: Vector2 = surface["bottom"]
 		var upper: Vector2 = surface["upper"]
@@ -769,7 +757,7 @@ static func surface_faces(surface: Dictionary) -> PackedVector3Array:
 		for lower in _half_plane(polygon, bottom, along, false):
 			result.append_array(_floor_region(lower, surface, 0.0))
 		for higher in _half_plane(polygon, upper, along, true):
-			result.append_array(_floor_region(higher, surface, float(surface["rise"]) / VERTICAL))
+			result.append_array(_floor_region(higher, surface, float(surface["rise"]) / WorldSpace3D.VERTICAL_PIXELS_PER_METER))
 		for middle in _half_plane(polygon, bottom, along, true):
 			for clipped in _half_plane(middle, upper, along, false):
 				result.append_array(_floor_region(clipped, surface))
@@ -788,15 +776,8 @@ static func _floor_region(polygon: PackedVector2Array, surface: Dictionary, cons
 	var result := PackedVector3Array()
 	for index in Geometry2D.triangulate_polygon(polygon):
 		var point := polygon[index]
-		result.append(native_point(point, constant_height if constant_height >= 0.0 else _surface_height(surface, point)))
+		result.append(WorldSpace3D.projected_to_world(point, constant_height if constant_height >= 0.0 else _surface_height(surface, point)))
 	return result
-
-
-func _floor_polygon(polygon: PackedVector2Array, height: float, label: String) -> void:
-	var vertices := PackedVector3Array()
-	for index in Geometry2D.triangulate_polygon(polygon):
-		vertices.append(native_point(polygon[index], height))
-	_triangle_body(vertices, FLOOR, label)
 
 
 func _triangle_body(vertices: PackedVector3Array, layer: int, label: String) -> StaticBody3D:
@@ -833,8 +814,8 @@ func _prism_body(polygon: PackedVector2Array, bottom: float, top: float, layer: 
 		var points := PackedVector3Array()
 		for corner in 3:
 			var point := polygon[indices[index + corner]]
-			points.append(native_point(point, bottom))
-			points.append(native_point(point, top))
+			points.append(WorldSpace3D.projected_to_world(point, bottom))
+			points.append(WorldSpace3D.projected_to_world(point, top))
 		var shape := ConvexPolygonShape3D.new()
 		shape.points = points
 		var collision := CollisionShape3D.new()

@@ -191,7 +191,7 @@ func _export(id: String, root: Node3D, actor := false) -> void:
 	file.store_string(scene)
 	file.close()
 	var inputs := {}
-	var sources: Array[String] = ["res://tools/assets/props/bake.gd"]
+	var sources: Array[String] = ["res://tools/assets/props/bake.gd", "res://scripts/core/world_space_3d.gd"]
 	if actor:
 		sources.append_array(
 			[

@@ -61,7 +61,7 @@ func run() -> void:
 		ratios = ink.get_shader_parameter("health_ratios")
 		check("ghost drain uses the source fraction without rebuilding its mesh", is_equal_approx(ratios.y, enemy.ghost_hp / enemy.max_hp) and bar.mesh == mesh)
 		var basis: Basis = renderer.camera.global_transform.basis
-		var factor := WorldRenderer3D.GROUND_PER_METER * WorldRenderer3D.PROJECTION_FACTOR
+		var factor := WorldSpace3D.GROUND_UNITS_PER_METER * WorldSpace3D.GROUND_PROJECTION_FACTOR
 		var anchor := renderer.actor_foot(enemy) + basis.y * ((enemy.sprite.body_height + 11.0) / factor)
 		check("health bar follows authoritative feet and camera-plane head offset", bar.global_position.distance_to(anchor) < 0.00001)
 		enemy.hp = enemy.max_hp
@@ -89,7 +89,7 @@ func run() -> void:
 			var angle := TAU * index / 16.0
 			var uv := Vector2(cos(angle), sin(angle)) * 0.5 + Vector2.ONE * 0.5
 			var local := vertices[0].lerp(vertices[1], uv.x).lerp(vertices[3].lerp(vertices[2], uv.x), uv.y)
-			var actual := SpatialWorld3D.projected(ring.global_transform * local)
+			var actual := WorldSpace3D.world_to_projected(ring.global_transform * local)
 			matches = matches and absf(boss.attack_distance(actual) - radius) < 0.001
 		check("all warning edges match the real y/0.55 boss hit ellipse", matches)
 		var foot: Vector3 = renderer.actor_foot(boss)

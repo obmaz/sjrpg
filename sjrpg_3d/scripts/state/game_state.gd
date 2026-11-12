@@ -347,13 +347,6 @@ func equip(g: Gear) -> bool:
 	return true
 
 
-func unequip(g: Gear) -> bool:
-	if g.slot() == "weapon" or not is_equipped(g):
-		return false
-	equipped.erase(g.slot())
-	return true
-
-
 func sell(g: Gear) -> bool:
 	if g.locked or is_equipped(g) or not inventory.has(g):
 		return false

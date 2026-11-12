@@ -87,7 +87,7 @@ func _check_melee_barrier(game: Node, gates: TownGateRuntime) -> void:
 func _check_boundary(game: Node, gates: TownGateRuntime) -> void:
 	var native_safe := PackedVector2Array()
 	for point: Vector2 in game.village.safe_zone:
-		var native := SpatialWorld3D.native_point(point)
+		var native := WorldSpace3D.projected_to_world(point)
 		native_safe.append(Vector2(native.x, native.z))
 	var radius := SpatialWorld3D.radius_metres(float(Enemy.RADIUS))
 	for index in 4:
@@ -96,7 +96,7 @@ func _check_boundary(game: Node, gates: TownGateRuntime) -> void:
 		var from := centre + direction * 300.0
 		var target := centre - direction * 250.0
 		var stopped: Vector2 = game.move_actor(from, target, Enemy.RADIUS, true)
-		var native := SpatialWorld3D.native_point(stopped)
+		var native := WorldSpace3D.projected_to_world(stopped)
 		# A circular native capsule projects to an ellipse. Its stand-off must be
 		# measured in the same nativeXZ metres as the real safe-boundary collider.
 		var clearance := TownGateRuntime.distance_to_polygon(Vector2(native.x, native.z), native_safe)
@@ -109,7 +109,7 @@ func _check_boundary(game: Node, gates: TownGateRuntime) -> void:
 	for corner: Vector2 in game.village.safe_zone:
 		var direction: Vector2 = (corner - centre).normalized()
 		var stopped: Vector2 = game.move_actor(corner + direction * 240.0, corner - direction * 120.0, Enemy.RADIUS, true)
-		var native := SpatialWorld3D.native_point(stopped)
+		var native := WorldSpace3D.projected_to_world(stopped)
 		var clearance := TownGateRuntime.distance_to_polygon(Vector2(native.x, native.z), native_safe)
 		check("monster bodies cannot cut across a town corner", not game.in_town(stopped) and clearance >= radius - 0.005, "clearance=%s m, capsule=%s m" % [clearance, radius])
 

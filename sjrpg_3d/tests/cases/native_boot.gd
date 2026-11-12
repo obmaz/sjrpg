@@ -18,7 +18,7 @@ func run() -> void:
 	check("native actor bodies own initial player and enemies", game.spatial_world.actor_bodies.size() >= game.enemies.size() + 1 and game.spatial_world.physics_ticks > 0)
 	game.world_renderer._sync_camera()
 	var point: Vector2 = game.player.position + Vector2(35, 0)
-	var native: Vector3 = SpatialWorld3D.native_point(point, game.spatial_world.height_at(point))
+	var native: Vector3 = WorldSpace3D.projected_to_world(point, game.spatial_world.height_at(point))
 	var screen: Vector2 = game.world_renderer.camera.unproject_position(native)
 	screen *= game.get_viewport_rect().size / Vector2(game.world_renderer.viewport.size)
 	check("mouse targeting intersects the real3D floor", game.screen_to_world(screen).distance_to(point) < 1.0)

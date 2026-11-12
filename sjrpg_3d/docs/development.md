@@ -2,6 +2,8 @@
 
 현재 개발 대상은 `sjrpg_3d/`입니다. 2D판은 동결하며, 루트는 버전 선택·공통 빌드만 담당합니다. [전체 구조](../../docs/development.md)와 [3D 제작 기준](../../docs/3d-asset-guide.md)이 기준입니다.
 
+공용 좌표 변환은 `WorldSpace3D`, 모델 트리 조회는 `ModelTree3D`, UI 표시 배율은 `UiMetrics`에서 관리합니다. 사용 단위와 호출 경계는 [폴더와 이름 규칙](project-layout.md#공용-계산과-이름)을 따릅니다.
+
 ## 실행과 상태
 
 - `Adventure3D`가 모험 진입점입니다. `SpatialWorld3D`의 실제 몸체·높이·충돌이 공간 기준입니다.

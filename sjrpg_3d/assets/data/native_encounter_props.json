@@ -55,7 +55,7 @@
     },
     {
       "path": "scripts/rendering/environment/encounter_prop_renderer_3d.gd",
-      "sha256": "4eaf12088e60eadfe0626cb89319484c5e4a435e3648e1642168b030cdd1de8e",
+      "sha256": "35109ef1515550da41e48fe3e69aaaf12d4e6395936cf3ee444af1a3472dd0c7",
       "bytes": 9690
     },
     {
@@ -185,7 +185,7 @@
     "gpu": "Pending coordinated actual browser captures; CPU metadata is not visual acceptance.",
     "review_fixture_source": {
       "path": "scripts/inspection/native_encounter_review.gd",
-      "sha256": "b440e8ce2cfbb51244ad8801f799968ccf93b133b984dba9055610bd5143e02a",
+      "sha256": "760d53afea22097645e8c28cae40b82ef234d3677a6ad949e7bbe527468c3316",
       "bytes": 8045
     },
     "review_fixture": "Explicit loot_review=1 in a fresh isolated browser profile only. Official create_slot binds a unique test session before original source state methods. Same source anchors and fixed120 camera; optional native-model rotation checks unseen faces, optional original-art cards provide same-world comparison."

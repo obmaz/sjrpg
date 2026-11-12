@@ -75,7 +75,7 @@ func run() -> void:
 	var blocked_shape := CylinderShape3D.new()
 	blocked_shape.radius = SpatialWorld3D.radius_metres(350.0)
 	blocked_shape.height = 8.0
-	var blocked_at := SpatialWorld3D.native_point(route.gate_point("tree"), 4.0)
+	var blocked_at := WorldSpace3D.projected_to_world(route.gate_point("tree"), 4.0)
 	var blocked_fixture: StaticBody3D = game.spatial_world._shape_body(blocked_shape, Transform3D(Basis.IDENTITY, blocked_at), SpatialWorld3D.SOLID, "BlockedWarpDestination")
 	await get_tree().physics_frame
 	await get_tree().physics_frame

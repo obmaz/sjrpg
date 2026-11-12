@@ -53,37 +53,8 @@ static func create(identity: String) -> Node3D:
 	return model
 
 
-static func descendant_meshes(node: Node) -> Array[MeshInstance3D]:
-	var result: Array[MeshInstance3D] = []
-	if node is MeshInstance3D:
-		result.append(node as MeshInstance3D)
-	for child: Node in node.get_children():
-		result.append_array(descendant_meshes(child))
-	return result
-
-
-static func _find_animation(node: Node) -> AnimationPlayer:
-	if node is AnimationPlayer:
-		return node as AnimationPlayer
-	for child: Node in node.get_children():
-		var found: AnimationPlayer = _find_animation(child)
-		if found != null:
-			return found
-	return null
-
-
-static func _find_skeleton(node: Node) -> Skeleton3D:
-	if node is Skeleton3D:
-		return node as Skeleton3D
-	for child: Node in node.get_children():
-		var found: Skeleton3D = _find_skeleton(child)
-		if found != null:
-			return found
-	return null
-
-
 static func _configure_idle(model: Node3D) -> void:
-	var animator: AnimationPlayer = _find_animation(model)
+	var animator: AnimationPlayer = ModelTree3D.first_animation_player(model)
 	if animator == null:
 		return
 	animator.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL
@@ -179,12 +150,12 @@ func sync() -> void:
 			renderer.stage.add_child(instance)
 			entries[id] = {"owner": weakref(resident), "node": instance,
 				"source": str(instance.get_meta("resident_source", "")),
-				"meshes": descendant_meshes(instance), "animation": idle_player(instance),
-				"skeleton": _find_skeleton(instance), "clip": "", "sample_time": 0.0}
+				"meshes": ModelTree3D.meshes_including_root(instance), "animation": idle_player(instance),
+				"skeleton": ModelTree3D.first_skeleton(instance), "clip": "", "sample_time": 0.0}
 		var model: Node3D = entries[id]["node"]
 		model.visible = resident.visible and resident.get_parent() == renderer.game.world and not renderer.game.dungeon.active
 		model.position = renderer.actor_foot(resident)
-		var direction: Vector3 = WorldRenderer3D.ground_position(Vector2.from_angle(resident.facing))
+		var direction: Vector3 = WorldSpace3D.projected_to_world(Vector2.from_angle(resident.facing))
 		model.rotation.y = atan2(direction.x, direction.z)
 		if model.visible and str(entries[id]["source"]) == "cc0_import":
 			var pose: Dictionary = sample_idle(model, resident._time)
@@ -195,7 +166,7 @@ func sync() -> void:
 		if resident._hurt_flash > 0.0:
 			if not entries[id].has("flash"):
 				var shader := Shader.new()
-				shader.code = WorldRenderer3D.ACTOR_FLASH_CODE
+				shader.code = WorldRenderer3D.ACTOR_FLASH_SHADER_SOURCE
 				flash = ShaderMaterial.new()
 				flash.shader = shader
 				entries[id]["flash"] = flash

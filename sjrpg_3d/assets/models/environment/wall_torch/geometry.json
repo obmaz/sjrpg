@@ -2,8 +2,9 @@
 	"forward": "+Z",
 	"id": "environment/wall_torch",
 	"inputs": {
-		"res://scripts/rendering/environment/cave_lantern_renderer_3d.gd": "e02e96950f27a2d505f2723d3831a8766201a4f90bd9d86f060ab3e1322479f7",
-		"res://tools/assets/props/bake.gd": "0e065c0f49b939e462f4a0bed2384b21a71ac32477bdb7f824d5c8bdc4708dc4",
+		"res://scripts/core/world_space_3d.gd": "59a32f64790e612a4528ddc2934ddb4aa6f59c309f090ad2bcbeea7b07568892",
+		"res://scripts/rendering/environment/cave_lantern_renderer_3d.gd": "87e36e29d9aae88814edb7a16aec9d6bd5eb009ee43ba483da8f7f04eed94056",
+		"res://tools/assets/props/bake.gd": "81d6e6b8fe14ba139a3c7ebd332feba2fdbbd5a7f0a1dabb6d17dbb48571c01c",
 		"res://tools/assets/props/torch_builder.gd": "6987004bf255ce65375da78279bd0068dce01e8d0c2fc05484451db6dd0241c2"
 	},
 	"layout_sha256": "dfdd82551da1d8b0f57cf3caae8692a787c8be50ad3457d2f268b5a7c9c083e7",

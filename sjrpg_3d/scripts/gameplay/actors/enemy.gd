@@ -101,7 +101,7 @@ func setup(g: Node, k: String, level: int) -> void:
 	attack_range = float(def["range"]) + radius * (1.0 - 1.0 / SIZE_FACTOR)
 	atlas = ActorAtlas.get_atlas(k)
 	sprite = ActorSprite.new()
-	sprite.body_height = float(NATIVE_HEIGHT_METRES[k]) * SpatialCombat3D.HEIGHT_PIXELS
+	sprite.body_height = float(NATIVE_HEIGHT_METRES[k]) * WorldSpace3D.VERTICAL_PIXELS_PER_METER
 	sprite.show_behind_parent = true
 	add_child(sprite)
 	facing = randf() * TAU
@@ -201,8 +201,8 @@ func take_damage(amount: float, source: Node2D, visual_source: Node2D = null) ->
 	impact.spatial_floor_height = SpatialCombat3D.floor_at(game, position)
 	impact.params["tier"] = tier
 	var incoming := Effect.contact_direction(impact_source, position)
-	var native_incoming := WorldRenderer3D.ground_position(incoming).normalized()
-	impact.params["contact_position"] = SpatialCombat3D.point(position, impact.spatial_floor_height) + Vector3.UP * (sprite.body_height * 0.55 / SpatialCombat3D.HEIGHT_PIXELS) - native_incoming * SpatialWorld3D.radius_metres(radius) * 0.65
+	var native_incoming := WorldSpace3D.projected_to_world(incoming).normalized()
+	impact.params["contact_position"] = WorldSpace3D.projected_to_world(position, impact.spatial_floor_height) + Vector3.UP * (sprite.body_height * 0.55 / WorldSpace3D.VERTICAL_PIXELS_PER_METER) - native_incoming * SpatialWorld3D.radius_metres(radius) * 0.65
 	if impact_source is Effect and impact_source.kind == "proj":
 		impact.params["contact_position"] = impact_source.native_position()
 	impact.angle = incoming.angle()
@@ -394,7 +394,7 @@ func _step(direction: Vector2, delta: float) -> void:
 	var from := position
 	var moved: Vector2 = SpatialCombat3D.move_actor(game, self, target, radius, true)
 	_walk_cycle += moved.distance_to(from) / 70.0
-	_run_distance_m += Iso.unproject(moved - from).length() / WorldRenderer3D.GROUND_PER_METER
+	_run_distance_m += Iso.unproject(moved - from).length() / WorldSpace3D.GROUND_UNITS_PER_METER
 	position = moved
 	sprite.set_frame(atlas, atlas.walk_frame(facing, _walk_cycle))
 

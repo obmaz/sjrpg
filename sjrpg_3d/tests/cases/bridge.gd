@@ -24,7 +24,7 @@ func run() -> void:
 			var query := PhysicsShapeQueryParameters3D.new()
 			query.shape = (body.get_child(0) as CollisionShape3D).shape
 			query.transform = body.global_transform
-			query.transform.origin += SpatialWorld3D.native_point((v.bridge.axis_point(1.0) - player.position).normalized() * 4.0)
+			query.transform.origin += WorldSpace3D.projected_to_world((v.bridge.axis_point(1.0) - player.position).normalized() * 4.0)
 			query.collision_mask = body.collision_mask
 			query.exclude = [body.get_rid()]
 			query.margin = margin

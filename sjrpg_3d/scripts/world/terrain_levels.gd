@@ -6,7 +6,7 @@ extends RefCounted
 const STEP_REACH := 25.0
 
 
-static func _rise(faces: Array[PackedVector2Array]) -> float:
+static func measured_rise(faces: Array[PackedVector2Array]) -> float:
 	var result := 0.0
 	var slopes: Array[float] = []
 	for face in faces:
@@ -28,7 +28,7 @@ static func _rise(faces: Array[PackedVector2Array]) -> float:
 	return slopes[slopes.size() / 2]
 
 
-static func _surfaces(village: Village) -> Array[Dictionary]:
+static func surfaces(village: Village) -> Array[Dictionary]:
 	if village.has_meta("melee_surfaces"):
 		var cached: Array[Dictionary] = village.get_meta("melee_surfaces")
 		return cached
@@ -39,7 +39,7 @@ static func _surfaces(village: Village) -> Array[Dictionary]:
 		chapel_faces.append(chapel.native_polygon(face))
 	var steps := village.chapel_steps
 	surfaces.append({"id": "chapel", "top": village.terrace, "ramp": village.terrace,
-		"bottom": steps[0], "upper": steps[steps.size() - 1], "rise": _rise(chapel_faces),
+		"bottom": steps[0], "upper": steps[steps.size() - 1], "rise": measured_rise(chapel_faces),
 		"entrance": PackedVector2Array([village.terrace[0], village.terrace[1]]), "blockers": chapel_faces})
 	for landmark: Landmark in village.landmarks:
 		var definition: Dictionary = Landmark.data()[landmark.index]
@@ -55,7 +55,7 @@ static func _surfaces(village: Village) -> Array[Dictionary]:
 			faces.append(landmark._poly(face))
 		var blockers := faces.duplicate()
 		blockers.append_array(landmark.ledges)
-		var rise := _rise(faces)
+		var rise := measured_rise(faces)
 		# Flat decorative tops without any measured rise are the ground plane;
 		# they must not acquire an invisible separate combat-height domain.
 		if rise <= 0.001:
@@ -73,7 +73,7 @@ static func _surfaces(village: Village) -> Array[Dictionary]:
 
 
 static func sample(village: Village, at: Vector2) -> Dictionary:
-	for surface in _surfaces(village):
+	for surface in surfaces(village):
 		var top: PackedVector2Array = surface["top"]
 		if not Geometry2D.is_point_in_polygon(at, top):
 			continue
@@ -87,59 +87,3 @@ static func sample(village: Village, at: Vector2) -> Dictionary:
 				height *= clampf((at - bottom).dot(along) / maxf(along.length_squared(), 0.001), 0.0, 1.0)
 		return {"id": surface["id"], "height": height, "surface": surface}
 	return {"id": "ground", "height": 0.0}
-
-
-static func _crosses_segment(from: Vector2, to: Vector2, edge: PackedVector2Array) -> bool:
-	return Geometry2D.segment_intersects_segment(from, to, edge[0], edge[1]) != null
-
-
-static func _crosses_blocker(from: Vector2, to: Vector2, polygon: PackedVector2Array) -> bool:
-	if Geometry2D.is_point_in_polygon(from, polygon) or Geometry2D.is_point_in_polygon(to, polygon):
-		return true
-	for i in polygon.size():
-		if Geometry2D.segment_intersects_segment(from, to, polygon[i], polygon[(i + 1) % polygon.size()]) != null:
-			return true
-	return false
-
-
-static func _wall_blocked(village: Village, from: Vector2, to: Vector2) -> bool:
-	var walls: Array[Dictionary] = []
-	if village.has_meta("melee_wall_bounds"):
-		walls = village.get_meta("melee_wall_bounds")
-	else:
-		for polygon: PackedVector2Array in village.wall_footprints:
-			walls.append({"polygon": polygon, "bounds": Iso.poly_bounds(polygon).grow(0.01)})
-		village.set_meta("melee_wall_bounds", walls)
-	var path := Rect2(from, Vector2.ZERO).expand(to).grow(0.01)
-	for wall in walls:
-		var bounds: Rect2 = wall["bounds"]
-		if bounds.intersects(path) and _crosses_blocker(from, to, wall["polygon"]):
-			return true
-	return false
-
-
-static func can_reach(village: Village, from: Vector2, to: Vector2) -> bool:
-	if _wall_blocked(village, from, to):
-		return false
-	var source := sample(village, from)
-	var target := sample(village, to)
-	if absf(float(source["height"]) - float(target["height"])) > STEP_REACH:
-		return false
-	if source["id"] != target["id"]:
-		if source["id"] != "ground" and target["id"] != "ground":
-			return false
-		var raised: Dictionary = target["surface"] if source["id"] == "ground" else source["surface"]
-		var entrance_crossing := false
-		if raised.has("entrance"):
-			entrance_crossing = _crosses_segment(from, to, raised["entrance"])
-		else:
-			for edge: PackedVector2Array in raised["entrances"]:
-				entrance_crossing = entrance_crossing or _crosses_segment(from, to, edge)
-		if not entrance_crossing:
-			return false
-	# Even equal-height endpoints cannot swing through an intervening cliff or parapet.
-	for surface in _surfaces(village):
-		for blocker: PackedVector2Array in surface["blockers"]:
-			if _crosses_blocker(from, to, blocker):
-				return false
-	return true

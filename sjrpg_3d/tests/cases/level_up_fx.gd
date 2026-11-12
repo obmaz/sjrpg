@@ -40,7 +40,7 @@ func run() -> void:
 	game.player.position += Vector2(60, 25)
 	source._process(0.05)
 	renderer._process(0.0)
-	check("celebration follows the actual moving hero's foot anchor", root.position.is_equal_approx(WorldRenderer3D.ground_position(game.player.position)))
+	check("celebration follows the actual moving hero's foot anchor", root.position.is_equal_approx(WorldSpace3D.projected_to_world(game.player.position)))
 	var spark: MeshInstance3D = sparks[0]
 	var low := spark.position.y
 	source._process(0.20)

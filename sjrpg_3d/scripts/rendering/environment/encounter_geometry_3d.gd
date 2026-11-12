@@ -1,9 +1,9 @@
 class_name EncounterGeometry3D
 extends RefCounted
-## Reproducible, fully sided metre geometry. No camera-facing asset planes.
+## 비석·상자의 GLB 메시와 물리/상호작용에 공유할 미터 단위 치수.
 
-const STONE_SIZE := Vector3(0.80, 1.58, 32.0 / 65.0)
-## 현재 요청에 따라 기존 상자의 각 축을 2배로 굽는다. 노드 배율은 ONE이다.
+const STONE_SIZE := Vector3(0.80, 1.58, 32.0 / WorldSpace3D.GROUND_UNITS_PER_METER)
+## 제작 기준 치수의 2.5배를 GLB에 굽는다. 인스턴스 루트 배율은 ONE이다.
 const CHEST_SCALE := 2.50
 const CHEST_COLLISION_HEIGHT := 0.424 * CHEST_SCALE
 const CHEST_WIDTH := 0.44

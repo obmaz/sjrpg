@@ -78,14 +78,14 @@ func tick(delta: float) -> void:
 
 
 func _near(trap: DungeonTrap, metres: float) -> bool:
-	return (Iso.unproject(game.player.position - trap.position) / 65.0).length() < metres
+	return (Iso.unproject(game.player.position - trap.position) / WorldSpace3D.GROUND_UNITS_PER_METER).length() < metres
 
 
 func nearest() -> DungeonTrap:
 	var result: DungeonTrap
 	var distance := INF
 	for trap in traps:
-		var next: float = (Iso.unproject(game.player.position - trap.position) / 65.0).length()
+		var next: float = (Iso.unproject(game.player.position - trap.position) / WorldSpace3D.GROUND_UNITS_PER_METER).length()
 		if next < distance and next < 5.0:
 			distance = next
 			result = trap

@@ -17,7 +17,7 @@ func run() -> void:
 	game.camera.reset_smoothing()
 	game.camera.force_update_scroll()
 	await _frames(2)
-	var renderer: EnemyRenderer3D = game.world_renderer._enemy_models
+	var renderer: EnemyRenderer3D = game.world_renderer._enemy_renderer
 	renderer.sync()
 	var model: Dictionary = renderer.entries[enemy.get_instance_id()]
 	var root: Node3D = model["root"]

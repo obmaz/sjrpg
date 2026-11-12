@@ -125,10 +125,10 @@ static func build(renderer: Node, parent: Node3D, world: Node2D) -> Dictionary:
 			suppressed.append(source.get_instance_id())
 			continue
 		var species := species_of(source)
-		var height := float(source.def.get("height", 0)) * source.k / (WorldRenderer3D.GROUND_PER_METER * Iso.S)
+		var height := float(source.def.get("height", 0)) * source.k / (WorldSpace3D.GROUND_UNITS_PER_METER * Iso.S)
 		if not is_finite(height) or height <= 0.0 or height > 2.5:
 			continue
-		var at := WorldRenderer3D.ground_position(source.global_position, renderer.surface_height(source.global_position))
+		var at := WorldSpace3D.projected_to_world(source.global_position, renderer.surface_height(source.global_position))
 		var chunk := Vector2i(floori(at.x / CHUNK), floori(at.z / CHUNK))
 		var key := "%d:%d:%s" % [chunk.x, chunk.y, species]
 		var seed := ForestTreeRenderer3D.placement_seed("%s:%.4f:%.4f" % [species, source.global_position.x, source.global_position.y])
