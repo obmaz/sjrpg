@@ -42,8 +42,10 @@ func _process(delta: float) -> void:
 		for child in p.find_children("*", "Button", true, false):
 			var button := child as Button
 			if button.is_visible_in_tree():
-				targets.append({"text": button.text, "rect": rect(button), "disabled": button.disabled, "in_body": p.body.is_ancestor_of(button), "world_zoom": button.get_meta("world_zoom", -1.0)})
+				targets.append({"text": button.text, "key": button.get_meta("gamepad_key", ""), "rect": rect(button), "disabled": button.disabled, "in_body": p.body.is_ancestor_of(button), "world_zoom": button.get_meta("world_zoom", -1.0)})
 		panel = {"rect": rect(p._panel), "title": rect(p.title_label), "subtitle": rect(p.subtitle_label), "body": rect(p.body_holder), "body_clip": rect(p.scroll), "subtitle_text": p.subtitle_label.text, "subtitle_visible": p.subtitle_label.is_visible_in_tree(), "title_text": p.title_label.text, "shopping": p is BagPanel and p.shopping, "buttons": targets, "type": p.get_script().resource_path}
+		panel["scroll_vertical"] = p.scroll.scroll_vertical
+		panel["scroll_max"] = maxf(0.0, p.scroll.get_v_scroll_bar().max_value - p.scroll.get_v_scroll_bar().page)
 		if p is SkillTreePanel:
 			var nodes := []
 			for id: String in p._nodes:

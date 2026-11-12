@@ -443,11 +443,42 @@ class GearCell:
 	func setup(g: Gear, s: String) -> void:
 		gear = g
 		slot = s
-		mouse_filter = Control.MOUSE_FILTER_STOP
+		mouse_filter = Control.MOUSE_FILTER_PASS
+
+	var _pointer := -2
+	var _drag := Vector2.ZERO
+	var _dragged := false
+
+	func _notification(what: int) -> void:
+		if what == NOTIFICATION_SCROLL_BEGIN:
+			_dragged = true
 
 	func _gui_input(event: InputEvent) -> void:
-		if (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT) or (event is InputEventScreenTouch and event.pressed):
-			pressed.emit()
+		if event is InputEventScreenTouch:
+			if event.canceled:
+				_pointer = -2
+			else:
+				_pointer_event(event.position, event.pressed, event.index)
+		elif event is InputEventScreenDrag and event.index == _pointer:
+			_drag += event.relative
+			_dragged = _dragged or _drag.length() >= 12.0
+		elif event is InputEventMouseButton and event.device != InputEvent.DEVICE_ID_EMULATION and event.button_index == MOUSE_BUTTON_LEFT:
+			_pointer_event(event.position, event.pressed, -1)
+		elif event is InputEventMouseMotion and _pointer == -1:
+			_drag += event.relative
+			_dragged = _dragged or _drag.length() >= 12.0
+
+	func _pointer_event(at: Vector2, down: bool, index: int) -> void:
+		if down:
+			if _pointer != -2:
+				return
+			_pointer = index
+			_drag = Vector2.ZERO
+			_dragged = false
+		elif index == _pointer:
+			_pointer = -2
+			if not _dragged and Rect2(Vector2.ZERO, size).has_point(at):
+				pressed.emit()
 
 	func _draw() -> void:
 		var col := UiKit.EDGE if gear == null else gear.color()

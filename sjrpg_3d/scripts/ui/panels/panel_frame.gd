@@ -44,6 +44,7 @@ func _exit_tree() -> void:
 
 
 func _ready() -> void:
+	get_tree().node_added.connect(_prepare_scroll_button)
 	add_to_group("panel_frames")
 	UiKit.boost = BOOST
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -273,3 +274,7 @@ class FrameTrim:
 				draw_set_transform(center, 0.0, inward)
 				PresentationArt.draw_ui(self, "corner", Vector2.ZERO, 13.0, Color(1, 0.96, 0.86, 0.9))
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+func _prepare_scroll_button(node: Node) -> void:
+	ScrollTouchSupport.prepare_button(node, self)
