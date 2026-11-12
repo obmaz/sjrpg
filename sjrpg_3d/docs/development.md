@@ -80,7 +80,7 @@ tools/serve.sh
 
 검수 캡처·일회성 진단 출력은 `build/`와 Actions 아티팩트에 둡니다. 저장소에 완료 스크린샷을 계속 쌓지 않습니다. 원본 출처와 현재 재현 방법은 관련 제작 문서에 유지합니다.
 
-프레임 비용은 `frame-pacing-review.yml`의 동일 worker 전후 비교로 검사합니다. `tools/perf/frame_pacing_observer.gd`는 임시 CI 빌드에만 연결하며 실제 렌더 제출 간격과 읽기 전용 엔진 모니터를 수집합니다. 정상 운영 장면에 관찰기를 연결하거나 입력·게임 상태를 바꾸지 않습니다. 측정 범위와 한계는 [웹 성능](web-performance.md)을 참고하세요.
+프레임 비용 전후 비교용 `tools/check_frame_pacing.mjs`와 `tools/perf/frame_pacing_observer.gd`는 남아 있지만 이를 실행하던 GitHub 워크플로는 제거했습니다. 관찰기는 임시 빌드에만 연결하며 실제 렌더 제출 간격과 읽기 전용 엔진 모니터를 수집합니다. 정상 운영 장면에 관찰기를 연결하거나 입력·게임 상태를 바꾸지 않습니다. 측정 범위와 한계는 [웹 성능](web-performance.md)을 참고하세요.
 
 ## 적 표시와 공격 피드백
 
@@ -122,7 +122,7 @@ tools/serve.sh
 
 강은 마을 밖 필드의 서·동 경계를 가로지르고 다리의 교대는 지면(5200,5200)에 있습니다. 퀘스트·랜드마크·소환 위치·구역 이름은 [확장 필드 배치](field-layout.md)를 공유합니다. 도로/강 거리장은 `capture_road_geometry.tscn`과 `bake_ground_field.py`로 함께 재생성합니다. `native_river.gdshader`는 시간에 따라 두 물결 표면을 이동시키고 이동 포말·수면 법선을 갱신합니다. 정적 메시를 매 프레임 다시 만들지 않으며 일시정지에는 같은 phase를 유지합니다.
 
-일반 푸시의 CI는 검사와 로컬 웹 산출물 검수까지만 수행합니다. Pages 공개 배포는 사용자가 별도로 요청한 뒤 `web.yml`을 `workflow_dispatch`의 `publish=true`로 실행할 때만 허용합니다. 기본 “배포”는 [APK 전달 스킬](../../.agents/skills/dropbox-apk/SKILL.md)의 Dropbox 전달입니다.
+푸시로 실행되는 GitHub Actions는 없고 검사는 푸시 전 로컬 `tools/ci.sh`로 합니다. Pages 공개 배포는 사용자가 별도로 요청한 뒤 `deploy-pages.yml`을 `workflow_dispatch`로 실행할 때만 허용합니다. 기본 “배포”는 [APK 전달 스킬](../../.agents/skills/dropbox-apk/SKILL.md)의 Dropbox 전달입니다.
 
 동굴 소환 비석은 골짜기 바닥의 완만한 지점에 둡니다. 저장된 소환 무리는 비석 기준점을 기록하고, 이전 위치의 저장은 무리 구성을 보존한 채 새 암반 지대로 옮긴 후 실제 지형에 재배치합니다. 시험용 전투장은 `native_combat_fixture.remote_at()`으로 필드 범위 밖에 두어 실제 지형 확장과 겹치지 않게 합니다.
 

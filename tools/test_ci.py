@@ -14,23 +14,43 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class WorkflowPolicyTest(unittest.TestCase):
-    def test_only_primary_workflow_can_run_automatically(self):
+    DEPLOY = 'on:\n  workflow_dispatch:\npermissions:\n  contents: read\n'
+
+    def folder(self, root):
+        folder = root / '.github/workflows'
+        folder.mkdir(parents=True)
+        return folder
+
+    def test_workflows_run_only_manually(self):
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            folder = root / '.github/workflows'
-            folder.mkdir(parents=True)
-            (folder / 'web.yml').write_text('on:\n  push:\n  pull_request:\n  workflow_dispatch:\npermissions:\n  contents: read\n')
+            folder = self.folder(Path(temporary))
+            (folder / 'deploy-pages.yml').write_text(self.DEPLOY)
             diagnostic = folder / 'diagnostic.yml'
             diagnostic.write_text('on:\n  workflow_dispatch:\n')
             with redirect_stdout(io.StringIO()):
-                check_workflows(root)
+                check_workflows(Path(temporary))
             for extension in ['.yml', '.yaml']:
                 alternate = folder / ('diagnostic' + extension)
                 diagnostic.rename(alternate)
                 diagnostic = alternate
-                diagnostic.write_text('on:\n  push:\n  workflow_dispatch:\n')
-                with self.subTest(extension=extension), self.assertRaises(AssertionError):
-                    check_workflows(root)
+                for events in ['push:', 'pull_request:', 'schedule:']:
+                    diagnostic.write_text('on:\n  %s\n  workflow_dispatch:\n' % events)
+                    with self.subTest(extension=extension, events=events), self.assertRaises(AssertionError):
+                        check_workflows(Path(temporary))
+
+    def test_deploy_workflow_cannot_run_on_push(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            folder = self.folder(Path(temporary))
+            (folder / 'deploy-pages.yml').write_text(self.DEPLOY.replace('  workflow_dispatch:', '  push:\n  workflow_dispatch:'))
+            with self.assertRaises(AssertionError):
+                check_workflows(Path(temporary))
+
+    def test_manual_deploy_workflow_is_required(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            folder = self.folder(Path(temporary))
+            (folder / 'diagnostic.yml').write_text('on:\n  workflow_dispatch:\n')
+            with self.assertRaises(AssertionError):
+                check_workflows(Path(temporary))
 
 
 class LocalEntryTest(unittest.TestCase):

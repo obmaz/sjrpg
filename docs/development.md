@@ -70,7 +70,7 @@ Android 도구 준비는 `sjrpg_3d/tools/setup_android.sh`에서 수행합니다
 
 `sjrpg_3d/assets/materials/grass/`의 생성 원화10종은 공용 셰이더에서 연속적으로 혼합합니다. 원본·실제 참조·임포트 정책과 검수는 [야외 표면](../sjrpg_3d/docs/native-outdoor-surfaces.md)을 따릅니다.
 
-푸시 전 공통 진입점은 `tools/ci.sh`입니다. 자동 CI 한 개·수동 브라우저/진단·웹 배포의 경계는 [CI 운영](ci.md)을 따릅니다.
+푸시 전 공통 진입점은 `tools/ci.sh`입니다. 푸시로 실행되는 워크플로는 없고 수동 웹 배포의 경계는 [CI 운영](ci.md)을 따릅니다.
 
 ## 독립 에셋 작업
 

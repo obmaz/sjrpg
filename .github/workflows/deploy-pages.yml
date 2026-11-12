@@ -1,44 +1,16 @@
-name: CI
+name: Deploy SJRPG to GitHub Pages
 
 on:
-    push:
-        branches: [main]
-        paths:
-            - ".github/**"
-            - "tools/**"
-            - "sjrpg_3d/**"
-            - "!sjrpg_3d/**.md"
-            - "web/**"
-            - ".godot-version"
-            - "package.json"
-            - "package-lock.json"
-    pull_request:
-        paths:
-            - ".github/**"
-            - "tools/**"
-            - "sjrpg_3d/**"
-            - "!sjrpg_3d/**.md"
-            - "web/**"
-            - ".godot-version"
-            - "package.json"
-            - "package-lock.json"
     workflow_dispatch:
-        inputs:
-            browser_review:
-                description: "무거운 실제 브라우저 검수 6종도 실행"
-                type: boolean
-                default: false
-            publish:
-                description: "명시적으로 요청한 GitHub Pages 웹 배포"
-                type: boolean
-                default: false
 
 permissions:
     contents: read
+    pages: write
+    id-token: write
 
 concurrency:
-    group: ci-${{ github.event.pull_request.number || github.ref }}-${{ inputs.publish == true && 'publish' || 'check' }}
-    cancel-in-progress: ${{ inputs.publish != true }}
+    group: github-pages
+    cancel-in-progress: true
 
 jobs:
     build:
@@ -73,14 +45,7 @@ jobs:
             - name: Prepare the same local development tools
               run: tools/setup_env.sh --project=3d --templates web --skip-import
             - name: Run the shared local and CI checks
-              env:
-                  SJRPG_PUBLISH_BUILD: ${{ github.event_name == 'workflow_dispatch' && inputs.publish == true }}
-              run: |
-                  if [[ "$SJRPG_PUBLISH_BUILD" == true ]]; then
-                      tools/ci.sh --all-editions
-                  else
-                      tools/ci.sh
-                  fi
+              run: tools/ci.sh --all-editions
             - uses: actions/upload-artifact@v6
               with:
                   name: exported-web-build
@@ -89,13 +54,11 @@ jobs:
                   if-no-files-found: error
                   retention-days: 7
             - uses: actions/upload-pages-artifact@v5.0.0
-              if: github.event_name == 'workflow_dispatch' && inputs.publish == true
               with:
                   path: build/ci/web
                   include-hidden-files: true
 
     browser_review:
-        if: github.event_name == 'workflow_dispatch' && (inputs.browser_review == true || inputs.publish == true)
         needs: build
         runs-on: ubuntu-latest
         timeout-minutes: 25
@@ -130,16 +93,9 @@ jobs:
                   retention-days: 7
 
     deploy:
-        if: success() && github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish == true && needs.build.outputs.native_style_release_allowed == 'true'
+        if: success() && github.ref == 'refs/heads/main' && needs.build.outputs.native_style_release_allowed == 'true'
         needs: [build, browser_review]
         runs-on: ubuntu-latest
-        permissions:
-            contents: read
-            pages: write
-            id-token: write
-        concurrency:
-            group: github-pages
-            cancel-in-progress: false
         environment:
             name: github-pages
             url: ${{ steps.deployment.outputs.page_url }}

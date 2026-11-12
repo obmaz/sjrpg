@@ -30,7 +30,7 @@ tools/check.sh --export           # 검사 후 선택 화면 + 두 버전 웹 �
 tools/serve.sh                    # http://localhost:8765/
 ```
 
-자동 CI는 한 개이며, 후보 비교·성능·사진 진단은 수동 실행합니다. 로컬 준비·푸시 전 검사·명시적 웹 배포 조건은 [CI 운영](docs/ci.md)을 따릅니다.
+GitHub Actions는 수동 배포 워크플로 한 개이며 푸시로 실행되지 않습니다. 로컬 준비·푸시 전 검사·명시적 웹 배포 조건은 [CI 운영](docs/ci.md)을 따릅니다.
 
 Godot 에디터에서는 각 폴더의 `project.godot`를 별도로 엽니다. 자세한 구조는 [개발 안내](docs/development.md), 기존 기능과 아트 기준은 [2D판 문서](sjrpg_2d/README.md), 3D 전환 구조는 [3D판 문서](sjrpg_3d/README.md)를 참고하세요.
 
@@ -44,4 +44,4 @@ Android 시험 APK는 `obmaz/commuzip`과 같은 공용 디버그 키를 사용�
 
 3D판 지도는 실제 건물·성문·NPC·동굴 위치를 미니맵과 함께 갱신합니다. 번호나 장소 목록으로 위치를 확대하고, 지도와 목록을 따로 스크롤합니다. [지도 안내](sjrpg_3d/docs/world-map.md)를 참고하세요.
 
-“배포”는 Dropbox APK 전달을 뜻합니다. 웹 공개 배포는 별도 요청 후 수동 워크플로의 `publish=true`로 실행하며 일반 푸시로 Pages를 갱신하지 않습니다.
+“배포”는 Dropbox APK 전달을 뜻합니다. 웹 공개 배포는 별도 요청 후 `Deploy SJRPG to GitHub Pages`(`deploy-pages.yml`)를 수동 실행해 이루어지며 일반 푸시로 Pages를 갱신하지 않습니다.

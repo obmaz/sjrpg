@@ -67,11 +67,11 @@ tools/check.sh --only=quests   # 일부 케이스
 tools/check.sh --export        # 웹 빌드까지
 ```
 
-- 푸시 전 공통 검사는 루트 `tools/ci.sh`를 사용하고, 자동 CI와 수동 진단의 경계는 [CI 운영](../docs/ci.md)을 따릅니다.
+- 푸시 전 공통 검사는 루트 `tools/ci.sh`를 사용하고, GitHub Actions는 수동 배포 워크플로 하나뿐이며 그 운영은 [CI 운영](../docs/ci.md)을 따릅니다.
 - 새 기능은 `tests/cases/`에 케이스를 추가합니다(`extends TestCase`, `run()` 구현). 실패는 `check()`/`failures += 1`로 남깁니다.
   게임 장면은 `await make_game()`으로 만들고, 걷기·프레임 대기는 `_walk`/`_frames`를 씁니다.
 - UI·입력·렌더링을 바꾸면 `tools/export_web.sh` → `tools/serve.sh` → `node tools/screenshot.mjs --scene … --device phone|desktop`으로 화면을 확인합니다.
-- **“배포”의 기본 의미는 Dropbox APK 전달**입니다. 웹 배포는 사용자가 별도로 명시한 경우에만 수행합니다. 일반 푸시·APK 배포는 GitHub Pages를 갱신하지 않습니다. 웹 워크플로는 검사와 빌드만 자동 수행하며, 공개 배포는 명시적 요청 후 workflow_dispatch의 publish=true로만 실행합니다.
+- **“배포”의 기본 의미는 Dropbox APK 전달**입니다. 웹 배포는 사용자가 별도로 명시한 경우에만 수행합니다. 일반 푸시·APK 배포는 GitHub Pages를 갱신하지 않습니다. 공개 배포는 명시적 요청 후 `deploy-pages.yml`을 workflow_dispatch로 실행할 때만 이루어지며, 푸시로 어떤 워크플로도 자동 실행되지 않습니다.
 - 웹 배포를 명시적으로 요청받은 경우에만 해당 커밋의 Pages 배포 성공과 공개 페이지 로드까지 확인합니다.
 - 브랜치는 만들지 않고 `main`에 직접 커밋합니다(사용자 지시). 커밋 메시지는 변경의 이유를 적습니다.
 - 기능이 바뀌면 README의 사용자 안내와 `docs/development.md`의 구조를 함께 갱신합니다. 일회성 완료 기록은 문서에 쌓지 않습니다.
