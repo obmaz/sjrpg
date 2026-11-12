@@ -89,6 +89,28 @@ static func build(renderer: Node) -> MeshInstance3D:
 			garden_bounds.end.y
 		)
 	)
+	var courtyard_bounds := PackedVector4Array()
+	var courtyard_paths := PackedVector4Array()
+	var courtyard_beds := PackedVector4Array()
+	var courtyard_aprons := PackedVector4Array()
+	var courtyard_themes := PackedFloat32Array()
+	for site: Dictionary in VillageCourtyardPlan3D.sites(renderer.game.village):
+		var bounds: Rect2 = site["bounds"]
+		var path: Rect2 = site["path"]
+		courtyard_bounds.append(
+			Vector4(bounds.position.x, bounds.position.y, bounds.end.x, bounds.end.y)
+		)
+		courtyard_paths.append(Vector4(path.position.x, path.position.y, path.end.x, path.end.y))
+		courtyard_beds.append_array(PackedVector4Array(site["beds"]))
+		courtyard_aprons.append(site["apron"])
+		courtyard_themes.append(
+			1.0 if site["theme"] == "workyard" else (.5 if site["theme"] == "stable" else 0.0)
+		)
+	material.set_shader_parameter("courtyard_bounds", courtyard_bounds)
+	material.set_shader_parameter("courtyard_paths", courtyard_paths)
+	material.set_shader_parameter("courtyard_beds", courtyard_beds)
+	material.set_shader_parameter("courtyard_aprons", courtyard_aprons)
+	material.set_shader_parameter("courtyard_themes", courtyard_themes)
 	var trail_bounds := CaveTrailPlan3D.bounds(renderer.game.village)
 	material.set_shader_parameter(
 		"cave_trail_bounds",

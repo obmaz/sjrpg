@@ -644,7 +644,7 @@ static func _contains(polygon: PackedVector2Array, point: Vector2) -> bool:
 
 static func _surface_height(surface: Dictionary, point: Vector2) -> float:
 	if surface.has("garden_pavers"):
-		return ChapelGardenPlan3D.height_at(surface["garden_pavers"], point)
+		return GardenPath3D.height_at(surface["garden_pavers"], point)
 	if surface.has("native_steps"):
 		var flat := Iso.unproject(point) / WorldSpace3D.GROUND_UNITS_PER_METER
 		var step_height := 0.0
@@ -687,6 +687,7 @@ static func terrain_surfaces(village: Village) -> Array[Dictionary]:
 	for id: String in TownPlazaPlan3D.SERVICES:
 		var rect := Rect2(-3.4, -3.0, 6.8, 6.2 if id == "open_smithy" else 4.4)
 		result.push_front({"id": "workshop_" + id, "top": TownPlazaPlan3D.project(ChapelPlan3D.polygon(rect), TownPlazaPlan3D.frame(id)), "rise": .16 * WorldSpace3D.VERTICAL_PIXELS_PER_METER, "blockers": []})
+	result.append_array(VillageCourtyardPlan3D.surfaces(village))
 	result.push_front(ChapelGardenPlan3D.surface(village))
 	result.push_front(_native_chapel(village))
 	village.set_meta("native_terrain_surfaces", result)
@@ -740,7 +741,7 @@ static func _native_chapel(village: Village) -> Dictionary:
 ## triangulation, so a large triangle cannot interpolate across a ramp crease.
 static func surface_faces(surface: Dictionary) -> PackedVector3Array:
 	if surface.has("garden_pavers"):
-		return ChapelGardenPlan3D.floor_faces(surface["garden_pavers"])
+		return GardenPath3D.floor_faces(surface["garden_pavers"])
 	var result := PackedVector3Array()
 	var top: PackedVector2Array = surface["top"]
 	if surface.has("native_steps"):

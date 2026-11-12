@@ -75,7 +75,7 @@
     },
     {
       "path": "scripts/world/physics/spatial_world_3d.gd",
-      "sha256": "9f1db76e2adea4e6b1723c7cbc6df1ab324e5e010bd30fe83c8f0a5525fc270f"
+      "sha256": "d631ecd0b5ba0cba7ea0323612cd86896cd1bd44006fc12a1a4210d5a91e254b"
     },
     {
       "path": "scripts/world/village.gd",
@@ -83,11 +83,11 @@
     },
     {
       "path": "assets/materials/terrain/ground.gdshader",
-      "sha256": "6a1abf90d7aec59030381afed6c234033b94bf9f54042425f32a9ecf41b7ee8a"
+      "sha256": "60363505aa6a6e12689704128a6f0ffdf3fb33990226dd7fdc25743f86a00bc8"
     },
     {
       "path": "scripts/rendering/terrain/ground_renderer_3d.gd",
-      "sha256": "945c1ed82e0d918c8f7aee69229b5f677cbb677f8a4110438a04cad9e87cacb1"
+      "sha256": "232b77da67aaa40636400acb82325877c722e20a30fb8ea9383622a1efc2d477"
     },
     {
       "path": "assets/materials/water/river.gdshader",
@@ -128,6 +128,30 @@
     {
       "path": "tools/assets/architecture/medieval_details.gd",
       "sha256": "5e4f5d3ecd4b74f72acee622f84bcab0b119c62b009f35d8550feb5abae8352b"
+    },
+    {
+      "path": "scripts/world/geometry/garden_path_3d.gd",
+      "sha256": "f28328db20bbdddf8f6f72f56cd9b4ad1d4c5da4e7708cf991acad8915bffa59"
+    },
+    {
+      "path": "scripts/world/geometry/village_courtyard_plan_3d.gd",
+      "sha256": "603ac9768c30787e991474151d463e3339da9fafdec14fc74e165c5854cf2198"
+    },
+    {
+      "path": "scripts/rendering/vegetation/garden_detail_renderer_3d.gd",
+      "sha256": "0593bedb6a7f598fe59fcda1a1c67c524c409b35f932b9b2338c4b190e2f4401"
+    },
+    {
+      "path": "scripts/world/geometry/chapel_garden_plan_3d.gd",
+      "sha256": "9dc576da438cb3de4895b61d231274271fef7f38033c6e58a7b5dd7fbffeeadc"
+    },
+    {
+      "path": "scripts/rendering/vegetation/chapel_garden_3d.gd",
+      "sha256": "d395825f5bd6aa1b9ed5f14c744decc2d79baee7acd4c8a5f30dc9ce9735daa7"
+    },
+    {
+      "path": "scripts/rendering/vegetation/forest_flora_renderer_3d.gd",
+      "sha256": "c7ed479acb7af7b468276ecda1e2d5084c0a2dfe67919507a38619d402c70d44"
     }
   ],
   "fortress_surface_provenance": "assets/source/environment/fortress/provenance.json",
@@ -167,5 +191,23 @@
       }
     ],
     "heraldic_plaques": 8
+  },
+  "courtyards": {
+    "plan": "scripts/world/geometry/village_courtyard_plan_3d.gd",
+    "shared_path_geometry": "scripts/world/geometry/garden_path_3d.gd",
+    "shared_renderer": "scripts/rendering/vegetation/garden_detail_renderer_3d.gd",
+    "reused_foliage_provenance": "assets/source/vegetation/chapel_garden/provenance.json",
+    "sites": [
+      "nw",
+      "ne",
+      "sw",
+      "se",
+      "market_shop",
+      "open_smithy"
+    ],
+    "max_additional_static_draws": 5,
+    "additional_textures": 0,
+    "new_lights": 0,
+    "physical_device_tested": false
   }
 }

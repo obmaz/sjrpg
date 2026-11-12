@@ -425,8 +425,8 @@ func _read_debug_params() -> void:
 					player.position = village.chapel_steps[village.chapel_steps.size() - 1]
 				"chapel_reference":
 					_place_at_chapel_reference()
-				"house_ne":
-					var bounds := world_renderer._building_bounds("ne")
+				"house_nw", "house_ne", "house_sw", "house_se":
+					var bounds := world_renderer._building_bounds(kv[1].trim_prefix("house_"))
 					var middle := bounds.get_center()
 					spatial_world.teleport_source_actor(player,Iso.project((middle+Vector2(0,bounds.size.y*0.5+1.2))*65.0),Player.RADIUS)
 					_fx_review_focus = Iso.project(middle*65.0)-Vector2(0,100)

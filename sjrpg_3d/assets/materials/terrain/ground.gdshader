@@ -17,6 +17,11 @@ uniform vec4 cave_trail_bounds;
 uniform vec4 chapel_beds[6];
 uniform vec4 chapel_path;
 uniform vec4 chapel_bounds;
+uniform vec4 courtyard_bounds[6];
+uniform vec4 courtyard_paths[6];
+uniform vec4 courtyard_beds[18];
+uniform vec4 courtyard_aprons[6];
+uniform float courtyard_themes[6];
 varying highp vec2 ground_world;
 varying float ground_height;
 
@@ -138,6 +143,34 @@ void fragment() {
 		color = mix(color,garden_floor,bed_cover*.96);
 		color = mix(color,mix(soil,grass,.22),path_cover*.95);
 		paving_relief *= 1.0-max(bed_cover,path_cover);
+	}
+	// 건물 구역 안에서만 화단·작업 마당을 계산하며 먼 필드에는 적용하지 않는다.
+	if (all(greaterThan(ground_world,town_bounds.xy)) && all(lessThan(ground_world,town_bounds.zw))) {
+		for (int i=0; i<6; i++) {
+			vec4 bounds = courtyard_bounds[i];
+			if (all(greaterThan(ground_world,bounds.xy)) && all(lessThan(ground_world,bounds.zw))) {
+				float bed = 0.0;
+				float noise = ground_noise(ground_world*3.8);
+				for (int j=0; j<3; j++) {
+					vec4 ellipse = courtyard_beds[i*3+j];
+					float radius = length((ground_world-ellipse.xy)/ellipse.zw);
+					bed = max(bed,1.0-smoothstep(.70,1.25,radius+(noise-.5)*.27));
+				}
+				vec4 path = courtyard_paths[i];
+				vec2 path_edge = min(ground_world-path.xy,path.zw-ground_world);
+				float path_cover = smoothstep(-.20,.10,min(path_edge.x,path_edge.y)+(noise-.5)*.10);
+				vec4 apron = courtyard_aprons[i];
+				float apron_radius = length((ground_world-apron.xy)/apron.zw);
+				float worn = (1.0-smoothstep(.68,1.25,apron_radius+(noise-.5)*.18))*courtyard_themes[i];
+				vec3 soil = texture(earth_texture,ground_world/2.56).rgb;
+				vec3 gravel = texture(rock_texture,ground_world/2.56).rgb;
+				vec3 working = mix(soil,gravel,.46)*vec3(.77,.77,.72);
+				color = mix(color,working,worn*.80);
+				color = mix(color,mix(soil,grass,.78),bed*.95);
+				color = mix(color,mix(soil,grass,mix(.27,.08,courtyard_themes[i])),path_cover*.92);
+				paving_relief *= 1.0-max(bed,path_cover);
+			}
+		}
 	}
 	vec3 dx = dFdx(vec3(ground_world.x,paving_relief,ground_world.y));
 	vec3 dy = dFdy(vec3(ground_world.x,paving_relief,ground_world.y));

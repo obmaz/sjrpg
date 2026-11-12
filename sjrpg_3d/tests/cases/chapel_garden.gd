@@ -37,7 +37,7 @@ func run() -> void:
 	var worst_floor_error := 0.0
 	var worst_foot_error := 0.0
 	for stone: Dictionary in stones:
-		var cap := ChapelGardenPlan3D.cap_polygon(stone)
+		var cap := GardenPath3D.cap_polygon(stone)
 		var triangles := Geometry2D.triangulate_polygon(cap)
 		# 삼각형 내부에서 측정한다. 경계 위의 부동소수점 레이 누락과 구별한다.
 		var center := (cap[triangles[0]] + cap[triangles[1]] + cap[triangles[2]]) / 3.0

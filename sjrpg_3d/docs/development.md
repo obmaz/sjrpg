@@ -12,7 +12,7 @@
 - `WorldRenderer3D`는 마을·숲·기존 동굴의 운영 공간 표시기입니다. 소유 참조는 `game.world_renderer`, 모듈의 표시기 참조는 `renderer`로 통일합니다.
 - 카메라는 방위45°·고도35.2643897° 직교 투영입니다. HUD와 미니맵은2D UI이며, 지면·물·효과·알파 잎의 평면은 입체 물리와 함께 사용합니다.
 
-예배당 정원은 `ChapelGardenPlan3D`가 판석·화단·후경 나무의 미터 배치를 한 번 계산해 마을 인스턴스에 보관합니다. `ChapelGarden3D`와 `SpatialWorld3D.surface_faces()`가 같은 판석 상면/경사 삼각형을 사용합니다. 판석은 한 메시, 고정 곡면 식생은 종류별 최대4개 MultiMesh이며 새 광원을 만들지 않습니다. 잎 원본과 참조 해시는 `assets/source/vegetation/chapel_garden/`에 기록합니다. 정원은 숲 루트와 함께 숨겨 동굴에 남지 않습니다. 기본 상대 시야는 `Prefs.WORLD_ZOOM_BASE=1.05`이고 HUD·미터 배율은 바꾸지 않습니다. 작은 판석의4.5cm 이하 높이는 발의 실제 FLOOR를 따르되 카메라 상하 떨림에는 반영하지 않습니다.
+마을 정원·마당은 `ChapelGardenPlan3D`와 [VillageCourtyardPlan3D](../scripts/world/geometry/village_courtyard_plan_3d.gd)가 실제 건물 접점에서 미터 배치를 계산해 마을 인스턴스에 보관합니다. 예배당과 주택4채·전용 상점·대장간이 [GardenPath3D](../scripts/world/geometry/garden_path_3d.gd)의 판석 상면/경사 삼각형을 표시와 FLOOR에 함께 사용합니다. [GardenDetailRenderer3D](../scripts/rendering/vegetation/garden_detail_renderer_3d.gd)는 예배당과 나머지 마당을 각각 판석1개 메시·식생 최대4개 MultiMesh로 묶고 잎 메시·재질·기존 생성형 이미지를 공유합니다. 추가 텍스처·광원은 없습니다. 작업장 앞은 흙·쇄석, 주택은 낮은 화단으로 구분하고 NPC·문·상자·광장을 비웁니다. 기존 단순 풀은 새 화단과 통로에서 중복 표시하지 않습니다. 식생 원본과 참조 해시는 `assets/source/vegetation/chapel_garden/`, 현재 배치/구현 출처는 `assets/source/environment/world_refinement/`에 기록합니다. 정원은 숲 루트와 함께 숨겨 동굴에 남지 않습니다. 기본 상대 시야는 `Prefs.WORLD_ZOOM_BASE=1.05`이고 HUD·미터 배율은 바꾸지 않습니다. 낮은 판석의4.5cm 이하 높이는 발의 실제 FLOOR를 따르되 카메라 상하 떨림에는 반영하지 않습니다.
 
 이동은 네이티브 캡슐 스윕과 미끄러짐을 보존하고, 바닥에 맞춰 높이를 보정할 때 추가 충돌을 확인합니다. 모든 이동 뒤에 겹침 여부만으로 되돌리면 정상적인 교대 모서리 접촉도 막힙니다. `native_bridge_sweep`는 30가지 이동 간격·진입 위치를 검사하며, `native_threshold_support`는 실제 접촉 깊이를 측정하고, 벽 안으로 3cm 이동한 검사 캡슐은 관통으로 검출되는지도 확인합니다.
 

@@ -111,6 +111,7 @@ static func build(renderer: Node, parent: Node3D, world: Node2D) -> Dictionary:
 	parent.add_child(root)
 	var owned := {}
 	var suppressed: Array[int] = []
+	var suppressed_courtyards: Array[int] = []
 	var chapel: Dictionary = SpatialWorld3D._native_chapel(renderer.game.village)
 	var clear_zone := Geometry2D.offset_polygon(chapel["top"], 18.0)
 	var buckets := {}
@@ -125,6 +126,12 @@ static func build(renderer: Node, parent: Node3D, world: Node2D) -> Dictionary:
 			suppressed.append(source.get_instance_id())
 			continue
 		var species := species_of(source)
+		var ground := Iso.unproject(source.global_position) / WorldSpace3D.GROUND_UNITS_PER_METER
+		if not renderer.game.dungeon.active and VillageCourtyardPlan3D.owns_groundcover(renderer.game.village,ground):
+			# 공용 정원이 담당하는 화단과 통로에 기존 단순 풀을 중복해서 그리지 않는다.
+			owned[source.get_instance_id()] = true
+			suppressed_courtyards.append(source.get_instance_id())
+			continue
 		var height := float(source.def.get("height", 0)) * source.k / (WorldSpace3D.GROUND_UNITS_PER_METER * Iso.S)
 		if not is_finite(height) or height <= 0.0 or height > 2.5:
 			continue
@@ -162,6 +169,6 @@ static func build(renderer: Node, parent: Node3D, world: Node2D) -> Dictionary:
 		batch.position = origin
 		batch.multimesh = multi
 		root.add_child(batch)
-	var report := {"owned_source_ids": owned, "suppressed_at_chapel": suppressed, "placements": placements, "groups": root.get_child_count(), "root": root, "billboards": false}
+	var report := {"owned_source_ids": owned, "suppressed_at_chapel": suppressed, "suppressed_at_courtyards": suppressed_courtyards, "placements": placements, "groups": root.get_child_count(), "root": root, "billboards": false}
 	root.set_meta("native_flora_report", report)
 	return report

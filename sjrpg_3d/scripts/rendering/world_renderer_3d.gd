@@ -340,13 +340,7 @@ func _build_ground() -> void:
 
 
 func _building_bounds(key: String) -> Rect2:
-	var sprite: IsoSprite = game.village.buildings[key]
-	var frame: Dictionary = game.village.data["frames"][key]
-	var points := sprite.atlas_polygon(frame["ground"])
-	var flat := PackedVector2Array()
-	for point in points:
-		flat.append(Iso.unproject(point) / WorldSpace3D.GROUND_UNITS_PER_METER)
-	return Iso.poly_bounds(flat)
+	return VillageCourtyardPlan3D.building_bounds(game.village, key)
 
 
 func _build_village() -> void:
@@ -362,6 +356,10 @@ func _build_village() -> void:
 		root.add_child(visual)
 		root.set_meta("native_house", visual.report)
 	ChapelGarden3D.build(self)
+	GardenDetailRenderer3D.build(
+		self, VillageCourtyardPlan3D.stones(game.village),
+		VillageCourtyardPlan3D.plants(game.village), "VillageCourtyards", "village_courtyards"
+	)
 	_fortification = FortificationRenderer3D.build(self)
 
 
@@ -416,7 +414,10 @@ func _sync_camera() -> void:
 		var ground := Iso.unproject(game.player.position) / WorldSpace3D.GROUND_UNITS_PER_METER
 		var path: Rect2 = ChapelGardenPlan3D.layout(game.village)["path"]
 		# 발은 판석의 실제 높이를 따르되 작은 요철이 카메라의 상하 떨림이 되지 않게 한다.
-		if path.has_point(ground) and floor_height <= ChapelGardenPlan3D.MAX_PAVER_HEIGHT + .003:
+		if (
+			(path.has_point(ground) or VillageCourtyardPlan3D.on_path(game.village, ground))
+			and floor_height <= GardenPath3D.MAX_HEIGHT + .003
+		):
 			floor_height = 0.0
 	var focus := WorldSpace3D.projected_to_world(focus_point, floor_height)
 	camera.position = focus + CAMERA_DIRECTION * 30.0
