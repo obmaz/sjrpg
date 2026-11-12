@@ -1,16 +1,18 @@
 # 건물 GLB와 개별 씬
 
-마을 주택 네 채·예배당·성곽/성문·다리는 `assets/models/architecture/<id>/`의 GLB와 `visual.tscn`을 사용합니다. 운영 중에는 이 자산을 인스턴스화하며, 메시 생성 코드는 앱에 넣지 않습니다. 나무·분수·바위 등 다른 소품의 제작 방식까지 변경한 것은 아닙니다.
+마을 주택 네 채·전용 상점/대장간·예배당·성곽/성문·다리는 `assets/models/architecture/<id>/`의 GLB와 `visual.tscn`을 사용합니다. 운영 중에는 이 자산을 인스턴스화하며, 메시 생성 코드는 앱에 넣지 않습니다. 나무·분수·바위 등 다른 소품의 제작 방식까지 변경한 것은 아닙니다.
 
 | 자산 id | 내용 | 삼각형 | 재질 역할 |
 | --- | --- | ---: | ---: |
-| shop | 상점 | 11,008 | 6 |
-| smith | 대장간 | 10,476 | 6 |
+| shop | 보존한 기존 상점 주택 | 11,008 | 6 |
+| smith | 보존한 기존 대장간 주택 | 10,476 | 6 |
 | stable | 마구간 | 8,008 | 6 |
 | home | 주택 | 10,492 | 6 |
 | chapel | 예배당 | 6,284 | 5 |
 | fortress | 성벽·망루·성문 네 곳, 여덟 문짝 | 37,472 | 4 |
 | bridge | 갑판·석조 아치·교각·난간 | 4,356 | 4 |
+| market_shop | C 원화 전용 상점: 천막·진열 상품·간판 | 19,764 | 7 |
+| open_smithy | C 원화 전용 대장간: 열린 작업장·화덕·모루 | 9,980 | 7 |
 
 ## 파일과 책임
 
@@ -59,3 +61,21 @@ sjrpg_3d/tools/check.sh --only=native_architecture_assets,native_house_family,me
 네 방향 건물 렌더는 `tools/review/models/render_facades.tscn`을 사용합니다. 실제 모바일 가로/세로에서 마을·성문·다리를 확인하고 기존 화면과 같은 카메라·광원으로 비교합니다. 일회성 비교와 진단 출력은 `build/`에 둡니다. 실제 Android 기기 실행과 로컬 브라우저 검수는 구분합니다.
 
 성곽은 2D 기준 원화(`assets/source/style/{wall-base-design,gate-wall-design}.png`)의 열린 원형 망루·양쪽 흉벽·목재 통로·외측 아치 음각을 따른다. 정적 재질은 5개에서4개로 줄이고, 열린 난간과 안쪽 흉벽을 추가한 기하 예산은38,000삼각형 미만이다. 그림과 충돌의 상부는 `FortressPlan3D.crown_parts`를 공유한다. 실제 중앙 수직 광선이 지붕 없이 목재 바닥에 도달하며, 화살창·문짝·지상 통로 검사를 유지한다.
+
+## 전용 시설과 광장
+
+`market_shop`·`open_smithy`는 사용자가 선택하고 보강 원화를 승인한 C안의 추가 건물입니다. 기존 `shop`·`smith`의 GLB·씬·재질은 보존합니다. 승인 컨셉과 실제 재생성 입력·프롬프트·해시는 `assets/source/architecture/trade_workshops/`에, 상품/천막/화덕의 생성형4×4 알베도는 `assets/materials/trade_workshops/`에 둡니다. 일반 벽·기와·목재는 기존 마을 패밀리를 재사용하고, 진열 상품과 아궁이/후드/모루는 실제 기하입니다. 알베도의 미세 명암은 회화 표현이며 스캔 PBR이나 법선 맵으로 주장하지 않습니다.
+
+상점은 많은 병·빵·과일·천과 장식 때문에 일반 주택의12,000삼각형 목표를 넘는19,764삼각형 예외입니다. 두 시설은 각7개 공유 재질 역할로 묶이며 상품마다 런타임 노드/광원을 추가하지 않습니다. 화덕은 같은 알베도의 잔불 셀을 발광으로 쓰고 새 동적 광원은 만들지 않습니다. FPS 개선은 이 수치만으로 보장하지 않습니다.
+
+`TownPlazaPlan3D`는 미터 단위 광장(14.4×14.5m), 기존 주택의 이동 중심, 새 시설의 변환·충돌 부품·기둥·NPC 접근점을 소유합니다. `Village`는 원본 JSON을 보존하면서 주택 위치만 조정하고, 새 시설은 `WorldRenderer3D`가 개별 씬으로 배치합니다. `SpatialWorld3D`는 같은 부품과16cm 기단을 물리에 사용합니다. 열린 대장간 전체를 닫힌 사각형으로 막지 않습니다. 두 지도도 같은 배치와 실제 정적 루트 변환을 읽습니다. 기존 성벽 안에서 충분한 공간을 확보하므로 성벽 크기는 유지합니다. 마을 안전 경계도 성벽 안쪽으로 맞춰 가장자리로 옮긴 주민들이 필드로 판정되지 않게 합니다.
+
+```sh
+# 기존 모델을 덮어쓰지 않고 새 시설 두 채만 재현
+sjrpg_3d/tools/godot.sh --headless res://tools/assets/architecture/bake_trade_buildings.tscn
+sjrpg_3d/tools/import_project.sh
+# 실제 운영 광원/직교 카메라로 두 시설의 네 방향 렌더
+sjrpg_3d/tools/godot.sh --audio-driver Dummy res://tools/review/models/render_facades.tscn -- --trade --after --no-layouts
+```
+
+`town_plaza`는 주택/광장 분리, 시설 NPC·실제 충돌·접근 공간·GLB·기하 예산·지도 도형을 검증합니다. `npc_clearance`는 실제3D 충돌 광선과 GLB 문 앞 위치를 사용하고, `tree_art`의 주민 검사는 전용 시설을 읽습니다. 숨겨진2D 건물 그림의 옛 배치/정렬을 새 마을에 강제하지 않습니다. 재생성할 때 공유 Plan과 모델을 함께 검수하며 기존7개 모델의 입력 호환 기록은 배치만 바뀌었고 GLB/씬/재질 바이트는 같다는 사실을 명시합니다.

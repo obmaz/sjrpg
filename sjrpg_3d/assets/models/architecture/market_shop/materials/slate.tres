@@ -1,0 +1,11 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://assets/materials/village_craft/roof.gdshader" id="1_r0p1t"]
+[ext_resource type="Texture2D" path="res://assets/materials/village_craft/roof.png" id="2_spikn"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_r0p1t")
+shader_parameter/atlas = ExtResource("2_spikn")
+shader_parameter/cell = 1
+shader_parameter/tint = Color(1, 1, 1, 1)

@@ -1,0 +1,44 @@
+[gd_resource type="Resource" format=3]
+
+[resource]
+metadata/report = {
+"bounds": AABB(-3.91, -0.014999986, -3.2314446, 7.7270403, 6.1249995, 6.7464447),
+"collision_note": "TownPlazaPlan3D blockers/posts; open workshop floor remains traversable",
+"concept": "approved C revision: projecting merchandise and large open furnace",
+"eaves_height": 3.7,
+"footprint": Vector2(8, 8),
+"furnace_opening": Vector2(1.68, 0.98),
+"goods_count": 17,
+"height_max": 6.1099997,
+"key": "open_smithy",
+"materials": ["stone", "wood", "iron", "glass", "slate", "wall", "details", "embers"],
+"meshes": [{
+"$node": "House_open_smithy_stone"
+}, {
+"$node": "House_open_smithy_glass"
+}, {
+"$node": "House_open_smithy_wood"
+}, {
+"$node": "House_open_smithy_iron"
+}, {
+"$node": "House_open_smithy_slate"
+}, {
+"$node": "House_open_smithy_details"
+}, {
+"$node": "House_open_smithy_embers"
+}],
+"roof_rise": 1.7,
+"surfaces": 7,
+"triangles": 9980
+}
+metadata/mesh_roles = {
+"House_open_smithy_details": "details",
+"House_open_smithy_embers": "embers",
+"House_open_smithy_glass": "glass",
+"House_open_smithy_iron": "iron",
+"House_open_smithy_slate": "slate",
+"House_open_smithy_stone": "stone",
+"House_open_smithy_wood": "wood"
+}
+metadata/node_flags = {}
+metadata/source_dimensions = Vector3(8, 3.7, 8)

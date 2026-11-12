@@ -66,6 +66,8 @@ static func build(village: Village) -> Array[Dictionary]:
 			var building: IsoSprite = village.buildings[key]
 			polygon = building.atlas_polygon(village.data["frames"][key]["ground"])
 		shapes.append(shape("building:" + key, "building", polygon, Color("c0aa7d")))
+	for id: String in TownPlazaPlan3D.SERVICES:
+		shapes.append(shape("building:" + id, "building", TownPlazaPlan3D.footprint(id), Color("c0aa7d")))
 	return shapes
 
 

@@ -1,0 +1,19 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://assets/models/architecture/shared/visual.gd" id="visual"]
+[ext_resource type="PackedScene" path="res://assets/models/architecture/market_shop/model.glb" id="model"]
+[ext_resource type="Resource" path="res://assets/models/architecture/market_shop/layout.tres" id="layout"]
+[ext_resource type="Material" path="res://assets/models/architecture/market_shop/materials/stone.tres" id="stone"]
+[ext_resource type="Material" path="res://assets/models/architecture/market_shop/materials/wall.tres" id="wall"]
+[ext_resource type="Material" path="res://assets/models/architecture/market_shop/materials/glass.tres" id="glass"]
+[ext_resource type="Material" path="res://assets/models/architecture/market_shop/materials/wood.tres" id="wood"]
+[ext_resource type="Material" path="res://assets/models/architecture/market_shop/materials/iron.tres" id="iron"]
+[ext_resource type="Material" path="res://assets/models/architecture/market_shop/materials/slate.tres" id="slate"]
+[ext_resource type="Material" path="res://assets/models/architecture/market_shop/materials/details.tres" id="details"]
+
+[node name="MarketShop" type="Node3D"]
+script = ExtResource("visual")
+layout = ExtResource("layout")
+materials = {"stone": ExtResource("stone"), "wall": ExtResource("wall"), "glass": ExtResource("glass"), "wood": ExtResource("wood"), "iron": ExtResource("iron"), "slate": ExtResource("slate"), "details": ExtResource("details")}
+
+[node name="Geometry" parent="." instance=ExtResource("model")]

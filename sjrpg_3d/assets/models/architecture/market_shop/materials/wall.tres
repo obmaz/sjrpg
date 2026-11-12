@@ -1,0 +1,16 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://assets/materials/shared/building_surface.gdshader" id="1_6axl1"]
+[ext_resource type="Texture2D" path="res://assets/models/architecture/shop/albedo.png" id="2_cuebp"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_6axl1")
+shader_parameter/atlas = ExtResource("2_cuebp")
+shader_parameter/extent = Vector3(6.8, 3.7, 4.4)
+shader_parameter/gable_rise = 1.7
+shader_parameter/tile = false
+shader_parameter/tile_metres = 2.56
+shader_parameter/cell_override = -1
+shader_parameter/roughness = 0.94
+metadata/asset_id = "shop"

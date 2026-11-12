@@ -3,7 +3,7 @@ extends TestCase
 
 
 func run() -> void:
-	for id: String in ["shop", "smith", "stable", "home", "chapel", "fortress", "bridge"]:
+	for id: String in ["shop", "smith", "stable", "home", "chapel", "fortress", "bridge", "market_shop", "open_smithy"]:
 		var first := ArchitectureSceneLibrary.create(id)
 		var second := ArchitectureSceneLibrary.create(id)
 		add_child(first)

@@ -119,10 +119,10 @@ func build(ground_layer: Node2D, world: Node2D) -> void:
 		chest_points.append(Iso.project(g))
 		clear_rects.append(Rect2(Iso.project(g) - Vector2(80, 80), Vector2(160, 160)))
 	chest_points.append(landmarks[3]._pt(Vector2(215, 472)))
-	var corners := [Vector2(0.04, 0.10), Vector2(0.94, 0.10), Vector2(0.94, 0.90), Vector2(0.04, 0.90)]
+	var corners := ChapelPlan3D.polygon(TownPlazaPlan3D.TOWN_INTERIOR)
 	safe_zone = PackedVector2Array()
 	for c in corners:
-		safe_zone.append(point(c))
+		safe_zone.append(Iso.project(c * WorldSpace3D.GROUND_UNITS_PER_METER))
 
 
 # ───────── ground ─────────
@@ -139,7 +139,9 @@ func _build_paving(layer: Node2D) -> void:
 	var group := Node2D.new()
 	group.z_index = 1
 	layer.add_child(group)
-	var merged := _box(Vector2(0.375, 0.375), Vector2(0.625, 0.625))
+	var merged := ChapelPlan3D.polygon(TownPlazaPlan3D.PLAZA)
+	for index in merged.size():
+		merged[index] *= WorldSpace3D.GROUND_UNITS_PER_METER
 	for other in [_box(Vector2(0.02, 0.453), Vector2(0.96, 0.547)), _box(Vector2(0.453, 0.06), Vector2(0.547, 0.94))]:
 		merged = Geometry2D.merge_polygons(merged, other)[0]
 	var stone := Polygon2D.new()
@@ -397,6 +399,12 @@ var buildings := {}
 func _build_buildings(world: Node2D) -> void:
 	for key in ["nw", "ne", "sw", "se"]:
 		var s := _placed(key)
+		var outline := s.atlas_polygon(data["frames"][key]["ground"])
+		var flat := PackedVector2Array()
+		for p: Vector2 in outline:
+			flat.append(Iso.unproject(p) / WorldSpace3D.GROUND_UNITS_PER_METER)
+		var center: Vector2 = TownPlazaPlan3D.LEGACY_CENTERS[key]
+		s.position += Iso.project((center - Iso.poly_bounds(flat).get_center()) * WorldSpace3D.GROUND_UNITS_PER_METER)
 		world.add_child(s)
 		buildings[key] = s
 		solids.append(s.atlas_polygon(data["frames"][key]["ground"]))
@@ -444,7 +452,7 @@ func _build_plaza(world: Node2D) -> void:
 	# Authored frame points follow the same measured source projection as its stone base.
 	solids.append(fountain.atlas_polygon(data["frames"]["pool"]["ground"]))
 	# Leave room for the larger fountain and for Mira's independent interaction approach.
-	_add_warp_portal("town", point(Vector2(0.395, 0.493)), world)
+	_add_warp_portal("town", Iso.project(Vector2(-5.1, 5.5) * WorldSpace3D.GROUND_UNITS_PER_METER), world)
 	portal_point = warp_point("town")
 
 
@@ -557,6 +565,12 @@ func _canopy_blocks_service(tree: IsoSprite) -> bool:
 func _grove_clear(at: Vector2) -> bool:
 	if near_water(Iso.unproject(at), 30.0):
 		return false
+	var flat := Iso.unproject(at) / WorldSpace3D.GROUND_UNITS_PER_METER
+	if TownPlazaPlan3D.PLAZA.grow(.5).has_point(flat):
+		return false
+	for id: String in TownPlazaPlan3D.SERVICES:
+		if Iso.poly_bounds(TownPlazaPlan3D.footprint(id)).grow(75.0).has_point(at):
+			return false
 	for solid in solids:
 		if Geometry2D.is_point_in_polygon(at, solid):
 			return false
@@ -590,6 +604,9 @@ func _build_npcs(world: Node2D) -> void:
 		var npc := Villager.new()
 		npc.setup(n[2], n[1])
 		npc.position = b.native_point(Vector2(a[0], a[1]))
+		for id: String in TownPlazaPlan3D.SERVICES:
+			if TownPlazaPlan3D.SERVICES[id]["npc"] == n[1]:
+				npc.position = TownPlazaPlan3D.approach(id)
 		var nm: String = n[1]
 		npc.marker = func(): return Quests.marker_for(nm)
 		npc_points[n[1]] = npc.position

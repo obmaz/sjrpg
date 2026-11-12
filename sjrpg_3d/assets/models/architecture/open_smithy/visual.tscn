@@ -1,0 +1,19 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://assets/models/architecture/shared/visual.gd" id="visual"]
+[ext_resource type="PackedScene" path="res://assets/models/architecture/open_smithy/model.glb" id="model"]
+[ext_resource type="Resource" path="res://assets/models/architecture/open_smithy/layout.tres" id="layout"]
+[ext_resource type="Material" path="res://assets/models/architecture/open_smithy/materials/stone.tres" id="stone"]
+[ext_resource type="Material" path="res://assets/models/architecture/open_smithy/materials/glass.tres" id="glass"]
+[ext_resource type="Material" path="res://assets/models/architecture/open_smithy/materials/wood.tres" id="wood"]
+[ext_resource type="Material" path="res://assets/models/architecture/open_smithy/materials/iron.tres" id="iron"]
+[ext_resource type="Material" path="res://assets/models/architecture/open_smithy/materials/slate.tres" id="slate"]
+[ext_resource type="Material" path="res://assets/models/architecture/open_smithy/materials/details.tres" id="details"]
+[ext_resource type="Material" path="res://assets/models/architecture/open_smithy/materials/embers.tres" id="embers"]
+
+[node name="OpenSmithy" type="Node3D"]
+script = ExtResource("visual")
+layout = ExtResource("layout")
+materials = {"stone": ExtResource("stone"), "glass": ExtResource("glass"), "wood": ExtResource("wood"), "iron": ExtResource("iron"), "slate": ExtResource("slate"), "details": ExtResource("details"), "embers": ExtResource("embers")}
+
+[node name="Geometry" parent="." instance=ExtResource("model")]

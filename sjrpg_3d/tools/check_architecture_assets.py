@@ -7,7 +7,7 @@ import struct
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-IDS = ("shop", "smith", "stable", "home", "chapel", "fortress", "bridge")
+IDS = ("shop", "smith", "stable", "home", "chapel", "fortress", "bridge", "market_shop", "open_smithy")
 
 
 def digest(path):

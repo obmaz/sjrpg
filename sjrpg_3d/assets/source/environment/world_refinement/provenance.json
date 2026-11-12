@@ -75,11 +75,11 @@
     },
     {
       "path": "scripts/world/physics/spatial_world_3d.gd",
-      "sha256": "859373abd971f459a7566ab444e5e28b4fde535067356dae7a1fc163feb0c1d1"
+      "sha256": "b9469b97e785219fbe39f8724ba918da4aad2d88e3d629cb8fb7d846162582b9"
     },
     {
       "path": "scripts/world/village.gd",
-      "sha256": "0f525b52acc3d77f3aa1d201ba47401bb9148b66fbd640412817a5ef92f78edf"
+      "sha256": "c102923d8ed1925af76328e76291839ec1173a454c53fdf5b1f06db820e6c483"
     },
     {
       "path": "assets/materials/terrain/ground.gdshader",

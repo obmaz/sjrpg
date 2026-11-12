@@ -6,7 +6,7 @@
 
 ## 현재 연결 구조
 
-- `assets/models/architecture/<id>/`: [GLB·개별 씬·재질·배치 기록](native-architecture-models.md). ID는 shop, smith, stable, home, chapel, fortress, bridge입니다. 기존 여섯 표면 자산은 같은 폴더의 `asset.json`과 `albedo.png`를 유지합니다.
+- `assets/models/architecture/<id>/`: [GLB·개별 씬·재질·배치 기록](native-architecture-models.md). ID는 shop, smith, stable, home, chapel, fortress, bridge, market_shop, open_smithy입니다. 기존 여섯 표면 자산은 같은 폴더의 `asset.json`과 `albedo.png`를 유지합니다.
 - `scripts/rendering/materials/building_surface_materials.gd`: 폴더별 설정을 읽는 공용 어댑터. 원화 추가·수정에는 이 파일을 고치지 않습니다.
 - `assets/materials/shared/building_surface.gdshader`: 집과 예배당의 실제 로컬 좌표로 네 방향 벽을 구별하고, 면 전체에 각 원화를 한 번 배치합니다. 창·문·골조와 충돌은 실제 기하가 유지합니다. 다리는 같은 어댑터의 미터 타일 모드를 사용합니다.
 - `assets/models/environment/cave_entrance/model.gd`와 `plan.gd`: 동굴 입구의 GLB 메시 어댑터와 표시·충돌의 공통 치수. 동굴 내부 생성·진입 규칙은 이 에셋에 넣지 않습니다.

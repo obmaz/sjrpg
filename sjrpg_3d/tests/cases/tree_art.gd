@@ -1,29 +1,51 @@
 extends TestCase
-## Organic camera consistency is reviewed in the illustration, not invented from a collision box.
-## Lock that review to the actual pixels and verify their ground contacts in the live forest.
+## 나무 ID·원본·발치 호환 자료를 검증한다. 실제3D 기하/수관은 tree_geometry_3d에서 검사한다.
 
 
 func run() -> void:
-	var art: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/data/tree_art.json"))
-	check("tree source matches the reviewed crown and roots", FileAccess.get_sha256("res://" + art["source"]) == art["source_sha256"])
-	check("tree atlas matches the reviewed shadow-free pixels", FileAccess.get_sha256("res://" + art["render"]) == art["render_sha256"])
-	check("the mixed legacy families are fully replaced", art["variants"].size() == 18 and art["frames"].size() == 4)
+	var art: Dictionary = JSON.parse_string(
+		FileAccess.get_file_as_string("res://assets/data/tree_art.json")
+	)
+	check(
+		"tree source matches the reviewed crown and roots",
+		FileAccess.get_sha256("res://" + art["source"]) == art["source_sha256"]
+	)
+	check(
+		"tree atlas matches the reviewed shadow-free pixels",
+		FileAccess.get_sha256("res://" + art["render"]) == art["render_sha256"]
+	)
+	check(
+		"the mixed legacy families are fully replaced",
+		art["variants"].size() == 18 and art["frames"].size() == 4
+	)
 	var image := Image.load_from_file("res://" + art["render"])
 	for key in art["frames"]:
 		var frame: Dictionary = art["frames"][key]
 		var source: Array = frame["source"]
 		var foot: Array = frame["foot"]
-		check("tree root contacts stay inside their packed illustration: " + key, Rect2(source[0], source[1], source[2], source[3]).has_point(Vector2(foot[0], foot[1])))
+		check(
+			"tree root contacts stay inside their packed illustration: " + key,
+			Rect2(source[0], source[1], source[2], source[3]).has_point(Vector2(foot[0], foot[1]))
+		)
 		var root_alpha := 0.0
 		for y in range(-2, 3):
 			for x in range(-2, 3):
-				root_alpha = maxf(root_alpha, image.get_pixel(roundi(foot[0]) + x, roundi(foot[1]) + y).a)
+				root_alpha = maxf(
+					root_alpha, image.get_pixel(roundi(foot[0]) + x, roundi(foot[1]) + y).a
+				)
 		check("tree contact touches painted roots: " + key, root_alpha > 0.5)
 	var game := await make_game()
 	for key in art["variants"]:
 		var expected: Dictionary = art["frames"][art["variants"][key]]
 		var actual: Dictionary = game.village.data["sprites"][key]
-		check("legacy tree ID resolves to reviewed pixels: " + key, actual["source"] == expected["source"] and actual["foot"] == expected["foot"] and actual["sheet"] == "forest-isometric-trees")
+		check(
+			"legacy tree ID resolves to reviewed pixels: " + key,
+			(
+				actual["source"] == expected["source"]
+				and actual["foot"] == expected["foot"]
+				and actual["sheet"] == "forest-isometric-trees"
+			)
+		)
 	var trees := 0
 	var contacts_match := true
 	var bases_blocked := true
@@ -52,8 +74,16 @@ func run() -> void:
 		check("service NPC stays readable below all foreground crowns: " + npc_name, visible)
 	for service in Village.NPCS:
 		var npc: Vector2 = game.village.npc_points[service[1]]
-		var building: IsoSprite = game.village.buildings[service[0]]
-		check("service resident stands in front of the actual building sort point: " + service[1], npc.y >= building.position.y + 8.0)
+		var native := WorldSpace3D.projected_to_world(npc)
+		var front: float = game.world_renderer._building_bounds(service[0]).end.y
+		for id: String in TownPlazaPlan3D.SERVICES:
+			if TownPlazaPlan3D.SERVICES[id]["npc"] == service[1]:
+				var size: Vector2 = TownPlazaPlan3D.SERVICES[id]["size"]
+				front = TownPlazaPlan3D.frame(id).origin.z + size.y * .5
+		check(
+			"service resident stands in front of its actual native facility: " + service[1],
+			native.z > front
+		)
 		var clear := true
 		for solid in game.village.solids:
 			clear = clear and not Geometry2D.is_point_in_polygon(npc, solid)

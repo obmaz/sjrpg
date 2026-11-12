@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1.0,
+  "id": "open_smithy",
+  "kind": "model",
+  "model": "model.glb",
+  "scene": "visual.tscn",
+  "layout": "layout.tres",
+  "modelSchemaVersion": 1
+}

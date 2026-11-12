@@ -1,0 +1,16 @@
+{
+  "stage": "concept_revision",
+  "selection": "User selected shop C and forge C; requested prominent merchandise and furnace. Revised concept shown for inspection before modeling.",
+  "prompt": "Revise the attached architecture approval board: SELECT ONLY the two buildings from BOTTOM ROW C, preserve their exact C silhouettes, roof designs and warm mature medieval woodland village style. Produce a high-resolution landscape concept sheet with ONLY TWO complete isolated buildings side by side, SHOP left, FORGE right, generous separation and no cropping. Same strict orthographic isometric camera azimuth45 elevation35.264, axes30degrees, no perspective. Shop C: terracotta gabled roof, cream infill/oak beams/warm stone base, ochre broad fabric awning and arched right entrance. USER CHANGE: make merchandise substantially more prominent, larger and clearly readable beneath the awning, projecting outdoor counter with distinct baskets of apples and bread, folded cloth bundles, ceramic potion bottles and rolled maps; tall side display shelving and stacked sacks/crates, hanging brass balance sign. Goods should be the visual focus rather than hidden in dark windows. Forge C: keep large carved stone arched gable on left and open timber lean-to workshop on right, dark blue slate roofs, double flue chimney. USER CHANGE: enlarge the masonry furnace opening and make its stepped stone hearth, hood, glowing orange coals and bright hot iron extremely visible from this game camera, strong but restrained amber furnace glow; place furnace toward open front of right work bay with anvil and hammer in front, tongs/racked blades on flank, compact ore/coal bin. Furnace and anvil are instantly readable at mobile game scale. Not a black closed room. Preserve adult grounded proportions and muted painterly materials, no cartoon/toy look, no photos. Buildings are modeling references for genuine 3D volumes, real projecting awnings counters and furnace, each with two visible sides. Neutral warm parchment background, small adult1.8m silhouette outside each for scale; no game UI, no long captions. Grounded soft illumination, textured limestone/oak/slate, elegant restrained accents. Final game appearance should be possible with merged low-poly textured geometry. Do not include any of rows A or B, no extra buildings.",
+  "references": [
+    {
+      "path": "assets/source/architecture/trade_workshops/concept-input.png",
+      "sha256": "c6ba2c0f7e83276f2ce1466c88caee858ce852cd9889da1268e1446ff1253bc0"
+    }
+  ],
+  "output": {
+    "path": "assets/source/architecture/trade_workshops/concept.png",
+    "sha256": "0d5618aa40c665b0697b811592a1766736c8af36f71af1181f1a49f24cb44eea"
+  },
+  "approval": "User selected both C and requested clearer goods/hearth, then explicitly instructed 제작해 after inspecting this revision."
+}

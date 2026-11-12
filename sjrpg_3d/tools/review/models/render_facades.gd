@@ -1,7 +1,7 @@
 extends Node
 ## 실제 건물의 비교 렌더와 생성 입력용 정면 배치도를 만든다. 게임 진입점에는 연결하지 않는다.
 
-const ASSETS := {"nw": "shop", "ne": "smith", "sw": "stable", "se": "home", "chapel": "chapel"}
+const ASSETS := {"nw": "shop", "ne": "smith", "sw": "stable", "se": "home", "chapel": "chapel", "market_shop": "market_shop", "open_smithy": "open_smithy"}
 var _review_root := ProjectSettings.globalize_path("res://").path_join("../build/review/facades/")
 var _renderer: WorldRenderer3D
 var _view: SubViewport
@@ -49,8 +49,10 @@ func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute(_review_root + "layouts/")
 	var layouts := {}
 	for key: String in ASSETS:
+		if (key in TownPlazaPlan3D.SERVICES) != ("--trade" in OS.get_cmdline_user_args()):
+			continue
 		var id: String = ASSETS[key]
-		var bounds := _renderer._building_bounds(key)
+		var bounds := Rect2(-4,-4,8,8) if key in TownPlazaPlan3D.SERVICES else _renderer._building_bounds(key)
 		var width := maxf(3.5, bounds.size.x)
 		var depth := maxf(3.0, bounds.size.y)
 		var root := Node3D.new()
@@ -60,7 +62,13 @@ func _ready() -> void:
 		var body_depth := depth - 0.40
 		var top: float
 		var rise: float
-		if key == "chapel":
+		if key in TownPlazaPlan3D.SERVICES:
+			var visual := ArchitectureSceneLibrary.create(id)
+			root.add_child(visual)
+			report = visual.report
+			top = report["eaves_height"]
+			rise = report["roof_rise"]
+		elif key == "chapel":
 			report = ChapelRenderer3D.build(
 				_renderer, root, width, depth, 3.5 * ChapelPlan3D.SIZE_FACTOR
 			)
@@ -95,7 +103,7 @@ func _ready() -> void:
 			root.rotation.y = deg_to_rad(float(yaw))
 			await _draw()
 			_save(folder + id + "-" + str(yaw) + ".png")
-		if layouts_enabled:
+		if layouts_enabled and key not in TownPlazaPlan3D.SERVICES:
 			ground.hide()
 			root.rotation = Vector3.ZERO
 			layouts[id] = {
@@ -113,7 +121,7 @@ func _ready() -> void:
 	if layouts_enabled:
 		var file := FileAccess.open(_review_root + "layouts/layouts.json", FileAccess.WRITE)
 		file.store_string(JSON.stringify(layouts, "\t"))
-	print("FACADE_REVIEW_PASS ", "after" if after else "before", " assets=5 views=20")
+	print("FACADE_REVIEW_PASS ", "after" if after else "before", " assets=", 2 if "--trade" in OS.get_cmdline_user_args() else 5)
 	get_tree().quit()
 
 

@@ -29,7 +29,7 @@
     },
     {
       "path": "scripts/world/village.gd",
-      "sha256": "0f525b52acc3d77f3aa1d201ba47401bb9148b66fbd640412817a5ef92f78edf"
+      "sha256": "c102923d8ed1925af76328e76291839ec1173a454c53fdf5b1f06db820e6c483"
     },
     {
       "path": "scripts/world/forest_region.gd",
@@ -93,5 +93,9 @@
   ],
   "units": "metres; +Y up; existing +Z front and foot datum",
   "materialPolicy": "GLB contains neutral PBR slots; visual.tscn binds original Godot shaders and shared textures without image copies.",
-  "collisionPolicy": "existing Native plans and SpatialWorld3D own collision; visual asset contains no physics bodies"
+  "collisionPolicy": "existing Native plans and SpatialWorld3D own collision; visual asset contains no physics bodies",
+  "placementCompatibility": {
+    "reason": "Only village positions and plaza changed; original GLB, layout and visual scene remain byte-identical. Local dimensions and materials are unchanged.",
+    "previousVillageSha256": "0f525b52acc3d77f3aa1d201ba47401bb9148b66fbd640412817a5ef92f78edf"
+  }
 }

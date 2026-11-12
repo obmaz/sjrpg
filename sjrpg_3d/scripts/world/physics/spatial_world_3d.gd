@@ -476,7 +476,7 @@ func _build_forest() -> void:
 			_triangle_body(TerrainForms3D.faces(surface), SOLID, "NaturalGeology")
 		for polygon: PackedVector2Array in surface["blockers"]:
 			terrain_blockers.append(polygon)
-		if str(surface["id"]).begins_with("waypoint_"):
+		if str(surface["id"]).begins_with("waypoint_") or str(surface["id"]).begins_with("workshop_"):
 			continue
 		var top: PackedVector2Array = surface["top"]
 		for edge in top.size():
@@ -493,6 +493,16 @@ func _build_forest() -> void:
 		var center := Iso.poly_bounds(polygon).get_center()
 		var base := _construction_height(center)
 		_prism_body(polygon, base, base + 3.5, PROP if _attackable_polygon(polygon) else SOLID, "Obstacle")
+	for id: String in TownPlazaPlan3D.SERVICES:
+		for part: Dictionary in TownPlazaPlan3D.blockers(id):
+			var shape := BoxShape3D.new()
+			shape.size = part["size"]
+			shape.margin = .001
+			_shape_body(shape, TownPlazaPlan3D.frame(id) * Transform3D(Basis.IDENTITY, part["at"]), SOLID, "Workshop_" + id)
+		for at: Vector3 in TownPlazaPlan3D.posts(id):
+			var shape := BoxShape3D.new()
+			shape.size = Vector3(.19, at.y * 2, .19)
+			_shape_body(shape, TownPlazaPlan3D.frame(id) * Transform3D(Basis.IDENTITY, at), SOLID, "WorkshopPost_" + id)
 	for sign: Dictionary in CaveTrailPlan3D.signs(game.village):
 		var point: Vector2 = sign["point"]
 		var pole := CylinderShape3D.new()
@@ -671,6 +681,9 @@ static func terrain_surfaces(village: Village) -> Array[Dictionary]:
 			result.append(surface)
 	for id: String in ["tree","cave"]:
 		result.push_front({"id":"waypoint_"+id,"top":village.portal_footprints[id],"rise":NativeWaypoint3D.HEIGHT*WorldSpace3D.VERTICAL_PIXELS_PER_METER,"blockers":[]})
+	for id: String in TownPlazaPlan3D.SERVICES:
+		var rect := Rect2(-3.4, -3.0, 6.8, 6.2 if id == "open_smithy" else 4.4)
+		result.push_front({"id": "workshop_" + id, "top": TownPlazaPlan3D.project(ChapelPlan3D.polygon(rect), TownPlazaPlan3D.frame(id)), "rise": .16 * WorldSpace3D.VERTICAL_PIXELS_PER_METER, "blockers": []})
 	result.push_front(_native_chapel(village))
 	village.set_meta("native_terrain_surfaces", result)
 	return result

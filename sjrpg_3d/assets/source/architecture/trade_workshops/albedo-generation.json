@@ -1,0 +1,19 @@
+{
+  "tool": "image_gen.imagegen",
+  "prompt": "Create a production-ready square 4 by 4 texture atlas, 16 equal square cells, no gutters no labels no text no border, flat orthographic albedo only, referencing the approved warm medieval shop and forge concept attached. NO building or scene perspective. Each cell edge-to-edge simple material, evenly lit no cast shadow. Mature hand painted medieval woodland fantasy game, warm muted stone/oak, readable details at mobile size. Exact row-major cells: row1 col1 ochre golden awning coarse linen fabric with fine woven threads, col2 folded burgundy textile weave, col3 faded navy wool fabric weave, col4 natural pale burlap sack fibers; row2 col1 red apple peel mottled muted crimson with tiny highlights only, col2 warm baked bread golden crust with small slashes and flour, col3 rolled parchment warm cream subtle fibers, col4 old warm oak plank with delicate carved panel flourishes; row3 col1 ruby red glazed ceramic, col2 teal blue glazed ceramic, col3 honey amber glass like potion vessels but only flat glazed material NO objects, col4 dusty olive ivy leaf surface veins; row4 col1 warm buff firebrick rows standard small masonry, col2 dark forged iron subtle hammer marks matte, col3 orange glowing embers and dark coal chunks as emissive hearth surface, col4 a centered simple brass balance scales emblem on a dark carved wooden square sign, flat straight-on. Preserve equal regular cells and each texture rectangular not isometric. No surrounding props. This will be UV mapped onto real3D mesh goods,bottles,bread,awning,forge masonry and sign, so DO NOT draw the model shapes, only material surface except the centered sign emblem. Painterly restrained not noisy photorealism. Largest possible square high resolution.",
+  "references": [
+    {
+      "path": "assets/source/architecture/trade_workshops/concept.png",
+      "sha256": "0d5618aa40c665b0697b811592a1766736c8af36f71af1181f1a49f24cb44eea"
+    }
+  ],
+  "output": {
+    "path": "assets/materials/trade_workshops/albedo.png",
+    "sha256": "06faedf467ddfe229f487275f6df686df155325c69237fb3a8a787fe9d43283d"
+  },
+  "atlasGrid": [
+    4,
+    4
+  ],
+  "limitations": "Painterly albedo with small material shading; not scanned PBR. Hearth cell used with emission. No normal or roughness texture generated."
+}

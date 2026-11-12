@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tools/assets/architecture/bake_trade_buildings.gd" id="1"]
+
+[node name="BakeTradeBuildings" type="Node"]
+script = ExtResource("1")

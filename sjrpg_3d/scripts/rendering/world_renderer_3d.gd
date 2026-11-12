@@ -352,6 +352,15 @@ func _building_bounds(key: String) -> Rect2:
 func _build_village() -> void:
 	for key: String in game.village.buildings:
 		_build_house(key)
+	for id: String in TownPlazaPlan3D.SERVICES:
+		var root := Node3D.new()
+		root.name = id.to_pascal_case()
+		root.transform = TownPlazaPlan3D.frame(id)
+		NativePlayerOcclusion.mark_object(root)
+		stage.add_child(root)
+		var visual := ArchitectureSceneLibrary.create(id)
+		root.add_child(visual)
+		root.set_meta("native_house", visual.report)
 	_fortification = FortificationRenderer3D.build(self)
 
 
