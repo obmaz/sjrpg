@@ -1,0 +1,29 @@
+{
+	"forward": "+Z",
+	"id": "vegetation/black_pine",
+	"inputs": {
+		"res://tools/prop_art/bake.gd": "417ad48faa3d12e160b511b43c3e9fd31418559a4b9a24db003d3c90cb5f4254",
+		"res://tools/prop_art/vegetation_builder.gd": "292a49f0c84b1a78f879c6bf25a2d91e3435ba43bbecc9188b07a2ca28678ca7"
+	},
+	"layout_sha256": "74e3fb8c79f781c3e8d0d133d29120313e9016b1f179a492dece190ac28f9bfc",
+	"meshes": {
+		"Body": {
+			"min": [
+				-2.54324960708618,
+				0.0,
+				-2.28334808349609
+			],
+			"size": [
+				5.07272291183472,
+				5.03999996185303,
+				4.55666494369507
+			],
+			"surfaces": 2
+		}
+	},
+	"model_sha256": "f8ff54b2c1ec59dd483b2918c880cf1a3f789007ff7f62201cc42da14dd32ffa",
+	"pivot": "ground",
+	"scene_sha256": "f6e8559ac460723f1aebb515ce202983cb6ccf228831c03ffca6084816a9c9a4",
+	"triangles": 3320,
+	"units": "metres"
+}

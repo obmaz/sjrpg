@@ -3,7 +3,7 @@ extends RefCounted
 ## Fixed three-dimensional leaf sprays and branches; source simulation keeps tree collision.
 ## Alpha-cutout leaves receive actual light and cast depth-tested shadows, never billboard.
 
-const PATHS := ["res://assets/art/preview3d/town-oak-0.glb", "res://assets/art/preview3d/town-oak-1.glb", "res://assets/art/preview3d/dark-fir.res", "res://assets/art/preview3d/black-pine.res", "res://assets/art/preview3d/spire-cypress.res"]
+const PATHS := ["res://assets/models/vegetation/town_oak_0/visual.tscn", "res://assets/models/vegetation/town_oak_1/visual.tscn", "res://assets/models/vegetation/dark_fir/visual.tscn", "res://assets/models/vegetation/black_pine/visual.tscn", "res://assets/models/vegetation/spire_cypress/visual.tscn"]
 const LEAVES := "res://assets/art/preview3d/tree-leaves.webp"
 const BARK := "res://assets/art/preview3d/bark.webp"
 const CAMERA_UP := Vector3(-0.408248290463863, 0.816496580927726, -0.408248290463863)

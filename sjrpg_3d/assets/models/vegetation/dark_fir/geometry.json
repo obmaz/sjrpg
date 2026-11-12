@@ -1,0 +1,29 @@
+{
+	"forward": "+Z",
+	"id": "vegetation/dark_fir",
+	"inputs": {
+		"res://tools/prop_art/bake.gd": "417ad48faa3d12e160b511b43c3e9fd31418559a4b9a24db003d3c90cb5f4254",
+		"res://tools/prop_art/vegetation_builder.gd": "292a49f0c84b1a78f879c6bf25a2d91e3435ba43bbecc9188b07a2ca28678ca7"
+	},
+	"layout_sha256": "74e3fb8c79f781c3e8d0d133d29120313e9016b1f179a492dece190ac28f9bfc",
+	"meshes": {
+		"Body": {
+			"min": [
+				-2.40299987792969,
+				0.0,
+				-2.15796542167664
+			],
+			"size": [
+				4.79286479949951,
+				5.88000011444092,
+				4.30548620223999
+			],
+			"surfaces": 2
+		}
+	},
+	"model_sha256": "67fa958b23eb14d8c3f0e27544213b5a568b4c79b69dacb64e141c2c61bca2de",
+	"pivot": "ground",
+	"scene_sha256": "c16d03e5579e7758d3a0ec5f6ca7d51d86e330367b6686ad820ce4c11c4e7e1f",
+	"triangles": 3320,
+	"units": "metres"
+}

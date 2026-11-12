@@ -16,7 +16,7 @@ Runtime entries retain the source Villager by WeakRef and expose a Node3D root, 
 
 ## Six authored identities
 
-Six remaining resident identities use closed, anatomically connected cross-section lofts rather than primitive cylinder bodies. NativeActorShapes is the reproducible geometry source; NativeActorMaterials supplies the shared generated painterly surface atlas. Source Villager identity, actor foot, facing, injury intensity, scope and gameplay remain authoritative.
+Six remaining resident identities use closed, anatomically connected cross-section lofts rather than primitive cylinder bodies. `tools/prop_art/actor_shapes.gd` and `resident_builder.gd` are the offline reproducible geometry source; NativeActorMaterials supplies the shared generated painterly surface atlas. Source Villager identity, actor foot, facing, injury intensity, scope and gameplay remain authoritative.
 
 The anatomy has a shoulder/chest/waist profile, elbow/forearm taper, hand volumes, curved toe/ankle/boot shafts and a jaw/cheek/temple skull profile. Eye whites and pupils sit beyond the face surface, below separate brow volumes. Nose bridge/tip and mouth line are separate features. An open back-and-side hair shell and six tapered locks replace the previous flat hair disk. Elder and smith beard shapes, female braid silhouettes and actual open collars connect the neck and head.
 
@@ -55,3 +55,5 @@ The earlier quick gallery was rejected for prototype silhouettes. This refinemen
 실측 런타임은 **17,595삼각형·5서피스·65관절·1.78m·2.5초 idle**이며 GLB는2,280,092바이트입니다. SHA-256은 `38e162930944aa156b8dac40877861637d9a3495f83c8a20e92ce26eaff7adcf`이고 실제 기록은 `assets/source/native-residents/mira/provenance.json`과 같은 폴더의 세 LICENSE 파일에 있습니다. 원본 색을512px 텍스처 네 장과256px 눈 텍스처 한 장으로 축소해 제한했습니다. 전체 mip을 RGBA8로 계산한 신규 이미지 메모리 상한 추정은5,941,924바이트(약5.67MiB)입니다. 이는 실제 GPU 할당량·전체 PCK 증가량·실제 기기 FPS 측정값이 아니므로 웹 내보내기/같은 화면 검수와 구별합니다.
 
 미라도 원래 Villager의 시계·발·방향·피격·퀘스트·상호작용을 따릅니다. 모델이나 애니메이션이 별도 충돌·독립 타이머를 만들지 않습니다. 실제 네 방향에서 얼굴/목/후드 접합과 피부·옷감의 색을 보고, 같은 세로/가로 게임 화면에서 주인공·상인과 비례/가림을 비교해야 합니다. 숫자 예산과 애니메이션 검사만으로 스타일 승인을 선언하지 않습니다.
+
+All eight identities enter through `assets/models/residents/<id>/visual.tscn`. The six authored bodies load baked GLB meshes; no anatomical geometry is generated during gameplay. Shared materials and original Villager clocks remain authoritative. See [asset scene contract](native-prop-models.md).

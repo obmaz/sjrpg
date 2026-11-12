@@ -1,0 +1,29 @@
+{
+	"forward": "+Z",
+	"id": "vegetation/juniper",
+	"inputs": {
+		"res://tools/prop_art/bake.gd": "417ad48faa3d12e160b511b43c3e9fd31418559a4b9a24db003d3c90cb5f4254",
+		"res://tools/prop_art/vegetation_builder.gd": "292a49f0c84b1a78f879c6bf25a2d91e3435ba43bbecc9188b07a2ca28678ca7"
+	},
+	"layout_sha256": "74e3fb8c79f781c3e8d0d133d29120313e9016b1f179a492dece190ac28f9bfc",
+	"meshes": {
+		"Body": {
+			"min": [
+				-1.00050115585327,
+				0.0,
+				-0.879352748394012
+			],
+			"size": [
+				1.9942843914032,
+				0.997500002384186,
+				1.76891255378723
+			],
+			"surfaces": 2
+		}
+	},
+	"model_sha256": "8bee34e6a69bc9701ce68daa048028aaf79083efde64301124b4e4c352ccb3c7",
+	"pivot": "ground",
+	"scene_sha256": "d578932f59565ee08bd15086683c6ace4e48040e3dcbfa67ea14cc7e1246e627",
+	"triangles": 1280,
+	"units": "metres"
+}

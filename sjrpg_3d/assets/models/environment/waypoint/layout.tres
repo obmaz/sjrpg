@@ -1,0 +1,40 @@
+[gd_resource type="Resource" format=3]
+
+[resource]
+metadata/mesh_roles = {
+"BeveledStonePlinth": ["BeveledStonePlinth"],
+"CornerSocket0": ["CornerSocket0"],
+"CornerSocket1": ["CornerSocket1"],
+"CornerSocket2": ["CornerSocket2"],
+"CornerSocket3": ["CornerSocket3"],
+"EngravedGroundSeal": ["EngravedGroundSeal"]
+}
+metadata/node_flags = {
+"BeveledStonePlinth": {
+"cast_shadow": 1,
+"metadata": {}
+},
+"CornerSocket0": {
+"cast_shadow": 1,
+"metadata": {}
+},
+"CornerSocket1": {
+"cast_shadow": 1,
+"metadata": {}
+},
+"CornerSocket2": {
+"cast_shadow": 1,
+"metadata": {}
+},
+"CornerSocket3": {
+"cast_shadow": 1,
+"metadata": {}
+},
+"EngravedGroundSeal": {
+"cast_shadow": 0,
+"metadata": {
+"exclude_static_batch": true
+}
+}
+}
+metadata/actor = false

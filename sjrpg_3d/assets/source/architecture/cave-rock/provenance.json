@@ -18,7 +18,7 @@
     },
     {
       "path": "assets/models/environment/cave_entrance/bake.gd",
-      "sha256": "1694745c8ecb927d1a761fa16ac49c0ace29532d78631ae714d4fb1ab079e046"
+      "sha256": "2232ba53408bedbffec61273346172250b854d192c955c2ea95644aa6da4fa00"
     },
     {
       "path": "assets/models/environment/cave_entrance/bake.tscn",
@@ -26,23 +26,35 @@
     },
     {
       "path": "assets/models/environment/cave_entrance/model.gd",
-      "sha256": "0887a058d57e8aea9d4f00febaea117c0e0bce11283fff94cee08ac40dd896e1"
+      "sha256": "fe5b19243524514d0d24a5ba7af6c77549e2b70f0ac1bf9bffa3b5a987e282a5"
     },
     {
-      "path": "assets/models/environment/cave_entrance/model.res",
-      "sha256": "510e724473b46289d62419b26af0963e0d89cf7619791a88dc4a73c8575d7ae7"
+      "path": "assets/models/environment/cave_entrance/model.glb",
+      "sha256": "4a9278e6d54eed39c14e910a0fe763f167f019f763aeb51df914117ed3aa2fa2"
     },
     {
       "path": "assets/models/environment/cave_entrance/plan.gd",
       "sha256": "a89b2998b4d7ef3a59e085a6f5bd2392392d59f6abdeeb75b5c7fdc6a484a0e7"
     },
     {
-      "path": "assets/models/environment/cave_entrance/sculpt.gd",
-      "sha256": "eef9a7190b587120e7292e2fbbc0ce21a929658d5da97cf8910be81f04748e49"
+      "path": "tools/prop_art/cave_builder.gd",
+      "sha256": "778784cf58150e34c1e4f3420160ee76d651a7d65f3500aa3cbf35b5ea9b7ac0"
     },
     {
       "path": "assets/models/environment/cave_entrance/surface.gdshader",
       "sha256": "672b442ad35e52824e514660010e0c8a23b7c21f8cc88f8897318dce558beb8f"
+    },
+    {
+      "path": "assets/models/environment/cave_entrance/visual.tscn",
+      "sha256": "4bdbcc987475b4ef0356d0ee908cc0849f6b263cb811fa6f969c8b8a27379cca"
+    },
+    {
+      "path": "assets/models/environment/cave_entrance/layout.tres",
+      "sha256": "0a2291d66436562c15b862dab0b7f7ccfb4b6a7a244ade9ef8c6d5d18f17e155"
+    },
+    {
+      "path": "assets/models/environment/cave_entrance/geometry.json",
+      "sha256": "b941f8113ebbc79a479d6713f04e21fc0fee019e12867a3ca3c8130fd531c1bf"
     }
   ]
 }

@@ -1,0 +1,55 @@
+{
+	"forward": "+Z",
+	"id": "environment/treasure_chest",
+	"inputs": {
+		"res://tools/prop_art/bake.gd": "417ad48faa3d12e160b511b43c3e9fd31418559a4b9a24db003d3c90cb5f4254",
+		"res://tools/prop_art/encounter_builder.gd": "f908a22c9293fc32b82e355e8fa071243bc9656f4113a7d1511224b733c5f0ba"
+	},
+	"layout_sha256": "1c45e5d1b2fb9335fdab49def491a2f8cde9d79fde0f0875c11ee00c5eb2e369",
+	"meshes": {
+		"ObservedConsumedLid/lid": {
+			"min": [
+				-0.550000011920929,
+				0.0,
+				-0.0174999982118607
+			],
+			"size": [
+				1.10000002384186,
+				0.357988834381104,
+				0.700488805770874
+			],
+			"surfaces": 1
+		},
+		"base": {
+			"min": [
+				-0.569999992847443,
+				0.0,
+				-0.375
+			],
+			"size": [
+				1.13999998569489,
+				0.708750009536743,
+				0.75
+			],
+			"surfaces": 1
+		},
+		"splinters": {
+			"min": [
+				-0.383079588413239,
+				0.654999971389771,
+				0.120907142758369
+			],
+			"size": [
+				0.758892297744751,
+				0.237500011920929,
+				0.0831857025623322
+			],
+			"surfaces": 1
+		}
+	},
+	"model_sha256": "79bdfb1a784350106f259114036bc277b67518f113f6bee439739b48a1ed1210",
+	"pivot": "ground",
+	"scene_sha256": "70dfedff4893a301397a74440240766b2db6c5a7283324a7c380fba46f49844b",
+	"triangles": 800,
+	"units": "metres"
+}

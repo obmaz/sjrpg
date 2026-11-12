@@ -1,0 +1,38 @@
+[gd_resource type="Resource" format=3]
+
+[resource]
+metadata/mesh_roles = {
+"Torso/Arm0/Part001": ["leather", "iron", "skin"],
+"Torso/Arm1/Part004": ["leather", "iron", "skin"],
+"Torso/Arm1/Sword/Part003": ["leather", "iron"],
+"Torso/Leg0/Part000": ["leather", "iron"],
+"Torso/Leg1/Part002": ["leather", "iron"],
+"Torso/Part005": ["cloth", "iron", "leather", "skin"]
+}
+metadata/node_flags = {
+"Torso/Arm0/Part001": {
+"cast_shadow": 1,
+"metadata": {}
+},
+"Torso/Arm1/Part004": {
+"cast_shadow": 1,
+"metadata": {}
+},
+"Torso/Arm1/Sword/Part003": {
+"cast_shadow": 1,
+"metadata": {}
+},
+"Torso/Leg0/Part000": {
+"cast_shadow": 1,
+"metadata": {}
+},
+"Torso/Leg1/Part002": {
+"cast_shadow": 1,
+"metadata": {}
+},
+"Torso/Part005": {
+"cast_shadow": 1,
+"metadata": {}
+}
+}
+metadata/actor = true

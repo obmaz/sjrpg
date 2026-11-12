@@ -1,0 +1,31 @@
+{
+	"forward": "+Z",
+	"id": "residents/rowen",
+	"inputs": {
+		"res://scripts/native_actor_materials.gd": "15272c2eb2d56a2674a97930a7711f7145eabcd3d1a9e2eafd246469d6f02235",
+		"res://tools/prop_art/actor_shapes.gd": "d1f946445f433d9596aec997af3612fab9395c5b809dddd341283e59e05eb36f",
+		"res://tools/prop_art/bake.gd": "417ad48faa3d12e160b511b43c3e9fd31418559a4b9a24db003d3c90cb5f4254",
+		"res://tools/prop_art/resident_builder.gd": "55639c595f0f7cb4793650d00aec70215aec011ab7595e9d88b435182840bb54"
+	},
+	"layout_sha256": "4503eab5cb97fdad0bf704331b7e24b31ab39f3e7a49172a64afa4a4aa29ca2d",
+	"meshes": {
+		"Body": {
+			"min": [
+				-0.355000019073486,
+				0.0,
+				-0.220459192991257
+			],
+			"size": [
+				0.702203154563904,
+				1.77999997138977,
+				0.455459207296371
+			],
+			"surfaces": 4
+		}
+	},
+	"model_sha256": "be16d78b0567d485bdaf85243bd14d26472f58e6797c09b87f3edf4b5a5b108c",
+	"pivot": "ground",
+	"scene_sha256": "fd5cda0b19b7d3ed67cbfdbc423ef8ae57ef89160ebdc121a39724e8a0032076",
+	"triangles": 3676,
+	"units": "metres"
+}

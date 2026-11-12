@@ -1,0 +1,30 @@
+{
+	"forward": "+Z",
+	"id": "environment/cave_entrance",
+	"inputs": {
+		"res://assets/models/environment/cave_entrance/plan.gd": "a89b2998b4d7ef3a59e085a6f5bd2392392d59f6abdeeb75b5c7fdc6a484a0e7",
+		"res://tools/prop_art/bake.gd": "417ad48faa3d12e160b511b43c3e9fd31418559a4b9a24db003d3c90cb5f4254",
+		"res://tools/prop_art/cave_builder.gd": "778784cf58150e34c1e4f3420160ee76d651a7d65f3500aa3cbf35b5ea9b7ac0"
+	},
+	"layout_sha256": "0a2291d66436562c15b862dab0b7f7ccfb4b6a7a244ade9ef8c6d5d18f17e155",
+	"meshes": {
+		"Body": {
+			"min": [
+				-6.02405309677124,
+				-1.60000002384186,
+				-9.56004428863525
+			],
+			"size": [
+				12.2869987487793,
+				6.28185272216797,
+				10.0837554931641
+			],
+			"surfaces": 1
+		}
+	},
+	"model_sha256": "4a9278e6d54eed39c14e910a0fe763f167f019f763aeb51df914117ed3aa2fa2",
+	"pivot": "ground",
+	"scene_sha256": "4bdbcc987475b4ef0356d0ee908cc0849f6b263cb811fa6f969c8b8a27379cca",
+	"triangles": 33336,
+	"units": "metres"
+}

@@ -7,58 +7,18 @@ const SHADER := preload("res://assets/models/environment/waypoint/surface.gdshad
 
 
 static func create(parent: Node3D, mote_mesh: Mesh, stone: Material) -> Dictionary:
-	var root := Node3D.new()
+	var root := NativePropAssets.create("environment/waypoint")
 	root.name = "NativeGroundWaypoint"
 	parent.add_child(root)
-	var tool := SurfaceTool.new()
-	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for i: int in 64:
-		var a := TAU * i / 64.0
-		var b := TAU * (i + 1) / 64.0
-		for p: Vector3 in [
-			Vector3.ZERO, Vector3(cos(a), 0, sin(a)) * RADIUS, Vector3(cos(b), 0, sin(b)) * RADIUS
-		]:
-			tool.set_normal(Vector3.UP)
-			tool.set_uv(Vector2(p.x, p.z) / (RADIUS * 2.0) + Vector2.ONE * 0.5)
-			tool.add_vertex(p + Vector3.UP * (HEIGHT + 0.005))
 	var fluid := ShaderMaterial.new()
 	fluid.shader = SHADER
-	fluid.set_shader_parameter(
-		"albedo", load("res://assets/models/environment/waypoint/albedo.png")
-	)
-	var seal := MeshInstance3D.new()
-	seal.name = "EngravedGroundSeal"
-	seal.mesh = tool.commit()
-	seal.material_override = fluid
-	seal.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	seal.set_meta("exclude_static_batch", true)
-	root.add_child(seal)
-	var edge := SurfaceTool.new()
-	edge.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var profile := [
-		Vector2(RADIUS + 0.10, 0.0), Vector2(RADIUS + 0.10, 0.035), Vector2(RADIUS, HEIGHT)
-	]
-	for ring: int in 2:
-		for i: int in 64:
-			var a := TAU * i / 64.0
-			var b := TAU * (i + 1) / 64.0
-			var lower: Vector2 = profile[ring]
-			var upper: Vector2 = profile[ring + 1]
-			NativeSceneryProps3D._face(
-				edge,
-				Vector3(cos(a) * lower.x, lower.y, sin(a) * lower.x),
-				Vector3(cos(b) * lower.x, lower.y, sin(b) * lower.x),
-				Vector3(cos(b) * upper.x, upper.y, sin(b) * upper.x),
-				Vector3(cos(a) * upper.x, upper.y, sin(a) * upper.x),
-				Vector3.UP * HEIGHT * 0.5
-			)
-	var plinth := MeshInstance3D.new()
-	plinth.name = "BeveledStonePlinth"
-	plinth.mesh = edge.commit()
+	fluid.set_shader_parameter("albedo", load("res://assets/models/environment/waypoint/albedo.png"))
+	(root.get_node("EngravedGroundSeal") as MeshInstance3D).material_override = fluid
 	var stone_ink := stone.duplicate() as StandardMaterial3D
 	stone_ink.albedo_color = Color("424440")
-	plinth.material_override = stone_ink
-	root.add_child(plinth)
+	for node: Node in root.find_children("*", "MeshInstance3D", true, false):
+		if node.name != "EngravedGroundSeal":
+			(node as MeshInstance3D).material_override = stone_ink
 	var motes := MultiMeshInstance3D.new()
 	motes.name = "WaypointSparks"
 	motes.multimesh = MultiMesh.new()
@@ -82,17 +42,6 @@ static func create(parent: Node3D, mote_mesh: Mesh, stone: Material) -> Dictiona
 		var at := Vector3(
 			CORNER * (-1.0 if i % 2 == 0 else 1.0), HEIGHT, CORNER * (-1.0 if i < 2 else 1.0)
 		)
-		var cup := MeshInstance3D.new()
-		cup.name = "CornerSocket%d" % i
-		var socket := CylinderMesh.new()
-		socket.top_radius = 0.14
-		socket.bottom_radius = 0.18
-		socket.height = 0.09
-		socket.radial_segments = 8
-		cup.mesh = socket
-		cup.material_override = stone_ink
-		cup.position = at + Vector3.UP * 0.045
-		root.add_child(cup)
 		motes.multimesh.set_instance_transform(
 			i, Transform3D(Basis.from_scale(Vector3(4, 7, 4)), at + Vector3.UP * 0.17)
 		)

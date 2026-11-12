@@ -1,0 +1,29 @@
+{
+	"forward": "+Z",
+	"id": "vegetation/spire_cypress",
+	"inputs": {
+		"res://tools/prop_art/bake.gd": "417ad48faa3d12e160b511b43c3e9fd31418559a4b9a24db003d3c90cb5f4254",
+		"res://tools/prop_art/vegetation_builder.gd": "292a49f0c84b1a78f879c6bf25a2d91e3435ba43bbecc9188b07a2ca28678ca7"
+	},
+	"layout_sha256": "74e3fb8c79f781c3e8d0d133d29120313e9016b1f179a492dece190ac28f9bfc",
+	"meshes": {
+		"Body": {
+			"min": [
+				-1.41721451282501,
+				0.0,
+				-1.49798250198364
+			],
+			"size": [
+				3.0001368522644,
+				6.51000022888184,
+				3.069256067276
+			],
+			"surfaces": 2
+		}
+	},
+	"model_sha256": "fcaa8435851bfe7ae8ae79aaaa9565039f172b72e349e094a36e7dafe78c68e5",
+	"pivot": "ground",
+	"scene_sha256": "4af0ab32dca0040fbd298a15a2f5ebb698cd9dc9eb22da328cc24f0ada6dbad6",
+	"triangles": 2776,
+	"units": "metres"
+}

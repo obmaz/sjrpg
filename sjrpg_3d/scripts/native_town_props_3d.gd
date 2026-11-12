@@ -3,8 +3,8 @@ extends RefCounted
 ## Source adapters keep interactions/collision; shared native assets own the picture.
 ## Water/portal motion observes each original PlazaWater phase, including pause/reduced motion.
 
-const FOUNTAIN := "res://assets/art/preview3d/native-fountain.glb"
-const PORTAL := "res://assets/art/preview3d/native-warp-gate.glb"
+const FOUNTAIN := "res://assets/models/environment/fountain/visual.tscn"
+const PORTAL := "res://assets/models/environment/warp_gate/visual.tscn"
 const WATER_SHADER := preload("res://scripts/native_prop_water.gdshader")
 const PORTAL_SHADER := preload("res://scripts/native_prop_portal.gdshader")
 const MOTE_COUNT := 12

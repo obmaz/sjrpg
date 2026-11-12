@@ -1,0 +1,31 @@
+{
+	"forward": "+Z",
+	"id": "residents/noah",
+	"inputs": {
+		"res://scripts/native_actor_materials.gd": "15272c2eb2d56a2674a97930a7711f7145eabcd3d1a9e2eafd246469d6f02235",
+		"res://tools/prop_art/actor_shapes.gd": "d1f946445f433d9596aec997af3612fab9395c5b809dddd341283e59e05eb36f",
+		"res://tools/prop_art/bake.gd": "417ad48faa3d12e160b511b43c3e9fd31418559a4b9a24db003d3c90cb5f4254",
+		"res://tools/prop_art/resident_builder.gd": "55639c595f0f7cb4793650d00aec70215aec011ab7595e9d88b435182840bb54"
+	},
+	"layout_sha256": "4503eab5cb97fdad0bf704331b7e24b31ab39f3e7a49172a64afa4a4aa29ca2d",
+	"meshes": {
+		"Body": {
+			"min": [
+				-0.348707884550095,
+				0.0,
+				-0.215646669268608
+			],
+			"size": [
+				0.697415769100189,
+				1.77999997138977,
+				0.503390192985535
+			],
+			"surfaces": 4
+		}
+	},
+	"model_sha256": "1d6c2ebdc93925bd4ab1665bd8a453313e383bedeac7cd860028f59e44e0ee18",
+	"pivot": "ground",
+	"scene_sha256": "e85987abf06ae5d50a61acea0fc116e1a0930f9309b910edebab5875b52f24d5",
+	"triangles": 3860,
+	"units": "metres"
+}

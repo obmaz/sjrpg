@@ -90,7 +90,7 @@ tools/serve.sh
 
 ## 에셋별 독립 작업
 
-[에셋 협업](asset-workflow.md)의 폴더 계약을 사용합니다. 건물 다섯 종류는 `assets/models/architecture/<id>/asset.json`의 생성형 네 면 표면을 사용하며 다리는 같은 계열의 석재/덮개/포장을 적용합니다. `NativeAssetSurface`는 전역 목록 없이 폴더를 읽습니다. 동굴 입구는 `assets/models/environment/cave_entrance/`에서 밀도장으로 조형하고 구운 `model.res`를 표시와 실제 삼각형 SOLID에 함께 사용합니다. 공통 윤곽·좌표계·하강로는 `plan.gd`가 담당합니다. 생성 원본·프롬프트·해시는 `assets/source/architecture/`에 보존합니다. 일회성 비교 리뷰와 후보 원화는 현재 제작 규격에 섞지 않습니다.
+[에셋 협업](asset-workflow.md)의 폴더 계약을 사용합니다. 건물 다섯 종류는 `assets/models/architecture/<id>/asset.json`의 생성형 네 면 표면을 사용하며 다리는 같은 계열의 석재/덮개/포장을 적용합니다. `NativeAssetSurface`는 전역 목록 없이 폴더를 읽습니다. 동굴 입구는 `assets/models/environment/cave_entrance/`에서 밀도장으로 조형하고 구운 GLB를 `visual.tscn`으로 읽어 표시와 실제 삼각형 SOLID에 함께 사용합니다. 공통 윤곽·좌표계·하강로는 `plan.gd`가 담당합니다. 생성 원본·프롬프트·해시는 `assets/source/architecture/`에 보존합니다. 일회성 비교 리뷰와 후보 원화는 현재 제작 규격에 섞지 않습니다.
 
 ## 낮은 강과 야외 웨이포인트
 
@@ -147,3 +147,5 @@ HUD는 Viewport 크기 변경 신호에서도 표시를 갱신합니다. `TouchC
 `Chest`는 실제 피해·보상과 함께 짧은 피격/개봉 표시 시간도 소유합니다. 반응 중에만 `_process`를 활성화하고, `NativeEncounterProps3D`는 같은 힌지 범위의 `lid_fraction()`만 읽습니다. [타격감 구조](juice.md)를 참고하세요.
 
 실제 구르기 피격 방지는 `Player.confirm_roll_avoid()`에서 한 번만 표시합니다. 대상 연결 문자는 `Effect`의 약한 참조/마지막 접점과 실제3D 발에서 배치하며 [타격감 구조](juice.md)를 따릅니다.
+
+고정 소품·전사·주민·식생은 [소품 GLB·씬 계약](native-prop-models.md)을 따릅니다. `NativePropAssets`는 씬과 메시를 공유하며, 나무/수풀/횃불은 기존 MultiMesh 배칭을 유지합니다. 형상 제작기는 `tools/prop_art/`에 두고 게임은 원래 이동·공격·상호작용 시계를 계속 소유합니다.

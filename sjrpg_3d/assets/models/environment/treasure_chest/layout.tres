@@ -1,0 +1,23 @@
+[gd_resource type="Resource" format=3]
+
+[resource]
+metadata/mesh_roles = {
+"ObservedConsumedLid/lid": ["chest"],
+"base": ["chest"],
+"splinters": ["chest"]
+}
+metadata/node_flags = {
+"ObservedConsumedLid/lid": {
+"cast_shadow": 1,
+"metadata": {}
+},
+"base": {
+"cast_shadow": 1,
+"metadata": {}
+},
+"splinters": {
+"cast_shadow": 1,
+"metadata": {}
+}
+}
+metadata/actor = false

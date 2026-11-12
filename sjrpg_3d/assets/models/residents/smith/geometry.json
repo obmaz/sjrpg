@@ -1,0 +1,31 @@
+{
+	"forward": "+Z",
+	"id": "residents/smith",
+	"inputs": {
+		"res://scripts/native_actor_materials.gd": "15272c2eb2d56a2674a97930a7711f7145eabcd3d1a9e2eafd246469d6f02235",
+		"res://tools/prop_art/actor_shapes.gd": "d1f946445f433d9596aec997af3612fab9395c5b809dddd341283e59e05eb36f",
+		"res://tools/prop_art/bake.gd": "417ad48faa3d12e160b511b43c3e9fd31418559a4b9a24db003d3c90cb5f4254",
+		"res://tools/prop_art/resident_builder.gd": "55639c595f0f7cb4793650d00aec70215aec011ab7595e9d88b435182840bb54"
+	},
+	"layout_sha256": "2082d106d0fa60d08539139646e1b84ff40fd5a866f7c0ea10fa1acd3f4e8f77",
+	"meshes": {
+		"Body": {
+			"min": [
+				-0.408562958240509,
+				0.0,
+				-0.19971951842308
+			],
+			"size": [
+				0.823562979698181,
+				1.77999997138977,
+				0.45770075917244
+			],
+			"surfaces": 4
+		}
+	},
+	"model_sha256": "ea9402183d587d6742cfc8d91f940f15f1692d9bd37478c320ac07bd851467e2",
+	"pivot": "ground",
+	"scene_sha256": "1f217f5805fa786692d2d3851e11af5df1314970881176ee007db9aaca7e5b02",
+	"triangles": 3680,
+	"units": "metres"
+}

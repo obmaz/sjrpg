@@ -1,6 +1,6 @@
 {
   "scope": "숲1장 비석·목재 상자와 선택형 동굴의 쇠·황금 상자. 2D판은 동결한다.",
-  "method": "실제 입체 상자와 힌지·내부·철물을 공유 메시로 만들고, 생성형 평면 알베도로 쇠·황금 표면을 구분한다.",
+  "method": "고정 GLB와 개별 씬에서 실제 입체 상자·힌지·내부·철물을 읽고, 생성형 평면 알베도로 목재·쇠·황금 표면을 구분한다.",
   "reference": {
     "path": "assets/source/style/approved-game-reference.jpg",
     "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
@@ -46,17 +46,17 @@
     "bytes": 1046
   },
   "new_texture_bytes": 3127826,
-  "new_binary_model_bytes": 0,
+  "new_binary_model_bytes": 184080,
   "generators": [
     {
-      "path": "scripts/native_encounter_mesh_3d.gd",
-      "sha256": "85b43d1d37558c23743693e735fa5654eaf03a2263d691f253159572c749d3c6",
+      "path": "tools/prop_art/encounter_builder.gd",
+      "sha256": "f908a22c9293fc32b82e355e8fa071243bc9656f4113a7d1511224b733c5f0ba",
       "bytes": 11547
     },
     {
       "path": "scripts/native_encounter_props_3d.gd",
-      "sha256": "98fce3e0e8c84fe3e624f61eeb555349f68085ffc27dc44cdc1e530cd41cac5f",
-      "bytes": 9712
+      "sha256": "7945402395aedc491a1216be0dc76e132970e1162faf3053ef0911fc658f986f",
+      "bytes": 9690
     },
     {
       "path": "scripts/native_chest_material.gdshader",

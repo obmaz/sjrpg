@@ -1,0 +1,29 @@
+{
+	"forward": "+Z",
+	"id": "vegetation/thorn_bramble",
+	"inputs": {
+		"res://tools/prop_art/bake.gd": "417ad48faa3d12e160b511b43c3e9fd31418559a4b9a24db003d3c90cb5f4254",
+		"res://tools/prop_art/vegetation_builder.gd": "292a49f0c84b1a78f879c6bf25a2d91e3435ba43bbecc9188b07a2ca28678ca7"
+	},
+	"layout_sha256": "74e3fb8c79f781c3e8d0d133d29120313e9016b1f179a492dece190ac28f9bfc",
+	"meshes": {
+		"Body": {
+			"min": [
+				-0.829137623310089,
+				0.0,
+				-0.750796139240265
+			],
+			"size": [
+				1.6864207983017,
+				0.997500002384186,
+				1.49039041996002
+			],
+			"surfaces": 2
+		}
+	},
+	"model_sha256": "469d12cb68cdf0e04fca38fa92ecd4fbb38180d8ebc6464ebfa9297ba9c128b0",
+	"pivot": "ground",
+	"scene_sha256": "f222ac9f368a9f7e6900e88cf52b4f0bcfc0e8d065d7002d1fb193cb75d0de8d",
+	"triangles": 2432,
+	"units": "metres"
+}

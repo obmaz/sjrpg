@@ -1,0 +1,42 @@
+{
+	"forward": "+Z",
+	"id": "environment/encounter_stone",
+	"inputs": {
+		"res://tools/prop_art/bake.gd": "417ad48faa3d12e160b511b43c3e9fd31418559a4b9a24db003d3c90cb5f4254",
+		"res://tools/prop_art/encounter_builder.gd": "f908a22c9293fc32b82e355e8fa071243bc9656f4113a7d1511224b733c5f0ba"
+	},
+	"layout_sha256": "37e34e3a22f904b21844d9f45cc9d28cbcf56c18210f66c32ce7836caddef827",
+	"meshes": {
+		"glyph": {
+			"min": [
+				-0.118000000715256,
+				0.720000028610229,
+				-0.148000001907349
+			],
+			"size": [
+				0.236000001430511,
+				0.639999985694885,
+				0.296000003814697
+			],
+			"surfaces": 2
+		},
+		"stone": {
+			"min": [
+				-0.400000005960464,
+				0.0,
+				-0.246153846383095
+			],
+			"size": [
+				0.800000011920929,
+				1.58000004291534,
+				0.49230769276619
+			],
+			"surfaces": 1
+		}
+	},
+	"model_sha256": "04693ecab71793287d500718e4189aa7f0583f1326ef8a1475ee8ccfb49ef524",
+	"pivot": "ground",
+	"scene_sha256": "224404e245f14366abdfb30843441af79224594a4f10c61f6d2a6c77260da19f",
+	"triangles": 276,
+	"units": "metres"
+}

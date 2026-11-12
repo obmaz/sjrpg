@@ -35,32 +35,11 @@ static func build(preview: Node, parent: Node3D, sources: Array) -> Dictionary:
 		mounts.append(transform)
 		contacts.append(mount)
 		lights.append(transform * Vector3(0, FLAME_BASE + 0.24, TORCH_DEPTH + 0.10))
-	var timber := SurfaceTool.new()
-	timber.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var handle := CylinderMesh.new()
-	handle.bottom_radius = 0.022 * SCALE
-	handle.top_radius = 0.042 * SCALE
-	handle.height = 0.44 * SCALE
-	handle.radial_segments = 8
-	handle.rings = 1
-	timber.append_from(handle, 0, Transform3D(Basis.IDENTITY, Vector3(0, 0.22 * SCALE + HANDLE_BOTTOM, TORCH_DEPTH)))
-	var iron := SurfaceTool.new()
-	iron.begin(Mesh.PRIMITIVE_TRIANGLES)
-	# One closed iron mesh includes the flush backplate, arm and diagonal brace.
-	_box(iron, Vector3(0.24, 0.54, 0.08), Transform3D(Basis.IDENTITY, Vector3(0, 0, 0.04)))
-	_box(iron, Vector3(0.10, 0.07, TORCH_DEPTH), Transform3D(Basis.IDENTITY, Vector3(0, -0.13, TORCH_DEPTH * 0.5)))
-	var brace_from := Vector3(0, -0.23, 0.08)
-	var brace_to := Vector3(0, -0.11, TORCH_DEPTH)
-	var brace_direction := brace_to - brace_from
-	_box(iron, Vector3(0.065, brace_direction.length(), 0.065),
-		Transform3D(Basis(Quaternion(Vector3.UP, brace_direction.normalized())), (brace_from + brace_to) * 0.5))
-	_ring(iron, 0.29 * SCALE + HANDLE_BOTTOM, 0.035 * SCALE, 0.048 * SCALE, 0.048 * SCALE, 0.011 * SCALE, TORCH_DEPTH)
-	_ring(iron, 0.36 * SCALE + HANDLE_BOTTOM, 0.12 * SCALE, 0.047 * SCALE, 0.086 * SCALE, 0.013 * SCALE, TORCH_DEPTH)
 	var outer := _flame(0.11 * SCALE, 0.46 * SCALE, 0.065 * SCALE)
 	var core := _flame(0.052 * SCALE, 0.30 * SCALE, -0.018 * SCALE)
 	var batches := {
-		"wood": _batch(root, "TorchWood", timber.commit(), preview._materials["wood"], mounts, true),
-		"iron": _batch(root, "TorchIron", iron.commit(), preview._materials["iron"], mounts, true),
+		"wood": _batch(root, "TorchWood", NativePropAssets.mesh("environment/wall_torch", "wood"), preview._materials["wood"], mounts, true),
+		"iron": _batch(root, "TorchIron", NativePropAssets.mesh("environment/wall_torch", "iron"), preview._materials["iron"], mounts, true),
 		"outer": _batch(root, "TorchFlame", outer, _fire_material(Color("c85818"), Color("f17b24"), 0.5), mounts, false),
 		"core": _batch(root, "TorchCore", core, _fire_material(Color("f3cf8d"), Color("ffd584"), 0.6), mounts, false)
 	}
@@ -148,19 +127,6 @@ static func _fire_transform(mount: Transform3D, clock: float, index: int, still:
 	return Transform3D(basis, mount * Vector3(0, FLAME_BASE, TORCH_DEPTH))
 
 
-static func _box(tool: SurfaceTool, size: Vector3, transform: Transform3D) -> void:
-	var box := BoxMesh.new()
-	box.size = size
-	# Keep iron parts unindexed together: appending an indexed primitive to
-	# custom unindexed rings can leave those ring vertices out of the final draw.
-	var faces := box.get_faces()
-	for index in range(0, faces.size(), 3):
-		var a := transform * faces[index]
-		var b := transform * faces[index + 1]
-		var c := transform * faces[index + 2]
-		_triangle(tool, a, b, c, ((a + b + c) / 3.0 - transform.origin).normalized())
-
-
 static func _batch(parent: Node3D, label: String, mesh: Mesh, material: Material, mounts: Array[Transform3D], shadows: bool) -> MultiMeshInstance3D:
 	var shared := MultiMesh.new()
 	shared.transform_format = MultiMesh.TRANSFORM_3D
@@ -199,24 +165,6 @@ static func _triangle(tool: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, out
 		tool.set_normal(normal)
 		tool.set_uv(Vector2(point.x, point.y))
 		tool.add_vertex(point)
-
-
-static func _ring(tool: SurfaceTool, bottom: float, height: float, lower: float, upper: float, thickness: float, depth := 0.0) -> void:
-	var rings: Array[PackedVector3Array] = []
-	for section: Vector3 in [Vector3(lower, bottom, 0), Vector3(upper, bottom + height, 0),
-			Vector3(lower - thickness, bottom, 0), Vector3(upper - thickness, bottom + height, 0)]:
-		var ring := PackedVector3Array()
-		for index in 8:
-			var angle := TAU * index / 8.0
-			ring.append(Vector3(cos(angle) * section.x, section.y, sin(angle) * section.x + depth))
-		rings.append(ring)
-	for index in 8:
-		var next := (index + 1) % 8
-		var direction := Vector3(cos(TAU * (index + 0.5) / 8.0), 0, sin(TAU * (index + 0.5) / 8.0))
-		_quad(tool, rings[0][index], rings[1][index], rings[1][next], rings[0][next], direction)
-		_quad(tool, rings[2][index], rings[2][next], rings[3][next], rings[3][index], -direction)
-		_quad(tool, rings[1][index], rings[3][index], rings[3][next], rings[1][next], Vector3.UP)
-		_quad(tool, rings[0][index], rings[0][next], rings[2][next], rings[2][index], Vector3.DOWN)
 
 
 static func _quad(tool: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3, outward: Vector3) -> void:

@@ -45,15 +45,15 @@ def main() -> None:
         }
     document = {
         "scope": "숲1장 비석·목재 상자와 선택형 동굴의 쇠·황금 상자. 2D판은 동결한다.",
-        "method": "실제 입체 상자와 힌지·내부·철물을 공유 메시로 만들고, 생성형 평면 알베도로 쇠·황금 표면을 구분한다.",
+        "method": "고정 GLB와 개별 씬에서 실제 입체 상자·힌지·내부·철물을 읽고, 생성형 평면 알베도로 목재·쇠·황금 표면을 구분한다.",
         "reference": source("assets/source/style/approved-game-reference.jpg"),
         "source_art": [source(path) for path in ["assets/art/village/encounter-stone.webp", "assets/art/village/remake-chest.webp", "assets/art/village/remake-chest-broken.webp"]],
         "shared_family_provenance": source("assets/art/preview3d/materials.json"),
         "shared_textures": [source("assets/art/preview3d/" + name + ".webp") for name in ["limestone"]] + [source("assets/models/materials/chests/albedo.png")],
         "metal_surface_provenance": source("assets/source/materials/chests/provenance.json"),
         "new_texture_bytes": (ROOT / "assets/models/materials/chests/albedo.png").stat().st_size,
-        "new_binary_model_bytes": 0,
-        "generators": [source("scripts/" + name) for name in ["native_encounter_mesh_3d.gd", "native_encounter_props_3d.gd", "native_chest_material.gdshader"]],
+        "new_binary_model_bytes": sum((ROOT / "assets/models/environment" / identity / "model.glb").stat().st_size for identity in ["treasure_chest", "encounter_stone"]),
+        "generators": [source(path) for path in ["tools/prop_art/encounter_builder.gd", "scripts/native_encounter_props_3d.gd", "scripts/native_chest_material.gdshader"]],
         "materials": {"stone": "Existing shared front-on generated limestone, 2.56m world tile / 8 courses; instance tint observes source flash.", "chest": "목재·쇠·황금의 앞면·옆면·펼친 곡면 뚜껑 전용 원화를 면 전체 UV로 한 번 배치한다. 실제 철물 정점 마스크와 면 영역을 정점색으로 보존한다.", "texel_density": texel_density, "limitations": "Reused generated albedos retain fine authored self-relief, not measured PBR scans."},
         "coordinates": {"units": "metres", "up": "+Y", "ground": "XZ", "forward": "+Z", "baked_scale": [1, 1, 1], "camera_azimuth": 45, "camera_elevation": 35.2643897},
         "geometry": metrics[0],

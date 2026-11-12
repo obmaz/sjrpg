@@ -1,0 +1,43 @@
+{
+	"forward": "+Z",
+	"id": "environment/wall_torch",
+	"inputs": {
+		"res://scripts/native_cave_lanterns_3d.gd": "93952158d2109b94f1d3f22793a503599840851c05b5761349beb50ea2dfa867",
+		"res://tools/prop_art/bake.gd": "417ad48faa3d12e160b511b43c3e9fd31418559a4b9a24db003d3c90cb5f4254",
+		"res://tools/prop_art/torch_builder.gd": "89c67acb306a4901162a91ac87ec4ca4b9c58f71404e27d1188b9e0f4158040f"
+	},
+	"layout_sha256": "dfdd82551da1d8b0f57cf3caae8692a787c8be50ad3457d2f268b5a7c9c083e7",
+	"meshes": {
+		"iron": {
+			"min": [
+				-0.146200001239777,
+				-0.269999980926514,
+				0.0
+			],
+			"size": [
+				0.292400002479553,
+				0.835999965667725,
+				0.466199994087219
+			],
+			"surfaces": 1
+		},
+		"wood": {
+			"min": [
+				-0.0714000016450882,
+				-0.25,
+				0.248599991202354
+			],
+			"size": [
+				0.142800003290176,
+				0.748000025749207,
+				0.142799988389015
+			],
+			"surfaces": 1
+		}
+	},
+	"model_sha256": "657a49eaf6a540b67a859e9c15b8b46c19b2046c8321867e92e1ff2f90fe37c9",
+	"pivot": "wall_mount",
+	"scene_sha256": "f70c47ab1a41411a1ee07cd0bb7afe35da2ba4d4a00c4b0858ca292b78796b6a",
+	"triangles": 212,
+	"units": "metres"
+}

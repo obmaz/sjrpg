@@ -104,7 +104,7 @@ func _sync_source(source: Node2D, role: String, current: Dictionary) -> void:
 
 
 func _create(source: Node2D, role: String) -> Dictionary:
-	var root := Node3D.new()
+	var root := NativePropAssets.create("environment/encounter_stone" if role == "stone" else "environment/treasure_chest")
 	root.name = "NativeEncounterStone_%s" % (source as EncounterStone).id if role == "stone" else "NativeTreasureChest_%d" % (source as Chest).index
 	root.set_meta("native_interactable_source", source.get_instance_id())
 	root.set_meta("native_interactable_role", role)
@@ -118,8 +118,8 @@ func _create(source: Node2D, role: String) -> Dictionary:
 		rune.emission_enabled = true
 		rune.emission = Color("236d60")
 		rune.emission_energy_multiplier = 0.12
-		_instance(_meshes["stone"], root, {"stone": stone})
-		_instance(_meshes["glyph"], root, {"iron": _materials["iron"], "rune": rune})
+		_bind(root.get_node("stone"), {"stone": stone})
+		_bind(root.get_node("glyph"), {"iron": _materials["iron"], "rune": rune})
 		var header := Label3D.new()
 		header.font = UiKit.BOLD_FONT
 		header.font_size = 17
@@ -133,13 +133,11 @@ func _create(source: Node2D, role: String) -> Dictionary:
 	else:
 		var chest := source as Chest
 		var ink: ShaderMaterial = _chest_variants.get(chest.variant,_chest_material)
-		_instance(_meshes["base"], root, {"chest": ink})
-		var lid := Node3D.new()
-		lid.name = "ObservedConsumedLid"
-		lid.position = NativeEncounterMesh3D.LID_PIVOT
-		root.add_child(lid)
-		_instance(_meshes["lid"], lid, {"chest": ink})
-		var splinters := _instance(_meshes["splinters"], root, {"chest": ink})
+		_bind(root.get_node("base"), {"chest": ink})
+		var lid := root.get_node("ObservedConsumedLid") as Node3D
+		_bind(lid.get_node("lid"), {"chest": ink})
+		var splinters := root.get_node("splinters") as MeshInstance3D
+		_bind(splinters, {"chest": ink})
 		entry.merge({"lid": lid, "splinters": splinters, "consumed": false})
 		if chest.variant != "wood":
 			var header := Label3D.new()
@@ -154,14 +152,9 @@ func _create(source: Node2D, role: String) -> Dictionary:
 	return entry
 
 
-func _instance(mesh: ArrayMesh, parent: Node3D, material_map: Dictionary) -> MeshInstance3D:
-	var node := MeshInstance3D.new()
-	node.mesh = mesh
-	for surface in mesh.get_surface_count():
-		node.set_surface_override_material(surface, material_map[mesh.surface_get_name(surface)])
-	parent.add_child(node)
-	return node
-
+func _bind(node: MeshInstance3D, material_map: Dictionary) -> void:
+	for surface: int in node.mesh.get_surface_count():
+		node.set_surface_override_material(surface, material_map[node.mesh.surface_get_name(surface)])
 
 func _sync_stone(stone: EncounterStone, entry: Dictionary) -> void:
 	var tint := stone.art.modulate_color * stone.art.modulate * stone.art.self_modulate

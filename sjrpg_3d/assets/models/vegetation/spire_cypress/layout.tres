@@ -1,0 +1,13 @@
+[gd_resource type="Resource" format=3]
+
+[resource]
+metadata/mesh_roles = {
+"Body": ["Bark", "LeafSpraysNeedles"]
+}
+metadata/node_flags = {
+"Body": {
+"cast_shadow": 1,
+"metadata": {}
+}
+}
+metadata/actor = false

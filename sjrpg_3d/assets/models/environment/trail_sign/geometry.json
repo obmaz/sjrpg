@@ -1,0 +1,28 @@
+{
+	"forward": "+Z",
+	"id": "environment/trail_sign",
+	"inputs": {
+		"res://tools/prop_art/bake.gd": "417ad48faa3d12e160b511b43c3e9fd31418559a4b9a24db003d3c90cb5f4254"
+	},
+	"layout_sha256": "331ad492990300b5a97aec5f47ba45cd1d0e7aee130c40a2e32f7f063d8b3ab1",
+	"meshes": {
+		"Board": {
+			"min": [
+				-0.800000011920929,
+				0.0,
+				-0.0799999982118607
+			],
+			"size": [
+				1.60000002384186,
+				1.5200001001358,
+				0.159999996423721
+			],
+			"surfaces": 1
+		}
+	},
+	"model_sha256": "30f5fd68a76f5115b50bcbe86a3d26572d074f2ea1b671007c3281b722050e32",
+	"pivot": "ground",
+	"scene_sha256": "b5b3ab83430f02cbca14bbd6953401d4a2c14e71e6a7a2f9c8b0b928c27c4119",
+	"triangles": 24,
+	"units": "metres"
+}

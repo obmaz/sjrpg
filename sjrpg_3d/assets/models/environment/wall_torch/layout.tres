@@ -1,0 +1,18 @@
+[gd_resource type="Resource" format=3]
+
+[resource]
+metadata/mesh_roles = {
+"iron": ["iron"],
+"wood": ["wood"]
+}
+metadata/node_flags = {
+"iron": {
+"cast_shadow": 1,
+"metadata": {}
+},
+"wood": {
+"cast_shadow": 1,
+"metadata": {}
+}
+}
+metadata/actor = false

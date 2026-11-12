@@ -7,7 +7,7 @@
 - `assets/models/architecture/<id>/`: [GLB·개별 씬·재질·배치 기록](native-architecture-models.md). ID는 shop, smith, stable, home, chapel, fortress, bridge입니다. 기존 여섯 표면 자산은 같은 폴더의 `asset.json`과 `albedo.png`를 유지합니다.
 - `scripts/native_asset_surface.gd`: 폴더별 설정을 읽는 공용 어댑터. 원화 추가·수정에는 이 파일을 고치지 않습니다.
 - `scripts/native_asset_surface.gdshader`: 집과 예배당의 실제 로컬 좌표로 네 방향 벽을 구별하고, 면 전체에 각 원화를 한 번 배치합니다. 창·문·골조와 충돌은 실제 기하가 유지합니다. 다리는 같은 어댑터의 미터 타일 모드를 사용합니다.
-- `assets/models/environment/cave_entrance/model.gd`와 `plan.gd`: 동굴 입구만 담당하는 메시 제작기와 표시·충돌의 공통 치수. 동굴 내부 생성·진입 규칙은 이 에셋에 넣지 않습니다.
+- `assets/models/environment/cave_entrance/model.gd`와 `plan.gd`: 동굴 입구의 GLB 메시 어댑터와 표시·충돌의 공통 치수. 동굴 내부 생성·진입 규칙은 이 에셋에 넣지 않습니다.
 - `assets/source/architecture/<id>/`: 채택 원본·실제 프롬프트·출처와 해시. 패키지에서는 제외합니다.
 
 기존 여섯 표면의 `asset.json`은 schemaVersion=1, kind=surface, atlasGrid=[2,2]를 유지하고 모델 경로를 함께 지정합니다. 성곽 모델은 kind=model입니다. albedo는 같은 폴더의 파일명이며 경로를 벗어날 수 없습니다. mapping은 facade 또는 tile, tileMetres는 미터 단위, roughness는 0~1입니다. 셀 순서는 정면(+Z), 오른쪽(+X), 뒤(-Z), 왼쪽(-X)입니다. 수정자는 다른 에셋의 JSON이나 전역 등록 파일을 함께 고치지 않습니다.
@@ -38,7 +38,7 @@ GLB/텍스처/라이선스·원본 출처·제작 도구 버전은 같은 에셋
 
 채택하지 않은 후보·일회성 캡처·완료 리뷰는 `build/` 또는 CI 아티팩트에서만 관리합니다. 현재 규격은 이 문서와 에셋별 설정에 유지하며, 채택 원본·라이선스·재생성 입력은 리뷰 기록과 구별해 보존합니다.
 
-동굴 입구의 특수 규격: 원점은 입구 앞 골짜기 바닥 중앙이고+Z가 바깥,+Y가 위입니다. 암반은-Z로 깊어지며 로컬 바닥은0m에서 뒤쪽-1.2m로 내려가고, 입구 폭은3.92m, 홈 깊이는 약3.5m입니다. `plan.gd`의 윤곽·하강 함수·`frame()`과 검수한 `model.res`를 공유합니다. 실제 SOLID는 표시 메시 전체의 삼각형으로 만듭니다. 닫힌 원형 콜라이더나 검은 판을 다시 추가하지 않습니다. 모델 교체 시 같은 원점과 통로를 유지하며 원화는 원형 덩어리보다 비대칭 지층·돌출 암반·흙/풀의 상부를 참고합니다.
+동굴 입구의 특수 규격: 원점은 입구 앞 골짜기 바닥 중앙이고+Z가 바깥,+Y가 위입니다. 암반은-Z로 깊어지며 로컬 바닥은0m에서 뒤쪽-1.2m로 내려가고, 입구 폭은3.92m, 홈 깊이는 약3.5m입니다. `plan.gd`의 윤곽·하강 함수·`frame()`과 검수한 GLB의 공유 메시를 공유합니다. 실제 SOLID는 표시 메시 전체의 삼각형으로 만듭니다. 닫힌 원형 콜라이더나 검은 판을 다시 추가하지 않습니다. 모델 교체 시 같은 원점과 통로를 유지하며 원화는 원형 덩어리보다 비대칭 지층·돌출 암반·흙/풀의 상부를 참고합니다.
 
 
 야외 웨이포인트는 `assets/models/environment/waypoint/`의 모델·셰이더·생성형 문양만 교체합니다. 상면 반경1.55m, 돌 기단 높이0.10m, 정면+Z, 원점은 주변 지면 중앙입니다. 문양은 기단 상면에 놓고 물리 FLOOR도 같은 높이로 만듭니다. 플레이어가 밟을 수 있어야 하며 수직 문·기둥·SOLID를 추가하지 않습니다. 발견 전은 어두운 회색, 발견 후는 절제된 석재색과 네 모퉁이 불빛을 사용합니다. 첫 활성화 판정·발견 저장은 `Exploration`의 소유입니다.
@@ -46,7 +46,7 @@ GLB/텍스처/라이선스·원본 출처·제작 도구 버전은 같은 에셋
 강둑 원화는 `assets/models/environment/riverbank/albedo.png`의2×2 아틀라스입니다. 좌상 젖은 암석, 우상 뿌리와 흙, 좌하 풀과 자갈, 우하 수중 자갈 바닥이며 실제 타일 밀도는2m입니다. 새 이미지 교체는 이 폴더와 대응 원본 폴더만 수정합니다. 실제 지형 높이·다리 접속은 공용 `NativeGroundRelief`가 담당합니다.
 
 
-동굴 조형은 같은 폴더의 `sculpt.gd`에서0.30m 밀도장과 통로 차집합으로 만듭니다. 수정 후 저장소 루트에서 `sjrpg_3d/tools/godot.sh --headless res://assets/models/environment/cave_entrance/bake.tscn`으로 `model.res`를 재생성합니다. 런타임 `model.gd`는 저장된 메시만 읽으며 시작할 때 조형 계산을 하지 않습니다. 새 메시·제작기·공유 치수·원화 출처를 한 에셋 커밋에 포함하고 가로·세로 렌더, 실제 하강·천장·측벽 충돌을 함께 확인합니다.
+동굴 조형은 `tools/prop_art/cave_builder.gd`에서0.30m 밀도장과 통로 차집합으로 만듭니다. 수정 후 저장소 루트에서 `sjrpg_3d/tools/godot.sh --headless res://assets/models/environment/cave_entrance/bake.tscn`으로 `model.glb`·`visual.tscn`과 형상 기록을 재생성합니다. 런타임 `model.gd`는 저장된 메시만 읽으며 시작할 때 조형 계산을 하지 않습니다. 새 메시·제작기·공유 치수·원화 출처를 한 에셋 커밋에 포함하고 가로·세로 렌더, 실제 하강·천장·측벽 충돌을 함께 확인합니다.
 
 동굴의 로컬 메시와 별개로 `frame()`은 주변 땅보다3.2m 낮고, 지형 통합 어댑터가 외부20m 하강로와 암반 측면을 연결합니다. 모델 교체 시 바깥 지면을0m로 가정해 입구 전체를 다시 올리지 않습니다.
 
@@ -65,3 +65,5 @@ GLB/텍스처/라이선스·원본 출처·제작 도구 버전은 같은 에셋
 몬스터는 [GLB + 독립 씬 계약](native-enemy-models.md)을 따릅니다. 제작자는 `assets/models/enemies/<kind>/{model.glb,visual.tscn,asset.json}`과 대응 소스 폴더를 담당합니다. 씬에는 모델·시각 피벗·효과 부착점을 조립하고 AI·충돌·저장·피해를 넣지 않습니다. 기존 종의 폴더에 검수된 씬을 추가하면 공용 표시 어댑터가 찾아 사용하므로 대형 몬스터 생성기를 함께 수정하지 않습니다. `asset.json`의 클립별 실제 이름·길이·타격 시각·높이·사망 접지를 GLB와 함께 갱신합니다. 다른 AI가 납품할 때도 같은 미터/축/발 기준, 실제 가로·세로 게임 화면, 기하·재질·관절·가중치 예산, 원본과 라이선스/수정 내역을 포함합니다.
 
 종별 오프라인 형상/동작 보정도 필요한 경우 `assets/source/enemies/<kind>/authoring.py`에 둡니다. 공용 변환기가 선택적으로 호출하는 `refine_meshes`, `foot_center`, `build_details`, `pose_world`, `pose_basis`를 사용하며 채택 원본의 잠금 해시와 보정 스크립트 의존 해시를 분리합니다. 이 스크립트는 앱에 포함하지 않습니다. 원본 Blender 파일에서 직접 완성한 GLB를 납품할 때도 같은 런타임 씬/manifest/출처 계약을 유지합니다.
+
+전사·주민·고정 소품·식생의 현재 씬 경계와 제작/검수 명령은 [고정 모델 계약](native-prop-models.md)을 따릅니다. 재사용 자산의 형상과 규칙을 서로 다른 AI가 수정할 때 모델 폴더와 게임 규칙의 커밋을 분리할 수 있습니다.
