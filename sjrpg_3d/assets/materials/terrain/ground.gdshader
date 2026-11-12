@@ -14,6 +14,9 @@ uniform sampler2D site_rock : source_color, filter_linear_mipmap_anisotropic, re
 uniform mat4 world_to_cave;
 uniform vec2 cave_trail[10];
 uniform vec4 cave_trail_bounds;
+uniform vec4 chapel_beds[6];
+uniform vec4 chapel_path;
+uniform vec4 chapel_bounds;
 varying highp vec2 ground_world;
 varying float ground_height;
 
@@ -66,7 +69,7 @@ void fragment() {
 		paving = mix(paving,grass,encroach*.78);
 		color = mix(grass,paving,cover);
 		// 낮은 표면 요철만 광원에 반응한다. 보행 지형의 매크로 높이는 기존 공유 메시다.
-		paving_relief = smoothstep(.16,.55,dot(paving,vec3(.30,.55,.15)))*.045*cover;
+		paving_relief = smoothstep(.16,.55,dot(paving,vec3(.30,.55,.15)))*.018*cover;
 	}
 
 	// 막다른 포장길은 흙길로 좁아지며 풀 속으로 이어진다.
@@ -119,6 +122,22 @@ void fragment() {
 		vec3 soil = texture(earth_texture,ground_world/2.56).rgb*vec3(1.30,1.12,0.86);
 		vec3 grit = texture(bank_atlas,(vec2(1.0)+mix(vec2(0.018),vec2(0.982),mirrored(ground_world/2.0)))*0.5).rgb;
 		color = mix(color,mix(soil,grit*0.97,0.28+zone*0.25),worn);
+	}
+	// 화단·길은 같은 미터 배치도를 따른다. 돌 틈의 흙이 화단까지 이어진다.
+	if (all(greaterThan(ground_world,chapel_bounds.xy)) && all(lessThan(ground_world,chapel_bounds.zw))) {
+		float bed_cover = 0.0;
+		float broken_edge = (ground_noise(ground_world*4.0)-.5)*.30;
+		for (int i=0; i<6; i++) {
+			float radius = length((ground_world-chapel_beds[i].xy)/chapel_beds[i].zw);
+			bed_cover = max(bed_cover,1.0-smoothstep(.70,1.3,radius+broken_edge));
+		}
+		vec2 path_edge = min(ground_world-chapel_path.xy,chapel_path.zw-ground_world);
+		float path_cover = smoothstep(-.12,.10,min(path_edge.x,path_edge.y));
+		vec3 soil = texture(earth_texture,ground_world/2.56).rgb;
+		vec3 garden_floor = mix(soil,grass,0.65+ground_noise(ground_world*2.0)*.22);
+		color = mix(color,garden_floor,bed_cover*.96);
+		color = mix(color,mix(soil,grass,.22),path_cover*.95);
+		paving_relief *= 1.0-max(bed_cover,path_cover);
 	}
 	vec3 dx = dFdx(vec3(ground_world.x,paving_relief,ground_world.y));
 	vec3 dy = dFdy(vec3(ground_world.x,paving_relief,ground_world.y));

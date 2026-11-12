@@ -75,19 +75,19 @@
     },
     {
       "path": "scripts/world/physics/spatial_world_3d.gd",
-      "sha256": "b9469b97e785219fbe39f8724ba918da4aad2d88e3d629cb8fb7d846162582b9"
+      "sha256": "9f1db76e2adea4e6b1723c7cbc6df1ab324e5e010bd30fe83c8f0a5525fc270f"
     },
     {
       "path": "scripts/world/village.gd",
-      "sha256": "c102923d8ed1925af76328e76291839ec1173a454c53fdf5b1f06db820e6c483"
+      "sha256": "7a9ea2ea83d9dbccd0e5781757fb2df82131a9a8e4418fa17ade5f36041a56fd"
     },
     {
       "path": "assets/materials/terrain/ground.gdshader",
-      "sha256": "bd15178093d3819b99ecd24736da7b64ffd3d4cb369604af52e2832d06f81440"
+      "sha256": "6a1abf90d7aec59030381afed6c234033b94bf9f54042425f32a9ecf41b7ee8a"
     },
     {
       "path": "scripts/rendering/terrain/ground_renderer_3d.gd",
-      "sha256": "3bd11ca1df804782a974082cef3ab360c05c59f45947a4aeb56143d4740af126"
+      "sha256": "945c1ed82e0d918c8f7aee69229b5f677cbb677f8a4110438a04cad9e87cacb1"
     },
     {
       "path": "assets/materials/water/river.gdshader",

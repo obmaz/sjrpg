@@ -18,7 +18,7 @@ func run() -> void:
 	var baseline: Vector2 = game.camera.zoom
 	var view_size: Vector2 = game.get_viewport_rect().size
 	var original_camera_scale: float = clampf(minf(view_size.x, view_size.y) / 720.0, 0.5, 1.6) * game.CAMERA_WORLD_SCALE
-	check("displayed default 1x uses the former actual 0.75 view", is_equal_approx(Prefs.world_zoom, 1.0) and is_equal_approx(Prefs.actual_world_zoom(), 0.75) and baseline.is_equal_approx(Vector2.ONE * original_camera_scale * 0.75))
+	check("displayed default 1x applies the configured composition scale once", is_equal_approx(Prefs.world_zoom, 1.0) and is_equal_approx(Prefs.actual_world_zoom(), Prefs.WORLD_ZOOM_BASE) and baseline.is_equal_approx(Vector2.ONE * original_camera_scale * Prefs.WORLD_ZOOM_BASE))
 	game._debug_zoom = 0.75
 	game._update_zoom()
 	check("URL debug scale remains an independent relative multiplier", game.camera.zoom.is_equal_approx(baseline * 0.75) and is_equal_approx(Prefs.world_zoom, 1.0))
@@ -32,7 +32,7 @@ func run() -> void:
 	for amount: float in Prefs.WORLD_ZOOMS:
 		Prefs.set_world_zoom(amount)
 		await _frames(2)
-		check("relative zoom maps once to the rebased actual scale", is_equal_approx(Prefs.actual_world_zoom(), 0.75 * amount))
+		check("relative zoom maps once to the rebased actual scale", is_equal_approx(Prefs.actual_world_zoom(), Prefs.WORLD_ZOOM_BASE * amount))
 		check("world zoom changes immediately while menu is paused", get_tree().paused and game.camera.zoom.is_equal_approx(baseline * amount))
 		check("zoom cannot advance or move a paused hero", is_equal_approx(game.player._attack_time, 0.5) and game.player.position == hero_position)
 		check("world zoom leaves HUD and menu hit areas unchanged", game.hud.minimap.size == hud_size and game.hud.controls._buttons["bar_bag"] == controls_before)
@@ -74,7 +74,7 @@ func run() -> void:
 	loaded = PrefsScript.new()
 	loaded.settings_path = TEST_PATH
 	add_child(loaded)
-	check("legacy device settings keep displayed default and existing values with the new actual base", is_equal_approx(loaded.world_zoom, 1.0) and is_equal_approx(loaded.actual_world_zoom(), 0.75) and not loaded.sound_enabled)
+	check("legacy device settings keep displayed default and existing values with the new actual base", is_equal_approx(loaded.world_zoom, 1.0) and is_equal_approx(loaded.actual_world_zoom(), Prefs.WORLD_ZOOM_BASE) and not loaded.sound_enabled)
 	loaded.queue_free()
 	await _frames(2)
 	for old_choice: float in Prefs.WORLD_ZOOMS:
@@ -83,7 +83,7 @@ func run() -> void:
 		loaded = PrefsScript.new()
 		loaded.settings_path = TEST_PATH
 		add_child(loaded)
-		check("existing stored preferences keep their relative selection without a schema migration", is_equal_approx(loaded.world_zoom, old_choice) and is_equal_approx(loaded.actual_world_zoom(), 0.75 * old_choice))
+		check("existing stored preferences keep their relative selection without a schema migration", is_equal_approx(loaded.world_zoom, old_choice) and is_equal_approx(loaded.actual_world_zoom(), Prefs.WORLD_ZOOM_BASE * old_choice))
 		loaded.queue_free()
 		await _frames(2)
 	cfg.set_value("device", "world_zoom", "corrupt")

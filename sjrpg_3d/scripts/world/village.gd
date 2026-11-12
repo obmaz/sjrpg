@@ -112,8 +112,15 @@ func build(ground_layer: Node2D, world: Node2D) -> void:
 	_build_sanctuaries(world)
 	_build_trees(world, ground_layer)
 	_build_npcs(world)
+	var garden_path: Rect2 = ChapelGardenPlan3D.layout(self)["path"]
 	for c in data["chest_uv"]:
-		chest_points.append(point(Vector2(c[0], c[1])))
+		var at := point(Vector2(c[0], c[1]))
+		var metres := Iso.unproject(at) / WorldSpace3D.GROUND_UNITS_PER_METER
+		# 상자 순서/보상 ID는 유지하고 새 진입로를 가리는 상자만 옆으로 옮긴다.
+		if garden_path.grow(.5).has_point(metres):
+			metres = Vector2(garden_path.end.x + 1.2, garden_path.position.y + 1.25)
+			at = Iso.project(metres * WorldSpace3D.GROUND_UNITS_PER_METER)
+		chest_points.append(at)
 	# The waterfall chest is above the measured dry path; memory IDs 5–7 stay stable.
 	for g in MEMORY_SPOTS:
 		chest_points.append(Iso.project(g))
@@ -537,6 +544,19 @@ func _build_trees(world: Node2D, ground_layer: Node2D) -> void:
 			world.add_child(extra)
 			town_trees.append(extra)
 			circles.append([at, 18.0])
+	# 후경 수관을 한 군락으로 묶어 예배당 뒤의 비어 있는 지면을 정돈한다.
+	for at: Vector2 in ChapelGardenPlan3D.layout(self)["background_trees"]:
+		var projected := Iso.project(at * WorldSpace3D.GROUND_UNITS_PER_METER)
+		if not _grove_clear(projected):
+			continue
+		var definition: Dictionary = data["sprites"]["tree-2"]
+		var extra := IsoSprite.new().setup(definition, 590.0)
+		extra.position = projected
+		extra.modulate_color = Color(.72, .79, .68)
+		extra.set_meta("native_tree_variant", 0)
+		world.add_child(extra)
+		town_trees.append(extra)
+		circles.append([projected, 18.0])
 	# Prioritize the new chapel grove. These flat-ground casters use their own alpha,
 	# never a repeating dark patch painted into the grass material.
 	var casters := town_trees.duplicate()

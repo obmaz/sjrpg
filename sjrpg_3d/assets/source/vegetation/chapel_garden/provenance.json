@@ -1,0 +1,23 @@
+{
+  "tool": "image_gen.imagegen",
+  "source": "assets/materials/chapel_garden/foliage.png",
+  "prompt": "prompt.txt",
+  "sha256": "13bb31144efb28fad89a9b2f8bc735b11f04f280705ada6311910cafe0ffc826",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "references": [
+    {
+      "path": "assets/source/style/approved-game-reference.jpg",
+      "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+    }
+  ],
+  "layout": [
+    "fern",
+    "ivy",
+    "white_flower",
+    "ochre_flower"
+  ],
+  "notes": "원본 RGBA 2×2 아틀라스를 수정 없이 사용한다. 종류별 고정 곡면 잎 메시를 공유하고 alpha-scissor 0.35로 빈 영역을 제거한다. 이미지 빌보드나 카메라 추적 회전을 사용하지 않는다."
+}

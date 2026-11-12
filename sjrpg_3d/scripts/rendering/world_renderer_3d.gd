@@ -211,19 +211,19 @@ func _setup_light() -> void:
 	settings.background_mode = Environment.BG_COLOR
 	settings.background_color = Color("17231d")
 	settings.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	settings.ambient_light_color = Color(0.57, 0.68, 0.77)
-	settings.ambient_light_energy = 0.43
+	settings.ambient_light_color = Color(0.49, 0.59, 0.68)
+	settings.ambient_light_energy = 0.30
 	environment.environment = settings
 	stage.add_child(environment)
 	sunlight = DirectionalLight3D.new()
-	sunlight.light_color = Color(1.0, 0.89, 0.73)
-	sunlight.light_energy = 1.6
+	sunlight.light_color = Color(1.0, 0.93, 0.81)
+	sunlight.light_energy = 1.30
 	sunlight.shadow_enabled = true
 	sunlight.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
 	# Perspective fallback range; orthographic shadows use the camera clipping range.
 	sunlight.directional_shadow_max_distance = 90.0
-	sunlight.shadow_bias = 0.04
-	sunlight.shadow_normal_bias = 0.6
+	sunlight.shadow_bias = 0.025
+	sunlight.shadow_normal_bias = 0.35
 	stage.add_child(sunlight)
 	var projected := Iso.unproject(Vector2(0.72, 0.48)).normalized()
 	var ray := Vector3(projected.x, -tan(deg_to_rad(47.0)), projected.y)
@@ -233,7 +233,7 @@ func _setup_light() -> void:
 	var bounce := DirectionalLight3D.new()
 	bounce.name = "WarmDaylightBounce"
 	bounce.light_color = Color(1.0, 0.94, 0.82)
-	bounce.light_energy = 0.38
+	bounce.light_energy = 0.18
 	bounce.shadow_enabled = false
 	stage.add_child(bounce)
 	bounce.look_at(-CAMERA_DIRECTION, Vector3.UP)
@@ -361,6 +361,7 @@ func _build_village() -> void:
 		var visual := ArchitectureSceneLibrary.create(id)
 		root.add_child(visual)
 		root.set_meta("native_house", visual.report)
+	ChapelGarden3D.build(self)
 	_fortification = FortificationRenderer3D.build(self)
 
 
@@ -410,7 +411,14 @@ func _load_actor() -> void:
 
 func _sync_camera() -> void:
 	var focus_point: Vector2 = game.camera.get_screen_center_position()
-	var focus := WorldSpace3D.projected_to_world(focus_point, surface_height(game.player.position))
+	var floor_height := surface_height(game.player.position)
+	if not game.dungeon.active:
+		var ground := Iso.unproject(game.player.position) / WorldSpace3D.GROUND_UNITS_PER_METER
+		var path: Rect2 = ChapelGardenPlan3D.layout(game.village)["path"]
+		# 발은 판석의 실제 높이를 따르되 작은 요철이 카메라의 상하 떨림이 되지 않게 한다.
+		if path.has_point(ground) and floor_height <= ChapelGardenPlan3D.MAX_PAVER_HEIGHT + .003:
+			floor_height = 0.0
+	var focus := WorldSpace3D.projected_to_world(focus_point, floor_height)
 	camera.position = focus + CAMERA_DIRECTION * 30.0
 	camera.look_at(focus, Vector3.UP)
 	# Read the actual2D rendering viewport/zoom; low-quality's half-size cancels its half zoom.

@@ -8,8 +8,8 @@ signal fps_changed
 const PATH := "user://settings.cfg"
 const WORLD_ZOOMS: Array[float] = [0.5, 0.75, 1.0, 1.25, 1.5]
 const SCREEN_ORIENTATIONS: Array[String] = ["auto", "landscape", "portrait"]
-## Stored values remain relative UI choices; the new 1x view uses the former 0.75 scale.
-const WORLD_ZOOM_BASE := 0.75
+## 기기별 확대 선택은 상대값으로 유지하고, 기본 시야는 인물과 주변 재료가 읽히는 근접 구도다.
+const WORLD_ZOOM_BASE := 1.05
 
 var settings_path := "/userfs/sjrpg_3d/settings.cfg" if OS.has_feature("web") else PATH
 var sound_enabled := true

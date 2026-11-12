@@ -36,8 +36,7 @@ static func build(renderer: Node) -> MeshInstance3D:
 	material.set_shader_parameter("grass_layers", NativeTerrainSurfaces.layers("grass"))
 	for variant in 6:
 		material.set_shader_parameter(
-			"paving_%d" % variant,
-			load("res://assets/materials/paving/paving-%d.png" % variant)
+			"paving_%d" % variant, load("res://assets/materials/paving/paving-%d.png" % variant)
 		)
 	var town := PackedVector2Array()
 	for point: Vector2 in renderer.game.village.safe_zone:
@@ -51,7 +50,9 @@ static func build(renderer: Node) -> MeshInstance3D:
 	)
 	material.set_shader_parameter("distance_field", load("res://" + str(record["field"])))
 	material.set_shader_parameter("shore_field", load("res://" + str(record["shore_field"])))
-	material.set_shader_parameter("rock_texture", load("res://assets/materials/terrain/rock_base.webp"))
+	material.set_shader_parameter(
+		"rock_texture", load("res://assets/materials/terrain/rock_base.webp")
+	)
 	material.set_shader_parameter("earth_texture", load("res://assets/sprites/forest/earth.webp"))
 	material.set_shader_parameter(
 		"bank_atlas", load("res://assets/models/environment/riverbank/albedo.png")
@@ -68,6 +69,26 @@ static func build(renderer: Node) -> MeshInstance3D:
 		)
 	)
 	material.set_shader_parameter("cave_trail", CaveTrailPlan3D.points(renderer.game.village))
+	var garden := ChapelGardenPlan3D.layout(renderer.game.village)
+	var garden_path: Rect2 = garden["path"]
+	var garden_base: Rect2 = garden["base"]
+	var garden_bounds := garden_base.merge(garden_path).grow(1.6)
+	material.set_shader_parameter("chapel_beds", PackedVector4Array(garden["beds"]))
+	material.set_shader_parameter(
+		"chapel_path",
+		Vector4(
+			garden_path.position.x, garden_path.position.y, garden_path.end.x, garden_path.end.y
+		)
+	)
+	material.set_shader_parameter(
+		"chapel_bounds",
+		Vector4(
+			garden_bounds.position.x,
+			garden_bounds.position.y,
+			garden_bounds.end.x,
+			garden_bounds.end.y
+		)
+	)
 	var trail_bounds := CaveTrailPlan3D.bounds(renderer.game.village)
 	material.set_shader_parameter(
 		"cave_trail_bounds",

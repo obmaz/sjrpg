@@ -143,7 +143,7 @@ static func build(renderer: Node, leaf_texture_path: String = LEAVES) -> Node3D:
 	for variant in PATHS.size():
 		var selected: Array[IsoSprite] = []
 		for index in source_trees.size():
-			if index % PATHS.size() == variant:
+			if int(source_trees[index].get_meta("native_tree_variant", index % PATHS.size())) == variant:
 				selected.append(source_trees[index])
 		if selected.is_empty():
 			continue

@@ -12,6 +12,8 @@
 - `WorldRenderer3D`는 마을·숲·기존 동굴의 운영 공간 표시기입니다. 소유 참조는 `game.world_renderer`, 모듈의 표시기 참조는 `renderer`로 통일합니다.
 - 카메라는 방위45°·고도35.2643897° 직교 투영입니다. HUD와 미니맵은2D UI이며, 지면·물·효과·알파 잎의 평면은 입체 물리와 함께 사용합니다.
 
+예배당 정원은 `ChapelGardenPlan3D`가 판석·화단·후경 나무의 미터 배치를 한 번 계산해 마을 인스턴스에 보관합니다. `ChapelGarden3D`와 `SpatialWorld3D.surface_faces()`가 같은 판석 상면/경사 삼각형을 사용합니다. 판석은 한 메시, 고정 곡면 식생은 종류별 최대4개 MultiMesh이며 새 광원을 만들지 않습니다. 잎 원본과 참조 해시는 `assets/source/vegetation/chapel_garden/`에 기록합니다. 정원은 숲 루트와 함께 숨겨 동굴에 남지 않습니다. 기본 상대 시야는 `Prefs.WORLD_ZOOM_BASE=1.05`이고 HUD·미터 배율은 바꾸지 않습니다. 작은 판석의4.5cm 이하 높이는 발의 실제 FLOOR를 따르되 카메라 상하 떨림에는 반영하지 않습니다.
+
 이동은 네이티브 캡슐 스윕과 미끄러짐을 보존하고, 바닥에 맞춰 높이를 보정할 때 추가 충돌을 확인합니다. 모든 이동 뒤에 겹침 여부만으로 되돌리면 정상적인 교대 모서리 접촉도 막힙니다. `native_bridge_sweep`는 30가지 이동 간격·진입 위치를 검사하며, `native_threshold_support`는 실제 접촉 깊이를 측정하고, 벽 안으로 3cm 이동한 검사 캡슐은 관통으로 검출되는지도 확인합니다.
 
 가림 처리 모듈은 `scripts/rendering/occlusion/`에 모았습니다. [전체 오브젝트 전환](../scripts/rendering/occlusion/player_occlusion.gd), [공간 색인](../scripts/rendering/occlusion/spatial_index.gd), [로딩 중 재질 준비](../scripts/rendering/occlusion/warmup.gd)를 나눕니다. 공간 색인은 재질이나 게임 상태를 변경하지 않으며 표시기는 실제 삼각형 검사와 전체 모델 투명도만 담당합니다.

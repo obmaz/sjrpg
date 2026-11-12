@@ -176,7 +176,7 @@ func _ready() -> void:
 	expedition = ExpeditionRun.new().setup(self)
 	add_child(expedition)
 	native_ready = true
-	toast("미니맵에서 의뢰 위치를 확인하세요 · 마을의 미라가 기다립니다")
+	# 첫 의뢰는 상태창의 목표와 미라의 표식으로 안내한다. 중복 배너로 장면을 가리지 않는다.
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval("window.__sjrpgAdventureReady = true")
 
