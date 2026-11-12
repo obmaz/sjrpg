@@ -3,6 +3,12 @@ extends TestCase
 
 
 func run() -> void:
+	var unindexed := ArrayMesh.new()
+	var fixture_arrays := []
+	fixture_arrays.resize(Mesh.ARRAY_MAX)
+	fixture_arrays[Mesh.ARRAY_VERTEX] = PackedVector3Array([Vector3.ZERO, Vector3.RIGHT, Vector3.UP])
+	unindexed.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, fixture_arrays)
+	check("triangle diagnostics also accept unindexed imported geometry", TreeGeometry3D._triangle_count(unindexed) == 1)
 	var record: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/models/vegetation/shared/tree_profiles.json"))
 	var generation: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/source/vegetation/town_trees/generation.json"))
 	var source: Dictionary = generation["preserved_source"]
@@ -23,6 +29,11 @@ func run() -> void:
 		await _frames(2)
 		return
 	var report: Dictionary = trees.get_meta("native_tree_report")
+	var actual_triangles := 0
+	for entry: Dictionary in report["trees"]:
+		var batch: MultiMeshInstance3D = entry["batch"]
+		actual_triangles += batch.multimesh.mesh.get_faces().size() / 3
+	check("tree diagnostic counts actual species geometry and placed instances", report["triangles"] == actual_triangles and report["triangles_by_variant"].size() == TreeGeometry3D.PATHS.size())
 	check("all existing town trees receive native replacements", report["trees"].size() == game.village.town_trees.size() and report["trees"].size() > 2)
 	check("native trees share bounded species mesh groups", int(report["groups"]) <= TreeGeometry3D.PATHS.size() and not report["billboards"])
 	check("native tree width and canopy top match original measured sprite size", float(report["max_fit_error"]) < 0.0001)

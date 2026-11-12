@@ -39,7 +39,7 @@ adb install -r sjrpg_3d/build/android/sjrpg_3d-debug.apk
 
 ## GPU 텍스처와 포함 리소스
 
-[플랫폼별 텍스처 정책](platform-exports.md)의 불투명 표면 56개를 ETC2로 넣습니다. Android 패키지에는 해당 표면의 S3TC 복사본을 넣지 않습니다. 건물 전용 표면과 UI·잎·유리·효과·배우 텍스처의 기존 설정과 원본 해상도는 유지합니다.
+[플랫폼별 텍스처 정책](platform-exports.md)의 지정된 불투명 표면을 ETC2로 넣습니다. Android 패키지에는 해당 표면의 S3TC 복사본을 넣지 않습니다. 건물 전용 표면과 UI·잎·유리·효과·배우 텍스처의 기존 설정과 원본 해상도는 유지합니다.
 
 `tools/export_android.sh`는 정책 적용·Godot 임포트·내보내기 후 `zipalign`, `apksigner`, `aapt2`, 실제 APK 리소스 검사까지 수행합니다. 결과는 `build/android/export-report.json`, 패키지 정보는 `build/android/package.txt`입니다. 개발 도구·테스트·웹 셸·에셋 원본 보관 폴더는 앱에 넣지 않습니다.
 

@@ -41,6 +41,25 @@ static func _find_mesh(node: Node) -> MeshInstance3D:
 	return null
 
 
+static func _triangle_count(mesh: Mesh) -> int:
+	var count := 0
+	for surface in mesh.get_surface_count():
+		var arrays := mesh.surface_get_arrays(surface)
+		var indices: PackedInt32Array = (
+			arrays[Mesh.ARRAY_INDEX] if arrays[Mesh.ARRAY_INDEX] != null else PackedInt32Array()
+		)
+		var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		count += (indices.size() if not indices.is_empty() else vertices.size()) / 3
+	return count
+
+
+static func triangle_counts(library: Array[Dictionary]) -> Array[int]:
+	var counts: Array[int] = []
+	for entry in library:
+		counts.append(int(entry.get("triangles", 0)))
+	return counts
+
+
 static func _points(mesh: Mesh) -> PackedVector3Array:
 	var points := PackedVector3Array()
 	for surface in mesh.get_surface_count():
@@ -66,7 +85,7 @@ static func mesh_library(leaf_texture_path: String = LEAVES) -> Array[Dictionary
 		_bark_material = bark_material
 		_needle_material = needle_material
 	for path: String in PATHS:
-		var entry := {"path": path, "mesh": null, "points": PackedVector3Array()}
+		var entry := {"path": path, "mesh": null, "points": PackedVector3Array(), "triangles": 0}
 		library.append(entry)
 		if not ResourceLoader.exists(path):
 			continue
@@ -87,6 +106,7 @@ static func mesh_library(leaf_texture_path: String = LEAVES) -> Array[Dictionary
 				mesh.surface_set_material(surface, (needle_material if original.resource_name == "LeafSpraysNeedles" else leaf_material) if is_leaf else bark_material)
 			entry["mesh"] = mesh
 			entry["points"] = _points(mesh)
+			entry["triangles"] = _triangle_count(mesh)
 		if imported != null:
 			imported.free()
 	if leaf_texture_path == LEAVES:
@@ -137,7 +157,8 @@ static func build(renderer: Node, leaf_texture_path: String = LEAVES) -> Node3D:
 	root.name = "NativeTownTrees"
 	renderer.stage.add_child(root)
 	var library := mesh_library(leaf_texture_path)
-	var report := {"trees": [], "groups": 0, "triangles_per_tree": 4358, "billboards": false, "source_count": renderer.game.village.town_trees.size(), "leaf_texture": leaf_texture_path, "max_fit_error": 0.0}
+	# 배치된 메시 합계이며 카메라 컬링 후 실제 GPU draw 수와는 구별한다.
+	var report := {"trees": [], "groups": 0, "triangles_by_variant": triangle_counts(library), "triangles": 0, "billboards": false, "source_count": renderer.game.village.town_trees.size(), "leaf_texture": leaf_texture_path, "max_fit_error": 0.0}
 	var source_trees: Array = renderer.game.village.town_trees
 	var factor: float = WorldSpace3D.GROUND_UNITS_PER_METER * WorldSpace3D.GROUND_PROJECTION_FACTOR
 	for variant in PATHS.size():
@@ -150,6 +171,7 @@ static func build(renderer: Node, leaf_texture_path: String = LEAVES) -> Node3D:
 		var mesh := library[variant]["mesh"] as Mesh
 		if mesh == null:
 			continue
+		report["triangles"] += int(library[variant]["triangles"]) * selected.size()
 		var points: PackedVector3Array = library[variant]["points"]
 		var multi := MultiMesh.new()
 		multi.transform_format = MultiMesh.TRANSFORM_3D

@@ -59,7 +59,7 @@ static func build(renderer: Node, parent: Node3D, world: Node2D) -> Node3D:
 	var selected := sources(world, renderer.game.village.town_trees)
 	var factor: float = WorldSpace3D.GROUND_UNITS_PER_METER * WorldSpace3D.GROUND_PROJECTION_FACTOR
 	var buckets := {}
-	var report := {"trees": [], "owned_source_ids": {}, "source_count": selected.size(), "groups": 0, "chunks": 0, "chunk_metres": CHUNK_METRES, "triangles_per_tree": 4358, "billboards": false, "max_fit_error": 0.0, "recipe": RECIPE}
+	var report := {"trees": [], "owned_source_ids": {}, "source_count": selected.size(), "groups": 0, "chunks": 0, "chunk_metres": CHUNK_METRES, "triangles_by_variant": TreeGeometry3D.triangle_counts(library), "triangles": 0, "billboards": false, "max_fit_error": 0.0, "recipe": RECIPE}
 	var record := {"recipe": RECIPE, "chunk_metres": CHUNK_METRES, "placements": []}
 	for tree: IsoSprite in selected:
 		# Partial/unknown future source definitions retain their authored card.
@@ -94,6 +94,7 @@ static func build(renderer: Node, parent: Node3D, world: Node2D) -> Node3D:
 		var radius := _collision_radius(tree, renderer.game.village.circles)
 		var entry := {"source": weakref(tree), "key": key, "variant": variant, "yaw": yaw, "position": position, "transform": Transform3D(basis, position), "target_width": width, "target_top": top, "projected_bounds": crown, "fit_error": fit_error, "collision_radius_pixels": radius, "collision_radius_metres": SpatialWorld3D.radius_metres(radius) if radius >= 0.0 else -1.0, "tint": tree.modulate_color * tree.modulate * tree.self_modulate}
 		buckets[bucket_key]["entries"].append(entry)
+		report["triangles"] += int(library[variant]["triangles"])
 		report["max_fit_error"] = maxf(float(report["max_fit_error"]), fit_error)
 		# A JSON-safe complete placement audit, including the full source sizing recipe.
 		record["placements"].append({"key": key, "source_frame": frame.duplicate(), "source_foot": foot.duplicate(), "source_k": tree.k, "source_flip": tree.flip, "crown_ratio": TreeGeometry3D.crown_ratio(variant), "source_position": [point.x, point.y], "variant": variant, "mesh": TreeGeometry3D.PATHS[variant], "yaw": yaw, "position": _v3(position), "basis": _basis_record(basis), "width": width, "top": top, "collision_radius_pixels": radius})
