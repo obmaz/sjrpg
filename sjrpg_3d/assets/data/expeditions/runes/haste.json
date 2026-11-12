@@ -1,0 +1,25 @@
+{
+  "id": "haste",
+  "name": "순환의 룬",
+  "desc": "재사용 시간 25% 감소. 소모 20% 증가.",
+  "types": [
+    "melee",
+    "proj",
+    "cone",
+    "spin",
+    "nova",
+    "beam",
+    "chain",
+    "zone",
+    "leap",
+    "blink",
+    "buff",
+    "summon",
+    "orb",
+    "shadow"
+  ],
+  "modifiers": {
+    "cooldown": 0.75,
+    "cost": 1.2
+  }
+}

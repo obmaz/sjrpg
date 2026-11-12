@@ -153,6 +153,7 @@ static func markers(game: Node) -> Array[Dictionary]:
 		return markers
 	for definition in Quests.DEFS:
 		var id: String = definition["id"]
+		if not ExpeditionState.quest_allowed(id): continue
 		var phase := Quests.phase(id)
 		if phase == "completed":
 			continue
@@ -197,13 +198,15 @@ static func markers(game: Node) -> Array[Dictionary]:
 			if not is_instance_valid(stone) or stone.is_queued_for_deletion():
 				continue
 			var ready: bool = game.encounters.can_summon(id)
+			var required: bool = ExpeditionState.phase() == "seals" and ExpeditionState.chapter()["seals"].has(id)
+			var cleared: bool = GameState.expedition.get("seals", []).has(id)
 			markers.append(
 				_marker(
 					"stone:" + id,
 					stone.position,
-					"재소환 비석",
-					Color("d6b38a") if ready else Color("9b8b7b"),
-					"소환 가능" if ready else "현재 소환할 수 없습니다"
+					("되찾은 봉인" if cleared else "숲의 봉인") if required else "재소환 비석",
+					Color("ffe197") if required else Color("d6b38a") if ready else Color("9b8b7b"),
+					("봉인 회복 완료" if cleared else "비석을 공격해 소환한 적을 모두 처치하세요") if required else "소환 가능" if ready else "현재 소환할 수 없습니다"
 				)
 			)
 	markers.append(
@@ -215,12 +218,20 @@ static func markers(game: Node) -> Array[Dictionary]:
 			"흙길을 따라 골짜기 아래 입구로"
 		)
 	)
-	if Quests.all_done() and not GameState.boss_defeated:
+	if (ExpeditionState.phase() == "boss" if ExpeditionState.mode() else Quests.all_done()) and not GameState.boss_defeated:
 		var boss: Enemy = game.quest_runtime._boss if game.quest_runtime != null else null
 		var at: Vector2 = (
 			boss.position if is_instance_valid(boss) and not boss.dead else game.village.boss_point
 		)
 		markers.append(_marker("boss", at, "파수꾼", Color("ff9e65"), "숲의 파수꾼 도전"))
+	if ExpeditionState.mode() and ExpeditionState.phase() in ["lobby", "debrief", "return"]:
+		var name := "촌장" if ExpeditionState.phase() == "return" else "보급원 미라"
+		var actor := _npc(game, name)
+		if actor != null: markers.append(_marker("quest:contract", actor.position, "원정 보고" if name == "촌장" else "원정 계약", Color("ffe197"), ExpeditionState.objective()))
+	if ExpeditionState.phase() == "optional" and GameState.expedition.get("branch") == "elite" and game.expedition != null and game.encounters != null and game.encounters.stones.has("deep_east"):
+		var actor: Enemy = game.expedition._elite
+		var at: Vector2 = actor.position if is_instance_valid(actor) and not actor.dead else game.encounters.stones["deep_east"].position
+		markers.append(_marker("quest:elite", at, "정예 파수꾼", Color("ff9e65"), "선택 도전 · 쓰러뜨리면 성장 선택 1회"))
 	return markers
 
 

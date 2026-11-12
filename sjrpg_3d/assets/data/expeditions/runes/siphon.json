@@ -1,0 +1,13 @@
+{
+  "id": "siphon",
+  "name": "흡수의 룬",
+  "desc": "직접 명중하면 자원 4 회복. 한 번의 시전에서 한 번만 회복합니다.",
+  "types": [
+    "melee",
+    "proj",
+    "cone"
+  ],
+  "modifiers": {
+    "resource_on_hit": 4
+  }
+}

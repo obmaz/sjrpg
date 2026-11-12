@@ -3,9 +3,25 @@ extends PanelFrame
 ## 퀘스트 일지 (원본 game_panels 'journal'): 지금 할 일 · 의뢰 진행 · 숲길 정화 · 첫 파수꾼 · 발견한 상자.
 
 
+var game: Node
+
+
+func setup(value: Node) -> JournalPanel:
+	game = value
+	return self
+
+
 func _ready() -> void:
 	super._ready()
 	set_header("제1장 · 숲과 초원", "퀘스트 일지")
+	if game != null:
+		var contract := UiKit.button("원정 · 계약 / 진행 / 보상", 23)
+		contract.custom_minimum_size.y = 76
+		contract.pressed.connect(func(): closed.emit(); game.hud.open_expedition.call_deferred())
+		body.add_child(contract)
+	if ExpeditionState.mode():
+		body.add_child(wrap_label(ExpeditionState.objective(), 22, UiKit.GOLD))
+		return
 	body.add_child(PanelFrame.section("지금 할 일"))
 	body.add_child(PanelFrame.wrap_label(Quests.main_objective(), 21, Color(0.95, 0.93, 0.85)))
 	for d in Quests.DEFS:

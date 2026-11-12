@@ -1,0 +1,23 @@
+{
+  "id": "emberFan",
+  "class": "mage",
+  "name": "불씨의 부채",
+  "desc": "세 갈래의 불씨를 앞쪽으로 흩뿌립니다.",
+  "icon_skill": "firebolt",
+  "cost": 6,
+  "cooldown": 1.5,
+  "unlock_renown": 0,
+  "behavior": {
+    "type": "proj",
+    "count": 3,
+    "spread": 30,
+    "speed": 1080,
+    "mult": 0.65,
+    "color": [
+      1,
+      0.55,
+      0.2
+    ],
+    "element": "fire"
+  }
+}

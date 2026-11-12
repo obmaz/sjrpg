@@ -98,16 +98,20 @@ const DEFS := {
 }
 
 
+static func base_def(id: String) -> Dictionary:
+	return DEFS[id] if DEFS.has(id) else AbilityLibrary.definition(id)
+
+
 static func get_def(id: String) -> Dictionary:
-	return DEFS.get(id, {})
+	return RunBuild.definition(id, base_def(id))
 
 
 ## One reuse duration for casting, button countdowns and the skill detail panel.
 static func cooldown(skill: Dictionary) -> float:
 	var native := maxf(0.0, float(skill.get("cooldown", 0.0)))
 	if native > 0.0 or (skill.get("passive", false) and not skill.get("basic", false)):
-		return GameTempo.duration(native)
-	return GameTempo.duration(float(SPELL_COOLDOWNS.get(str(skill.get("id", "")), 0.0)))
+		return RunBuild.cooldown(str(skill.get("id", "")), GameTempo.duration(native))
+	return RunBuild.cooldown(str(skill.get("id", "")), GameTempo.duration(float(SPELL_COOLDOWNS.get(str(skill.get("id", "")), 0.0))))
 
 
 static func scaled(base: float, growth: float, rank: int) -> float:
@@ -124,7 +128,7 @@ static func cost(skill: Dictionary, rank: int) -> float:
 		c = maxf(float(d["min_cost"]), c - float(d["cost_drop"]) * (rank - 1))
 	if d.has("cost_scale"):
 		c *= float(d["cost_scale"])
-	return c
+	return RunBuild.cost(str(skill["id"]), c)
 
 
 ## Short human-readable effect line for the tree's detail panel.

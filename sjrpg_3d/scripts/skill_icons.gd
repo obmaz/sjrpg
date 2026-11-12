@@ -12,6 +12,7 @@ const COMBAT := preload("res://assets/art/hud/icons.webp")
 
 ## Return normalized texture bounds so square panels and round HUD buttons use the same illustration.
 static func source(id: String) -> Dictionary:
+	id = AbilityLibrary.icon_id(id)
 	var cls := GameState.hero_class
 	var icons: Dictionary = GameState.skill_data()[cls]["icons"]
 	if icons.has(id):

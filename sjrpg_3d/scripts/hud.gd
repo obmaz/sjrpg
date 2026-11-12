@@ -257,7 +257,15 @@ func apply_panel_changes() -> void:
 
 
 func open_skill_tree() -> void:
-	_open(SkillTreePanel.new())
+	if ExpeditionState.active() and GameState.available_skill_choices() > 0:
+		open_expedition()
+	else:
+		_open(RunBuildPanel.new() if ExpeditionState.active() else SkillTreePanel.new())
+
+
+
+func open_expedition() -> void:
+	_open(ExpeditionPanel.new().setup(game))
 
 
 func pause_for_background() -> void:
@@ -308,7 +316,7 @@ func open_memory(i: int) -> void:
 
 
 func open_journal() -> void:
-	_open(JournalPanel.new())
+	_open(JournalPanel.new().setup(game))
 
 
 func open_smith() -> void:

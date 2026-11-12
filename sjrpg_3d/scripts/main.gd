@@ -23,6 +23,8 @@ func _ready() -> void:
 	get_tree().root.size_changed.connect(_fit_orientation)
 	_fit_orientation()
 	show_title()
+	if OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('expedition_review')", true)) == "1":
+		add_child(preload("res://scripts/expeditions/expedition_review.gd").new().setup(self))
 	if OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('gamepad_review')", true)) == "1":
 		add_child(preload("res://scripts/gamepad_review.gd").new().setup(self))
 	if OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('scale_review')", true)) == "1":
@@ -78,6 +80,7 @@ func show_class_select() -> void:
 
 func start_game() -> void:
 	var game := NativeAdventure.new()
+	game.reload_requested.connect(_reload_adventure)
 	game.quit_requested.connect(show_title)
 	game.restart_requested.connect(func():
 		show_class_select())
@@ -114,7 +117,7 @@ func _begin_new_game(cls: String) -> void:
 	if not _entry_valid(token):
 		return
 	_entry_loading.note_work()
-	if not GameState.create_slot(slot, cls):
+	if not GameState.create_slot(slot, cls, true):
 		_entry_failed(token, slot, "새 모험을 저장하지 못했습니다. 빈 슬롯인지 확인하고 다시 시도해 주세요.")
 		return
 	await _build_entry_world(token, slot)
@@ -285,3 +288,8 @@ func handle_system_back() -> void:
 			if hud.panel_open():
 				hud.close_panel()
 			hud.open_settings()
+
+
+func _reload_adventure() -> void:
+	var token := _open_entry_loading("continue", GameState.active_slot, GameState.hero_class)
+	await _build_entry_world(token, GameState.active_slot)

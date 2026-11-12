@@ -22,6 +22,14 @@
 
 배우 연결 문자는 실제 발을 읽고, 자유 배치 문자는 `Effect.anchor_text_ground()`의 생성 지면과 화면 여백을 분리합니다. 상자·시체·보상에 별도 물리 배우를 만들거나 피해 숫자의 표시 대기에 넣지 않습니다.
 
+## 원정 진행과 기술 확장
+
+`GameState.expedition`은 현재 원정, `expedition_meta`는 명성과 챕터 완료 기록입니다. 기존 저장 슬롯 안에 보관하며 필드가 없는 예전 저장은 기존 진행을 유지합니다. `scripts/expeditions/`에 상태 검증, 저장용 캐릭터 스냅샷, 선택/룬, 월드 어댑터, UI를 분리했습니다. 선택과 결산 저장에 실패하면 기존 상태로 되돌리고 월드를 교체하지 않습니다.
+
+챕터/계약과 룬은 `assets/data/expeditions/`, 새 기술은 `assets/abilities/<id>/ability.json`이 소유합니다. `SkillDefs.base_def()`가 기본 행동을, `RunBuild.definition()`이 원정 룬을 적용한 행동을 반환합니다. 투사체의 관통과 갈래는 실제 `Effect`에 전달하며, 흡수는 시전 식별자로 한 시전당 한 번만 지급합니다. 월드 재생성은 메뉴 재시작과 구별되는 `reload_requested`로 기존 로딩 화면을 거칩니다.
+
+후속 챕터의 데이터/월드 어댑터 경계, 영속 수명, 검수 방법은 [원정 구조](expeditions.md)를 따릅니다.
+
 ## 지도
 
 `MapWorldState`는 실제 건축 루트·성문 변환과 공유 지형 설계를 프레임당 한 번 확인하고 변경 시에만 두 지도용 도형과 메시를 갱신합니다. `MapGeometry`는 살아 있는 시설·진입 노드와 활성 동굴의 미개봉 상자에서 표식을 만들고, 동굴 귀환문은 완료 판정과 같은 `DungeonRuntime.return_portal()`을 읽습니다. `WorldMapCanvas`와 `MapPlaceRow`는 같은 번호/좌표를 표시합니다. 행은 터치 입력을 부모 스크롤에 전달하는 리스트 컨트롤이며, `GamepadNavigation`은 `gamepad_target`과 `pressed` 신호를 가진 비버튼 컨트롤도 탐색합니다. 상세 계약과 검사는 [지도 구조](world-map.md)를 따릅니다.

@@ -1,0 +1,12 @@
+{
+  "id": "pierce",
+  "name": "관통의 룬",
+  "desc": "투사체가 적을 관통합니다. 피해 20% 감소.",
+  "types": [
+    "proj"
+  ],
+  "modifiers": {
+    "pierce": true,
+    "damage": 0.8
+  }
+}

@@ -34,6 +34,7 @@ const PROFILES := {
 	# 회피 시작음과 구분하는 짧고 낮은 음량의 성공 악센트. 기존 음성 풀을 재사용한다.
 	"evade_confirm": [620.0, 920.0, 0.075, 3000.0, 0.025, 0.018, "sine"],
 	"warcry": [135.0, 58.0, 0.36, 320.0, 0.10, 0.06, "sine"],
+	"town_bell": [440.0, 438.0, 0.9, 0.0, 0.0, 0.035, "triangle"],
 	"levelup": [660.0, 1320.0, 0.42, 0.0, 0.0, 0.035, "sine"],
 	"loot": [880.0, 1320.0, 0.18, 0.0, 0.0, 0.025, "sine"],
 	"warp": [440.0, 1040.0, 0.32, 1200.0, 0.02, 0.04, "sine"],
@@ -289,7 +290,7 @@ static func playback_volume_db(name: String) -> float:
 static func voice_priority(name: String) -> int:
 	if name == "hurt":
 		return 100
-	if name in ["levelup", "warp"]:
+	if name in ["levelup", "warp", "town_bell"]:
 		return 90
 	if name.begins_with("warn_") or name in ["loot", "kill", "evade_confirm"]:
 		return 80

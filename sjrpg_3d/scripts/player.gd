@@ -5,6 +5,8 @@ extends Node2D
 signal died
 signal open_skills_requested
 
+var run_contact_serials: Dictionary = {}
+
 const RADIUS := 18.0
 # 주인공 보행만 기존 템포보다20% 빠르게 한다.
 const MOVE_SPEED_MULTIPLIER := 1.2
@@ -147,7 +149,7 @@ func damage_for(id: String, mult: float) -> float:
 		power *= 1.0 + passive("throw")
 	elif not is_mage:
 		power *= 1.0 + passive("weapon")
-	return power * randf_range(0.9, 1.1)
+	return power * randf_range(0.9, 1.1) * float(RunBuild.modifiers(id)["damage"])
 
 
 # ───────────────────────── loop ─────────────────────────
@@ -618,7 +620,7 @@ func _aim(range_limit: float) -> Enemy:
 func aim_range(id: String, definition: Dictionary) -> float:
 	match str(definition.get("type", "")):
 		"melee":
-			return float(weapon_melee()["range"]) + 60.0 if id == "cleave" else 170.0
+			return float(weapon_melee()["range"]) * float(RunBuild.modifiers(id)["reach"]) + 60.0 if id in ["cleave", "sorceressAttack"] else float(definition.get("range", 110)) + 60.0
 		"proj", "orb":
 			return 560.0
 		"beam":
@@ -771,7 +773,10 @@ func _prepare(id: String, d: Dictionary, rank: int) -> Callable:
 				)
 				game.break_chests_in_arc(position, facing, d["range"], deg_to_rad(d["arc"]), self)
 				for e in hits:
+					var before: float = e.hp
 					e.take_damage(damage_for(id, power), self)
+					if e.hp < before:
+						RunBuild.contact(self, e, id, _action_serial)
 				game.spawn_cone(position + Vector2(0, -30), facing, d["range"], d["color"])
 		"nova":
 			return func(): _nova(id, d, rank, power)
@@ -811,7 +816,7 @@ func _melee(id: String, d: Dictionary, rank: int, power: float) -> void:
 	if id in ["cleave", "sorceressAttack"]:
 		var wm := weapon_melee()
 		d = d.duplicate()
-		d["range"] = wm["range"]
+		d["range"] = float(wm["range"]) * float(RunBuild.modifiers(id)["reach"])
 		d["arc"] = rad_to_deg(wm["arc"])
 	var hits_total := 0
 	var swings := int(d.get("hits", 1))
@@ -819,7 +824,10 @@ func _melee(id: String, d: Dictionary, rank: int, power: float) -> void:
 	for swing in swings:
 		var hits: Array = game.enemies_in_arc(position, facing, d["range"], deg_to_rad(d["arc"]), true)
 		for e in hits:
+			var before: float = e.hp
 			e.take_damage(damage_for(id, power) * (1.0 + enchant), self)
+			if e.hp < before:
+				RunBuild.contact(self, e, id, _action_serial)
 			if d.has("knock"):
 				e.knock(position, d["knock"])
 			if d.has("stun"):
@@ -988,6 +996,7 @@ func _projectiles(id: String, d: Dictionary, rank: int, power: float) -> void:
 			"damage": damage_for(id, power), "color": d["color"], "explode": d.get("explode", 0.0),
 			"slow": d.get("slow", 0.0), "freeze": d.get("freeze", 0.0) + d.get("freeze_growth", 0.0) * (rank - 1),
 			"knock": d.get("knock", 0.0), "wiggle": d.get("wiggle", false), "throw": d.get("throw", false),
+			"pierce": d.get("pierce", false), "run_skill_id": id, "run_action_serial": _action_serial,
 			"visual": "bolt" if id in ["iceBolt", "iceBlast", "glacialSpike", "chargedBolt"] else "",
 		}, self)
 
@@ -1005,7 +1014,9 @@ func _nova(id: String, d: Dictionary, rank: int, power: float) -> void:
 		if d.has("mult"):
 			e.take_damage(damage_for(id, power), self)
 		if d.has("pct"):
-			e.take_damage(maxf(1.0, e.hp * d["pct"]), self)
+			e.take_damage(maxf(1.0, e.hp * d["pct"] * float(RunBuild.modifiers(id)["damage"])), self)
+		if d.has("knock"):
+			e.knock(position, d["knock"])
 		if d.has("slow"):
 			e.slow(d["slow"])
 		if d.has("stun"):

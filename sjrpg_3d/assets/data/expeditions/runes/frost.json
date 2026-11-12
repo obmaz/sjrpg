@@ -1,0 +1,13 @@
+{
+  "id": "frost",
+  "name": "서리의 룬",
+  "desc": "직접 명중한 적을 0.8초 둔화시킵니다.",
+  "types": [
+    "melee",
+    "proj",
+    "cone"
+  ],
+  "modifiers": {
+    "slow": 0.8
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "id": "steelWave",
+  "class": "warrior",
+  "name": "강철의 파도",
+  "desc": "검 끝에서 짧고 넓은 검기를 전방으로 날립니다.",
+  "icon_skill": "doubleThrow",
+  "cost": 6,
+  "cooldown": 1.2,
+  "unlock_renown": 0,
+  "behavior": {
+    "type": "proj",
+    "count": 1,
+    "spread": 0,
+    "speed": 900,
+    "mult": 1.2,
+    "pierce": true,
+    "throw": true,
+    "color": [
+      1,
+      0.92,
+      0.7
+    ]
+  }
+}

@@ -201,6 +201,8 @@ func complete() -> bool:
 		return false
 	var reward := 100 + entry_level * 20
 	GameState.gold += reward
+	if game.expedition != null:
+		game.expedition.optional_completed("cave")
 	leave("동굴 탐험 완료 · 추가 보상 %d G" % reward)
 	return true
 

@@ -25,6 +25,11 @@ func _rebuild() -> void:
 	for c in trailing.get_children():
 		c.queue_free()
 	set_header(npc)
+	if (ExpeditionState.mode() and npc in ["보급원 미라", "촌장"]) or (not ExpeditionState.mode() and npc == "촌장"):
+		_say("숲의 종이 다시 울리니 주민들이 안심하고 있네. 보급소도 복구되어 다음 원정에 회복약을 더 챙겨 준다네." if not GameState.expedition_meta.get("clears", {}).is_empty() else ExpeditionState.objective())
+		_action("원정 계약과 진행", func():
+			closed.emit()
+			game.hud.open_expedition.call_deferred())
 	match npc:
 		"수녀 엘린":
 			_quest("roots", true)
@@ -68,6 +73,9 @@ func _action(text: String, on_press: Callable, enabled := true) -> void:
 
 
 func _quest(id: String, same_giver: bool) -> void:
+	if not ExpeditionState.quest_allowed(id):
+		_say("이번 임무는 일지의 원정 화면에서 선택하세요.")
+		return
 	var d := Quests.def(id)
 	var s := Quests.state(id)
 	body.add_child(PanelFrame.section(d["title"]))
@@ -101,6 +109,8 @@ func _quest(id: String, same_giver: bool) -> void:
 
 
 func _mira() -> void:
+	if not ExpeditionState.quest_allowed("moon"):
+		return
 	var d := Quests.def("moon")
 	var s := Quests.state("moon")
 	body.add_child(PanelFrame.section(d["title"]))
@@ -122,6 +132,9 @@ func _mira() -> void:
 
 
 func _noah() -> void:
+	if not ExpeditionState.quest_allowed("moon"):
+		_say("숲길의 비석을 살피게. 봉인 너머에 파수꾼이 있네.")
+		return
 	var d := Quests.def("moon")
 	var s := Quests.state("moon")
 	body.add_child(PanelFrame.section(d["title"]))
@@ -143,6 +156,8 @@ func _noah() -> void:
 
 
 func _elder() -> void:
+	if ExpeditionState.mode():
+		return
 	body.add_child(PanelFrame.section("숲의 현자"))
 	_say("“석조 정원의 엘린은 봉인을 지키고, 마을 보급원 미라는 약초 배달을 기다리네. 동굴의 조사관 로웬도 도움이 필요하다네. 세 의뢰를 해결하면 강 건너 남쪽 숲 공터에서 파수꾼에게 도전할 수 있다네. 상자와 전리품을 모으고, 얻은 힘을 스스로 선택하게나. 전투를 벗어나 분수 곁에서 쉬면 생명이 회복된다네.”")
 	body.add_child(PanelFrame.section("지금 할 일"))

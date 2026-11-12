@@ -33,5 +33,5 @@ func _ready() -> void:
 	body.add_child(PanelFrame.section(m["title"]))
 	body.add_child(PanelFrame.wrap_label(m["story"], 22, Color(0.95, 0.93, 0.85)))
 	if GameState.memory_rewarded:
-		body.add_child(PanelFrame.wrap_label("세 기억을 모두 모았습니다 · 스킬 포인트 +1", 20, Color(1, 0.88, 0.5)))
+		body.add_child(PanelFrame.wrap_label("세 기억을 모두 모았습니다 · 지원 룬 선택 +1" if ExpeditionState.active() else "세 기억을 모두 모았습니다 · 스킬 포인트 +1", 20, Color(1, 0.88, 0.5)))
 	add_footer("닫기", func(): closed.emit(), true)

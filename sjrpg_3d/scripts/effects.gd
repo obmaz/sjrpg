@@ -527,7 +527,10 @@ func _area_targets(center: Vector2, reach: float) -> Array:
 
 
 func _apply(e: Enemy, amount: float) -> void:
+	var before := e.hp
 	e.take_damage(amount, self)
+	if e.hp < before and owner_node is Player:
+		RunBuild.contact(owner_node, e, str(params.get("run_skill_id", "")), int(params.get("run_action_serial", -1)))
 	if float(params.get("slow", 0.0)) > 0.0:
 		e.slow(params["slow"])
 	if float(params.get("freeze", 0.0)) > 0.0:

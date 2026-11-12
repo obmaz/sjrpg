@@ -1,0 +1,15 @@
+{
+  "id": "reach",
+  "name": "파문의 룬",
+  "desc": "근접·원형·부채꼴 공격 범위 35% 증가. 피해 15% 감소.",
+  "types": [
+    "melee",
+    "spin",
+    "nova",
+    "cone"
+  ],
+  "modifiers": {
+    "reach": 1.35,
+    "damage": 0.85
+  }
+}

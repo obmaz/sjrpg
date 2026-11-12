@@ -76,6 +76,8 @@ static func objective(id: String) -> String:
 
 ## Immediate defense/reporting comes first; otherwise follow active work before suggesting a new village delivery.
 static func next_quest() -> String:
+	if ExpeditionState.mode():
+		return ExpeditionState.current_mission()
 	var defense := state("sun")
 	if defense["phase"] == "ready" or (defense["phase"] == "accepted" and defense["started"]):
 		return "sun"
@@ -88,6 +90,8 @@ static func next_quest() -> String:
 
 ## 지금 할 일: begin near the village, but respect quests the player has already accepted.
 static func main_objective() -> String:
+	if ExpeditionState.mode():
+		return ExpeditionState.objective()
 	var id := next_quest()
 	if id != "":
 		return objective(id)
@@ -109,6 +113,16 @@ static func quest_progress(id: String) -> float:
 
 ## "!" over an NPC: something to accept, deliver or report there.
 static func marker_for(npc: String) -> bool:
+	if ExpeditionState.mode():
+		if ExpeditionState.phase() in ["lobby", "debrief"]:
+			return npc == "보급원 미라"
+		if ExpeditionState.phase() == "return":
+			return npc == "촌장"
+		if ExpeditionState.current_mission().is_empty():
+			return false
+		var current := def(ExpeditionState.current_mission())
+		if npc != current.get("giver", "") and npc != current.get("recipient", ""):
+			return false
 	match npc:
 		"수녀 엘린":
 			var p := phase("roots")

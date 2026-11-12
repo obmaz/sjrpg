@@ -3,6 +3,7 @@ extends Node2D
 
 signal quit_requested
 signal restart_requested
+signal reload_requested
 
 ## Field in ground units (original scale): the town perimeter is data-driven.
 const FIELD := ForestRegion.FIELD
@@ -33,6 +34,7 @@ var encounters: EncounterRuntime
 var music: MusicDirector
 var village: Village
 var town_gates: TownGateRuntime
+var expedition: ExpeditionRun
 var quest_runtime: QuestRuntime
 var exploration: Exploration
 var dungeon: DungeonRuntime
@@ -171,6 +173,8 @@ func _ready() -> void:
 	await ortho_preview._warp_fx.warm_up()
 	if is_queued_for_deletion():
 		return
+	expedition = ExpeditionRun.new().setup(self)
+	add_child(expedition)
 	native_ready = true
 	toast("미니맵에서 의뢰 위치를 확인하세요 · 마을의 미라가 기다립니다")
 	if OS.has_feature("web"):
@@ -237,6 +241,10 @@ var _encounter_audit := false
 
 
 func _debug_open_panel(which: String) -> void:
+	if which == "expedition" and not native_ready:
+		await get_tree().process_frame
+		_debug_open_panel.call_deferred(which)
+		return
 	# Debug rewards may have opened a memory; always show the requested capture panel.
 	if hud.panel_open():
 		hud.close_panel()
@@ -253,6 +261,8 @@ func _debug_open_panel(which: String) -> void:
 			hud.open_settings()
 		"journal":
 			hud.open_journal()
+		"expedition":
+			hud.open_expedition()
 		"elin":
 			hud.interact("수녀 엘린")
 		"mira":
@@ -1526,6 +1536,10 @@ func on_boss_defeated(boss: Enemy) -> void:
 		return
 	GameState.boss_defeated = true
 	GameState.boss_summoned = true
+	if ExpeditionState.active():
+		expedition.boss_defeated()
+		_boss_defeat_presentation(boss)
+		return
 	GameState.boss_heart_pending = true
 	if GameState.claim_boss_heart():
 		toast("파수꾼의 심장을 얻었습니다!")
@@ -1541,6 +1555,8 @@ func on_enemy_killed(enemy: Enemy) -> void:
 	enemies.erase(enemy)
 	if encounters != null:
 		encounters.on_killed(enemy)
+	if expedition != null:
+		expedition.enemy_killed(enemy)
 	Prefs.pulse("kill")
 	GameState.kills += 1
 	if dungeon.active:
@@ -1561,7 +1577,7 @@ func on_enemy_killed(enemy: Enemy) -> void:
 	grant_xp(enemy.xp_reward, enemy.position)
 
 
-func grant_xp(amount: int, source_point := Vector2.INF) -> void:
+func grant_xp(amount: int, source_point := Vector2.INF, save_progress := true) -> void:
 	var gained := GameState.add_xp(amount)
 	if amount > 0:
 		hud.reward_trail.offer("xp", source_point if source_point.is_finite() else player.position)
@@ -1571,7 +1587,8 @@ func grant_xp(amount: int, source_point := Vector2.INF) -> void:
 		SoundFx.play("levelup")
 		SoundFx.play("loot")
 		hud.show_level_up(GameState.level)
-		GameState.save_game()
+		if save_progress:
+			GameState.save_game()
 
 
 ## One bounded record owns the picture and any corpse-skill target. No actor/collision survives death.
@@ -1674,6 +1691,12 @@ func _on_player_died() -> void:
 	await get_tree().create_timer(2.5, false).timeout
 	if not player.dead:
 		hud.hide_death()
+		return
+	if ExpeditionState.active():
+		if not expedition.settle(false):
+			hud.hide_death()
+			player.revive(player.position)
+			toast(expedition.error)
 		return
 	if dungeon.active:
 		dungeon.leave("쓰러져 동굴 입구로 돌아왔습니다")

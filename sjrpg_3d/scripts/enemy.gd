@@ -89,6 +89,8 @@ func setup(g: Node, k: String, level: int) -> void:
 	kind = k
 	var def: Dictionary = KINDS[k]
 	display_name = def["name"]
+	var contract := ExpeditionContent.contract(str(GameState.expedition.get("chapter", "")), str(GameState.expedition.get("contract", ""))) if ExpeditionState.active() else {}
+	level += int(contract.get("enemy_level", 0))
 	var scale_factor := 1.0 + (level - 1) * 0.22
 	max_hp = def["hp"] * 0.8 * scale_factor
 	hp = max_hp

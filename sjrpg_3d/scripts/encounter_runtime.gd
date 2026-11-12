@@ -252,6 +252,8 @@ func _record_wave(id: String, initial: bool) -> void:
 			state["recharge"] = 0.0
 		state["charges"] = int(state["charges"]) - 1
 	capture()
+	if not initial and game.expedition != null:
+		game.expedition.wave_started(id)
 
 
 func _spawn_position(desired: Vector2, fallback: Vector2, attempt: int, radius_pixels := Enemy.RADIUS) -> Vector2:
@@ -302,6 +304,8 @@ func on_killed(enemy: Enemy) -> void:
 		return
 	_cleared_frame[enemy.encounter_id] = Engine.get_process_frames()
 	capture()
+	if game.expedition != null and states[enemy.encounter_id]["members"].is_empty():
+		game.expedition.wave_cleared(enemy.encounter_id)
 
 
 func capture() -> void:

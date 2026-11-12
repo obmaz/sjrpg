@@ -312,7 +312,7 @@ func _refresh_drawing() -> void:
 		if held_names.has(name) or float(_feedback.get(name, 0.0)) > 0.0:
 			pressed.append(name)
 	var base_state: Array = [_unit, _buttons, _near_name, pressed,
-		GameState.potions, GameState.mana_potions, GameState.skill_points,
+		GameState.potions, GameState.mana_potions, GameState.available_skill_choices(),
 		Gamepad.using_gamepad, css_scale()]
 	var overlay_state: Array = [_unit, _buttons, _success_feedback.duplicate(),
 		_denied_feedback.duplicate(), Prefs.reduce_motion]
@@ -539,7 +539,7 @@ static func skill_points_geometry(center: Vector2, radius: float, points: int, s
 
 
 func _draw_skill_points(center: Vector2, radius: float, hit_radius: float) -> void:
-	var geometry := skill_points_geometry(center, radius, GameState.skill_points, css_scale(), hit_radius)
+	var geometry := skill_points_geometry(center, radius, GameState.available_skill_choices(), css_scale(), hit_radius)
 	var rect: Rect2 = geometry["rect"]
 	var skin := StyleBoxFlat.new()
 	skin.bg_color = Color(UiToneArt.CHARCOAL, 0.96)
@@ -617,7 +617,7 @@ func _draw() -> void:
 			_draw_interaction(c, b["half_size"], pressed)
 		elif name.begins_with("bar_"):
 			_draw_menu(name, c, r, pressed)
-			if name == "bar_skills" and GameState.skill_points > 0:
+			if name == "bar_skills" and GameState.available_skill_choices() > 0:
 				_draw_skill_points(c, r, float(b["radius"]))
 
 

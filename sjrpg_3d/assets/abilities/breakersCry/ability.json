@@ -1,0 +1,22 @@
+{
+  "id": "breakersCry",
+  "class": "warrior",
+  "name": "분쇄자의 외침",
+  "desc": "주변의 적을 밀쳐 내는 강한 함성을 터뜨립니다.",
+  "icon_skill": "warcry",
+  "cost": 16,
+  "cooldown": 5,
+  "unlock_renown": 6,
+  "behavior": {
+    "type": "nova",
+    "radius": 210,
+    "mult": 1.4,
+    "growth": 0,
+    "knock": 200,
+    "color": [
+      1,
+      0.78,
+      0.45
+    ]
+  }
+}

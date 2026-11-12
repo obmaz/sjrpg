@@ -1,0 +1,13 @@
+{
+  "id": "blast",
+  "name": "폭발의 룬",
+  "desc": "투사체 명중 시 작은 폭발이 일어납니다. 피해 20% 감소, 소모 15% 증가.",
+  "types": [
+    "proj"
+  ],
+  "modifiers": {
+    "explode_min": 75,
+    "damage": 0.8,
+    "cost": 1.15
+  }
+}

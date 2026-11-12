@@ -1,0 +1,45 @@
+{
+  "id": "forest_1",
+  "world": "forest",
+  "title": "울리지 않는 숲의 종",
+  "goal": "숲의 두 봉인을 되찾고 파수꾼을 잠재운 뒤 마을의 종을 울리세요.",
+  "missions": [
+    "moon",
+    "roots",
+    "sun"
+  ],
+  "required_missions": 2,
+  "seals": [
+    "deep_west",
+    "deep_east"
+  ],
+  "boss_level": 8,
+  "return_npc": "촌장",
+  "contracts": [
+    {
+      "id": "hearth",
+      "title": "불씨를 지키는 계약",
+      "desc": "회복 물약 2개를 더 챙겨 출발합니다. 숲의 주민을 돕고 종의 불씨를 되찾으세요.",
+      "potions": 2,
+      "enemy_level": 0,
+      "renown": 6
+    },
+    {
+      "id": "hunt",
+      "title": "파수꾼 사냥 계약",
+      "desc": "적이 1레벨 더 강합니다. 성공하면 더 많은 명성과 선택지를 얻습니다.",
+      "potions": 0,
+      "enemy_level": 1,
+      "renown": 10
+    },
+    {
+      "id": "lore",
+      "title": "잊힌 룬의 계약",
+      "desc": "시작 스킬을 고른 뒤 지원 룬 선택을 한 번 더 받습니다.",
+      "potions": 0,
+      "enemy_level": 0,
+      "renown": 7,
+      "extra_draft": true
+    }
+  ]
+}

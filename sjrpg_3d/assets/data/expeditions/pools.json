@@ -1,0 +1,44 @@
+{
+  "warrior": {
+    "starters": [
+      "bash",
+      "doubleSwing",
+      "doubleThrow"
+    ],
+    "skills": [
+      "bash",
+      "doubleSwing",
+      "doubleThrow",
+      "stun",
+      "leapAttack",
+      "whirlwind",
+      "warcry",
+      "shout",
+      "battleCry",
+      "frenzy",
+      "shadowAssault",
+      "battleSprint"
+    ]
+  },
+  "mage": {
+    "starters": [
+      "firebolt",
+      "iceBolt",
+      "chargedBolt"
+    ],
+    "skills": [
+      "firebolt",
+      "iceBolt",
+      "chargedBolt",
+      "fireball",
+      "chainLightning",
+      "frostNova",
+      "nova",
+      "lightning",
+      "blaze",
+      "meteor",
+      "energyShield",
+      "hydra"
+    ]
+  }
+}

@@ -29,7 +29,7 @@ func _process(delta: float) -> void:
 # ───────── 대화에서 부르는 행동 ─────────
 
 func accept(id: String) -> void:
-	if Quests.phase(id) != "offered":
+	if not ExpeditionState.quest_allowed(id) or Quests.phase(id) != "offered":
 		return
 	var s := Quests.state(id)
 	s["phase"] = "accepted"
@@ -91,7 +91,10 @@ func report(id: String) -> void:
 	GameState.gold += int(d["gold"])
 	game.float_text(game.player.position + Vector2(0, -110), "+%d G  +%d XP" % [d["gold"], exp], Color(1, 0.9, 0.5)).anchor_text_ground(game.player.position)
 	game.toast("의뢰 완료 · %s" % d["title"])
-	game.grant_xp(exp)
+	# 의뢰 보상과 원정 단계가 하나의 문서에 함께 저장되어야 중간 복구가 막히지 않는다.
+	game.grant_xp(exp, Vector2.INF, false)
+	if game.expedition != null:
+		game.expedition.mission_completed(id)
 	SoundFx.play("loot")
 	Prefs.pulse("loot")
 	GameState.save_game()
@@ -235,6 +238,8 @@ func on_enemy_killed(enemy: Enemy) -> void:
 
 
 func boss_ready() -> bool:
+	if ExpeditionState.mode():
+		return ExpeditionState.phase() == "boss" and not GameState.boss_defeated and not GameState.boss_summoned
 	return Quests.all_done() and not GameState.boss_defeated and not GameState.boss_summoned
 
 
@@ -244,7 +249,7 @@ func start_boss() -> bool:
 	if game.spatial_world.blocked(game.village.boss_point, Enemy.radius_for("golem"), true):
 		return false
 	_boss = Enemy.new()
-	_boss.setup(game, "golem", 8)
+	_boss.setup(game, "golem", int(ExpeditionState.chapter()["boss_level"]) if ExpeditionState.active() else 8)
 	_boss.make_boss()
 	_boss.position = game.village.boss_point
 	game.world.add_child(_boss)

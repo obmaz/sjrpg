@@ -1,5 +1,7 @@
 # 자연의 수호자
 
+3D판의 계약 원정·3지선다 기술·지원 룬 진행은 [3D 사용자 안내](sjrpg_3d/README.md#계약-원정과-스킬-조합)와 [원정 구조](sjrpg_3d/docs/expeditions.md)를 참고하세요.
+
 Godot **4.7.2**로 만드는 120° 직교 쿼터뷰 액션 RPG입니다.
 
 [버전 선택](https://obmaz.github.io/sjrpg/) · [2D 모험](https://obmaz.github.io/sjrpg/2d/) · [3D 모험](https://obmaz.github.io/sjrpg/3d/)

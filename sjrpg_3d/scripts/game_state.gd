@@ -53,6 +53,9 @@ const CLASSES := {
 	},
 }
 
+var expedition: Dictionary = {}
+var expedition_meta: Dictionary = {}
+
 var hero_class := "warrior"
 var level := 1
 var xp := 0
@@ -110,11 +113,20 @@ static func skill_data() -> Dictionary:
 
 
 func skills() -> Array:
-	return skill_data()[hero_class]["skills"]
+	var result: Array = skill_data()[hero_class]["skills"].duplicate()
+	for id: String in AbilityLibrary.all():
+		if AbilityLibrary.all()[id]["class"] == hero_class:
+			result.append(AbilityLibrary.metadata(id))
+	return result
 
 
 func skill(id: String) -> Dictionary:
-	return skill_data()[hero_class]["by_id"].get(id, {})
+	var custom := AbilityLibrary.metadata(id)
+	return skill_data()[hero_class]["by_id"].get(id, custom if custom.get("class", "") == hero_class else {})
+
+
+func available_skill_choices() -> int:
+	return expedition.get("drafts", []).size() if ExpeditionState.active() else skill_points
 
 
 func rank(id: String) -> int:
@@ -169,6 +181,8 @@ func is_assignable(s: Dictionary) -> bool:
 
 
 func learn(id: String) -> bool:
+	if ExpeditionState.active():
+		return false
 	var s := skill(id)
 	if s.is_empty() or learn_block_reason(s) != "":
 		return false
@@ -194,6 +208,7 @@ func invested_points() -> int:
 
 
 func reset_skills() -> void:
+	if ExpeditionState.active(): return
 	skill_points += invested_points()
 	_starter_skills()
 	save_game()
@@ -208,6 +223,8 @@ func _starter_skills() -> void:
 
 
 func assign_slot(index: int, id: String) -> void:
+	if ExpeditionState.active() and (index == 0 or id == expedition.get("signature", "") or rank(id) == 0 or skill(id).get("passive", true)):
+		return
 	for i in slots.size():
 		if slots[i] == id:
 			slots[i] = ""
@@ -216,6 +233,8 @@ func assign_slot(index: int, id: String) -> void:
 
 
 func clear_slot(index: int) -> void:
+	if ExpeditionState.active() and index == 0:
+		return
 	slots[index] = ""
 	save_game()
 
@@ -382,7 +401,10 @@ func add_xp(amount: int) -> int:
 		xp -= xp_to_next()
 		level += 1
 		gained += 1
-		skill_points += 2 if level % 5 == 0 else 1
+		if not ExpeditionState.active():
+			skill_points += 2 if level % 5 == 0 else 1
+		else:
+			RunBuild.queue("level")
 	return gained
 
 
@@ -495,17 +517,17 @@ func select_slot(slot: int) -> bool:
 	return true
 
 
-func create_slot(slot: int, cls: String) -> bool:
+func create_slot(slot: int, cls: String, expedition_mode := false) -> bool:
 	if slot < 1 or slot > MAX_SAVE_SLOTS or not CLASSES.has(cls):
 		return false
 	var migrated := _ensure_legacy_migration()
 	if (slot == 1 and not migrated) or _has_slot_files(slot_path(slot)):
 		return false
 	select_slot(slot)
-	return new_game(cls)
+	return new_game(cls, expedition_mode)
 
 
-func new_game(cls: String) -> bool:
+func new_game(cls: String, expedition_mode := false) -> bool:
 	if not CLASSES.has(cls) or has_save_files():
 		return false
 	if active_slot == 1 and not _legacy_path().is_empty() and not _write_migration("complete"):
@@ -515,6 +537,8 @@ func new_game(cls: String) -> bool:
 	encounters = {}
 	bonus_ranks = 0
 	hero_class = cls
+	expedition = ExpeditionState.lobby() if expedition_mode else {}
+	expedition_meta = {}
 	level = 1
 	xp = 0
 	potions = 3
@@ -592,6 +616,8 @@ func save_game() -> bool:
 		"potions": potions, "mana_potions": mana_potions, "kills": kills,
 		"skill_points": skill_points, "ranks": ranks, "slots": slots,
 		"quests": quests, "stage_kills": stage_kills, "boss_defeated": boss_defeated, "boss_heart_pending": boss_heart_pending, "memory_rewarded": memory_rewarded, "discovered_sanctuaries": discovered_sanctuaries, "last_sanctuary": last_sanctuary, "location_mode": location_mode, "gold": gold, "bonus_attack": bonus_attack, "bonus_health": bonus_health, "chest_seed": chest_seed, "opened_chests": opened_chests,
+		"expedition": expedition.duplicate(true),
+		"expedition_meta": expedition_meta.duplicate(true),
 		"encounters": encounters.duplicate(true),
 		"next_serial": next_serial,
 		"inventory": inventory.map(func(g): return g.to_save()),
@@ -610,6 +636,10 @@ func save_game() -> bool:
 
 ## Validate containers before applying a save so malformed data cannot partially replace the hero.
 func _valid_save(data: Dictionary) -> bool:
+	if not ExpeditionState.valid(data.get("expedition", {}), str(data.get("class", ""))):
+		return false
+	if not ExpeditionState.valid_meta(data.get("expedition_meta", {})):
+		return false
 	if not _valid_encounters(data.get("encounters", {})):
 		return false
 	if not CLASSES.has(data.get("class", "")):
@@ -743,6 +773,8 @@ func load_game() -> bool:
 	var saved_encounters: Dictionary = data.get("encounters", {})
 	encounters = saved_encounters.duplicate(true)
 	hero_class = data["class"]
+	expedition = data.get("expedition", {}).duplicate(true)
+	expedition_meta = data.get("expedition_meta", {}).duplicate(true)
 	level = int(data.get("level", 1))
 	xp = int(data.get("xp", 0))
 	potions = int(data.get("potions", 3))
@@ -827,7 +859,10 @@ func collect_memory_reward() -> bool:
 	if memory_rewarded or MemoryPanel.recovered() != MemoryPanel.MEMORIES.size():
 		return false
 	memory_rewarded = true
-	skill_points += 1
+	if ExpeditionState.active():
+		RunBuild.queue("rune")
+	else:
+		skill_points += 1
 	return true
 
 
