@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Explicit visual fixtures. These captures are NOT normal-play/performance results.
 import assert from 'node:assert/strict';
+import {assertWallTorchHeights} from './review/diagnostic_contracts.mjs';
 import {mkdir,writeFile} from 'node:fs/promises';
 import path from 'node:path';
 import {createRequire} from 'node:module';
@@ -34,7 +35,7 @@ function validate(scenario,s){
  assert.equal(s.fixture.scope,scenario.startsWith('cave_torches')?'cave':'forest');
  if(scenario==='cave_torches'){assert(s.fixture.proof.actual_cave_enter);assert.equal(s.fixture.cave_lights,10);}
  if(edition==='baseline')return;
- if(scenario.startsWith('cave_torches')){assert.equal(s.fixture.torches?.mounting,'wall');assert.equal(s.fixture.torches?.count,10);assert.equal(s.fixture.torches?.batches,4);assert.equal(s.fixture.torches?.scale,1.7);assert.equal(s.fixture.torches?.heights.length,10);assert(s.fixture.torches.heights.every(y=>Math.abs(y-1.55)<.001));}
+ if(scenario.startsWith('cave_torches')){assert.equal(s.fixture.torches?.mounting,'wall');assert.equal(s.fixture.torches?.count,10);assert.equal(s.fixture.torches?.batches,4);assert.equal(s.fixture.torches?.scale,1.7);assertWallTorchHeights(s.fixture.torches);}
  if(scenario==='combat_health'){assert.equal(s.fixture.enemy_feedback?.bars,3,'native health bars for three actual damaged enemies');assert.equal(s.fixture.enemy_feedback?.telegraphs,0);}
  if(scenario==='boss_warning'){assert.equal(s.fixture.enemy_feedback?.telegraphs,1,'native boss windup warning');assert.equal(s.fixture.proof.boss.state,'windup');}
  if(scenario==='meteor_warning'){assert.equal(s.fixture.native_zones?.count,1);assert.equal(s.fixture.native_zones?.sources?.[0]?.phase,'warning');}

@@ -1,25 +1,8 @@
 name: Candidate UI and native model diagnostics
-# Verify owned paused music voices and scene teardown without extra runner timing.
+# 현재 후보의 UI와 실제 가져온 모델을 개별 검수한다.
 
+# 자동 검증은 web.yml의 tools/ci.sh가 담당한다. 이 작업은 필요할 때 수동 실행한다.
 on:
-    push:
-        paths:
-            - ".github/workflows/native-candidate-smoke.yml"
-            - "sjrpg_3d/scripts/gamepad_*.gd"
-            - "sjrpg_3d/scripts/player.gd"
-            - "sjrpg_3d/scripts/game.gd"
-            - "sjrpg_3d/scripts/settings_panel.gd"
-            - "sjrpg_3d/tests/cases/gamepad*.gd"
-            - "sjrpg_3d/scripts/main.gd"
-            - "sjrpg_3d/scripts/entry_loading.gd"
-            - "sjrpg_3d/tests/cases/entry_loading.gd"
-            - "sjrpg_3d/scripts/native_*.gd"
-            - "sjrpg_3d/scripts/ortho_3d*.gd"
-            - "sjrpg_3d/scripts/hud*.gd"
-            - "sjrpg_3d/scripts/potion_art.gd"
-            - "sjrpg_3d/scripts/skill_tree_panel.gd"
-            - "sjrpg_3d/assets/art/hud/**"
-            - "sjrpg_3d/tools/check_native_style.mjs"
     workflow_dispatch:
 
 permissions:

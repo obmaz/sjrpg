@@ -1,11 +1,6 @@
 name: Reproduce continuous town walking memory
+# 자동 검증은 web.yml의 tools/ci.sh가 담당한다. 이 작업은 필요할 때 수동 실행한다.
 on:
-    push:
-        paths:
-            - ".github/workflows/town-walk-review.yml"
-            - "sjrpg_3d/tools/check_town_walking.mjs"
-            - "sjrpg_3d/tools/walking_resource_telemetry.mjs"
-            - "sjrpg_3d/scripts/walking_resource_review.gd"
     workflow_dispatch:
         inputs:
             source_ref:

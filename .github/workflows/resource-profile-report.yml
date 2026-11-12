@@ -1,9 +1,6 @@
 name: Report completed 3D resource profiles
+# 자동 검증은 web.yml의 tools/ci.sh가 담당한다. 이 작업은 필요할 때 수동 실행한다.
 on:
-    push:
-        paths:
-            - ".github/workflows/resource-profile-report.yml"
-            - "sjrpg_3d/tools/compare_resource_profile.py"
     workflow_dispatch:
         inputs:
             source_run:

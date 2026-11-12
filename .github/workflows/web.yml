@@ -1,10 +1,31 @@
-name: Build web and deploy to GitHub Pages
+name: CI
 
 on:
     push:
+        branches: [main]
+        paths:
+            - ".github/**"
+            - "tools/**"
+            - "sjrpg_3d/**"
+            - "web/**"
+            - ".godot-version"
+            - "package.json"
+            - "package-lock.json"
     pull_request:
+        paths:
+            - ".github/**"
+            - "tools/**"
+            - "sjrpg_3d/**"
+            - "web/**"
+            - ".godot-version"
+            - "package.json"
+            - "package-lock.json"
     workflow_dispatch:
         inputs:
+            browser_review:
+                description: "무거운 실제 브라우저 검수 6종도 실행"
+                type: boolean
+                default: false
             publish:
                 description: "명시적으로 요청한 GitHub Pages 웹 배포"
                 type: boolean
@@ -13,16 +34,26 @@ on:
 permissions:
     contents: read
 
+concurrency:
+    group: ci-${{ github.event.pull_request.number || github.ref }}-${{ inputs.publish == true && 'publish' || 'check' }}
+    cancel-in-progress: ${{ inputs.publish != true }}
+
 jobs:
     build:
-        # Explicit UI review commits run the focused harness without publishing.
-        if: "!contains(github.event.head_commit.message, '[layout-review]')"
         runs-on: ubuntu-latest
+        timeout-minutes: 45
         outputs:
             native_style_release_allowed: ${{ steps.native_release.outputs.allowed }}
         steps:
             - uses: actions/checkout@v7.0.1
-
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: 24
+            - uses: actions/setup-python@v6
+              with:
+                  python-version: '3.12'
+            - name: Install workflow policy parser
+              run: python3 -m pip install --disable-pip-version-check -r tools/requirements-ci.txt
             - name: Read native visual review release state
               id: native_release
               run: |
@@ -31,62 +62,41 @@ jobs:
                   else
                       echo 'allowed=true' >> "$GITHUB_OUTPUT"
                   fi
-
-            - uses: actions/setup-node@v6
-              with:
-                  node-version: 24
-                  cache: npm
-
-            - name: Install test and portal browser dependencies
-              run: |
-                  npm ci --ignore-scripts
-                  npx playwright install --with-deps chromium
-
-            - name: Cache Godot and web export templates
-              uses: actions/cache@v4
+            - uses: actions/cache@v4
               with:
                   path: |
                       ~/.godot-tools
                       ~/.local/share/godot/export_templates
                   key: godot-${{ hashFiles('.godot-version') }}-tools-v1
-
-            - name: Check (import, tests) and export web build
-              id: native_build
+            - name: Prepare the same local development tools
+              run: tools/setup_env.sh --project=3d --templates web --skip-import
+            - name: Run the shared local and CI checks
+              env:
+                  SJRPG_PUBLISH_BUILD: ${{ github.event_name == 'workflow_dispatch' && inputs.publish == true }}
               run: |
-                  chmod +x tools/*.sh
-                  tools/setup_godot.sh
-                  python3 sjrpg_2d/tools/test_stamp_web.py
-                  python3 sjrpg_3d/tools/test_stamp_web.py
-                  python3 sjrpg_3d/tools/test_import_project.py
-                  node tools/test_portal.mjs
-                  node sjrpg_2d/web/check_shell.mjs
-                  node sjrpg_3d/web/check_shell.mjs
-                  node sjrpg_3d/web/check_install.mjs
-                  node sjrpg_3d/web/check_fullscreen.mjs
-                  node sjrpg_3d/web/check_orientation.mjs
-                  node sjrpg_3d/web/check_back.mjs
-                  node sjrpg_3d/web/check_canvas_budget.mjs
-                  node sjrpg_3d/tools/check_music_memory.mjs --self-test
-                  tools/check.sh --export
-                  touch build/web/.nojekyll
-
-            - name: Upload the exact exported browser build
-              uses: actions/upload-artifact@v6
+                  if [[ "$SJRPG_PUBLISH_BUILD" == true ]]; then
+                      tools/ci.sh --all-editions
+                  else
+                      tools/ci.sh
+                  fi
+            - uses: actions/upload-artifact@v6
               with:
                   name: exported-web-build
-                  path: build/web
+                  path: build/ci/web
                   include-hidden-files: true
                   if-no-files-found: error
                   retention-days: 7
-
             - uses: actions/upload-pages-artifact@v5.0.0
+              if: github.event_name == 'workflow_dispatch' && inputs.publish == true
               with:
-                  path: build/web
+                  path: build/ci/web
                   include-hidden-files: true
 
     browser_review:
+        if: github.event_name == 'workflow_dispatch' && (inputs.browser_review == true || inputs.publish == true)
         needs: build
         runs-on: ubuntu-latest
+        timeout-minutes: 25
         strategy:
             fail-fast: false
             matrix:
@@ -97,40 +107,18 @@ jobs:
               with:
                   node-version: 24
                   cache: npm
-            - name: Download the exact checked export from this workflow
-              uses: actions/download-artifact@v6
+            - uses: actions/download-artifact@v6
               with:
                   name: exported-web-build
-                  path: build/web
+                  path: build/ci/web
             - name: Install browser test dependency
               run: |
                   npm ci --ignore-scripts
                   npx playwright install --with-deps chromium
-            - name: Review the exported game
+            - name: Run the same local browser checker
               env:
                   SJRPG_BROWSER_REVIEW: ${{ matrix.review }}
-              run: |
-                  set -euo pipefail
-                  if [[ "$SJRPG_BROWSER_REVIEW" == native ]]; then
-                      chmod +x tools/check_native_web.sh
-                      tools/check_native_web.sh
-                      exit 0
-                  fi
-                  case "$SJRPG_BROWSER_REVIEW" in
-                      save) SJRPG_CHECKER=check_save_layout.mjs ;;
-                      loading) SJRPG_CHECKER=check_entry_loading.mjs ;;
-                      gamepad) SJRPG_CHECKER=check_gamepad.mjs ;;
-                      music) SJRPG_CHECKER=check_music_memory.mjs; export SJRPG_MUSIC_PROFILE=fold ;;
-                      equipment) SJRPG_CHECKER=check_equipment_layout.mjs ;;
-                      *) echo "Unknown browser review: $SJRPG_BROWSER_REVIEW" >&2; exit 2 ;;
-                  esac
-                  SJRPG_REVIEW_DIR="build/review/$SJRPG_BROWSER_REVIEW"
-                  mkdir -p "$SJRPG_REVIEW_DIR"
-                  python3 -m http.server 8779 --bind 127.0.0.1 --directory build/web/3d > "$SJRPG_REVIEW_DIR/server.log" 2>&1 &
-                  SJRPG_REVIEW_SERVER_PID=$!
-                  trap 'kill "$SJRPG_REVIEW_SERVER_PID" 2>/dev/null || true' EXIT
-                  curl --fail --silent --show-error --max-time 2 --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 12 http://127.0.0.1:8779/ > /dev/null
-                  node "sjrpg_3d/tools/$SJRPG_CHECKER" http://127.0.0.1:8779/ "$SJRPG_REVIEW_DIR"
+              run: tools/check_browser_review.sh "$SJRPG_BROWSER_REVIEW"
             - uses: actions/upload-artifact@v6
               if: always()
               with:

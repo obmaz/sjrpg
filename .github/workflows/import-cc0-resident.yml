@@ -1,12 +1,6 @@
 name: Prepare exact CC0 Mira candidate
+# 자동 검증은 web.yml의 tools/ci.sh가 담당한다. 이 작업은 필요할 때 수동 실행한다.
 on:
-    push:
-        paths:
-            - ".github/workflows/import-cc0-resident.yml"
-            - "sjrpg_3d/tools/hero_art/fetch_resident_sources.py"
-            - "sjrpg_3d/tools/hero_art/export_cc0_resident.py"
-            - "sjrpg_3d/tools/hero_art/publish_resident_blobs.py"
-            - "sjrpg_3d/tools/hero_art/resident-source-plan.json"
     workflow_dispatch:
 permissions:
     contents: write

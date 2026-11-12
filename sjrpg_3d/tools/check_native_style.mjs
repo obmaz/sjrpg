@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Actual exported NativeAdventure, real pointer/keyboard input, fresh profiles only.
 import assert from 'node:assert/strict';
+import {assertImportedMerchantAsset} from './review/diagnostic_contracts.mjs';
 import {mkdir,writeFile} from 'node:fs/promises';
 import path from 'node:path';
 import {createRequire} from 'node:module';
@@ -139,7 +140,7 @@ async function modelGallery(){
    const g=await wait(s=>s.ui.gallery&&s.ui.gallery.face===face&&s.ui.gallery.current_frame>=s.ui.gallery.requested_frame+3,'actual all-face model gallery',90000);
    assert.equal(g.ui.gallery.count,14,'all actual actor archetypes in gallery');
    assert.equal(g.ui.gallery.projection,'orthographic');
-   if(g.ui.merchant?.source==='cc0_import'){const merchant=g.ui.gallery.models.find(m=>m.identity==='merchant');assert(merchant?.skeletons>0&&merchant.skinned_meshes>0&&merchant.scene_paths.some(p=>p.includes('merchant.glb')),'full gallery uses actual imported merchant factory');}
+   if(g.ui.merchant?.source==='cc0_import'){const merchant=g.ui.gallery.models.find(m=>m.identity==='merchant');assert(merchant?.skeletons>0&&merchant.skinned_meshes>0,'full gallery uses actual imported merchant factory');assertImportedMerchantAsset(merchant,'full gallery');}
    for(const model of g.ui.gallery.models){assert(model.triangles>0&&model.surfaces>0,'actual mesh '+model.identity);assert(model.bounds_max.every((v,i)=>v>model.bounds_min[i]),'three-dimensional envelope '+model.identity);}
    await capture('native-gallery-face-'+face,true);checks.push('actual native model face '+face);
   }
@@ -173,7 +174,7 @@ function merchantGeometry(s,label){
  const m=s.ui.merchant;assert(m?.identity==='merchant',label+' actual runtime merchant source');
  assert.equal(m.near_name,'상인',label+' actual nearby resident');
  assert(m.circle?.radius>0&&m.meshes>0,label+' actual resident geometry/collision owner');
- if(!baseline){assert.equal(m.source,'cc0_import',label+' actual runtime imported factory');assert.equal(m.asset,'res://assets/art/native_residents/merchant.glb');assert(m.scene_paths.some(p=>p.includes('merchant.glb')),label+' actual instantiated GLB path');assert(m.bone_count>=20&&m.skinned_meshes>0,label+' real skeleton-bound meshes');assert(m.clip.toLowerCase().includes('idle'),label+' actual idle clip');m.model_position.forEach((v,i)=>assert(Math.abs(v-m.native_foot[i])<.01,label+' actual model follows physical NPC foot'));}
+ if(!baseline){assert.equal(m.source,'cc0_import',label+' actual runtime imported factory');assertImportedMerchantAsset(m,label);assert(m.bone_count>=20&&m.skinned_meshes>0,label+' real skeleton-bound meshes');assert(m.clip.toLowerCase().includes('idle'),label+' actual idle clip');m.model_position.forEach((v,i)=>assert(Math.abs(v-m.native_foot[i])<.01,label+' actual model follows physical NPC foot'));}
  const box=css(s,s.ui.buttons.near_shop),bounds={x:0,y:0,w:s.window[0],h:s.window[1]};assert(inside(bounds,box),label+' actual interaction target inside viewport');
  verify(()=>assert(box.w>=43.5&&box.h>=43.5,label+' 44 CSS interaction target'),label);
  if(!baseline){
@@ -224,7 +225,7 @@ async function merchantPilot(){
   const s=await wait(s=>s.ui.gallery?.merchant_only&&s.ui.gallery.face===face&&s.ui.gallery.current_frame>=s.ui.gallery.requested_frame+3,'actual factory merchant gallery',90000);
   assert.equal(s.ui.gallery.count,1);assert.deepEqual(s.ui.gallery.mapped,['merchant']);assert.equal(s.ui.gallery.projection,'orthographic');
   const model=s.ui.gallery.models[0];assert(model.triangles>0&&model.surfaces>0,'actual merchant mesh');
-  if(!baseline){assert(model.skeletons>0&&model.skinned_meshes>0&&model.scene_paths.some(p=>p.includes('merchant.glb')),'gallery uses actual imported runtime factory');assert(model.sample.clip.toLowerCase().includes('idle'),'gallery samples actual runtime idle');assert(Math.abs((model.bounds_max[1]-model.bounds_min[1])-1.78)<.035,'gallery actual normalized adult height');}
+  if(!baseline){assert(model.skeletons>0&&model.skinned_meshes>0,'gallery uses actual imported runtime factory');assertImportedMerchantAsset(model,'merchant gallery');assert(model.sample.clip.toLowerCase().includes('idle'),'gallery samples actual runtime idle');assert(Math.abs((model.bounds_max[1]-model.bounds_min[1])-1.78)<.035,'gallery actual normalized adult height');}
   await capture('merchant-gallery-face-'+face,true);checks.push('actual imported merchant factory camera face '+face);
  }
  await page.evaluate(()=>window.__sjrpgNativeStyleAction('merchant_gallery',-1));

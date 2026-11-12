@@ -1,11 +1,6 @@
 name: Profile actual 3D resource lifecycle
+# 자동 검증은 web.yml의 tools/ci.sh가 담당한다. 이 작업은 필요할 때 수동 실행한다.
 on:
-    push:
-        paths:
-            - ".github/workflows/resource-profile-review.yml"
-            - "sjrpg_3d/tools/check_resource_profile.mjs"
-            - "sjrpg_3d/tools/resource_telemetry.mjs"
-            - "sjrpg_3d/scripts/resource_profile_review.gd"
     workflow_dispatch:
 permissions:
     contents: read

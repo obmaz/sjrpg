@@ -1,18 +1,7 @@
 name: Review save selection and adventure loading
 
+# 자동 검증은 web.yml의 tools/ci.sh가 담당한다. 이 작업은 필요할 때 수동 실행한다.
 on:
-    push:
-        paths:
-            - ".github/workflows/save-layout-review.yml"
-            - "sjrpg_3d/scripts/main.gd"
-            - "sjrpg_3d/scripts/entry_loading.gd"
-            - "sjrpg_3d/tests/cases/entry_loading.gd"
-            - "sjrpg_3d/scripts/class_select.gd"
-            - "sjrpg_3d/scripts/save_layout_review.gd"
-            - "sjrpg_3d/tests/cases/entry_layout.gd"
-            - "sjrpg_3d/tests/cases/save_layout.gd"
-            - "sjrpg_3d/tools/check_save_layout.mjs"
-            - "sjrpg_3d/tools/check_entry_loading.mjs"
     workflow_dispatch:
 
 permissions:

@@ -1,13 +1,6 @@
 name: Review sustained 3D town resource growth
+# 자동 검증은 web.yml의 tools/ci.sh가 담당한다. 이 작업은 필요할 때 수동 실행한다.
 on:
-    push:
-        paths:
-            - ".github/workflows/town-stability-review.yml"
-            - "sjrpg_3d/tools/check_town_stability.mjs"
-            - "sjrpg_3d/tools/stability_telemetry.mjs"
-            - "sjrpg_3d/scripts/stability_resource_review.gd"
-            - "sjrpg_3d/tools/town_stability_route.mjs"
-            - "sjrpg_3d/tools/check_town_stability_route.mjs"
     workflow_dispatch:
         inputs:
             edition:

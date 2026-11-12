@@ -1,37 +1,6 @@
 name: Check 3D optimization budgets
+# 자동 검증은 web.yml의 tools/ci.sh가 담당한다. 이 작업은 필요할 때 수동 실행한다.
 on:
-    push:
-        paths:
-            - ".github/workflows/perf-candidate-tests.yml"
-            - "sjrpg_3d/scripts/music_director.gd"
-            - "sjrpg_3d/tests/cases/music.gd"
-            - "sjrpg_3d/scripts/hud.gd"
-            - "sjrpg_3d/scripts/touch_controls.gd"
-            - "sjrpg_3d/tests/cases/hud_draw_cache.gd"
-            - "sjrpg_3d/tests/cases/touch_draw_layers.gd"
-            - "sjrpg_3d/tests/cases/minimap_retained.gd"
-            - "sjrpg_3d/tests/cases/native_card_geometry_cache.gd"
-            - "sjrpg_3d/scripts/minimap.gd"
-            - "sjrpg_3d/tests/cases/minimap_mesh_cache.gd"
-            - "sjrpg_3d/scripts/iso_sprite.gd"
-            - "sjrpg_3d/scripts/canopy_shade.gd"
-            - "sjrpg_3d/scripts/plaza_water.gd"
-            - "sjrpg_3d/scripts/ortho_3d_affordances.gd"
-            - "sjrpg_3d/tests/cases/iso_sprite_lazy.gd"
-            - "sjrpg_3d/web/canvas-budget.js"
-            - "sjrpg_3d/web/check_canvas_budget.mjs"
-            - "sjrpg_3d/scripts/actor_atlas.gd"
-            - "sjrpg_3d/scripts/actor_sprite.gd"
-            - "sjrpg_3d/scripts/native_enemy_models.gd"
-            - "sjrpg_3d/scripts/ortho_3d_preview.gd"
-            - "sjrpg_3d/scripts/class_select.gd"
-            - "sjrpg_3d/scripts/gamepad_input.gd"
-            - "sjrpg_3d/tests/cases/gamepad_reconnect_epoch.gd"
-            - "sjrpg_3d/tests/cases/*budget*.gd"
-            - "sjrpg_3d/tests/run_all.gd"
-            - "sjrpg_3d/tests/cases/render_quality.gd"
-            - "sjrpg_3d/tests/cases/actor_atlas_lazy.gd"
-            - "sjrpg_3d/tests/cases/native_enemy_recipe_cache.gd"
     workflow_dispatch:
 permissions:
     contents: read

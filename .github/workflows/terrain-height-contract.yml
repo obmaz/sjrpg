@@ -1,22 +1,6 @@
 name: Check terrain and village geometry contracts
+# 자동 검증은 web.yml의 tools/ci.sh가 담당한다. 이 작업은 필요할 때 수동 실행한다.
 on:
-    push:
-        paths:
-            - ".github/workflows/terrain-height-contract.yml"
-            - "sjrpg_3d/scripts/native_landmarks_3d.gd"
-            - "sjrpg_3d/scripts/ortho_3d_fortification.gd"
-            - "sjrpg_3d/scripts/native_house_3d.gd"
-            - "sjrpg_3d/scripts/ortho_3d_chapel.gd"
-            - "sjrpg_3d/tests/cases/ortho_3d_chapel.gd"
-            - "sjrpg_3d/assets/source/preview3d/chapel/refinement.json"
-            - "sjrpg_3d/tests/cases/native_terrain_readability.gd"
-            - "sjrpg_3d/tests/cases/ortho_3d_fortification.gd"
-            - "sjrpg_3d/tests/cases/native_house_family.gd"
-            - "sjrpg_3d/assets/source/preview3d/houses/provenance.json"
-            - "sjrpg_3d/assets/data/native_encounter_props.json"
-            - "sjrpg_3d/assets/art/preview3d/materials.json"
-            - "sjrpg_3d/assets/art/preview3d/limestone.webp"
-            - "sjrpg_3d/assets/art/preview3d/timber.webp"
     workflow_dispatch:
 permissions:
     contents: read

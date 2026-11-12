@@ -1,14 +1,6 @@
 name: Pack reviewed selection artwork
+# 자동 검증은 web.yml의 tools/ci.sh가 담당한다. 이 작업은 필요할 때 수동 실행한다.
 on:
-    push:
-        paths:
-            - ".github/workflows/pack-selection-art.yml"
-            - "sjrpg_3d/tools/entry_art/pack_selection_art.py"
-            - "sjrpg_3d/assets/source/entry-redesign/selection-generation.json"
-            - "sjrpg_3d/assets/source/entry-redesign/selection-and-continue-concept.png"
-            - "sjrpg_3d/assets/source/entry-redesign/warrior.png"
-            - "sjrpg_3d/assets/source/entry-redesign/mage.png"
-            - "sjrpg_3d/assets/source/entry-redesign/forest.png"
     workflow_dispatch:
 permissions:
     contents: write

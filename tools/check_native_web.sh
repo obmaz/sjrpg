@@ -3,9 +3,10 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PORT="${SJRPG_WEB_TEST_PORT:-8766}"
+EXPORT="${SJRPG_WEB_TEST_ROOT:-$ROOT/build/web}"
 [[ "$PORT" =~ ^[0-9]+$ ]] || { echo "Invalid test port" >&2; exit 2; }
 mkdir -p "$ROOT/build/review"
-python3 -m http.server "$PORT" --bind 127.0.0.1 --directory "$ROOT/build/web" > "$ROOT/build/review/server.log" 2>&1 &
+python3 -m http.server "$PORT" --bind 127.0.0.1 --directory "$EXPORT" > "$ROOT/build/review/server.log" 2>&1 &
 SERVER_PID=$!
 trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
 python3 - "$PORT" <<'PY'

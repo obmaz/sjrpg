@@ -1,14 +1,6 @@
 name: Check game Back and FPS controls
+# 자동 검증은 web.yml의 tools/ci.sh가 담당한다. 이 작업은 필요할 때 수동 실행한다.
 on:
-  push:
-    paths:
-      - "sjrpg_3d/scripts/main.gd"
-      - "sjrpg_3d/scripts/fps_counter.gd"
-      - "sjrpg_3d/tests/cases/system_back.gd"
-      - "sjrpg_3d/tests/cases/fps_settings.gd"
-      - "sjrpg_3d/web/check_back.mjs"
-      - "sjrpg_3d/tools/screenshot.mjs"
-      - ".github/workflows/game-ui-contracts.yml"
   workflow_dispatch:
 permissions:
   contents: read

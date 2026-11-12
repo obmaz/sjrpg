@@ -22,9 +22,13 @@ tools/setup_env.sh                # 새 클론에서 한 번: Godot 설치 + 두
 tools/setup_env.sh --templates web  # 웹 빌드가 필요하면 export 템플릿도 설치
 tools/check.sh                    # 두 프로젝트 전체 검사
 tools/check.sh --project=3d       # 3D판 검사
+tools/ci.sh                      # 푸시 전: GitHub와 같은 3D 전체 검사 + 웹 빌드
+tools/ci.sh --browser            # 공통 검사와 실제 브라우저 검수 6종
 tools/check.sh --export           # 검사 후 선택 화면 + 두 버전 웹 빌드
 tools/serve.sh                    # http://localhost:8765/
 ```
+
+자동 CI는 한 개이며, 후보 비교·성능·사진 진단은 수동 실행합니다. 로컬 준비·푸시 전 검사·명시적 웹 배포 조건은 [CI 운영](docs/ci.md)을 따릅니다.
 
 Godot 에디터에서는 각 폴더의 `project.godot`를 별도로 엽니다. 자세한 구조는 [개발 안내](docs/development.md), 기존 기능과 아트 기준은 [2D판 문서](sjrpg_2d/README.md), 3D 전환 구조는 [3D판 문서](sjrpg_3d/README.md)를 참고하세요.
 

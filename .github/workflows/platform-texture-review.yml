@@ -1,17 +1,8 @@
 name: Review Web and Android texture compression
 # Preserve existing texture UIDs and record first engine assignments separately.
 
+# 자동 검증은 web.yml의 tools/ci.sh가 담당한다. 이 작업은 필요할 때 수동 실행한다.
 on:
-    push:
-        paths:
-            - ".github/workflows/platform-texture-review.yml"
-            - "sjrpg_3d/project.godot"
-            - "sjrpg_3d/export_presets.cfg"
-            - "sjrpg_3d/assets/data/texture_policy.json"
-            - "sjrpg_3d/tools/texture_policy.py"
-            - "sjrpg_3d/tools/check_platform_exports.py"
-            - "sjrpg_3d/tools/check_texture_compression.mjs"
-            - "sjrpg_3d/tools/review/texture_compression_observer.gd"
     workflow_dispatch:
 
 permissions:

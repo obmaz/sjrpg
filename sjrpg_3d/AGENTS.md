@@ -67,6 +67,7 @@ tools/check.sh --only=quests   # 일부 케이스
 tools/check.sh --export        # 웹 빌드까지
 ```
 
+- 푸시 전 공통 검사는 루트 `tools/ci.sh`를 사용하고, 자동 CI와 수동 진단의 경계는 [CI 운영](../docs/ci.md)을 따릅니다.
 - 새 기능은 `tests/cases/`에 케이스를 추가합니다(`extends TestCase`, `run()` 구현). 실패는 `check()`/`failures += 1`로 남깁니다.
   게임 장면은 `await make_game()`으로 만들고, 걷기·프레임 대기는 `_walk`/`_frames`를 씁니다.
 - UI·입력·렌더링을 바꾸면 `tools/export_web.sh` → `tools/serve.sh` → `node tools/screenshot.mjs --scene … --device phone|desktop`으로 화면을 확인합니다.

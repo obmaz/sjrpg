@@ -222,7 +222,7 @@ func _prepare(requested: String) -> void:
 					_fail("no real supported attack approach to cave marker")
 					return
 				_teleport(game, approach)
-				game.player.facing = (game.player.position - stone.position).angle()
+				game.player.facing = (stone.position - game.player.position).angle()
 				game.player.cooldowns.clear()
 				game.player.resource = game.player.resource_max
 				var accepted: bool = game.player.cast_slot(0)
@@ -308,9 +308,12 @@ func _publish(ready: bool) -> void:
 				if is_instance_valid(torches):
 					var torches_report: Dictionary = torches.get_meta("native_lantern_report")
 					var heights := []
+					var floor_heights := []
 					for mount: Transform3D in torches_report.get("mount_transforms", []):
 						heights.append(mount.origin.y)
+					for anchor: Vector3 in torches_report.get("anchors", []):
+						floor_heights.append(game.spatial_world.height_at(SpatialWorld3D.projected(anchor)))
 					result["torches"] = {"count": torches_report["count"], "mounting": torches_report.get("mounting", "floor"),
-						"scale": torches_report.get("scale", 1.0), "heights": heights, "batches": torches_report["batches"].size()}
+						"scale": torches_report.get("scale", 1.0), "heights": heights, "floor_heights": floor_heights, "batches": torches_report["batches"].size()}
 
 	JavaScriptBridge.eval("window.__sjrpgCombatVisibility = " + JSON.stringify(result), true)

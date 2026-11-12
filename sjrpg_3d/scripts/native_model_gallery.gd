@@ -218,7 +218,7 @@ func review_snapshot() -> Dictionary:
 		for candidate: Node in meshes:
 			if (candidate as MeshInstance3D).skin != null:
 				skinned += 1
-		models.append({"scene_paths": _model_scene_paths(model), "skeletons": model.find_children("*", "Skeleton3D", true, false).size(), "skinned_meshes": skinned, "sample": _resident_samples.get(_keys[index], {}), "identity": _keys[index], "triangles": triangles, "surfaces": surfaces, "bounds_min": [envelope.position.x, envelope.position.y, envelope.position.z], "bounds_max": [envelope.end.x, envelope.end.y, envelope.end.z], "scale": [model.scale.x, model.scale.y, model.scale.z]})
+		models.append({"asset": model.get_meta("resident_asset", ""), "scene_paths": _model_scene_paths(model), "skeletons": model.find_children("*", "Skeleton3D", true, false).size(), "skinned_meshes": skinned, "sample": _resident_samples.get(_keys[index], {}), "identity": _keys[index], "triangles": triangles, "surfaces": surfaces, "bounds_min": [envelope.position.x, envelope.position.y, envelope.position.z], "bounds_max": [envelope.end.x, envelope.end.y, envelope.end.z], "scale": [model.scale.x, model.scale.y, model.scale.z]})
 	return {"face": face, "azimuth": 45 + face * 90, "elevation": ELEVATION, "projection": "orthographic", "models": models, "mapped": ["merchant"] if merchant_only else _keys, "merchant_only": merchant_only, "count": models.size(), "visible": visible, "requested_frame": requested_frame, "current_frame": Engine.get_process_frames()}
 
 

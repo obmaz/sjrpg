@@ -1,16 +1,6 @@
 name: Review cave swarm and combat visibility
+# 자동 검증은 web.yml의 tools/ci.sh가 담당한다. 이 작업은 필요할 때 수동 실행한다.
 on:
-  push:
-    paths:
-      - ".github/workflows/gameplay-polish-review.yml"
-      - "sjrpg_3d/tools/check_combat_visibility.mjs"
-      - "sjrpg_3d/tools/perf/combat_visibility_review.gd"
-      - "sjrpg_3d/scripts/native_cave_lanterns_3d.gd"
-      - "sjrpg_3d/scripts/native_zone_fx_3d.gd"
-      - "sjrpg_3d/scripts/encounter_runtime.gd"
-      - "sjrpg_3d/tests/cases/cave_swarm.gd"
-      - "sjrpg_3d/scripts/native_enemy_models.gd"
-      - "sjrpg_3d/tests/cases/native_cave_crawler.gd"
   workflow_dispatch:
 permissions:
   contents: read
@@ -66,16 +56,7 @@ jobs:
             git fetch --no-tags --depth=1 origin "$SJRPG_VISIBILITY_SHA"
           fi
           git archive "$SJRPG_VISIBILITY_SHA" | tar -x -C "$SJRPG_VISIBILITY_GAME"
-          cp sjrpg_3d/tools/perf/combat_visibility_review.gd "$SJRPG_VISIBILITY_GAME/sjrpg_3d/scripts/"
-          python3 - <<'PY'
-          import os
-          from pathlib import Path
-          main=Path(os.environ["SJRPG_VISIBILITY_GAME"])/"sjrpg_3d/scripts/main.gd"
-          source=main.read_text();needle="\tshow_title()\n"
-          hook='\tif OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get(\'combat_visibility_review\')", true)) == "1":\n\t\tadd_child(load("res://scripts/combat_visibility_review.gd").new().setup(self))\n'
-          assert needle in source and "combat_visibility_review.gd" not in source
-          main.write_text(source.replace(needle,needle+hook,1))
-          PY
+          python3 tools/prepare_combat_review.py "$SJRPG_VISIBILITY_GAME"
           "$SJRPG_VISIBILITY_GAME/sjrpg_3d/tools/export_web.sh"
       - name: Capture the explicit native fixtures in both orientations
         run: |

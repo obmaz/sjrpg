@@ -1,9 +1,7 @@
 name: Compose verified GPU texture review
 
+# 자동 검증은 web.yml의 tools/ci.sh가 담당한다. 이 작업은 필요할 때 수동 실행한다.
 on:
-    push:
-        paths:
-            - ".github/workflows/texture-review-report.yml"
     workflow_dispatch:
         inputs:
             capture_run_id:

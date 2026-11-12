@@ -67,6 +67,7 @@ tools/check.sh --only=quests   # 일부 케이스
 tools/check.sh --export        # 웹 빌드까지
 ```
 
+- 푸시 전에는 로컬에서 `tools/ci.sh`로 GitHub와 같은3D 전체 검사·웹 빌드를 통과시킵니다. UI·입력·렌더링 변경은 관련 실제 브라우저 검수도 수행합니다. 자동 CI는 `web.yml` 한 개이며, 개별 후보/성능/사진 진단은 필요한 경우만 수동 실행합니다. 운영 계약은 [CI 운영](docs/ci.md)을 따릅니다.
 - 새 기능은 `tests/cases/`에 케이스를 추가합니다(`extends TestCase`, `run()` 구현). 실패는 `check()`/`failures += 1`로 남깁니다.
   게임 장면은 `await make_game()`으로 만들고, 걷기·프레임 대기는 `_walk`/`_frames`를 씁니다.
 - UI·입력·렌더링을 바꾸면 `tools/export_web.sh` → `tools/serve.sh` → `node sjrpg_3d/tools/screenshot.mjs --scene … --device phone|desktop`으로 화면을 확인합니다.

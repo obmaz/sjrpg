@@ -1,14 +1,7 @@
 name: Review generated entry design
 
+# 자동 검증은 web.yml의 tools/ci.sh가 담당한다. 이 작업은 필요할 때 수동 실행한다.
 on:
-    push:
-        paths:
-            - ".github/workflows/entry-design-review.yml"
-            - "sjrpg_3d/scripts/class_select.gd"
-            - "sjrpg_3d/scripts/selection_ui.gd"
-            - "sjrpg_3d/tools/check_save_layout.mjs"
-            - "sjrpg_3d/tools/compare_entry_design.py"
-            - "sjrpg_3d/assets/art/entry/selection-*"
     workflow_dispatch:
 
 permissions:

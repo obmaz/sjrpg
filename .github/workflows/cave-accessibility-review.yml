@@ -1,12 +1,6 @@
 name: Review cave readability and settings
+# 자동 검증은 web.yml의 tools/ci.sh가 담당한다. 이 작업은 필요할 때 수동 실행한다.
 on:
-  push:
-    paths:
-      - "sjrpg_3d/scripts/ortho_3d_cave_rock.gd"
-      - "sjrpg_3d/scripts/prefs.gd"
-      - "sjrpg_3d/scripts/touch_controls.gd"
-      - ".github/workflows/cave-accessibility-review.yml"
-      - "sjrpg_3d/tests/cases/native_cave_geometry.gd"
   workflow_dispatch:
     inputs:
       rotation_only:

@@ -1,8 +1,6 @@
 name: Inspect completed native memory attribution
+# 자동 검증은 web.yml의 tools/ci.sh가 담당한다. 이 작업은 필요할 때 수동 실행한다.
 on:
-    push:
-        paths:
-            - ".github/workflows/native-memory-report.yml"
     workflow_dispatch:
 permissions:
     contents: read
