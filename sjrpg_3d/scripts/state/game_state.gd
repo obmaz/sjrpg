@@ -89,6 +89,8 @@ var next_serial := 1
 ## 상자 보상 순서 (원본 chestContent: 열 개 중 장비 7 · 보급 1 · 골드 1 · 매복 1) and opened chests.
 var chest_seed := 1
 var opened_chests: Array[int] = []
+## Only modified ordinary forest trees; renderer and collision read the same records.
+var forest_trees: Dictionary = {}
 ## Skill tree (원본 rpg_model.dart): 2 starting points, +1 per level and +2 every fifth level.
 var skill_points := 2
 var ranks: Dictionary = {}
@@ -552,6 +554,7 @@ func new_game(cls: String, expedition_mode := false) -> bool:
 	bonus_health = 0.0
 	chest_seed = randi() % 0x7fffffff
 	opened_chests.clear()
+	forest_trees.clear()
 	skill_points = 2
 	_starter_skills()
 	_starting_gear()
@@ -610,6 +613,7 @@ func save_game() -> bool:
 		"skill_points": skill_points, "ranks": ranks, "slots": slots,
 		"quests": quests, "stage_kills": stage_kills, "boss_defeated": boss_defeated, "boss_heart_pending": boss_heart_pending, "memory_rewarded": memory_rewarded, "discovered_sanctuaries": discovered_sanctuaries, "last_sanctuary": last_sanctuary, "location_mode": location_mode, "gold": gold, "bonus_attack": bonus_attack, "bonus_health": bonus_health, "chest_seed": chest_seed, "opened_chests": opened_chests,
 		"expedition": expedition.duplicate(true),
+		"forest_trees": forest_trees.duplicate(true),
 		"expedition_meta": expedition_meta.duplicate(true),
 		"encounters": encounters.duplicate(true),
 		"next_serial": next_serial,
@@ -642,7 +646,7 @@ func _valid_save(data: Dictionary) -> bool:
 			return false
 	if int(data.get("version", 0)) > SAVE_VERSION or int(data.get("level", 1)) < 1:
 		return false
-	for key in ["ranks", "quests"]:
+	for key in ["ranks", "quests", "forest_trees"]:
 		if data.has(key) and not data[key] is Dictionary:
 			return false
 	for value in data.get("ranks", {}).values():
@@ -821,6 +825,7 @@ func load_game() -> bool:
 	bonus_attack = float(data.get("bonus_attack", 0.0))
 	bonus_health = float(data.get("bonus_health", 0.0))
 	chest_seed = int(data.get("chest_seed", 1))
+	forest_trees = data.get("forest_trees", {}).duplicate(true)
 	opened_chests.clear()
 	for c in data.get("opened_chests", []):
 		opened_chests.append(int(c))

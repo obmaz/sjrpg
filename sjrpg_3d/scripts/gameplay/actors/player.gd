@@ -140,6 +140,11 @@ func speed() -> float:
 
 
 func damage_for(id: String, mult: float) -> float:
+	return _base_damage_for(id, mult) * randf_range(0.9, 1.1)
+
+
+## 환경 내구도는 같은 공격력을 읽되 적 피해의 난수 순서를 소비하지 않는다.
+func _base_damage_for(id: String, mult: float) -> float:
 	var d := SkillDefs.get_def(id)
 	var power := GameState.attack_power() * mult
 	var element: String = d.get("element", "")
@@ -149,7 +154,7 @@ func damage_for(id: String, mult: float) -> float:
 		power *= 1.0 + passive("throw")
 	elif not is_mage:
 		power *= 1.0 + passive("weapon")
-	return power * randf_range(0.9, 1.1) * float(RunBuild.modifiers(id)["damage"])
+	return power * float(RunBuild.modifiers(id)["damage"])
 
 
 # ───────────────────────── loop ─────────────────────────
@@ -343,7 +348,8 @@ func _drop_blaze(step: float) -> void:
 		var d := SkillDefs.get_def("blaze")
 		game.spawn_zone({"pos": position, "radius": 34.0, "duration": 3.0, "tick": 0.3,
 			"damage": damage_for("blaze", SkillDefs.scaled(d["mult"], d["growth"], int(buffs["blaze"]["rank"]))),
-			"color": SkillDefs.FIRE})
+			"color": SkillDefs.FIRE,
+			"tree_action": buffs["blaze"].get("tree_action", ForestTreeRuntime.action_id(self))})
 
 
 # ───────────────────────── casting ─────────────────────────
@@ -509,7 +515,7 @@ func confirm_melee_contact(heavy: bool, kill := false) -> void:
 		if kill:
 			_hitstop.trigger(HitTier.KILL_STOP, HitTier.KILL_STOP_LIMIT)  # JUICE #5
 		else:
-			_hitstop.trigger(HitTier.HEAVY_ATTACKER_STOP if heavy else 0.035, HitTier.HEAVY_STOP_LIMIT)
+			_hitstop.trigger(HitTier.HEAVY_ATTACKER_STOP if heavy else HitTier.NORMAL_STOP, HitTier.HEAVY_STOP_LIMIT)
 		sprite.hold_contact(0.060 if heavy else 0.040)
 
 
@@ -573,7 +579,7 @@ func aim_target(range_limit: float) -> Enemy:
 	return _enemy_in_direction(range_limit, aim_direction())
 
 
-func _front_prop(reach: float, bearing: Vector2, stones_only := false) -> Node2D:
+func _front_prop(reach: float, bearing: Vector2, exclude_chests := false) -> Node2D:
 	var candidates: Array = []
 	if game.encounters != null and not game.dungeon.active:
 		for stone: EncounterStone in game.encounters.stones.values():
@@ -582,8 +588,9 @@ func _front_prop(reach: float, bearing: Vector2, stones_only := false) -> Node2D
 				and game.encounters.clear_line(position, stone.position)
 			):
 				candidates.append(stone)
-	if not stones_only:
+	if not exclude_chests:
 		candidates.append_array(game.chests)
+	candidates.append_array(game.forest_trees.aim_sources(position, reach))
 	var best: Node2D
 	var best_score := INF
 	for prop: Node2D in candidates:
@@ -723,11 +730,11 @@ func _prepare(id: String, d: Dictionary, rank: int) -> Callable:
 		"chain":
 			var first := _aim(aim_range(id, d))
 			if first == null:
-				var stone := _front_prop(d["range"], aim_direction(), true) as EncounterStone
-				if stone != null:
-					var stone_ref: WeakRef = weakref(stone)
+				var prop := _front_prop(d["range"], aim_direction(), true)
+				if prop != null:
+					var prop_ref: WeakRef = weakref(prop)
 					return func():
-						var contact := stone_ref.get_ref() as EncounterStone
+						var contact := prop_ref.get_ref() as Node2D
 						if (
 							is_instance_valid(contact)
 							and position.distance_to(contact.position) <= float(d["range"])
@@ -772,6 +779,7 @@ func _prepare(id: String, d: Dictionary, rank: int) -> Callable:
 					position, facing, d["range"], deg_to_rad(d["arc"])
 				)
 				game.break_chests_in_arc(position, facing, d["range"], deg_to_rad(d["arc"]), self)
+				_tree_arc(d, id, power, d["color"])
 				for e in hits:
 					var before: float = e.hp
 					e.take_damage(damage_for(id, power), self)
@@ -821,6 +829,7 @@ func _melee(id: String, d: Dictionary, rank: int, power: float) -> void:
 	var hits_total := 0
 	var swings := int(d.get("hits", 1))
 	var enchant := buff_value("enchant") if id == "sorceressAttack" else 0.0
+	_tree_arc(d, id, power, SkillDefs.FIRE if enchant > 0.0 else SkillDefs.STEEL)
 	for swing in swings:
 		var hits: Array = game.enemies_in_arc(position, facing, d["range"], deg_to_rad(d["arc"]), true)
 		for e in hits:
@@ -854,6 +863,7 @@ func _spin(id: String, d: Dictionary, power: float) -> void:
 			_resolving_melee_contact = true
 			var hits: Array = game.enemies_in_radius(position, d["radius"], true)
 			game.break_chests_in_radius(position, d["radius"], self, true)
+			_tree_area(d["radius"], SkillDefs.STEEL, _base_damage_for(id, power))
 			for e in hits:
 				e.take_damage(damage_for(id, power), self)
 			_resolving_melee_contact = false
@@ -974,6 +984,7 @@ func _prepare_leap(id: String, d: Dictionary, rank: int, power: float) -> Callab
 		var hits: Array = game.enemies_in_radius(position, d["radius"], true)
 		if d.has("mult"):
 			game.break_chests_in_radius(position, d["radius"], self, true)
+			_tree_area(d["radius"], SkillDefs.STEEL, _base_damage_for(id, power))
 		var previous_contact := _resolving_melee_contact
 		_resolving_melee_contact = d.has("mult")
 		for e in hits:
@@ -1010,6 +1021,8 @@ func _nova(id: String, d: Dictionary, rank: int, power: float) -> void:
 		game.spawn_nova(position, radius, d["color"])
 	if d.has("mult") or d.has("pct"):
 		game.break_chests_in_radius(position, radius, self)
+	if d.has("mult") or d.has("pct") or id == "frostNova":
+		_tree_area(radius, d["color"], _base_damage_for(id, power))
 	var hits: Array = game.enemies_in_radius(position, radius)
 	for e in hits:
 		if d.has("mult"):
@@ -1044,6 +1057,21 @@ func _zone(id: String, d: Dictionary, rank: int, power: float, at: Vector2) -> v
 	game.spawn_zone(z)
 
 
+func _tree_arc(d: Dictionary, id: String, power: float, tint: Color) -> void:
+	game.forest_trees.hit_arc(
+		position, facing, d["range"], deg_to_rad(d["arc"]),
+		ForestTreeRuntime.element(tint), ForestTreeRuntime.action_id(self),
+		ForestTreeRuntime.strength(_base_damage_for(id, power))
+	)
+
+
+func _tree_area(reach: float, tint: Color, amount: float) -> void:
+	game.forest_trees.hit_area(
+		position, reach, ForestTreeRuntime.element(tint), ForestTreeRuntime.action_id(self),
+		ForestTreeRuntime.strength(amount)
+	)
+
+
 func _buff(id: String, d: Dictionary, rank: int) -> void:
 	var dur: float = d["duration"] + d.get("dur_growth", 0.0) * (rank - 1)
 	var v: float = d.get("value", 0.0) + d.get("value_growth", 0.0) * (rank - 1)
@@ -1051,6 +1079,8 @@ func _buff(id: String, d: Dictionary, rank: int) -> void:
 	if name == "sprint":
 		dur *= 1.0 + passive("stamina")
 	buffs[name] = {"time": dur, "value": v, "rank": rank, "id": id}
+	if name == "blaze":
+		buffs[name]["tree_action"] = ForestTreeRuntime.action_id(self)
 	if name == "armor":
 		buffs[name]["kind"] = d["armor"]
 	var color := SkillDefs.SHOUT if not is_mage else SkillDefs.COLD

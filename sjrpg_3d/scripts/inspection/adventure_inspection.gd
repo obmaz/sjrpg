@@ -155,6 +155,8 @@ func apply() -> void:
 			scenes.preview_hit_feel.call_deferred()
 		elif option == "hitfeel_preview" and value == "multi":
 			scenes.preview_multi_hit.call_deferred()
+		elif option == "tree_preview" and value in ForestTreeRuntime.STATES:
+			TreeDestructionReview.run.call_deferred(_game, value)
 		elif option == "waypoint_preview" and value == "1":
 			scenes.preview_waypoint_discovery.call_deferred()
 		elif option == "combat_preview":

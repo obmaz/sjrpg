@@ -214,7 +214,7 @@ func take_damage(amount: float, source: Node2D, visual_source: Node2D = null) ->
 		_recoil_started = false
 		_recoil = _recoil_direction * _recoil_size
 		sprite.position = _recoil
-	_hitstop.trigger(HitTier.HEAVY_VICTIM_STOP if heavy else 0.040, HitTier.HEAVY_STOP_LIMIT)
+	_hitstop.trigger(HitTier.HEAVY_VICTIM_STOP if heavy else HitTier.NORMAL_STOP, HitTier.HEAVY_STOP_LIMIT)
 	sprite.hold_contact(0.065 if heavy else 0.045)
 	if source is Player:
 		source.confirm_melee_contact(heavy, tier == HitTier.KILL)

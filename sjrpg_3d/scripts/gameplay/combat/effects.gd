@@ -430,6 +430,8 @@ func _projectile_contacts(start: Vector2, finish: Vector2) -> Array[Dictionary]:
 				continue
 			if not _hit.has(contact["enemy"]):
 				contacts.append(contact)
+	if owner_node is Player:
+		contacts.append_array(game.forest_trees.projectile_contacts(start, finish, spatial_height))
 	contacts.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["fraction"]) < float(b["fraction"]))
 	return contacts
 
@@ -443,15 +445,19 @@ func _update_projectile(delta: float) -> void:
 	var start := _ground()
 	var travel_end := start + dir * velocity.length() * delta
 	var wall := 1.0
+	var wall_trees: Array = []
 	if SpatialCombat3D.world(game) != null:
 		if is_inf(spatial_height):
 			spatial_height = SpatialCombat3D.launch_height(game, start, owner_node)
 			spatial_floor_height = spatial_height - SpatialCombat3D.PROJECTILE_LIFT
-		wall = SpatialCombat3D.wall_fraction(game, start, travel_end, spatial_height)
+		var trace := SpatialCombat3D.wall_trace(game, start, travel_end, spatial_height)
+		wall = trace["fraction"]
+		wall_trees = trace["trees"]
 	var finish := start.lerp(travel_end, wall)
 	var contacts: Array[Dictionary] = []
 	for contact in _projectile_contacts(start, travel_end):
-		if float(contact["fraction"]) <= wall:
+		var blocking_tree: bool = contact.has("tree") and wall_trees.has(contact["tree"])
+		if float(contact["fraction"]) <= wall or blocking_tree:
 			contacts.append(contact)
 	var piercing: bool = params.get("pierce", false)
 	if not piercing and not contacts.is_empty():
@@ -459,12 +465,30 @@ func _update_projectile(delta: float) -> void:
 	# Chest interaction follows the same bounded path, never past a blocking first contact.
 	_break_projectile_chests(start, finish)
 	for contact in contacts:
+		if contact.has("tree"):
+			position = start.lerp(travel_end, float(contact["fraction"])) - Vector2(0, 34)
+			var blocked: bool = game.forest_trees.blocks(contact["tree"])
+			game.forest_trees.hit(contact["tree"], ForestTreeRuntime.element(color),
+				str(params.get("tree_action", "")), ForestTreeRuntime.strength(damage))
+			var blast := float(params.get("explode", 0.0))
+			if blast > 0.0:
+				_hit_area_trees(_ground(), blast)
+				for enemy in _area_targets(_ground(), blast):
+					if not _hit.has(enemy):
+						_hit[enemy] = true
+						_apply(enemy, damage)
+				game.spawn_nova(_ground(), blast, color, true)
+			if blocked or not piercing:
+				queue_free()
+				return
+			continue
 		var target: Node2D = contact["enemy"]
 		if target is EncounterStone:
 			position = start.lerp(travel_end, float(contact["fraction"])) - Vector2(0, 34)
 			_hit[target] = true
 			var blast := float(params.get("explode", 0.0))
 			if blast > 0.0:
+				_hit_area_trees(_ground(), blast)
 				# Resolve existing explosion victims before activating the stone: killing its
 				# last defender must not turn this same contact into a fresh summon.
 				for enemy in _area_targets(_ground(), blast):
@@ -483,6 +507,7 @@ func _update_projectile(delta: float) -> void:
 		position = start.lerp(travel_end, float(contact["fraction"])) - Vector2(0, 34)
 		_hit[hit] = true
 		if float(params.get("explode", 0.0)) > 0.0:
+			_hit_area_trees(_ground(), params["explode"])
 			var victims: Array = _area_targets(_ground(), params["explode"])
 			if not victims.has(hit):
 				victims.append(hit)
@@ -530,6 +555,14 @@ func _area_targets(center: Vector2, reach: float) -> Array:
 	return out
 
 
+func _hit_area_trees(center: Vector2, reach: float) -> void:
+	if owner_node is Player:
+		game.forest_trees.hit_area(
+			center, reach, ForestTreeRuntime.element(color), str(params.get("tree_action", "")),
+			ForestTreeRuntime.strength(damage), float(params.get("wall", INF)), spatial_floor_height
+		)
+
+
 func _apply(e: Enemy, amount: float) -> void:
 	var before := e.hp
 	e.take_damage(amount, self)
@@ -547,11 +580,20 @@ func _update_orb(delta: float) -> void:
 	var start := _ground()
 	var finish := start + velocity * delta
 	var wall := 1.0
+	var wall_trees: Array = []
 	if SpatialCombat3D.world(game) != null:
 		if is_inf(spatial_height):
 			spatial_height = SpatialCombat3D.launch_height(game, start, owner_node)
 			spatial_floor_height = spatial_height - SpatialCombat3D.PROJECTILE_LIFT
-		wall = SpatialCombat3D.wall_fraction(game, start, finish, spatial_height)
+		var trace := SpatialCombat3D.wall_trace(game, start, finish, spatial_height)
+		wall = trace["fraction"]
+		wall_trees = trace["trees"]
+	if owner_node is Player:
+		for contact in game.forest_trees.projectile_contacts(start, finish, spatial_height):
+			if float(contact["fraction"]) <= wall or wall_trees.has(contact["tree"]):
+				game.forest_trees.hit(contact["tree"], ForestTreeRuntime.element(color),
+					str(params.get("tree_action", "")), ForestTreeRuntime.strength(damage))
+				wall = minf(wall, float(contact["fraction"]))
 	position = start.lerp(finish, wall) - Vector2(0, 34)
 	if wall < 1.0:
 		_orb_burst()
@@ -562,13 +604,15 @@ func _update_orb(delta: float) -> void:
 		_tick_timer = GameTempo.duration(0.09)
 		var dir := Vector2.from_angle(age * GameTempo.RATE * 9.0)
 		game.spawn_projectile({"pos": position, "dir": dir, "speed": 420.0, "damage": damage,
-			"color": color, "slow": 1.5, "life": 0.6, "spatial_height": spatial_height}, owner_node)
+			"color": color, "slow": 1.5, "life": 0.6, "spatial_height": spatial_height,
+			"tree_action": params.get("tree_action", "")}, owner_node)
 
 
 func _orb_burst() -> void:
 	for i in 12:
 		game.spawn_projectile({"pos": position, "dir": Vector2.from_angle(TAU * i / 12.0), "speed": 460.0,
-			"damage": damage, "color": color, "slow": 1.5, "life": 0.5, "spatial_height": spatial_height}, owner_node)
+			"damage": damage, "color": color, "slow": 1.5, "life": 0.5, "spatial_height": spatial_height,
+			"tree_action": params.get("tree_action", "")}, owner_node)
 
 
 func _update_zone(delta: float) -> void:
@@ -577,6 +621,7 @@ func _update_zone(delta: float) -> void:
 		return
 	if delay > 0.0 and not params.get("impacted", false):
 		params["impacted"] = true
+		_hit_area_trees(position, radius)
 		for e in _area_targets(position, radius):
 			e.take_damage(params.get("impact", damage), self)
 		if params.get("visual", "") == "meteor":
@@ -588,6 +633,7 @@ func _update_zone(delta: float) -> void:
 		return
 	_tick_timer = float(params.get("tick", 0.3))
 	game.break_chests_in_radius(position, radius, owner_node)
+	_hit_area_trees(position, radius)
 	for e in _zone_targets():
 		e.take_damage(damage, null, self)
 		if float(params.get("slow", 0.0)) > 0.0:
@@ -619,7 +665,8 @@ func _update_hydra(delta: float) -> void:
 	var dir := (target.position - position).normalized()
 	game.spawn_projectile({"pos": position + Vector2(0, -40), "dir": dir, "speed": 600.0,
 		"damage": damage, "color": SkillDefs.FIRE,
-		"spatial_height": spatial_floor_height + SpatialCombat3D.PROJECTILE_LIFT}, owner_node)
+		"spatial_height": spatial_floor_height + SpatialCombat3D.PROJECTILE_LIFT,
+		"tree_action": params.get("tree_action", "")}, owner_node)
 
 
 func _update_ward(delta: float) -> void:

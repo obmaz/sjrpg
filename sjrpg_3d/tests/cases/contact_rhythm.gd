@@ -165,22 +165,22 @@ func _impact(game: Node) -> Effect:
 
 func _check_stop_upgrade() -> void:
 	var stop := GameTempo.ContactStop.new()
-	stop.trigger(0.035)
+	stop.trigger(HitTier.NORMAL_STOP)
 	stop.consume(0.01)
 	stop.trigger(HitTier.HEAVY_ATTACKER_STOP, HitTier.HEAVY_STOP_LIMIT)
 	check(
 		"later heavy contact upgrades the original pause rather than restarting it",
-		is_equal_approx(stop.remaining, 0.05)
+		is_equal_approx(stop.remaining, 0.08)
 	)
 	stop.trigger(HitTier.KILL_STOP, HitTier.KILL_STOP_LIMIT)
 	check(
 		"a kill later in the same sweep retains only the strongest pause",
-		is_equal_approx(stop.remaining, 0.065)
+		is_equal_approx(stop.remaining, 0.11)
 	)
 	for index in 20:
 		stop.trigger(HitTier.KILL_STOP, HitTier.KILL_STOP_LIMIT)
-	check("repeated contacts cannot stack the pause", is_equal_approx(stop.remaining, 0.065))
-	stop.consume(0.07)
+	check("repeated contacts cannot stack the pause", is_equal_approx(stop.remaining, 0.11))
+	stop.consume(0.12)
 	stop.trigger(HitTier.KILL_STOP, HitTier.KILL_STOP_LIMIT)
 	check("finished stop cannot restart during recovery", stop.remaining == 0.0)
 

@@ -38,6 +38,13 @@ func run() -> void:
 		)
 	)
 	var contact := native.joint_rotation("upperarm_r")
+	check(
+		"real ordinary melee contact pauses both actors for50ms",
+		(
+			is_equal_approx(hero._hitstop.remaining, 0.050)
+			and is_equal_approx(foe._hitstop.remaining, 0.050)
+		)
+	)
 	native.sync(hero)
 	check(
 		"subsequent frozen samples retain the actual strike",
@@ -200,13 +207,13 @@ func _check_live_review_contact() -> void:
 func _check_contact_stop() -> void:
 	var stop := GameTempo.ContactStop.new()
 	stop.trigger(HitTier.HEAVY_VICTIM_STOP, HitTier.HEAVY_STOP_LIMIT)
-	check("heavy victim contact holds for65ms", is_equal_approx(stop.remaining, 0.065))
-	check("local stop consumes only its remaining time", is_equal_approx(stop.consume(0.1), 0.035))
+	check("heavy victim contact holds for90ms", is_equal_approx(stop.remaining, 0.090))
+	check("local stop consumes only its remaining time", is_equal_approx(stop.consume(0.1), 0.010))
 	stop.trigger(HitTier.HEAVY_VICTIM_STOP, HitTier.HEAVY_STOP_LIMIT)
 	check("rapid repeated contacts cannot keep pinning the victim", stop.remaining == 0.0)
 	stop.consume(0.05)
 	stop.trigger(HitTier.HEAVY_ATTACKER_STOP, HitTier.HEAVY_STOP_LIMIT)
-	check("fresh heavy contact holds the attacker for60ms", is_equal_approx(stop.remaining, 0.060))
+	check("fresh heavy contact holds the attacker for90ms", is_equal_approx(stop.remaining, 0.090))
 	stop.clear()
 	Prefs.reduce_motion = true
 	stop.trigger(HitTier.HEAVY_VICTIM_STOP, HitTier.HEAVY_STOP_LIMIT)

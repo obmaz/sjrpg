@@ -44,6 +44,37 @@ static func mark_object(node: Node) -> void:
 	node.set_meta("occlusion_static_object", true)
 
 
+## 슬롯의 게임 상태가 가림 페이드보다 우선한다. 파괴된 나무가 복원되지 않는다.
+static func instance_enabled(node: GeometryInstance3D, index: int) -> bool:
+	var enabled: PackedByteArray = node.get_meta("occlusion_enabled_instances", PackedByteArray())
+	return index < 0 or enabled.is_empty() or (index < enabled.size() and enabled[index] != 0)
+
+
+func set_instance_enabled(node: MultiMeshInstance3D, index: int, enabled: bool) -> void:
+	var mask: PackedByteArray = node.get_meta("occlusion_enabled_instances", PackedByteArray())
+	if mask.is_empty():
+		mask.resize(node.multimesh.instance_count)
+		mask.fill(1)
+	mask[index] = int(enabled)
+	node.set_meta("occlusion_enabled_instances", mask)
+	var key := "%s:%s" % [node.get_instance_id(), index]
+	if not enabled:
+		if _active.has(key):
+			var active: Dictionary = _active[key]
+			_restore(active)
+			_active.erase(key)
+			_fades.erase(active["object"])
+		node.multimesh.set_instance_transform(index, Transform3D(Basis.from_scale(Vector3.ZERO), Vector3.ZERO))
+	elif not _active.has(key):
+		var frames: Array = node.get_meta("occlusion_transforms", [])
+		if index < frames.size():
+			node.multimesh.set_instance_transform(index, frames[index])
+
+
+func register_static_root(root: Node3D) -> void:
+	_register(root)
+
+
 static func static_owner(node: Node) -> Node:
 	var owner: Node
 	var cursor := node
@@ -151,13 +182,37 @@ func _prime(entry: Dictionary) -> void:
 			)
 		if material == null:
 			material = mesh.surface_get_material(index)
-		var ink := _template(material)
+		_prepare_sample(mesh, index, material)
+
+
+## 손상 변형도 로딩 중 공유 BVH/재질을 준비해 첫 원소 타격에 몰리지 않게 한다.
+func prepare_mesh(mesh: Mesh) -> void:
+	var id := mesh.get_instance_id()
+	if mesh.get_aabb().size.y >= 0.45 and not _triangles.has(id):
+		_triangles[id] = mesh.generate_triangle_mesh()
+		triangle_builds += 1
+	for index in mesh.get_surface_count():
+		var material := mesh.surface_get_material(index)
+		_prepare_sample(mesh, index, material)
+		if material == null:
+			continue
+		# Opaque/cutout and faded variants use different GPU programs in Compatibility.
 		var format: String = (
 			str(mesh.surface_get_format(index)) if mesh is ArrayMesh else mesh.get_class()
 		)
-		var key := "%s:%s" % [ink.get_instance_id(), format]
+		var key := "original:%s:%s" % [material.get_instance_id(), format]
 		if not _samples.has(key):
-			_samples[key] = {"mesh": mesh, "ink": ink}
+			_samples[key] = {"mesh": mesh, "ink": material}
+
+
+func _prepare_sample(mesh: Mesh, index: int, material: Material) -> void:
+	var ink := _template(material)
+	var format: String = (
+		str(mesh.surface_get_format(index)) if mesh is ArrayMesh else mesh.get_class()
+	)
+	var key := "%s:%s" % [ink.get_instance_id(), format]
+	if not _samples.has(key):
+		_samples[key] = {"mesh": mesh, "ink": ink}
 
 
 func sync(delta: float) -> void:
@@ -218,6 +273,7 @@ func _find_occluders() -> void:
 		var node: GeometryInstance3D = entry["node"]
 		if (
 			not is_instance_valid(node)
+			or not instance_enabled(node, entry["index"])
 			or not node.is_visible_in_tree()
 			or node.is_queued_for_deletion()
 		):
@@ -276,6 +332,7 @@ func _find_occluders() -> void:
 		for entry: Dictionary in _objects[object_key]:
 			if (
 				not is_instance_valid(entry["node"])
+				or not instance_enabled(entry["node"], entry["index"])
 				or not entry["node"].is_visible_in_tree()
 				or entry["node"].is_queued_for_deletion()
 			):
@@ -432,7 +489,8 @@ func _activate(entry: Dictionary) -> Dictionary:
 
 func _restore(state: Dictionary) -> void:
 	if state["index"] >= 0:
-		state["source"].multimesh.set_instance_transform(state["index"], state["transform"])
+		if instance_enabled(state["source"], state["index"]):
+			state["source"].multimesh.set_instance_transform(state["index"], state["transform"])
 		state["draw"].visible = false
 	else:
 		var draw: MeshInstance3D = state["draw"]

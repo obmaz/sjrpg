@@ -54,6 +54,20 @@ static func wall_fraction(game: Node, from: Vector2, to: Vector2, height: float,
 	return clampf(float(backend.projectile_fraction(WorldSpace3D.projected_to_world(from, height), WorldSpace3D.projected_to_world(to, height), radius_pixels / WorldSpace3D.HORIZONTAL_PIXELS_PER_METER)), 0.0, 1.0)
 
 
+static func wall_trace(
+	game: Node, from: Vector2, to: Vector2, height: float,
+	radius_pixels := PROJECTILE_RADIUS
+) -> Dictionary:
+	var backend := world(game)
+	if backend == null:
+		return {"fraction": 1.0, "trees": []}
+	return backend.projectile_trace(
+		WorldSpace3D.projected_to_world(from, height),
+		WorldSpace3D.projected_to_world(to, height),
+		radius_pixels / WorldSpace3D.HORIZONTAL_PIXELS_PER_METER
+	)
+
+
 static func line_clear(game: Node, from: Vector2, to: Vector2, from_floor := INF, to_floor := INF) -> bool:
 	var backend := world(game)
 	if backend == null:

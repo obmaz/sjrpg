@@ -360,6 +360,34 @@ func projectile_fraction(from: Vector3, to: Vector3, radius_m: float) -> float:
 	return result[0] if result.size() == 2 else 1.0
 
 
+## cast_motion's safe/unsafe interval can span several pixels for a long beam.
+## Identify the actual blocking trunk at the unsafe pose rather than guessing a tolerance.
+func projectile_trace(from: Vector3, to: Vector3, radius_m: float) -> Dictionary:
+	sync_scope()
+	_sphere.radius = maxf(radius_m, 0.005)
+	var query := _query(_sphere, from, SOLID)
+	query.motion = to - from
+	var space := get_world_3d().direct_space_state
+	var initial := space.intersect_shape(query, 16)
+	var bounds := PackedFloat32Array([0.0, 0.0])
+	if initial.is_empty():
+		bounds = space.cast_motion(query)
+	if bounds.size() != 2 or bounds[0] >= 1.0:
+		return {"fraction": 1.0, "trees": []}
+	query.transform.origin = from.lerp(to, minf(1.0, bounds[1] + 0.00001))
+	query.motion = Vector3.ZERO
+	var contacts := initial if not initial.is_empty() else space.intersect_shape(query, 16)
+	var trees: Array[String] = []
+	for contact: Dictionary in contacts:
+		var collider: Object = contact["collider"]
+		var key: String = collider.get_meta("forest_tree_key", "")
+		if key.is_empty():
+			# A simultaneous masonry contact is still a wall, never a tree behind it.
+			return {"fraction": bounds[0], "trees": []}
+		trees.append(key)
+	return {"fraction": bounds[0], "trees": trees}
+
+
 func _physics_process(_delta: float) -> void:
 	physics_ticks += 1
 	sync_scope()
@@ -558,6 +586,8 @@ func _build_forest() -> void:
 			_props.append({"owner": weakref(chest), "body": body})
 		else:
 			_circles.append({"point": point, "radius": radius, "body": body})
+			if game.forest_trees != null:
+				game.forest_trees.bind_body(point, body)
 	for polygon in game.village.gate_passages:
 		_gates.append(_prism_body(polygon, 0.0, 4.5, 0, "ClosedGate"))
 	var safe: PackedVector2Array = game.village.safe_zone

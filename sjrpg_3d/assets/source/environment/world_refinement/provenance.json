@@ -75,7 +75,7 @@
     },
     {
       "path": "scripts/world/physics/spatial_world_3d.gd",
-      "sha256": "22f62fbe9f1a5247bdf143d13dbdf22ba5c3c5b763e8225882a7e255c5ef0c96"
+      "sha256": "87ce5732ca1f07b53d92ae263b8058b3420f94b1ca73c708dd1d32fe444adc4b"
     },
     {
       "path": "scripts/world/village.gd",

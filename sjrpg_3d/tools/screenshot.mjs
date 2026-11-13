@@ -31,6 +31,12 @@ const SCENES = {
     warp_trip: 'warp_preview=1',
     juice: 'at=field&combat_preview=1',
     multi_hit: 'at=field&hitfeel_preview=multi',
+    tree_healthy: 'at=field&tree_preview=healthy',
+    tree_frozen: 'at=field&tree_preview=frozen',
+    tree_burning: 'at=field&tree_preview=burning',
+    tree_charred: 'at=field&tree_preview=charred',
+    tree_ash: 'at=field&tree_preview=ash',
+    tree_felled: 'at=field&tree_preview=felled',
     damage_stream: 'at=field&combat_text_preview=1',
     fx_slash: 'at=field&fx_preview=cleave',
     fx_spin: 'at=field&fx_preview=whirlwind',
@@ -290,6 +296,15 @@ if (scene === 'defender') {
     await page.waitForFunction(() => window.__sjrpgDamageStreamReady === true, null, {timeout: 60000});
 } else if (scene === 'multi_hit') {
     await page.waitForFunction(() => window.__sjrpg3dProbe?.contact_rhythm?.beats >= 4 && window.__sjrpg3dProbe?.contact_rhythm?.peak_pending === 3, null, {timeout: 60000});
+} else if (scene.startsWith('tree_')) {
+    await page.waitForFunction(() => window.__sjrpgTreeReview?.ready === true, null, {timeout: 90000}).catch(async error => {
+        console.log('Tree review failure:', await page.evaluate(() => ({tree:window.__sjrpgTreeReview,probe:window.__sjrpg3dProbe})));
+        console.log(logs.filter(line => /error/i.test(line)));
+        throw error;
+    });
+    const treeReview = await page.evaluate(() => window.__sjrpgTreeReview);
+    console.log('Actual tree reaction:', treeReview);
+    if (treeReview.state !== treeReview.expected) throw new Error('Tree cast did not reach expected state');
 } else if (scene.startsWith('gate_closed')) {
     await page.waitForFunction(() => window.__sjrpgGateReview?.closed === true, null, {timeout: 60000});
     console.log('Actual threat closed the gate:', await page.evaluate(() => window.__sjrpgGateReview));
@@ -602,7 +617,7 @@ if (args['state-out']) {
         const canvas = document.getElementById('canvas');
         const gl = canvas?.getContext('webgl2');
         const gpu = gl ? {fragmentTextureUnits:gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS),combinedTextureUnits:gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS),version:gl.getParameter(gl.VERSION)} : null;
-        return {probe:window.__sjrpg3dProbe,village:window.__sjrpgVillageReview,window:[innerWidth,innerHeight],gpu,entryLoading:window.__sjrpgEntryLoading,loadingOverlayVisible:Boolean(document.getElementById('sjrpg-entry-loading'))};
+        return {probe:window.__sjrpg3dProbe,village:window.__sjrpgVillageReview,tree:window.__sjrpgTreeReview,window:[innerWidth,innerHeight],gpu,entryLoading:window.__sjrpgEntryLoading,loadingOverlayVisible:Boolean(document.getElementById('sjrpg-entry-loading'))};
     });
     writeFileSync(path, JSON.stringify({...state,launchUrl:launchURL.href,pckUrls,errors},null,2)+'\n');
 }

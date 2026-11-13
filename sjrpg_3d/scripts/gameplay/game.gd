@@ -31,6 +31,7 @@ var _impact_impulse := Vector2.ZERO
 var _impact_age := 1.0
 const IMPACT_LIMIT := 2.0
 var contact_rhythm := ContactRhythm.new()
+var forest_trees: ForestTreeRuntime
 var camera: Camera2D
 var hud: Hud
 var encounters: EncounterRuntime
@@ -95,6 +96,7 @@ func _ready() -> void:
 	village = Village.new()
 	village.build(ground_layer, world)
 	village.build_field(world, FIELD.grow(-150), _rng)
+	forest_trees = ForestTreeRuntime.new().setup(self)
 	forest_lighting = ForestLighting.new()
 	field_root.add_child(forest_lighting)
 	forest_lighting.setup(ground_layer, village)
@@ -348,6 +350,7 @@ func _process(delta: float) -> void:
 	WorldLighting.advance(delta)
 	_update_impact_camera(delta)
 	contact_rhythm.tick(self, delta)
+	forest_trees.tick(delta)
 	_update_zoom_punch(delta)
 	camera.position = _camera_focus()
 	if dungeon.active:
@@ -969,6 +972,8 @@ func _on_player_died() -> void:
 
 
 func _add_effect(e: Effect) -> void:
+	if e.owner_node is Player and not e.params.has("tree_action"):
+		e.params["tree_action"] = ForestTreeRuntime.action_id(e.owner_node)
 	# Bound only cosmetic nodes; projectiles, damage zones and summons keep their gameplay.
 	if e.kind not in ["proj", "orb", "zone", "hydra", "ward"]:
 		cosmetic_effects = cosmetic_effects.filter(func(effect): return is_instance_valid(effect) and not effect.is_queued_for_deletion())
@@ -1064,7 +1069,14 @@ func spawn_zone(z: Dictionary) -> void:
 func spawn_beam(from: Vector2, angle: float, length: float, damage: float, color: Color, _owner: Node2D) -> void:
 	var dir := Vector2.from_angle(angle)
 	var native_y := SpatialCombat3D.launch_height(self, from, _owner)
-	length *= SpatialCombat3D.wall_fraction(self, from, from + dir * length, native_y, 14.0)
+	var tree_contacts := forest_trees.projectile_contacts(from, from + dir * length, native_y, 14.0)
+	var full_length := length
+	var trace := SpatialCombat3D.wall_trace(self, from, from + dir * length, native_y, 14.0)
+	length *= float(trace["fraction"])
+	if _owner is Player:
+		for contact in tree_contacts:
+			if trace["trees"].has(contact["tree"]) or float(contact["fraction"]) * full_length <= length:
+				forest_trees.hit(contact["tree"], "lightning", ForestTreeRuntime.action_id(_owner))
 	for en: Enemy in enemies.duplicate():
 		if en.dead:
 			continue

@@ -90,6 +90,7 @@ var _warp_fx: WarpEffects3D
 var _level_up_fx: ProgressionEffects3D
 var _combat_fx: CombatEffects3D
 var _trees: Node3D
+var _tree_damage: TreeDamageRenderer3D
 var _fortification: FortificationRenderer3D
 var _houses := {}
 var _forest_stage: Node3D
@@ -181,6 +182,7 @@ func _ready() -> void:
 	_sync_camera()
 	_world_environment = EnvironmentRenderer3D.new().setup(self, _forest_stage)
 	_occlusion = NativePlayerOcclusion.new().setup(self)
+	_tree_damage = TreeDamageRenderer3D.new().setup(self)
 	_hit_feel = HitFeedback3D.new().setup(self)
 	_aim_target = AimTargetRenderer3D.new().setup(self)
 	_sprite_fallbacks.sync()
@@ -468,6 +470,7 @@ func _process(delta: float) -> void:
 	_encounter_props.sync()
 	_sprite_fallbacks.sync()
 	_world_environment.sync(0.0 if frozen else delta, frozen)
+	_tree_damage.sync(0.0 if frozen else delta)
 	# 측정은 가림 전 원본 배치에서 한다. 임시 분리 슬롯은 의도적으로 숨겨진다.
 	if OS.has_feature("web") and _probe_enabled and _batch_gpu_error < 0.0:
 		_batch_gpu_error = StaticMeshBatch3D.corner_error(_static_batch)
@@ -584,6 +587,7 @@ func _publish_probe() -> void:
 		"aim_target": _aim_target.target_id if _aim_target != null else 0,
 		"hit_feel": _hit_feel.snapshot() if _hit_feel != null else {},
 		"contact_rhythm": game.contact_rhythm.snapshot(),
+		"forest_tree_damage": _tree_damage.snapshot(),
 		"contact_audio_accents": SoundFx.contact_beats,
 		"contact_camera_offset": [game.camera.offset.x, game.camera.offset.y],
 		"player_occluders": _occlusion._active.size() if _occlusion != null else 0,

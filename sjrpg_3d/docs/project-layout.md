@@ -25,7 +25,7 @@
 | --- | --- |
 | `scripts/app/` | 진입 화면·게임 조립·`Adventure3D` |
 | `scripts/state/`, `core/`, `input/`, `audio/` | 저장 상태·좌표/공통 계산·입력·소리 |
-| `scripts/gameplay/{actors,combat,loot,quests,dungeon,travel,expeditions}/` | 플레이 규칙·진행. 렌더러가 이 규칙을 다시 구현하지 않음 |
+| `scripts/gameplay/{actors,combat,loot,props,quests,dungeon,travel,expeditions}/` | 플레이 규칙·진행. `props/`는 나무 등 환경 오브젝트의 상태. 렌더러가 규칙을 다시 구현하지 않음 |
 | `scripts/world/{geometry,physics,map}/` | 공유 지형 설계·실제 충돌/이동·지도 동기화 |
 | `scripts/ui/{screens,panels,hud,widgets,style}/` | 화면·패널·HUD·재사용 컨트롤·스타일 |
 | `scripts/rendering/` | `WorldRenderer3D`와 배우·건축·환경·지형·식생·효과·재질·가림 표시 모듈 |
