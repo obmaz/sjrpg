@@ -78,9 +78,10 @@ function geometry(s,label){
   assert.equal(c.slot,i+1);assert(c.title_text&&c.meta_text,label+' actual title/metadata');
   assert(select.w>=43.5&&select.h>=43.5,label+' real CSS row touch target');
   assert(c.title_font*ratio>=13.8&&c.meta_font*ratio>=11.8,label+' real CSS type size');
-  assert(encloses(select,title)&&encloses(select,meta)&&encloses(select,number),label+' row label bounds '+(i+1));
-  assert(!overlaps(title,meta)&&!overlaps(number,title)&&!overlaps(number,meta),label+' distinct label boxes '+(i+1));
-  if(c.status_text)assert(!overlaps(title,css(s,c.status)),label+' title/status separation '+(i+1));
+  const metaVisible=c.meta_visible!==false;
+  assert(encloses(select,title)&&encloses(select,number)&&(!metaVisible||encloses(select,meta)),label+' visible row label bounds '+(i+1));
+  assert(!overlaps(number,title)&&(!metaVisible||(!overlaps(title,meta)&&!overlaps(number,meta))),label+' distinct visible label boxes '+(i+1));
+  if(c.status_text&&c.status_visible!==false)assert(!overlaps(title,css(s,c.status)),label+' title/status separation '+(i+1));
   assert(row.x>=list.x-1&&endX(row)<=endX(list)+1,label+' row horizontal clip '+(i+1));
   if(i)assert(endY(css(s,layout.cards[i-1].row))<row.y+1,label+' non-overlapping measured rows');
   assert.equal(c.delete_visible,Boolean(s.ui.slots_state[i].occupied),label+' empty slots have no delete action');
@@ -136,10 +137,13 @@ async function scenario(name){
 }
 async function resize(width,height){
  await page.setViewportSize({width,height});
- await waitState(s=>s.window[0]===width&&s.window[1]===height&&s.ui?.viewport?.[0]>0&&((s.ui.viewport[0]>s.ui.viewport[1])===(width>height)),'real main-window rotation');
+ await waitState(s=>s.window[0]===width&&s.window[1]===height&&s.ui?.viewport?.[0]>0&&Math.abs(s.ui.viewport[0]/s.ui.viewport[1]-width/height)<0.005,'completed main-window rotation');
  await page.waitForTimeout(220);
 }
 async function capture(name,inline=false){
+ // UI probes are published after Godot drawing; allow Chrome to composite that frame too.
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+ await page.waitForTimeout(180);
  const state=await read();
  const png=path.join(out,name+'.png');
  await page.screenshot({path:png,type:'png',scale:'css',timeout:90000});
@@ -172,6 +176,13 @@ function classGeometry(s,label){
  assert(!overlaps(back,heading)&&encloses(safe,back),label+' back does not cover title '+JSON.stringify({stage:s.ui.stage,css_scale:p.css_scale,heading,back,visible:p.visible,texts:p.texts}));
  const tabs=['warrior','mage'].map(key=>css(s,p.tabs[key]));
  assert(!overlaps(tabs[0],tabs[1]),label+' independent class tabs');
+ if(p.tab_contents){
+  for(const key of ['warrior','mage']){
+   const content=p.tab_contents[key],tab=css(s,p.tabs[key]);
+   const icon=css(s,content.icon),caption=css(s,content.label);
+   assert(encloses(tab,icon)&&encloses(tab,caption)&&!overlaps(icon,caption),label+' real icon/caption group never overlaps '+key);
+  }
+ }else assert(captureBaseline,label+' missing measured live tab content');
  for(const rect of [...tabs,back,css(s,p.start),css(s,p.slotchange)]){
   assert(encloses(safe,rect)&&rect.w>=43.5&&rect.h>=43.5,label+' actual44CSS class targets');
  }
@@ -180,7 +191,7 @@ function classGeometry(s,label){
  assert(!overlaps(details,css(s,p.start))&&!overlaps(details,css(s,p.slotchange)),label+' details never cover actions');
  if(p.portrait){
   assert(Math.max(...tabs.map(endY))<=art.y+2,label+' portrait tabs above artwork');
-  assert(endY(art)<=details.y+2,label+' portrait art above information');
+  assert(details.y>=art.y+art.h*0.45,label+' portrait information leaves the face and upper body visible');
   assert(endY(details)<=css(s,p.start).y+2,label+' portrait information before start');
  }
  const ratio=s.window[0]/s.ui.viewport[0];
@@ -203,7 +214,7 @@ function inspectVisual(label,callback){
  catch(error){visualFailures.push({label,error:String(error)});console.error('ENTRY_VISUAL_CHECK_FAIL '+label+' '+String(error));}
 }
 async function focusedVisual(){
- const sizes=[[390,844],[844,390]];
+ const sizes=[[390,844],[844,390],[320,568],[568,320]];
  for(const name of ['empty','mixed','full','corrupt','backup']){
   await resize(390,844);const before=stateKey(await scenario(name));
   if(name==='mixed'){await tap('slot3');await waitState(s=>s.ui.selected_slot===3,'selected mage save preview');}
@@ -277,7 +288,11 @@ try{
  await page.goto(url.href,{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>window.__sjrpgTitleReady&&window.__sjrpgEntryReady,null,{timeout:90000});
  if(idbDiagnostics.enabled)assert.equal(idbDiagnostics.engineLogRewrites,1,'one exact Godot IDB error log must expose original error fields');
- await page.locator('#entry-start').click();
+ const titleButtons=await page.evaluate(()=>window.__sjrpgTitleButtons);
+ if(titleButtons){
+  const point=titleButtons[captureBaseline?'new_game':'load_game'];
+  await page.mouse.click(point[0]*390,point[1]*844);
+ }else await page.locator('#entry-start').click();
  await waitState(s=>s.review?.ready&&s.review?.screen==='selection'&&s.ui?.save_layout,'live save selection',90000);
  if(entryVisualOnly){await focusedVisual();}else{
  const sizes=[[390,844],[844,390],[568,320],[320,640],[360,640],[390,844]];

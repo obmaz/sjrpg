@@ -65,18 +65,14 @@ func show_title() -> void:
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval("window.__sjrpgAdventureReady = false; window.__sjrpgClassSelectReady = false; window.__sjrpgTitleReady = false")
 	var title := preload("res://scripts/ui/screens/title_screen.gd").new()
-	title.new_game_requested.connect(show_class_select)
+	title.new_game_requested.connect(show_class_select.bind("new"))
 	title.load_game_requested.connect(_on_title_load_game)
 	title.settings_requested.connect(_on_title_settings)
 	_swap(title)
 
 
 func _on_title_load_game() -> void:
-	var panel := preload("res://scripts/ui/panels/save_load_panel.gd").new().setup(true)
-	panel.slot_loaded.connect(func(slot: int):
-		load_slot_adventure(slot)
-	)
-	_open_title_panel(panel)
+	show_class_select("continue")
 
 
 func _on_title_settings() -> void:
@@ -113,9 +109,10 @@ func load_slot_adventure(slot: int) -> void:
 	await _build_entry_world(token, slot)
 
 
-func show_class_select() -> void:
+func show_class_select(mode: String = "auto") -> void:
 	_cancel_entry_loading()
 	var select := preload("res://scripts/ui/screens/class_select.gd").new()
+	select.entry_mode = mode
 	select.chosen.connect(_choose_hero)
 	select.continue_requested.connect(_continue_hero)
 	select.back_requested.connect(show_title)
@@ -256,7 +253,7 @@ func _entry_failed(token: int, slot: int, message: String) -> void:
 		return
 	var original: Node = _entry_source
 	var mode: int = _entry_source_mode
-	if is_instance_valid(original) and current == original:
+	if is_instance_valid(original) and current == original and original.has_method("refresh_slots"):
 		_close_entry_loading("error")
 		original.process_mode = mode
 		original.refresh_slots()
@@ -264,7 +261,7 @@ func _entry_failed(token: int, slot: int, message: String) -> void:
 		original.show_error(message)
 	else:
 		# Persistence may already have succeeded. Return to that slot's Continue flow.
-		show_class_select()
+		show_class_select("continue")
 		current.select_slot(slot)
 		current.show_error(message)
 
@@ -333,6 +330,9 @@ func handle_system_back() -> void:
 			if not panel.is_queued_for_deletion() and panel.get_viewport() == get_viewport():
 				panel.closed.emit()
 				return
+		if current.has_method("gamepad_back"):
+			current.gamepad_back()
+			return
 	if current is Adventure3D and is_instance_valid(current.simulation):
 		var hud: Hud = current.simulation.hud
 		if not hud._panel is SettingsPanel:

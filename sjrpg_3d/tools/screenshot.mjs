@@ -238,7 +238,11 @@ if (scene === 'title') {
 	}
     await capture({path: out});
 	if (args.menu) {
-		await page.keyboard.press('Escape');
+		if (args.menu === 'load_game') {
+			await page.waitForFunction(() => window.__sjrpgClassSelectReady && window.__sjrpgClassButtons?.stage === 'slots');
+			const back = await page.evaluate(() => window.__sjrpgClassButtons.back);
+			await tap(vp.width * back[0], vp.height * back[1]);
+		} else await page.keyboard.press('Escape');
 		await page.waitForTimeout(400);
 		await tapTitle();
 		await page.waitForFunction(() => window.__sjrpgClassSelectReady === true, null, {timeout:30000});

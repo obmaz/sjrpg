@@ -23,14 +23,23 @@ func _buttons_fit(select: Control, dimensions: Vector2i) -> void:
 			check("visible entry action remains safe and thumb-sized %s/%s" % [dimensions, button.text], bounds.encloses(button.get_global_rect()) and button.size.y >= 64.0 * unit)
 	check("entry Back target never overlaps the actual title rectangle", not select.back_button.get_global_rect().intersects(select.heading.get_global_rect()))
 	if select.showcase.is_visible_in_tree():
-		check("entry uses a full illustration without stretching or clipping its frame", bounds.encloses(select.showcase.get_global_rect()) and select.hero_art.stretch_mode == TextureRect.STRETCH_KEEP_ASPECT_CENTERED and select.hero_art.get_global_rect().size.is_equal_approx(select.showcase.get_global_rect().size))
+		check("entry crops the original illustration without stretching it outside its clipped art region", bounds.encloses(select.showcase.get_global_rect()) and select.hero_art.stretch_mode in [TextureRect.STRETCH_KEEP_ASPECT_CENTERED, TextureRect.STRETCH_KEEP_ASPECT_COVERED] and select.showcase.clip_contents)
 	if select._stage == "class":
+		for cls: String in ["warrior", "mage"]:
+			var tab: Button = select.class_buttons[cls]
+			var symbol: TextureRect = select.class_tab_icons[cls]
+			var caption: Label = select.class_tab_labels[cls]
+			check("class tab icon and live caption keep distinct visible bounds",
+				not symbol.get_global_rect().intersects(caption.get_global_rect())
+				and tab.get_global_rect().encloses(symbol.get_global_rect())
+				and tab.get_global_rect().encloses(caption.get_global_rect())
+				and caption.text == GameState.CLASSES[cls]["name"])
 		check("class tabs and main action remain separate", not select.start_button.get_global_rect().intersects(select.class_buttons["warrior"].get_global_rect()) and not select.class_buttons["warrior"].get_global_rect().intersects(select.class_buttons["mage"].get_global_rect()))
 		check("role, description and real stats retain their own space", select.role.get_global_rect().end.y <= select.description.get_global_rect().position.y and select.description.get_global_rect().end.y < select.health.get_global_rect().position.y and select.details.get_global_rect().encloses(select.resource.get_global_rect()))
 		if dimensions.y > dimensions.x:
-			check("portrait class tabs precede the dominant illustration and readable information card",
+			check("portrait tabs precede dominant art while the information overlay leaves the upper body visible",
 				select.class_buttons["mage"].get_global_rect().end.y <= select.showcase.get_global_rect().position.y
-				and select.showcase.get_global_rect().end.y <= select.details.get_global_rect().position.y
+				and select.details.get_global_rect().position.y >= select.showcase.get_global_rect().position.y + select.showcase.size.y * 0.45
 				and select.showcase.size.y >= dimensions.y * 0.20
 				and select.details.get_global_rect().end.y < select.start_button.get_global_rect().position.y)
 		else:

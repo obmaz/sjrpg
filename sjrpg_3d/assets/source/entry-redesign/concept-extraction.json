@@ -1,0 +1,209 @@
+{
+  "source": "assets/source/entry-redesign/selection-and-continue-concept.png",
+  "sourceSha256": "888e5698de6b5e5326db6c35a5beb8f7144c440641452ca6cb43be85be5e33eb",
+  "method": "Original corners/edges, text-free source fill, live runtime labels; no generative redraw",
+  "parts": {
+    "primary": {
+      "sourceRect": [
+        45,
+        1024,
+        610,
+        1107
+      ],
+      "sourceFillRect": [
+        145,
+        1045,
+        161,
+        1061
+      ],
+      "margins": [
+        45,
+        14,
+        45,
+        14
+      ],
+      "size": [
+        565,
+        83
+      ],
+      "runtime": "assets/ui/entry/concept/primary.png",
+      "sha256": "948fcb1496d9a86d60ec8071b808f58a2f47ffcdd02764fa6b65a4ec7973c408"
+    },
+    "info": {
+      "sourceRect": [
+        30,
+        755,
+        639,
+        996
+      ],
+      "sourceFillRect": [
+        570,
+        972,
+        586,
+        980
+      ],
+      "margins": [
+        14,
+        14,
+        14,
+        14
+      ],
+      "size": [
+        52,
+        52
+      ],
+      "runtime": "assets/ui/entry/concept/info.png",
+      "sha256": "b0c0de2e444db317a531e40acc8454e091ee3737298fa977907da7485b1a79b8"
+    },
+    "slot": {
+      "sourceRect": [
+        694,
+        596,
+        1303,
+        702
+      ],
+      "sourceFillRect": [
+        1210,
+        610,
+        1226,
+        626
+      ],
+      "margins": [
+        14,
+        14,
+        14,
+        14
+      ],
+      "size": [
+        52,
+        52
+      ],
+      "runtime": "assets/ui/entry/concept/slot.png",
+      "sha256": "e572345086a29874e0d99da19f19a94665263914a50151e5733833cd70a2fd70"
+    },
+    "slot_selected": {
+      "sourceRect": [
+        694,
+        476,
+        1303,
+        584
+      ],
+      "sourceFillRect": [
+        1210,
+        492,
+        1226,
+        508
+      ],
+      "margins": [
+        14,
+        14,
+        14,
+        14
+      ],
+      "size": [
+        52,
+        52
+      ],
+      "runtime": "assets/ui/entry/concept/slot_selected.png",
+      "sha256": "f08c9694db3fbcdc6f5bd9c64d6b4e08ed84dd7817e0ec4292f63ca40aeed1e7"
+    },
+    "tab": {
+      "sourceRect": [
+        94,
+        224,
+        330,
+        270
+      ],
+      "sourceFillRect": [
+        120,
+        241,
+        136,
+        253
+      ],
+      "margins": [
+        13,
+        9,
+        13,
+        9
+      ],
+      "size": [
+        50,
+        42
+      ],
+      "runtime": "assets/ui/entry/concept/tab.png",
+      "sha256": "d675d56b9f06ad7fe3148b361e520d08f04f2c06c6b6a5e7f09c1861f65d289e"
+    },
+    "stat": {
+      "sourceRect": [
+        94,
+        915,
+        329,
+        968
+      ],
+      "sourceFillRect": [
+        153,
+        932,
+        163,
+        948
+      ],
+      "margins": [
+        10,
+        8,
+        10,
+        8
+      ],
+      "size": [
+        44,
+        40
+      ],
+      "runtime": "assets/ui/entry/concept/stat.png",
+      "sha256": "4d2be888d497cfdfd85ce456be1c045965695bb34927ddd392e92ae3bb70254b"
+    }
+  },
+  "icons": {
+    "swords": {
+      "sourceRect": [
+        60,
+        778,
+        131,
+        842
+      ],
+      "runtime": "assets/ui/entry/concept/swords.png",
+      "alpha": "source maximum RGB: 85..145 soft threshold",
+      "sha256": "eda1d1db9031c6297536ec4c84d12491f9665a414698b0cde1a54a43a8e838a0"
+    },
+    "staff": {
+      "sourceRect": [
+        408,
+        231,
+        437,
+        267
+      ],
+      "runtime": "assets/ui/entry/concept/staff.png",
+      "alpha": "source maximum RGB: 85..145 soft threshold",
+      "sha256": "7811e76bb7bb3f73e322cf4d24c1275c72e7c736eec7ce76cc4b737fb4f8c742"
+    },
+    "heart": {
+      "sourceRect": [
+        117,
+        929,
+        148,
+        956
+      ],
+      "runtime": "assets/ui/entry/concept/heart.png",
+      "alpha": "source maximum RGB: 85..145 soft threshold",
+      "sha256": "9d5922f66ef3517786d56ff459997df7e7aa176f769afa6cd59042230dfa687a"
+    },
+    "resource": {
+      "sourceRect": [
+        390,
+        924,
+        424,
+        958
+      ],
+      "runtime": "assets/ui/entry/concept/resource.png",
+      "alpha": "source maximum RGB: 85..145 soft threshold",
+      "sha256": "3a130127f70b6238cf3287ada19d3ca0faec23916410cd57db2328209a080994"
+    }
+  }
+}

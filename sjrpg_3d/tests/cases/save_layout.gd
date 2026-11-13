@@ -32,10 +32,12 @@ func _layout_check(select: Control, view: SubViewport, scenario: String) -> void
 		check("real row hitbox remains usable " + label, row.size.y >= 44.0 and row.size.x >= 44.0)
 		check("row has structured, readable identity and metadata " + label, title.get_theme_font_size("font_size") >= 14 and meta.get_theme_font_size("font_size") >= 12 and not title.text.is_empty() and not meta.text.is_empty() and not number.text.is_empty())
 		check("row text has enough measured height " + label, title.size.y + EPS >= title.get_combined_minimum_size().y and meta.size.y + EPS >= meta.get_combined_minimum_size().y)
-		var contained := _inside(row.get_global_rect(), title.get_global_rect()) and _inside(row.get_global_rect(), meta.get_global_rect()) and title.get_global_rect().end.y <= meta.get_global_rect().position.y + EPS and not number.get_global_rect().intersects(title.get_global_rect())
+		var metadata_fits := not meta.is_visible_in_tree() or (_inside(row.get_global_rect(), meta.get_global_rect()) and title.get_global_rect().end.y <= meta.get_global_rect().position.y + EPS)
+		var contained := _inside(row.get_global_rect(), title.get_global_rect()) and metadata_fits and not number.get_global_rect().intersects(title.get_global_rect())
 		if not contained:
 			print("FAIL SAVE_TEXT_DIAG ", JSON.stringify({"label": label, "slot": index + 1, "row": str(row.get_global_rect()), "band": str(box), "title": str(title.get_global_rect()), "meta": str(meta.get_global_rect()), "number": str(number.get_global_rect()), "status": str(select.slot_status_labels[index].get_global_rect()), "minimum": str(meta.get_combined_minimum_size())}))
-		check("row labels retain their own measured space " + label, _inside(row.get_global_rect(), title.get_global_rect()) and _inside(row.get_global_rect(), meta.get_global_rect()) and title.get_global_rect().end.y <= meta.get_global_rect().position.y + EPS and not number.get_global_rect().intersects(title.get_global_rect()))
+		check("visible row labels retain their own measured space " + label, contained)
+		check("only real occupied saves show a second metadata line " + label, meta.is_visible_in_tree() == bool(summaries[index]["occupied"]))
 		check("delete exists only for occupied source files " + label, remove.is_visible_in_tree() == bool(summaries[index]["occupied"]))
 		if remove.is_visible_in_tree():
 			check("select and delete have distinct usable targets " + label, not row.get_global_rect().intersects(remove.get_global_rect()) and remove.size.x >= 44.0 and remove.size.y >= 44.0 and _inside(box, remove.get_global_rect()))
@@ -43,6 +45,8 @@ func _layout_check(select: Control, view: SubViewport, scenario: String) -> void
 			check("measured save rows do not overlap " + label, select.slot_bands[index - 1].get_global_rect().end.y < box.position.y)
 		row.grab_focus()
 		await _frames(3)
+		if not _inside(list, row.get_global_rect()):
+			print("FAIL SAVE_FOCUS_DIAG ", JSON.stringify({"scenario": label, "slot": index + 1, "clip_before": str(list), "clip_now": str(select.slot_scroll.get_global_rect()), "row": str(row.get_global_rect()), "scroll": select.slot_scroll.scroll_vertical, "max": select.slot_scroll.get_v_scroll_bar().max_value, "page": select.slot_scroll.get_v_scroll_bar().page}))
 		check("keyboard focus brings every actual row fully into the list " + label, _inside(list, row.get_global_rect()))
 	check("scrolling never moves the fixed footer " + label, select.slot_footer.get_global_rect().is_equal_approx(footer))
 

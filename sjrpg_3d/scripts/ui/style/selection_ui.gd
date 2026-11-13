@@ -1,17 +1,57 @@
 class_name SelectionUi
 extends RefCounted
-## Selection-specific interpretation of the generated two-screen design board.
+## 선택·이어하기 시안의 얇은 청동선과 반투명 청록 패널. 공용 팝업 스킨과 분리한다.
 const FOREST := "res://assets/ui/entry/selection-forest.webp"
-const HEROES := {"warrior": "res://assets/ui/entry/selection-warrior.webp", "mage": "res://assets/ui/entry/selection-mage.webp"}
+const HEROES := {
+	"warrior": "res://assets/ui/entry/selection-warrior.webp",
+	"mage": "res://assets/ui/entry/selection-mage.webp"
+}
+const TITLE_FONT := preload("res://assets/fonts/NanumMyeongjo-Bold.ttf")
+const BODY_FONT := preload("res://assets/fonts/NanumMyeongjo-Regular.ttf")
 const INK := Color("101a19")
 const IVORY := Color("e7e1d1")
-const MUTED := Color("a5b0a8")
+const MUTED := Color("b5b4a0")
 const BRONZE := Color("a68b5b")
+const PORTRAIT_BLEND := """
+shader_type canvas_item;
+uniform float visible_bottom = 1.0;
+void fragment() {
+ vec4 ink = texture(TEXTURE, UV);
+ float sides = smoothstep(0.0,0.13,UV.x)*(1.0-smoothstep(0.87,1.0,UV.x));
+ // Runtime moves the source up by 15%; fade the visible crop edge, not source y=0.
+ float top = smoothstep(0.15,0.235,UV.y);
+ float bottom = 1.0-smoothstep(max(0.24,visible_bottom-0.10),visible_bottom,UV.y);
+ COLOR = vec4(ink.rgb,ink.a*sides*top*bottom);
+}
+"""
+static var _portrait_shader: Shader
 
 
 static func hero_image(cls: String) -> Texture2D:
 	var path: String = HEROES.get(cls, HEROES["mage"])
-	return EntryUi.image(path if ResourceLoader.exists(path) else EntryUi.HEROES.get(cls, EntryUi.HEROES["mage"]))
+	return EntryUi.image(
+		path if ResourceLoader.exists(path) else EntryUi.HEROES.get(cls, EntryUi.HEROES["mage"])
+	)
+
+
+static func blend_portrait(art: TextureRect, visible_bottom := 1.0) -> void:
+	if _portrait_shader == null:
+		_portrait_shader = Shader.new()
+		_portrait_shader.code = PORTRAIT_BLEND
+	if art.material == null:
+		var material := ShaderMaterial.new()
+		material.shader = _portrait_shader
+		art.material = material
+	var material := art.material as ShaderMaterial
+	material.set_shader_parameter("visible_bottom", clampf(visible_bottom, 0.30, 1.0))
+
+
+static func icon_texture(kind: String) -> Texture2D:
+	return EntryUi.image("res://assets/ui/entry/concept/" + kind + ".png")
+
+
+static func class_icon(cls: String) -> Texture2D:
+	return icon_texture("swords" if cls == "warrior" else "staff")
 
 
 static func backdrop(parent: Control) -> TextureRect:
@@ -25,55 +65,73 @@ static func backdrop(parent: Control) -> TextureRect:
 	return art
 
 
-static func skin(fill := INK, edge := Color("5f6655"), radius := 8) -> StyleBox:
-	if radius >= 8:
-		var frame := UiKit.texture_stylebox(UiKit.TEX_PANEL_FRAME, 65, 65, 65, 65)
-		frame.content_margin_left = 24
-		frame.content_margin_top = 24
-		frame.content_margin_right = 24
-		frame.content_margin_bottom = 24
-		return frame
-	else:
-		var card := UiKit.texture_stylebox(UiKit.TEX_SLOT_NORMAL, 25, 25, 25, 25)
-		card.content_margin_left = 12
-		card.content_margin_top = 10
-		card.content_margin_right = 12
-		card.content_margin_bottom = 10
-		return card
+static func skin(fill := INK, edge := Color("5f6655"), radius := 8) -> StyleBoxFlat:
+	var box := StyleBoxFlat.new()
+	box.bg_color = fill
+	box.border_color = edge
+	box.set_border_width_all(1)
+	box.set_corner_radius_all(mini(radius, 6))
+	box.set_content_margin_all(12.0)
+	box.anti_aliasing = true
+	return box
+
+
+static func concept_skin(kind: String) -> StyleBoxTexture:
+	var margins: Array = {
+		"primary": [45, 14],
+		"info": [14, 14],
+		"slot": [14, 14],
+		"slot_selected": [14, 14],
+		"tab": [13, 9],
+		"stat": [10, 8]
+	}[kind]
+	return UiKit.texture_stylebox(
+		"res://assets/ui/entry/concept/" + kind + ".png",
+		margins[0],
+		margins[1],
+		margins[0],
+		margins[1]
+	)
 
 
 static func style(button: Button, primary := false, selected := false) -> void:
-	button.add_theme_font_override("font", UiKit.BOLD_FONT)
+	button.add_theme_font_override("font", TITLE_FONT)
 	button.add_theme_constant_override("outline_size", 0)
-
-	var path := UiKit.TEX_GOLD_BTN if primary else (UiKit.TEX_SLOT_SELECTED if selected else UiKit.TEX_SLOT_NORMAL)
-	var is_slot_card := selected or (not primary and button.name.begins_with("SaveSlot"))
-	if not primary and not is_slot_card:
-		path = UiKit.TEX_BRONZE_BTN
-	var ml := 25 if is_slot_card else 58
-	var mt := 25 if is_slot_card else 26
-	var mr := 25 if is_slot_card else 58
-	var mb := 25 if is_slot_card else 26
-
-	var normal_box := UiKit.texture_stylebox(path, ml, mt, mr, mb)
-	var pressed_box := UiKit.texture_stylebox(path, ml, mt, mr, mb, Color(0.75, 0.75, 0.75))
-	var disabled_box := UiKit.texture_stylebox(path, ml, mt, mr, mb, Color(0.4, 0.4, 0.4))
-
+	var normal: StyleBox
+	if primary:
+		normal = concept_skin("primary")
+	elif button.name in ["warrior", "mage"] or selected:
+		normal = concept_skin("tab")
+		if not selected:
+			(normal as StyleBoxTexture).modulate_color = Color(0.64, 0.78, 0.74)
+	else:
+		normal = skin(Color(0.025, 0.075, 0.065, 0.74), Color("747459"), 4)
 	for state: String in ["normal", "hover", "pressed", "focus", "disabled"]:
-		var box: StyleBoxTexture
-		if state == "pressed":
-			box = pressed_box
-		elif state == "disabled":
-			box = disabled_box
-		else:
-			# 호버 및 포커스 효과는 프로젝트 규칙에 따라 배제 (normal 상태와 동일 유지)
-			box = normal_box
+		var box := normal.duplicate() as StyleBox
+		if box is StyleBoxFlat:
+			if state == "pressed":
+				box.bg_color = box.bg_color.lightened(0.08)
+			elif state == "disabled":
+				box.bg_color = box.bg_color.darkened(0.14)
+		elif box is StyleBoxTexture:
+			if state == "pressed":
+				box.modulate_color *= Color(0.84, 0.84, 0.84)
+			elif state == "disabled":
+				box.modulate_color *= Color(0.6, 0.6, 0.6)
 		button.add_theme_stylebox_override(state, box)
+	for state: String in [
+		"font_color", "font_hover_color", "font_pressed_color", "font_focus_color"
+	]:
+		button.add_theme_color_override(state, Color("f7e7c7") if primary or selected else IVORY)
+	button.add_theme_color_override("font_disabled_color", MUTED)
 
-	var text_color := Color("fff2d1") if primary or selected else IVORY
-	for state: String in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
-		button.add_theme_color_override(state, text_color)
-	button.add_theme_color_override("font_disabled_color", Color("758077"))
+
+static func slot_style(band: Control, button: Button, selected: bool) -> void:
+	var box := concept_skin("slot_selected" if selected else "slot")
+	band.add_theme_stylebox_override("panel", box)
+	band.queue_redraw()
+	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
+		button.add_theme_stylebox_override(state, StyleBoxEmpty.new())
 
 
 static func portrait(texture: Texture2D) -> Texture2D:
@@ -81,17 +139,8 @@ static func portrait(texture: Texture2D) -> Texture2D:
 		return null
 	var crop := AtlasTexture.new()
 	crop.atlas = texture
-	crop.region = Rect2(Vector2(texture.get_width() * 0.14, texture.get_height() * 0.09), Vector2(texture.get_width() * 0.72, texture.get_height() * 0.48))
-	return crop
-
-
-static func vignette(texture: Texture2D) -> Texture2D:
-	if texture == null:
-		return null
-	var crop := AtlasTexture.new()
-	crop.atlas = texture
-	# Both delivered portraits place the eyes near the upper third. This upper-body
-	# region keeps the face and casting hand in the wide Continue presentation.
-	crop.region = Rect2(Vector2(0, texture.get_height() * 0.12),
-		Vector2(texture.get_width(), texture.get_height() * 0.43))
+	crop.region = Rect2(
+		Vector2(texture.get_width() * 0.29, texture.get_height() * 0.15),
+		Vector2(texture.get_width() * 0.42, texture.get_height() * 0.30)
+	)
 	return crop

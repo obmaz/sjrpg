@@ -1,6 +1,6 @@
 # 3D 개발 구조
 
-타이틀의 세 메뉴는 `TitleScreen`의 신호를 `Main`이 받아 처리합니다. 타이틀 모달은 `Main`이,
+타이틀의 세 메뉴는 `TitleScreen`의 신호를 `Main`이 받아 처리합니다. 새 모험·이어가기는 `ClassSelect.entry_mode`로 구분하는 전체 화면이며, 타이틀 설정 모달은 `Main`이,
 설정 안의 불러오기 모달은 `SettingsPanel`이 닫힘과 해제를 소유합니다. 게임 중 슬롯 전환은
 `Game.load_slot()`이 현재 진행의 저장에 성공한 뒤 HUD를 닫고, `Main`이 대상 저장의 읽기 결과를 확인합니다.
 

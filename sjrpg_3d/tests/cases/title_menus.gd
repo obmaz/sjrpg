@@ -1,5 +1,5 @@
 extends TestCase
-## 세 메뉴의 실제 신호·닫힘·저장 실패 경로를 확인한다.
+## 타이틀의 새 생성·이어가기 진입과 저장·패드·뒤로가기 경계를 확인한다.
 
 
 class EntryRoot:
@@ -15,6 +15,8 @@ class EntryRoot:
 
 
 func run() -> void:
+	for slot in range(1, GameState.MAX_SAVE_SLOTS + 1):
+		GameState.delete_slot(slot)
 	var view := SubViewport.new()
 	view.size = Vector2i(720, 1280)
 	add_child(view)
@@ -46,11 +48,18 @@ func run() -> void:
 	await _frames(2)
 	var menus := _panels(root)
 	if check(
-		"load button opens the real load panel", menus.size() == 1 and menus[0] is SaveLoadPanel
+		"load button opens the concept continue screen even with no saves",
+		(
+			_is_selection(root.current)
+			and root.current.entry_mode == "continue"
+			and root.current._stage == "slots"
+			and root.current.slot_buttons.size() == GameState.MAX_SAVE_SLOTS
+			and menus.is_empty()
+		)
 	):
 		root.handle_system_back()
 		await _frames(2)
-		check("cancelling title load removes its modal", _panels(root).is_empty())
+		check("continue Back returns to title", _is_title(root.current))
 	root.current._btn_settings.pressed.emit()
 	await _frames(2)
 	menus = _panels(root)
@@ -72,6 +81,8 @@ func run() -> void:
 		settings.closed.emit()
 		await _frames(2)
 		check("cancelling title settings removes its modal", _panels(root).is_empty())
+	await _new_entry_modes(root)
+	await _failed_title_load_returns_to_selection(root)
 	await _slot_status_messages(root)
 	GameState.select_slot(1)
 	GameState.delete_save()
@@ -81,12 +92,12 @@ func run() -> void:
 	GameState.gold = 1
 	root.current._btn_load_game.pressed.emit()
 	await _frames(2)
-	var load_menu: SaveLoadPanel = _panels(root)[0]
-	var select: Button = load_menu._slot_cards[0].get_node("SelectSaveSlot1")
-	select.pressed.emit()
+	var load_menu: Control = root.current
+	load_menu.slot_buttons[0].pressed.emit()
 	await _frames(2)
-	check("selecting a real saved row enables load", not load_menu._load_button.disabled)
-	load_menu._load_button.pressed.emit()
+	check("selecting a real saved row enables continue", not load_menu.continue_button.disabled)
+	check("continue preview does not apply saved progress", GameState.gold == 1)
+	load_menu.continue_button.pressed.emit()
 	for frame in 120:
 		await _frames(1)
 		if not root._entry_starting:
@@ -96,13 +107,133 @@ func run() -> void:
 		root.launches == 1 and GameState.hero_class == "mage" and GameState.gold == 137
 	)
 	check(
-		"successful title load retires its modal and loading screen",
-		_panels(root).is_empty() and not root._entry_starting
+		"successful title load retires the selection and loading screen",
+		not is_instance_valid(load_menu) and not root._entry_starting
 	)
 	view.queue_free()
 	await _frames(2)
 	await _gamepad_menus()
 	await _failed_save_keeps_settings()
+
+
+func _is_selection(node: Node) -> bool:
+	return node.get_script() == preload("res://scripts/ui/screens/class_select.gd")
+
+
+func _is_title(node: Node) -> bool:
+	return node.get_script() == preload("res://scripts/ui/screens/title_screen.gd")
+
+
+func _failed_title_load_returns_to_selection(root: EntryRoot) -> void:
+	# 타이틀 설정의 불러오기는 기존 게임이 없어도 읽기 실패를 같은 슬롯 화면에서 안내한다.
+	var path := GameState.slot_path(4)
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	file.store_string("{unreadable")
+	file.close()
+	root.current._btn_settings.pressed.emit()
+	await _frames(2)
+	var settings: SettingsPanel = _panels(root)[0]
+	settings.load_requested.emit(4)
+	settings.closed.emit()
+	for frame in 120:
+		await _frames(1)
+		if not root._entry_starting:
+			break
+	check(
+		"failed title settings load returns to the intended continue screen with its error",
+		(
+			_is_selection(root.current)
+			and root.current.entry_mode == "continue"
+			and root.current.selected_slot == 4
+			and root.current.subtitle.text.contains("모험을 읽지 못했습니다")
+			and not root._entry_starting
+			and root.launches == 0
+		)
+	)
+	check(
+		"failed title load preserves the damaged file",
+		FileAccess.get_file_as_string(path) == "{unreadable"
+	)
+	root.handle_system_back()
+	await _frames(2)
+	GameState.delete_slot(4)
+
+
+func _new_entry_modes(root: EntryRoot) -> void:
+	check("entry fixture creates an occupied active slot", GameState.create_slot(2, "warrior"))
+	var saved := FileAccess.get_file_as_string(GameState.slot_path(2))
+	GameState.gold = 73
+	root.current._btn_new_game.pressed.emit()
+	await _frames(2)
+	check(
+		"new adventure chooses an empty slot instead of reopening the active save",
+		(
+			_is_selection(root.current)
+			and root.current.entry_mode == "new"
+			and root.current._stage == "class"
+			and root.current.selected_slot == 1
+		)
+	)
+	check(
+		"new hero preview preserves the live hero and existing save bytes",
+		(
+			GameState.gold == 73
+			and GameState.hero_class == "warrior"
+			and FileAccess.get_file_as_string(GameState.slot_path(2)) == saved
+		)
+	)
+	root.current.slot_switch.pressed.emit()
+	await _frames(2)
+	root.current.continue_button.pressed.emit()
+	await _frames(2)
+	check(
+		"empty-slot main action opens hero choice from slot management",
+		root.current._stage == "class" and root.current.selected_slot == 1
+	)
+	root.handle_system_back()
+	await _frames(2)
+	check(
+		"Back after the empty-slot main action returns to slot management",
+		_is_selection(root.current) and root.current._stage == "slots"
+	)
+	root.current.back_button.pressed.emit()
+	await _frames(2)
+	root.current._btn_load_game.pressed.emit()
+	await _frames(2)
+	check(
+		"continue explicitly opens the occupied active slot in the same screen family",
+		(
+			_is_selection(root.current)
+			and root.current.entry_mode == "continue"
+			and root.current._stage == "slots"
+			and root.current.selected_slot == 2
+		)
+	)
+	root.handle_system_back()
+	await _frames(2)
+	for slot in [1, 3, 4]:
+		check("entry fixture fills save slot %d" % slot, GameState.create_slot(slot, "mage"))
+	var bytes: Array[String] = []
+	for slot in range(1, GameState.MAX_SAVE_SLOTS + 1):
+		bytes.append(FileAccess.get_file_as_string(GameState.slot_path(slot)))
+	root.current._btn_new_game.pressed.emit()
+	await _frames(2)
+	check(
+		"full slots show safe slot management instead of authorizing overwrite",
+		(
+			_is_selection(root.current)
+			and root.current._stage == "slots"
+			and root.current.start_button.disabled
+		)
+	)
+	root.current.back_button.pressed.emit()
+	await _frames(2)
+	for slot in range(1, GameState.MAX_SAVE_SLOTS + 1):
+		check(
+			"entry routing never replaces an occupied slot %d" % slot,
+			FileAccess.get_file_as_string(GameState.slot_path(slot)) == bytes[slot - 1]
+		)
+		GameState.delete_slot(slot)
 
 
 func _gamepad_menus() -> void:
@@ -123,10 +254,9 @@ func _gamepad_menus() -> void:
 		nav._action("primary")
 		await _frames(2)
 		var panels := _panels(root)
-		var expected: bool = (
-			panels.size() == 1
-			and (panels[0] is SaveLoadPanel if menu == "load_game" else panels[0] is SettingsPanel)
-		)
+		var expected := panels.size() == 1 and panels[0] is SettingsPanel
+		if menu == "load_game":
+			expected = _is_selection(root.current) and root.current.entry_mode == "continue"
 		check("pad primary opens the focused title menu: " + menu, expected)
 		if not expected:
 			break
@@ -166,32 +296,39 @@ func _slot_status_messages(root: EntryRoot) -> void:
 		file.close()
 	root.current._btn_load_game.pressed.emit()
 	await _frames(2)
-	var panel: SaveLoadPanel = _panels(root)[0]
-	var backup_text := _label_text(panel._slot_cards[1])
-	var broken_text := _label_text(panel._slot_cards[2])
+	var panel: Control = root.current
+	var backup_text := _label_text(panel.slot_buttons[1])
+	var broken_text := _label_text(panel.slot_buttons[2])
 	check(
-		"load card identifies the actual recoverable backup and coarse forest location",
-		(
-			backup_text.contains("백업에서 복구")
-			and backup_text.contains("숲 필드")
-			and not backup_text.contains("예배당")
-		)
+		"continue card identifies the actual recoverable backup",
+		backup_text.contains("백업") and bool(panel._summaries[1]["backup"])
 	)
 	check(
 		"unreadable occupied slot reports damage instead of inventing a level zero hero",
 		(
-			broken_text.contains("손상된 모험")
-			and broken_text.contains("확인·삭제")
+			broken_text.contains("읽을 수 없는 모험")
+			and broken_text.contains("삭제")
 			and not broken_text.contains("Lv.0")
 		)
 	)
-	var backup_button: Button = panel._slot_cards[1].get_node("SelectSaveSlot2")
-	var broken_button: Button = panel._slot_cards[2].get_node("SelectSaveSlot3")
+	panel.slot_buttons[1].pressed.emit()
+	await _frames(2)
 	check(
-		"only the recovered slot is selectable",
-		not backup_button.disabled and broken_button.disabled
+		"the recovered slot enables the explicit continue action",
+		not panel.continue_button.disabled
 	)
-	panel.closed.emit()
+	panel.slot_buttons[2].pressed.emit()
+	await _frames(2)
+	check(
+		"damaged slot remains manageable but cannot continue or replace its bytes",
+		(
+			panel.continue_button.disabled
+			and panel.start_button.disabled
+			and panel.delete_buttons[2].is_visible_in_tree()
+			and FileAccess.get_file_as_string(GameState.slot_path(3)) == "{corrupt"
+		)
+	)
+	root.handle_system_back()
 	await _frames(2)
 	GameState.delete_slot(2)
 	GameState.delete_slot(3)
