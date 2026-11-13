@@ -5,6 +5,7 @@ extends Node2D
 
 const GROUND_Y := 0.577350269
 const GROUP := "world_effects"
+const COSMETIC_LIMIT := 64
 
 var kind := ""
 var color := Color.WHITE
@@ -319,6 +320,9 @@ static func spawn_impact(world_game: Node, at: Vector2, source: Node2D, heavy :=
 
 
 func _process(delta: float) -> void:
+	# 접촉 박자 대기는 ContactRhythm만 진행한다. 피해 효과에는 적용하지 않는다.
+	if kind == "impact" and age < 0.0:
+		return
 	var previous_age := age
 	var active_delta := minf(delta, maxf(0.0, life - age))
 	# A slow frame must not discard a new cosmetic impact before its first render.
@@ -635,7 +639,7 @@ func visual_phase() -> float:
 
 
 func _draw() -> void:
-	if kind == "text" and age < 0.0:
+	if age < 0.0:
 		return
 	var t := age / life
 	match kind:

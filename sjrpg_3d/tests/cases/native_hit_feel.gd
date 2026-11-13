@@ -116,6 +116,7 @@ func run() -> void:
 		is_equal_approx(label.scale.x, 1.0)
 	)
 	var fx := renderer._hit_feel
+	game.contact_rhythm.tick(game, 0.12)
 	fx.sync(0.0)
 	check(
 		"real confirmed impacts create directional depth-tested streaks and a short focus pulse",

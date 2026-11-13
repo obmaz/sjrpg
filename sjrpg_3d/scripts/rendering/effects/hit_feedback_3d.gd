@@ -99,7 +99,7 @@ func sync(delta: float) -> void:
 	var hits: Array[Effect] = Effect.in_world(renderer.game.world)
 	var view := renderer.source_view_rect()
 	for source: Effect in hits:
-		if source.kind != "impact" or not source.params.has("contact_position") or source.is_queued_for_deletion() or source.age >= source.life:
+		if source.kind != "impact" or not source.params.has("contact_position") or source.is_queued_for_deletion() or source.age < 0.0 or source.age >= source.life:
 			continue
 		if not view.has_point(source.position):
 			continue

@@ -305,6 +305,40 @@ func preview_hit_feel() -> void:
 		await _game.get_tree().create_timer(0.37, false).timeout
 
 
+## 실제 전방 부채꼴 공격으로 네 표적을 맞히고 접촉 박자를 연속 검수한다.
+func preview_multi_hit() -> void:
+	_game.encounters.set_process(false)
+	_game._spawn_timer = 10000.0
+	for foe: Enemy in _game.enemies:
+		foe.queue_free()
+	_game.enemies.clear()
+	await _game.get_tree().create_timer(2.0).timeout
+	var targets: Array[Enemy] = []
+	var offsets: Array[Vector2] = [Vector2(65, -25), Vector2(80, -8), Vector2(80, 8), Vector2(65, 25)]
+	for offset: Vector2 in offsets:
+		var foe := Enemy.new()
+		foe.setup(_game, "goblin", 1)
+		foe.hp = 100000.0
+		foe.max_hp = foe.hp
+		foe.xp_reward = 0
+		foe.position = _game.player.position + offset
+		_game.world.add_child(foe)
+		_game.enemies.append(foe)
+		foe.stun(90.0)
+		targets.append(foe)
+	for index in 80:
+		if not _game.is_inside_tree() or _game.is_queued_for_deletion():
+			return
+		if _game.player._attack_time <= 0.0:
+			for target_index in targets.size():
+				var target := targets[target_index]
+				target.position = _game.player.position + offsets[target_index]
+				target._knockback = Vector2.ZERO
+			_game.player.facing = 0.0
+			_game.player.cast_slot(0, true)
+		await _game.get_tree().create_timer(0.75, false).timeout
+
+
 func preview_combat() -> void:
 	_game.encounters.set_process(false)
 	_game._spawn_timer = 10000.0

@@ -30,6 +30,7 @@ const SCENES = {
     warp: 'at=portal&panel=warp',
     warp_trip: 'warp_preview=1',
     juice: 'at=field&combat_preview=1',
+    multi_hit: 'at=field&hitfeel_preview=multi',
     damage_stream: 'at=field&combat_text_preview=1',
     fx_slash: 'at=field&fx_preview=cleave',
     fx_spin: 'at=field&fx_preview=whirlwind',
@@ -287,6 +288,8 @@ if (scene === 'defender') {
     await page.waitForFunction(() => window.__sjrpgDefenderReview === true, null, {timeout: 60000});
 } else if (scene === 'damage_stream') {
     await page.waitForFunction(() => window.__sjrpgDamageStreamReady === true, null, {timeout: 60000});
+} else if (scene === 'multi_hit') {
+    await page.waitForFunction(() => window.__sjrpg3dProbe?.contact_rhythm?.beats >= 4 && window.__sjrpg3dProbe?.contact_rhythm?.peak_pending === 3, null, {timeout: 60000});
 } else if (scene.startsWith('gate_closed')) {
     await page.waitForFunction(() => window.__sjrpgGateReview?.closed === true, null, {timeout: 60000});
     console.log('Actual threat closed the gate:', await page.evaluate(() => window.__sjrpgGateReview));

@@ -205,7 +205,8 @@ func take_damage(amount: float, source: Node2D, visual_source: Node2D = null) ->
 	if impact_source is Effect and impact_source.kind == "proj":
 		impact.params["contact_position"] = impact_source.native_position()
 	impact.angle = incoming.angle()
-	game.combat_feedback(position, float([0.36, 0.55, 0.92, 1.0][tier]), false)
+	impact.params["camera_position"] = position
+	game.contact_rhythm.confirm(game, impact, tier, Effect.contact_element(impact_source), kind)
 	if is_instance_valid(impact_source) and not Prefs.reduce_motion:
 		_recoil_direction = Effect.contact_direction(impact_source, position)
 		_recoil_size = HitTier.KILL_RECOIL if tier == HitTier.KILL else (8.0 if heavy else 5.0)  # JUICE #5
@@ -219,7 +220,6 @@ func take_damage(amount: float, source: Node2D, visual_source: Node2D = null) ->
 		source.confirm_melee_contact(heavy, tier == HitTier.KILL)
 	if GameState.has_gift("frost") and source != null and source is Player:
 		slow(0.67)
-	SoundFx.play_hit(tier, Effect.contact_element(impact_source), kind)  # JUICE #11, #12
 	Prefs.pulse("hit")
 	sprite.trigger_squash(HitTier.squash(tier))  # JUICE #4
 	if tier >= HitTier.HEAVY:

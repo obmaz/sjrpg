@@ -27,7 +27,10 @@ var inspection: AdventureInspection
 var player: Player
 var _impact_offset := Vector2.ZERO
 var _impact_fresh := false
-const IMPACT_LIMIT := 0.65
+var _impact_impulse := Vector2.ZERO
+var _impact_age := 1.0
+const IMPACT_LIMIT := 2.0
+var contact_rhythm := ContactRhythm.new()
 var camera: Camera2D
 var hud: Hud
 var encounters: EncounterRuntime
@@ -306,8 +309,13 @@ func combat_feedback(at: Vector2, strength: float, hurt := false) -> void:
 	var direction := (player.position - at).normalized()
 	if direction.length_squared() < 0.1:
 		direction = Vector2(0.6, -0.8)
-	# 연타·광역 명중도 누적하지 않는다. 강타는 몸의 반동과 소리로 전달한다.
-	_impact_offset = direction * clampf(strength, 0.0, 1.0) * (IMPACT_LIMIT if hurt else 0.45)
+	var impulse := direction * clampf(strength, 0.0, 1.0) * (IMPACT_LIMIT if hurt else 1.5)
+	# 같은 프레임의 약한 타격이 강한 피격을 덮거나 변위를 누적하지 않는다.
+	if _impact_fresh and impulse.length_squared() <= _impact_impulse.length_squared():
+		return
+	_impact_impulse = impulse
+	_impact_age = 0.0
+	_impact_offset = impulse
 	_impact_fresh = true
 	camera.offset = _impact_offset
 
@@ -315,9 +323,12 @@ func combat_feedback(at: Vector2, strength: float, hurt := false) -> void:
 ## Present a confirmed contact before a slow next frame can decay its whole pulse away.
 func _update_impact_camera(delta: float) -> void:
 	if Prefs.reduce_motion:
+		_impact_impulse = Vector2.ZERO
+		_impact_age = 1.0
 		_impact_offset = Vector2.ZERO
 	else:
-		_impact_offset *= exp(-18.0 * (minf(delta, 0.012) if _impact_fresh else delta))
+		_impact_age += minf(delta, 0.006) if _impact_fresh else delta
+		_impact_offset = _impact_impulse * exp(-24.0 * _impact_age) * cos(34.0 * _impact_age) if _impact_age < 0.18 else Vector2.ZERO
 	_impact_fresh = false
 	camera.offset = _impact_offset
 
@@ -336,6 +347,7 @@ func _process(delta: float) -> void:
 	_sync_forest_daylight()
 	WorldLighting.advance(delta)
 	_update_impact_camera(delta)
+	contact_rhythm.tick(self, delta)
 	_update_zoom_punch(delta)
 	camera.position = _camera_focus()
 	if dungeon.active:
@@ -960,7 +972,7 @@ func _add_effect(e: Effect) -> void:
 	# Bound only cosmetic nodes; projectiles, damage zones and summons keep their gameplay.
 	if e.kind not in ["proj", "orb", "zone", "hydra", "ward"]:
 		cosmetic_effects = cosmetic_effects.filter(func(effect): return is_instance_valid(effect) and not effect.is_queued_for_deletion())
-		if cosmetic_effects.size() >= 64:
+		if cosmetic_effects.size() >= Effect.COSMETIC_LIMIT:
 			cosmetic_effects.pop_front().queue_free()
 		cosmetic_effects.append(e)
 	e.game = self

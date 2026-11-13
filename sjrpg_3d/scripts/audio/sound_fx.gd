@@ -65,6 +65,12 @@ var _streak := 0
 var _last_kill_ms := -100000
 var _last_hit_ms := -100000
 var _last_hit_tier := -1
+var _last_contact_tap_ms := -100000
+var contact_beats := 0
+const CONTACT_BEAT_GAIN_DB := -6.0
+const CONTINUOUS_CONTACT_GAIN_DB := -1.5
+const STRONGER_CONTACT_GAIN_DB := -4.0
+const CONTACT_BEAT_GAP_MS := 32
 
 
 func _ready() -> void:
@@ -163,21 +169,22 @@ static func material_hit_name(species: String) -> String:
 	return "hit_flesh" if species in ["goblin", "wolf", "boar", "cave_crawler"] else ""
 
 
-func play_hit(tier: int, element := 0, species := "") -> void:
+func play_hit(tier: int, element := 0, species := "", followup := false) -> void:
 	var kill_pitch := _next_kill_pitch() if tier == HitTier.KILL else 1.0
 	var now := Time.get_ticks_msec()
-	var grouped := now - _last_hit_ms < 70
+	var gap_ms := now - _last_hit_ms
+	# 표시 박자로 예약된 후속음은 느린 프레임에서도 짧은 악센트의 역할을 유지한다.
+	var grouped := followup or gap_ms < 70
+	var gain_db := STRONGER_CONTACT_GAIN_DB if grouped else (CONTINUOUS_CONTACT_GAIN_DB if gap_ms < 160 else 0.0)
 	if grouped and tier <= _last_hit_tier:
+		if now - _last_contact_tap_ms >= CONTACT_BEAT_GAP_MS and Prefs.sound_enabled:
+			_last_contact_tap_ms = now
+			_hit_variant += 1
+			var before := played_serial
+			play(contact_beat_name(species), true, 1.0 + 0.025 * (_hit_variant % 3), CONTACT_BEAT_GAIN_DB)
+			if played_serial > before:
+				contact_beats += 1
 		return
-	if grouped:
-		# 한 광역 공격 안에서도 약한 접촉음보다 강한 마무리를 우선한다.
-		for voice: AudioStreamPlayer in _players:
-			if voice.get_meta("contact_voice", false):
-				voice.stop()
-		for gate in [
-			"impact", "tick", "kill", "hit_material", "hit_fire", "hit_ice", "hit_lightning"
-		]:
-			_last[gate] = -100000
 	_last_hit_ms = now
 	_last_hit_tier = tier
 	var names := hit_names(tier, _hit_variant, element)
@@ -186,7 +193,13 @@ func play_hit(tier: int, element := 0, species := "") -> void:
 	if not material.is_empty():
 		names.append(material)
 	for sound in names:
-		play(sound, false, kill_pitch if sound == "kill" else 1.0)
+		# 더 강한 후속 타격도 앞 소리의 꼬리를 자르지 않고 낮은 이득으로 겹친다.
+		play(sound, grouped, kill_pitch if sound == "kill" else 1.0, gain_db)
+
+
+static func contact_beat_name(species: String) -> String:
+	var material := material_hit_name(species)
+	return material if not material.is_empty() else "tick"
 
 
 func _next_kill_pitch() -> float:
@@ -196,17 +209,17 @@ func _next_kill_pitch() -> float:
 	return streak_pitch(_streak)
 
 
-func play(name: String, preview := false, pitch_multiplier := 1.0) -> void:
+func play(name: String, bypass_throttle := false, pitch_multiplier := 1.0, gain_db := 0.0) -> void:
 	if not Prefs.sound_enabled or not _streams.has(name):
 		return
 	var now := Time.get_ticks_msec()
-	# Every contact variant shares one gate so area attacks cannot layer a wall of thuds.
+	# 기본 접촉음은 게이트를 공유한다. 검수음·박자 관리된 후속음만 제한을 우회한다.
 	var gate := (
 		"impact"
 		if name.begins_with("impact")
 		else ("hit_material" if name in ["hit_flesh", "hit_bone", "hit_stone"] else name)
 	)
-	if not preview and now - int(_last.get(gate, 0)) < 70:
+	if not bypass_throttle and now - int(_last.get(gate, 0)) < 70:
 		return
 	var priority := voice_priority(name)
 	var index := _voice_index(priority)
@@ -248,7 +261,7 @@ func play(name: String, preview := false, pitch_multiplier := 1.0) -> void:
 	)
 	player.set_meta("warning", "")
 	player.set_meta("contact_voice", contact)
-	player.volume_db = playback_volume_db(name)
+	player.volume_db = playback_volume_db(name) + gain_db
 	player.play()
 	played_serial += 1
 	last_played = {

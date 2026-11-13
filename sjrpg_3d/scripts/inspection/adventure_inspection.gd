@@ -153,6 +153,8 @@ func apply() -> void:
 			scenes.preview_warp.call_deferred()
 		elif option == "hitfeel_preview" and value in ["1", "peak"]:
 			scenes.preview_hit_feel.call_deferred()
+		elif option == "hitfeel_preview" and value == "multi":
+			scenes.preview_multi_hit.call_deferred()
 		elif option == "waypoint_preview" and value == "1":
 			scenes.preview_waypoint_discovery.call_deferred()
 		elif option == "combat_preview":

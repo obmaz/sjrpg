@@ -583,6 +583,9 @@ func _publish_probe() -> void:
 		"native_novas": _nova_fx.snapshot() if _nova_fx != null else {},
 		"aim_target": _aim_target.target_id if _aim_target != null else 0,
 		"hit_feel": _hit_feel.snapshot() if _hit_feel != null else {},
+		"contact_rhythm": game.contact_rhythm.snapshot(),
+		"contact_audio_accents": SoundFx.contact_beats,
+		"contact_camera_offset": [game.camera.offset.x, game.camera.offset.y],
 		"player_occluders": _occlusion._active.size() if _occlusion != null else 0,
 		"occlusion_warmed_materials": _occlusion.warmed_materials,
 		"occlusion_triangle_builds": _occlusion.triangle_builds,
@@ -707,12 +710,10 @@ func _sync_cards() -> void:
 		if owner is Effect:
 			(entry["node"] as MeshInstance3D).visible = owner.get_parent() == game.world
 	for effect in Effect.in_world(game.world):
-		if effect.is_queued_for_deletion():
+		if effect.is_queued_for_deletion() or effect.age < 0.0:
 			continue
 		var id := effect.get_instance_id()
 		if effect.kind == "text":
-			if effect.age < 0.0:
-				continue
 			if not _labels.has(id):
 				var fresh_label: Label3D
 				if _label_pool.is_empty():
