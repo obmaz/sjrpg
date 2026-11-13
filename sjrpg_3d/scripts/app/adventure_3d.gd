@@ -14,3 +14,9 @@ func _ready() -> void:
 	simulation.restart_requested.connect(func(): restart_requested.emit())
 	simulation.reload_requested.connect(func(): reload_requested.emit())
 	add_child(simulation)
+
+
+func load_slot(slot: int) -> bool:
+	if simulation != null and simulation.has_method("load_slot"):
+		return simulation.load_slot(slot)
+	return false

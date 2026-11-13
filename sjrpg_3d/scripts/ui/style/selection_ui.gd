@@ -41,10 +41,8 @@ static func style(button: Button, primary := false, selected := false) -> void:
 		var fill := Color("655638") if primary else Color("14211f")
 		fill.a = 0.96 if primary else 0.88
 		var edge := BRONZE if primary or selected else Color("4e5b50")
-		if state in ["hover", "focus"]:
-			fill = fill.lightened(0.08)
-			edge = Color("dbc28c")
-		elif state == "pressed":
+		# 호버 및 포커스 효과는 프로젝트 규칙에 따라 배제 (normal 상태와 동일 유지)
+		if state == "pressed":
 			fill = fill.darkened(0.18)
 		elif state == "disabled":
 			fill = Color("15201d")
@@ -57,7 +55,7 @@ static func style(button: Button, primary := false, selected := false) -> void:
 			button.add_theme_stylebox_override(state, metal)
 		else:
 			var box := skin(fill, edge, 7)
-			box.set_border_width_all(2 if selected or state == "focus" else 1)
+			box.set_border_width_all(2 if selected else 1)
 			button.add_theme_stylebox_override(state, box)
 	for state: String in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
 		button.add_theme_color_override(state, IVORY)

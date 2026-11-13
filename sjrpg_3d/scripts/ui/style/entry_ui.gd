@@ -50,10 +50,8 @@ static func style(button: Button, primary := false, selected := false) -> void:
 		skin.border_color = BRONZE if primary or selected else Color("4c4d4e")
 		skin.set_border_width_all(2 if selected else 1)
 		skin.set_corner_radius_all(3)
-		if state in ["hover", "focus"]:
-			skin.bg_color = skin.bg_color.lightened(0.10)
-			skin.border_color = Color("d0b58d")
-		elif state == "pressed":
+		# 호버 및 포커스 효과는 프로젝트 규칙에 따라 배제 (normal 상태와 동일 유지)
+		if state == "pressed":
 			skin.bg_color = skin.bg_color.darkened(0.25)
 		elif state == "disabled":
 			skin.bg_color = Color("111418")

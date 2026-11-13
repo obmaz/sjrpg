@@ -65,8 +65,47 @@ func show_title() -> void:
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval("window.__sjrpgAdventureReady = false; window.__sjrpgClassSelectReady = false; window.__sjrpgTitleReady = false")
 	var title := preload("res://scripts/ui/screens/title_screen.gd").new()
-	title.start_requested.connect(show_class_select)
+	title.new_game_requested.connect(show_class_select)
+	title.load_game_requested.connect(_on_title_load_game)
+	title.settings_requested.connect(_on_title_settings)
 	_swap(title)
+
+
+func _on_title_load_game() -> void:
+	var panel := preload("res://scripts/ui/panels/save_load_panel.gd").new().setup(true)
+	panel.slot_loaded.connect(func(slot: int):
+		load_slot_adventure(slot)
+	)
+	add_child(panel)
+
+
+func _on_title_settings() -> void:
+	var panel := preload("res://scripts/ui/panels/settings_panel.gd").new().setup(null)
+	panel.load_requested.connect(func(slot: int):
+		load_slot_adventure(slot)
+	)
+	add_child(panel)
+
+
+func load_slot_adventure(slot: int) -> void:
+	if _entry_starting:
+		return
+	var summaries := GameState.slot_summaries()
+	var cls := "warrior"
+	for s: Dictionary in summaries:
+		if int(s.get("slot", 0)) == slot and bool(s.get("valid", false)):
+			cls = str(s.get("class", "warrior"))
+			break
+	var token: int = _open_entry_loading("continue", slot, cls)
+	await _paint_entry_phase("load")
+	if not _entry_valid(token):
+		return
+	_entry_loading.note_work()
+	var loaded: bool = GameState.select_slot(slot) and GameState.load_game()
+	if not loaded:
+		_entry_failed(token, slot, "모험을 읽지 못했습니다. 다른 슬롯을 선택하거나 다시 시도해 주세요.")
+		return
+	await _build_entry_world(token, slot)
 
 
 func show_class_select() -> void:
@@ -291,5 +330,10 @@ func handle_system_back() -> void:
 
 
 func _reload_adventure() -> void:
+	GameState.load_game()
 	var token := _open_entry_loading("continue", GameState.active_slot, GameState.hero_class)
+	await _paint_entry_phase("load")
+	if not _entry_valid(token):
+		return
+	_entry_loading.note_work()
 	await _build_entry_world(token, GameState.active_slot)

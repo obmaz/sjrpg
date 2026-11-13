@@ -128,16 +128,12 @@ static func style_button(button: Button, primary := false, selected := false) ->
 	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
 		var fill := surface
 		var edge := border
-		if state == "hover":
-			fill = surface.lightened(0.08)
-			edge = border.lightened(0.15)
-		elif state == "pressed":
+		if state == "pressed":
 			fill = surface.darkened(0.15)
 		elif state == "disabled":
 			fill = Color("191915")
 			edge = Color("443d31")
-		elif state == "focus":
-			edge = Color("d4c092")
+		# 호버 및 포커스 효과는 프로젝트 규칙상 제거 (기본 상태 유지)
 		var box := panel_style(fill, edge, 6)
 		box.raised = true
 		button.add_theme_stylebox_override(state, box)

@@ -5,6 +5,7 @@ extends PanelFrame
 
 signal title_requested
 signal restart_requested
+signal load_requested(slot: int)
 
 var game: Node
 var _feedback := ""
@@ -30,7 +31,8 @@ func _ready() -> void:
 	super._ready()
 	set_header("모험 설정")
 	_rebuild()
-	add_footer("모험 계속하기", func(): closed.emit(), true)
+	var footer_text := "모험 계속하기" if game != null else "닫기"
+	add_footer(footer_text, func(): closed.emit(), true)
 	get_viewport().size_changed.connect(_fit_display_option_targets)
 
 
@@ -88,7 +90,7 @@ func _rebuild() -> void:
 			SoundFx.play("loot", true)
 		_rebuild()))
 	body.add_child(_action_row("효과음 확인", func(): SoundFx.play("impact", true), Prefs.sound_enabled))
-	if game.dungeon.active:
+	if game != null and is_instance_valid(game) and "dungeon" in game and game.dungeon != null and game.dungeon.active:
 		body.add_child(_action_row("동굴에서 나가기", func():
 			closed.emit()
 			game.dungeon.leave("동굴 입구로 돌아왔습니다")))
@@ -99,14 +101,17 @@ func _rebuild() -> void:
 		var feedback := PanelFrame.wrap_label(_feedback, 16, Color(1.0, 0.69, 0.63) if _feedback_error else Color(0.71, 1, 0.69))
 		feedback.name = "SaveFeedback"
 		body.add_child(feedback)
-	body.add_child(_action_row("진행 상황 지금 저장", func():
-		var saved := GameState.save_game()
-		_feedback = "현재 모험 진행이 저장되었습니다." if saved else GameState.save_error
-		_feedback_error = not saved
-		_rebuild()))
-	body.add_child(_action_row("저장하고 타이틀로", func(): title_requested.emit()))
-	var danger := _action_row("새 모험 준비", func(): _confirm_restart())
-	body.add_child(danger)
+	if game != null:
+		body.add_child(_action_row("진행 상황 지금 저장", func():
+			var saved := GameState.save_game()
+			_feedback = "현재 모험 진행이 저장되었습니다." if saved else GameState.save_error
+			_feedback_error = not saved
+			_rebuild()))
+	body.add_child(_action_row("모험 불러오기", func(): _open_save_load_dialog()))
+	if game != null:
+		body.add_child(_action_row("저장하고 타이틀로", func(): title_requested.emit()))
+		var danger := _action_row("새 모험 준비", func(): _confirm_restart())
+		body.add_child(danger)
 	body.add_child(PanelFrame.section("게임패드 조작"))
 	body.add_child(PanelFrame.wrap_label("LS 이동 · RS 조준\nA 기본 공격 / 확인 · B 회피 / 뒤로\nX · Y · RB · RT 보조 기술 1–4\nLT 대화 / 상호작용 · LB 체력 물약 · ↑ 자원 물약\n← 가방 · → 의뢰 · ↓ 스킬\nMenu 설정 · View 지도\n메뉴에서는 LS / 방향키로 선택하고 A로 확인합니다.", 16, UiKit.MUTED))
 	body.add_child(UiKit.divider())
@@ -194,6 +199,15 @@ func _confirm_restart() -> void:
 	body.add_child(PanelFrame.wrap_label("현재 모험을 저장하고 슬롯 선택으로 이동합니다. 빈 슬롯에서 새 모험을 시작할 수 있으며 기존 모험은 그대로 유지됩니다.", 18))
 	body.add_child(_action_row("저장하고 슬롯 선택으로", func(): restart_requested.emit()))
 	body.add_child(_action_row("취소", func(): _rebuild()))
+
+
+func _open_save_load_dialog() -> void:
+	var load_panel := preload("res://scripts/ui/panels/save_load_panel.gd").new().setup(true)
+	load_panel.slot_loaded.connect(func(slot: int):
+		load_requested.emit(slot)
+		closed.emit()
+	)
+	add_child(load_panel)
 
 
 func _action_row(text: String, on_press: Callable, enabled := true) -> Button:

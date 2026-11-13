@@ -326,6 +326,11 @@ func open_settings() -> void:
 	var panel := SettingsPanel.new().setup(game)
 	panel.title_requested.connect(func(): game.quit_to_title())
 	panel.restart_requested.connect(func(): game.return_to_selection())
+	panel.load_requested.connect(func(slot: int):
+		close_panel()
+		if game.has_method("load_slot"):
+			game.load_slot(slot)
+	)
 	_open(panel)
 
 

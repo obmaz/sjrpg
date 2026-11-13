@@ -1208,6 +1208,28 @@ func return_to_selection() -> bool:
 	return _leave_to_menu(true)
 
 
+func load_slot(slot: int) -> bool:
+	if _menu_exit_committed:
+		return false
+	hud.apply_panel_changes()
+	var previous_location := GameState.location_mode
+	if dungeon.active:
+		GameState.location_mode = "forest"
+	if not GameState.save_game():
+		GameState.location_mode = previous_location
+		var panel: PanelFrame = hud._panel
+		if is_instance_valid(panel) and panel.has_method("show_save_error"):
+			panel.call("show_save_error", GameState.save_error)
+		return false
+	_menu_exit_committed = true
+	if dungeon.active:
+		dungeon.leave("동굴 입구로 돌아왔습니다", false)
+	hud.close_panel(false)
+	GameState.select_slot(slot)
+	reload_requested.emit()
+	return true
+
+
 ## Commit progress before releasing the paused settings panel or retiring the cave.
 func _leave_to_menu(restart: bool) -> bool:
 	if _menu_exit_committed:
