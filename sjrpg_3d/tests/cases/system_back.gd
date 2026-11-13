@@ -86,8 +86,13 @@ func run() -> void:
 		root.show_class_select()
 		await _frames(2)
 		var selection: Node = root.current
-		root.handle_system_back()
-		check("class selection is outside the adventure Back interception", root.current == selection and not get_tree().paused)
+		check("saved entry opens the full continue screen", selection.get_script() == preload("res://scripts/ui/screens/class_select.gd") and selection.get("_stage") == "slots")
+		var entry_save := FileAccess.get_file_as_string(GameState.save_path)
+		var entry_progress := [GameState.active_slot, GameState.hero_class, GameState.level, GameState.xp, GameState.gold, GameState.location_mode]
+		root.notification(NOTIFICATION_WM_GO_BACK_REQUEST)
+		await _frames(2)
+		check("OS Back from Continue returns to the title without pausing", root.current.get_script() == preload("res://scripts/ui/screens/title_screen.gd") and not get_tree().paused)
+		check("entry Back preserves progress and exact save bytes", [GameState.active_slot, GameState.hero_class, GameState.level, GameState.xp, GameState.gold, GameState.location_mode] == entry_progress and FileAccess.get_file_as_string(GameState.save_path) == entry_save)
 	get_tree().paused = false
 	view.queue_free()
 	await _frames(3)

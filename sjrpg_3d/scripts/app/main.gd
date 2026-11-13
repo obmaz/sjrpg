@@ -319,7 +319,7 @@ func _on_web_back(_arguments: Array) -> void:
 	handle_system_back()
 
 
-## 게임 중 Back은 설정으로, 시작 화면에서는 가장 위의 모달을 닫는다.
+## 게임 중 Back은 설정으로, 진입 화면에서는 모달을 우선 닫고 화면의 뒤로가기 단계를 따른다.
 func handle_system_back() -> void:
 	if _entry_starting or _edition_exiting or not is_instance_valid(current):
 		return
