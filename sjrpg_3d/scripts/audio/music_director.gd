@@ -12,6 +12,9 @@ const TRACKS := {
 const FADE_SECONDS := 1.6  # 전환 전체 길이. 페이드 아웃/인에 절반씩 사용한다.
 const BASE_DB := -6.0
 const CHECK_INTERVAL := 0.25
+const CONTACT_DUCK_DB := -3.0
+const CONTACT_DUCK_HOLD := 0.08
+const CONTACT_DUCK_RELEASE := 0.12
 
 var game: Node
 var current := ""
@@ -21,12 +24,19 @@ var _next_check := 0.0
 var _focus_paused := false
 var _applied_focus_pause := {}
 var focus_pause_updates := 0
+var _contact_duck_db := 0.0
+var _contact_duck_remaining := 0.0
+var _duck_context := ""
 
 
 func _enter_tree() -> void:
 	# Re-entering the same director restores streams without creating duplicate players.
 	current = ""
 	_next_check = 0.0
+	_reset_contact_duck()
+	_duck_context = ""
+	if not SoundFx.contact_played.is_connected(_on_contact_played):
+		SoundFx.contact_played.connect(_on_contact_played)
 	for name: String in _players:
 		var player: AudioStreamPlayer = _players[name]
 		if is_instance_valid(player):
@@ -40,6 +50,10 @@ func _exit_tree() -> void:
 	# Merely freeing the parent can leave an active looping playback in AudioServer.
 	current = ""
 	_next_check = 0.0
+	_reset_contact_duck()
+	_duck_context = ""
+	if SoundFx.contact_played.is_connected(_on_contact_played):
+		SoundFx.contact_played.disconnect(_on_contact_played)
 	for name: String in _players:
 		var player: AudioStreamPlayer = _players[name]
 		if is_instance_valid(player):
@@ -87,6 +101,7 @@ func _process(delta: float) -> void:
 ## 서로 다른 조성과 박자의 곡이 섞이지 않도록 이전 재생기를 먼저 정지한다.
 ## 경계 왕복·동굴 진입으로 목표가 바뀌어도 새 곡을 겹쳐 시작하지 않는다.
 func step(delta: float) -> void:
+	_step_contact_duck(delta)
 	var outgoing := false
 	for name: String in _players:
 		if name == current:
@@ -103,7 +118,7 @@ func _fade_track(name: String, target: float, delta: float) -> void:
 	_level[name] = level
 	var player: AudioStreamPlayer = _players[name]
 	if level > 0.0:
-		player.volume_db = BASE_DB + linear_to_db(level)
+		player.volume_db = BASE_DB + linear_to_db(level) + _contact_duck_db
 		if not player.has_stream_playback():
 			player.play()
 			# A new playback begins unpaused, independent of the last voice.
@@ -112,6 +127,52 @@ func _fade_track(name: String, target: float, delta: float) -> void:
 	elif player.has_stream_playback():
 		player.stop()
 		_applied_focus_pause[name] = false
+
+
+func _on_contact_played() -> void:
+	if not _can_duck() or not _players.has(current) or current != context_for(game):
+		return
+	var player: AudioStreamPlayer = _players[current]
+	if not player.has_stream_playback():
+		return
+	# 연타는 유지 시간만 새로 잡고 감쇄량을 더하지 않는다. 효과음 이득은 그대로다.
+	_contact_duck_db = CONTACT_DUCK_DB
+	_contact_duck_remaining = CONTACT_DUCK_HOLD
+	_apply_contact_volume()
+
+
+func _can_duck() -> bool:
+	return (
+		is_inside_tree() and is_instance_valid(game) and not game.is_queued_for_deletion()
+		and Prefs.music_enabled and Prefs.sound_enabled and not Prefs.reduce_motion
+		and not _focus_paused and not get_tree().paused
+	)
+
+
+func _step_contact_duck(delta: float) -> void:
+	if current != _duck_context or not _can_duck():
+		_reset_contact_duck()
+		_duck_context = current
+		return
+	# 큰 프레임에서도 hold를 넘은 시간만 release에 써 총 수명을 늘리지 않는다.
+	var release_delta := maxf(0.0, delta - _contact_duck_remaining)
+	_contact_duck_remaining = maxf(0.0, _contact_duck_remaining - delta)
+	_contact_duck_db = move_toward(
+		_contact_duck_db, 0.0, release_delta * -CONTACT_DUCK_DB / CONTACT_DUCK_RELEASE
+	)
+
+
+func _reset_contact_duck() -> void:
+	_contact_duck_db = 0.0
+	_contact_duck_remaining = 0.0
+
+
+func _apply_contact_volume() -> void:
+	for name: String in _players:
+		var player: AudioStreamPlayer = _players[name]
+		var level: float = _level[name]
+		if level > 0.0:
+			player.volume_db = BASE_DB + linear_to_db(level) + _contact_duck_db
 
 
 ## Godot4.7.2 Web sample pause(false) restarts and copies its AudioBuffer even
@@ -138,6 +199,9 @@ func _notification(what: int) -> void:
 	if not (lost or back):
 		return
 	_focus_paused = lost
+	if lost:
+		_reset_contact_duck()
+		_apply_contact_volume()
 	for name: String in _players:
 		var player: AudioStreamPlayer = _players[name]
 		if player.has_stream_playback():

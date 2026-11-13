@@ -55,11 +55,11 @@ func run() -> void:
 	trees.hit(key, "fire", "flame-1")
 	trees.tick(ForestTreeRuntime.BURN_SECONDS + 0.1)
 	check(
-		"four seconds of fire leaves attackable nonblocking ash",
-		trees.state(key) == "ash" and not trees.blocks(key)
+		"four seconds of fire leaves the same blocking charred wood as lightning",
+		trees.state(key) == "charred" and trees.blocks(key)
 	)
 	trees.hit(key, "cold", "ice-on-ash")
-	check("any new attack including ice clears ash", trees.state(key) == "felled")
+	check("any new attack including ice breaks burned-out wood", trees.state(key) == "felled")
 	key = keys[5]
 	trees.hit(key, "fire", "burn-before-frost")
 	trees.hit(key, "cold", "extinguish")

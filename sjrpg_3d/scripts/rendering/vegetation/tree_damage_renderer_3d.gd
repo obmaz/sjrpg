@@ -5,6 +5,7 @@ extends RefCounted
 var renderer: WorldRenderer3D
 var root: Node3D
 var debris: TreeDebris3D
+var breakup: TreeBreakup3D
 var _entries: Dictionary = {}
 var _batches: Dictionary = {}
 var _shown: Dictionary = {}
@@ -30,7 +31,13 @@ func setup(presenter: WorldRenderer3D) -> TreeDamageRenderer3D:
 	for variant in TreeGeometry3D.PATHS.size():
 		for state in ["burning", "frozen", "charred", "ash", "felled"]:
 			renderer._occlusion.prepare_mesh(TreeDamageGeometry3D.mesh(variant, state))
+		TreeDamageGeometry3D.fire_anchors(variant)
+		for state in ["charred", "frozen"]:
+			for piece: Mesh in TreeDamageGeometry3D.fragments(variant, state):
+				if piece != null:
+					renderer._occlusion.prepare_mesh(piece)
 	debris = TreeDebris3D.new().setup(root)
+	breakup = TreeBreakup3D.new().setup(root)
 	renderer._occlusion.prepare_mesh(debris.embers.multimesh.mesh)
 	return self
 
@@ -86,14 +93,19 @@ func sync(delta: float) -> void:
 			and visible.has_point(runtime.entries[event["key"]]["point"])
 		):
 			debris.burst(_entries[event["key"]]["position"], event["kind"])
-	var burning: Array[Vector3] = []
+			breakup.burst(_entries[event["key"]], event["kind"])
+	var burning: Array[Dictionary] = []
 	if not renderer.game.dungeon.active:
 		for key: String in GameState.forest_trees:
 			if runtime.state(key) == "burning" and visible.has_point(runtime.entries[key]["point"]):
-				burning.append(_entries[key]["position"])
+				burning.append(_entries[key])
 				if burning.size() == TreeDebris3D.FIRE_LIMIT:
 					break
 	debris.sync(delta, burning, renderer.camera.global_basis)
+	if renderer.game.dungeon.active:
+		breakup.clear()
+	else:
+		breakup.sync(delta)
 
 
 func _show(entry: Dictionary, state: String) -> void:
@@ -125,6 +137,9 @@ func snapshot() -> Dictionary:
 		"state_batches": _batches.size(),
 		"fragments": debris._particles.size(),
 		"fragment_limit": TreeDebris3D.LIMIT,
+		"breaking_trees": breakup.active_count(),
+		"breaking_tree_limit": TreeBreakup3D.LIMIT,
+		"flames": debris.embers.multimesh.visible_instance_count,
 		"emitted": debris.emitted,
 		"revision": _revision
 	}

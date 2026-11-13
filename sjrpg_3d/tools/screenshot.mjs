@@ -35,7 +35,9 @@ const SCENES = {
     tree_frozen: 'at=field&tree_preview=frozen',
     tree_burning: 'at=field&tree_preview=burning',
     tree_charred: 'at=field&tree_preview=charred',
-    tree_ash: 'at=field&tree_preview=ash',
+    tree_burned: 'at=field&tree_preview=burned',
+    tree_frozen_break: 'at=field&tree_preview=frozen_break',
+    tree_charred_break: 'at=field&tree_preview=charred_break',
     tree_felled: 'at=field&tree_preview=felled',
     damage_stream: 'at=field&combat_text_preview=1',
     fx_slash: 'at=field&fx_preview=cleave',
@@ -321,6 +323,8 @@ if (scene === 'defender') {
     const treeReview = await page.evaluate(() => window.__sjrpgTreeReview);
     console.log('Actual tree reaction:', treeReview);
     if (treeReview.state !== treeReview.expected) throw new Error('Tree cast did not reach expected state');
+    if (scene.endsWith('_break') && !(treeReview.effects.breaking_trees >= 1)) throw new Error('Actual brittle tree break has no animated geometry');
+    if (scene === 'tree_burning' && !(treeReview.effects.flames >= 8)) throw new Error('Burning tree has no branch flames');
 } else if (scene.startsWith('gate_closed')) {
     await page.waitForFunction(() => window.__sjrpgGateReview?.closed === true, null, {timeout: 60000});
     console.log('Actual threat closed the gate:', await page.evaluate(() => window.__sjrpgGateReview));

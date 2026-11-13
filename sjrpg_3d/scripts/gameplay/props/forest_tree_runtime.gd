@@ -286,9 +286,7 @@ func tick(delta: float) -> void:
 			if float(data["timer"]) <= 0.0:
 				_transition(
 					key,
-					"ash" if current == "burning" else "healthy",
-					0.0,
-					"burning" if current == "burning" else ""
+					"charred" if current == "burning" else "healthy"
 				)
 				continue
 		if float(data["respawn"]) <= 0.0 and can_regrow(key):

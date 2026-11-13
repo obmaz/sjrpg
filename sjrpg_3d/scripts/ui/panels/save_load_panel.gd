@@ -96,21 +96,27 @@ func _create_slot_card(slot_num: int, summary: Dictionary) -> PanelContainer:
 	info_col.add_theme_constant_override("separation", 4)
 	row.add_child(info_col)
 
-	if occupied:
+	if occupied and not valid:
+		info_col.add_child(UiKit.label("슬롯 %d · 손상된 모험" % slot_num, 19, UiKit.MUTED, true))
+		info_col.add_child(PanelFrame.wrap_label(
+			"저장 파일을 읽지 못했습니다. 새로운 모험의 슬롯 선택에서 확인·삭제할 수 있습니다.",
+			15, UiKit.MUTED))
+	elif occupied:
 		var hero_cls: String = summary.get("class", "warrior")
 		var hero_name: String = "전사" if hero_cls == "warrior" else "마법사"
 		var level: int = summary.get("level", 1)
-		var loc: String = "숲의 예배당" if summary.get("location") == "forest" else "어두운 동굴"
+		var loc: String = "숲 필드" if summary.get("location") == "forest" else "어두운 동굴"
 
 		var title_text := "슬롯 %d · Lv.%d %s" % [slot_num, level, hero_name]
 		var title := UiKit.label(title_text, 20, Color("f0ece1") if is_selected else UiKit.TEXT, true)
 		info_col.add_child(title)
 
 		var sub_text := "위치: %s" % loc
-		var ts: int = summary.get("timestamp", 0)
+		if bool(summary.get("backup", false)):
+			sub_text += " · 백업에서 복구"
+		var ts: float = summary.get("timestamp", 0.0)
 		if ts > 0:
-			var dt := Time.get_datetime_dict_from_unix_time(ts)
-			sub_text += "  ·  %04d.%02d.%02d %02d:%02d" % [dt.year, dt.month, dt.day, dt.hour, dt.minute]
+			sub_text += " · " + SaveTimeLabel.for_device(ts)
 		var sub := PanelFrame.wrap_label(sub_text, 15, UiKit.MUTED)
 		info_col.add_child(sub)
 	else:

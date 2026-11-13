@@ -1,6 +1,9 @@
 extends Node
 ## CC0 짧은 PCM과 원래 합성 악센트를 공유8음성으로 재생한다. 게임 RNG와 분리한다.
 
+## 확정 접촉의 소리가 실제 음성 풀에 들어간 경우만 한 박자당 한 번 보낸다.
+signal contact_played
+
 const RATE := 22050
 const VOICE_COUNT := 8
 const BANKS := "res://assets/audio/feedback/banks.json"
@@ -184,6 +187,7 @@ func play_hit(tier: int, element := 0, species := "", followup := false) -> void
 			play(contact_beat_name(species), true, 1.0 + 0.025 * (_hit_variant % 3), CONTACT_BEAT_GAIN_DB)
 			if played_serial > before:
 				contact_beats += 1
+				contact_played.emit()
 		return
 	_last_hit_ms = now
 	_last_hit_tier = tier
@@ -192,9 +196,12 @@ func play_hit(tier: int, element := 0, species := "", followup := false) -> void
 	var material := material_hit_name(species)
 	if not material.is_empty():
 		names.append(material)
+	var voice_serial_before := played_serial
 	for sound in names:
 		# 더 강한 후속 타격도 앞 소리의 꼬리를 자르지 않고 낮은 이득으로 겹친다.
 		play(sound, grouped, kill_pitch if sound == "kill" else 1.0, gain_db)
+	if played_serial > voice_serial_before:
+		contact_played.emit()
 
 
 static func contact_beat_name(species: String) -> String:

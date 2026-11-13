@@ -72,6 +72,7 @@ func run() -> void:
 		settings.closed.emit()
 		await _frames(2)
 		check("cancelling title settings removes its modal", _panels(root).is_empty())
+	await _slot_status_messages(root)
 	GameState.select_slot(1)
 	GameState.delete_save()
 	check("title load fixture creates a fresh saved adventure", GameState.new_game("mage"))
@@ -100,7 +101,107 @@ func run() -> void:
 	)
 	view.queue_free()
 	await _frames(2)
+	await _gamepad_menus()
 	await _failed_save_keeps_settings()
+
+
+func _gamepad_menus() -> void:
+	# 실제 패드 내비게이션은 자기 뷰포트의 포커스를 읽으므로 루트 뷰포트에 배치한다.
+	var root := EntryRoot.new()
+	add_child(root)
+	root.show_title()
+	await _frames(2)
+	var nav := Gamepad.get_node("Navigation") as GamepadNavigation
+	var old_mode: bool = Gamepad.using_gamepad
+	var old_combat: bool = Gamepad._combat
+	Gamepad.using_gamepad = true
+	for menu in ["load_game", "settings"]:
+		nav._process(0.11)
+		nav._refresh()
+		var button: Button = root.current.get("_btn_" + menu)
+		button.grab_focus()
+		nav._action("primary")
+		await _frames(2)
+		var panels := _panels(root)
+		var expected: bool = (
+			panels.size() == 1
+			and (panels[0] is SaveLoadPanel if menu == "load_game" else panels[0] is SettingsPanel)
+		)
+		check("pad primary opens the focused title menu: " + menu, expected)
+		if not expected:
+			break
+		root.handle_system_back()
+		await _frames(2)
+	if (
+		_panels(root).is_empty()
+		and root.current.get_script() == preload("res://scripts/ui/screens/title_screen.gd")
+	):
+		nav._process(0.11)
+		nav._refresh()
+		root.current._btn_new_game.grab_focus()
+		nav._action("primary")
+		await _frames(2)
+		check(
+			"pad primary on new adventure opens the real selection screen",
+			root.current.get_script() == preload("res://scripts/ui/screens/class_select.gd")
+		)
+	root.queue_free()
+	await _frames(2)
+	Gamepad.using_gamepad = old_mode
+	Gamepad.set_combat_enabled(old_combat)
+	Gamepad.require_neutral()
+
+
+func _slot_status_messages(root: EntryRoot) -> void:
+	for slot in [2, 3]:
+		GameState.select_slot(slot)
+		GameState.delete_save()
+		check("slot notice fixture creates hero %d" % slot, GameState.new_game("warrior"))
+		if slot == 2:
+			check("slot notice fixture creates a readable backup", GameState.save_game())
+		var file := FileAccess.open(GameState.save_path, FileAccess.WRITE)
+		if not check("slot notice fixture opens primary %d" % slot, file != null):
+			continue
+		file.store_string("{corrupt")
+		file.close()
+	root.current._btn_load_game.pressed.emit()
+	await _frames(2)
+	var panel: SaveLoadPanel = _panels(root)[0]
+	var backup_text := _label_text(panel._slot_cards[1])
+	var broken_text := _label_text(panel._slot_cards[2])
+	check(
+		"load card identifies the actual recoverable backup and coarse forest location",
+		(
+			backup_text.contains("백업에서 복구")
+			and backup_text.contains("숲 필드")
+			and not backup_text.contains("예배당")
+		)
+	)
+	check(
+		"unreadable occupied slot reports damage instead of inventing a level zero hero",
+		(
+			broken_text.contains("손상된 모험")
+			and broken_text.contains("확인·삭제")
+			and not broken_text.contains("Lv.0")
+		)
+	)
+	var backup_button: Button = panel._slot_cards[1].get_node("SelectSaveSlot2")
+	var broken_button: Button = panel._slot_cards[2].get_node("SelectSaveSlot3")
+	check(
+		"only the recovered slot is selectable",
+		not backup_button.disabled and broken_button.disabled
+	)
+	panel.closed.emit()
+	await _frames(2)
+	GameState.delete_slot(2)
+	GameState.delete_slot(3)
+
+
+func _label_text(node: Node) -> String:
+	var text: String = node.text if node is Label else ""
+	for child in node.get_children():
+		text += "\n" + _label_text(child)
+	return text
 
 
 func _panels(parent: Node) -> Array[PanelFrame]:

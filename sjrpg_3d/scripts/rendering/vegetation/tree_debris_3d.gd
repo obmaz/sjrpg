@@ -17,7 +17,7 @@ var emitted := 0
 func setup(parent: Node3D) -> TreeDebris3D:
 	root = parent
 	fragments = _batch("TreeSplinters", LIMIT, false)
-	embers = _batch("TreeEmbers", FIRE_LIMIT * 3, true)
+	embers = _batch("TreeEmbers", FIRE_LIMIT * TreeDamageGeometry3D.FLAMES_PER_TREE, true)
 	return self
 
 
@@ -88,7 +88,7 @@ func burst(point: Vector3, kind: String) -> void:
 		emitted += 1
 
 
-func sync(delta: float, burning: Array[Vector3], camera_basis := Basis.IDENTITY) -> void:
+func sync(delta: float, burning: Array[Dictionary], camera_basis := Basis.IDENTITY) -> void:
 	_time += delta
 	for particle in _particles:
 		particle["age"] += delta
@@ -104,19 +104,22 @@ func sync(delta: float, burning: Array[Vector3], camera_basis := Basis.IDENTITY)
 		multi.set_instance_transform(index, Transform3D(basis.scaled(Vector3.ONE * scale), at))
 		multi.set_instance_color(index, p["color"])
 	var fire := embers.multimesh
-	fire.visible_instance_count = mini(FIRE_LIMIT, burning.size()) * 3
+	var per_tree := TreeDamageGeometry3D.FLAMES_PER_TREE
+	fire.visible_instance_count = mini(FIRE_LIMIT, burning.size()) * per_tree
 	for index in fire.visible_instance_count:
-		var tree_index := index / 3
+		var entry: Dictionary = burning[index / per_tree]
+		var frame: Transform3D = entry["transform"]
+		var anchors := TreeDamageGeometry3D.fire_anchors(entry["variant"])
 		var phase := fmod(_time * 1.1 + float(index) * 0.37, 1.0)
 		if Prefs.reduce_motion:
 			phase = 0.4
-		var angle := float(index % 3) * TAU / 3.0
-		var at := (
-			burning[tree_index] + Vector3(sin(angle) * 0.55, 0.6 + phase * 0.2, cos(angle) * 0.55)
-		)
-		var basis := camera_basis.scaled(Vector3(0.55, 0.8, 1.0) * (1.0 - phase * 0.25))
+		var anchor: Vector3 = frame * anchors[index % per_tree]
+		var size := clampf(frame.basis.y.length() * 0.85, 0.55, 0.90)
+		# 카드 중심을 가지 위에 올려 불의 밑동이 부착점에 남게 한다.
+		var at := anchor + Vector3.UP * (size * 0.55 + phase * 0.12)
+		var basis := camera_basis.scaled(Vector3(size * 0.85, size * 1.5, 1.0) * (1.0 - phase * 0.18))
 		fire.set_instance_transform(index, Transform3D(basis, at))
-		fire.set_instance_color(index, Color(1.0, 1.0, 1.0, 0.65))
+		fire.set_instance_color(index, Color(1.0, 1.0, 1.0, 0.90))
 		fire.set_instance_custom_data(index, Color(floorf(phase * 4.0) / 4.0, 0.0, 0.0, 0.0))
 	fragments.visible = not _particles.is_empty() and not Prefs.reduce_motion
 	embers.visible = not burning.is_empty()
