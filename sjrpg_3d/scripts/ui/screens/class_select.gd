@@ -647,6 +647,8 @@ func _layout_slots() -> void:
 	var u := _unit
 	var compact := area.size.y / _slot_css < 460.0
 	var pad := maxf(42.0 * u, 26.0 * _slot_css)
+	if compact:
+		pad = maxf(22.0 * u, 14.0 * _slot_css)
 	var gap := maxf(12.0 * u, 6.0 * _slot_css)
 	var outer := maxf(22.0 * u, 12.0 * _slot_css)
 	_slot_pad = maxf(14.0 * u, 8.0 * _slot_css)
@@ -655,11 +657,10 @@ func _layout_slots() -> void:
 	_slot_touch = maxf(72.0 * u, 44.0 * _slot_css)
 	var summary := _selected()
 	var preview := bool(summary["valid"])
-	var side_preview := preview and not portrait
+	var side_preview := preview and not portrait and not compact
 	var side_left := area.position.x + area.size.x * 0.52
 	var width := area.end.x - outer - side_left if side_preview else minf(area.size.x - outer * 2.0, maxf(1000.0 * u, 292.0 * _slot_css))
 	var inner := maxf(1.0, width - pad * 2.0)
-	var preview_h := 0.0
 	slot_surface.show()
 	slot_scroll.show()
 	slot_footer.show()
@@ -707,6 +708,7 @@ func _layout_slots() -> void:
 			_font(entry[0], float(entry[1]), float(entry[2]))
 		var remove_w := maxf(76.0 * u, _slot_touch)
 		remove.custom_minimum_size = Vector2(remove_w, _slot_touch)
+		remove_w = maxf(remove_w, remove.get_combined_minimum_size().x)
 		slot_bands[index].add_theme_constant_override("separation", roundi(gap))
 		var scrollbar := slot_scroll.get_v_scroll_bar()
 		var gutter := maxf(scrollbar.get_combined_minimum_size().x, scrollbar.size.x)
@@ -732,13 +734,10 @@ func _layout_slots() -> void:
 	EntryUi.place(brand_label, Rect2(content + Vector2(header_left, 0), Vector2(header_width, brand_h)))
 	EntryUi.place(heading, Rect2(content + Vector2(header_left, title_y), Vector2(header_width, title_h)))
 	EntryUi.place(subtitle, Rect2(content + Vector2(0, subtitle_y), Vector2(subtitle_width, subtitle_h)))
-	if preview:
-		if portrait:
-			EntryUi.place(showcase, Rect2(content + Vector2(0, vignette_y), Vector2(inner, preview_h)))
-		else:
-			var art_left := area.position.x + outer
-			EntryUi.place(showcase, Rect2(Vector2(art_left, area.position.y + outer),
-				Vector2(side_left - gap * 2.0 - art_left, area.size.y - outer * 2.0)))
+	if side_preview:
+		var art_left := area.position.x + outer
+		EntryUi.place(showcase, Rect2(Vector2(art_left, area.position.y + outer),
+			Vector2(side_left - gap * 2.0 - art_left, area.size.y - outer * 2.0)))
 		EntryUi.place(hero_art, Rect2(Vector2.ZERO, showcase.size))
 	var list_y := content.y + header_h + gap
 	var available := maxf(1.0, height - pad * 2.0 - header_h - gap * 2.0 - footer_h)

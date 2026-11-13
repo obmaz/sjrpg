@@ -205,8 +205,11 @@ func _open_save_load_dialog() -> void:
 	var load_panel := preload("res://scripts/ui/panels/save_load_panel.gd").new().setup(true)
 	load_panel.slot_loaded.connect(func(slot: int):
 		load_requested.emit(slot)
-		closed.emit()
+		# 게임에서는 저장 성공 뒤 Game.load_slot()이 패널을 닫는다.
+		if game == null:
+			closed.emit()
 	)
+	load_panel.closed.connect(load_panel.queue_free)
 	add_child(load_panel)
 
 

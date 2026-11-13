@@ -1,5 +1,9 @@
 # 3D 개발 구조
 
+타이틀의 세 메뉴는 `TitleScreen`의 신호를 `Main`이 받아 처리합니다. 타이틀 모달은 `Main`이,
+설정 안의 불러오기 모달은 `SettingsPanel`이 닫힘과 해제를 소유합니다. 게임 중 슬롯 전환은
+`Game.load_slot()`이 현재 진행의 저장에 성공한 뒤 HUD를 닫고, `Main`이 대상 저장의 읽기 결과를 확인합니다.
+
 `ForestTreeRuntime`이 일반 숲 나무의 원소·내구도·재생·저장을 소유합니다.
 `TreeDamageRenderer3D`는 같은 키와 고정 슬롯으로 손상 메시·가림·충돌 상태를 동기화하고
 `TreeDebris3D`는 작은 파편을 재사용합니다. [나무 파괴 구조와 예산](destructible-trees.md)을 따릅니다.

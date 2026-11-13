@@ -68,7 +68,7 @@ func _ready() -> void:
 			# 엔진 로딩이 완료되면 웹 HTML 쉘의 다운로드 오버레이를 닫고 Godot 메인 화면을 노출합니다.
 			_web_entry.hide()
 		show()
-		JavaScriptBridge.eval("window.__sjrpgTitleReady = true")
+		JavaScriptBridge.eval("window.__sjrpgTitleReady = true; window.__sjrpgEntryReady = true")
 
 
 func _label(text: String, font_size: int, color: Color, bold := false) -> Label:
@@ -126,6 +126,20 @@ func _layout() -> void:
 	_chapter.position = Vector2(left, chapter_bottom - 34.0 * unit)
 	_chapter.size = Vector2(width, 34.0 * unit)
 	_chapter.add_theme_font_size_override("font_size", roundi(23.0 * unit))
+	_publish_buttons()
+
+
+func _publish_buttons() -> void:
+	if not OS.has_feature("web"):
+		return
+	var dimensions := get_viewport_rect().size
+	var buttons := {}
+	for key: String in ["new_game", "load_game", "settings"]:
+		var button: Button = {"new_game": _btn_new_game, "load_game": _btn_load_game,
+			"settings": _btn_settings}[key]
+		var center := button.get_global_rect().get_center() / dimensions
+		buttons[key] = [center.x, center.y]
+	JavaScriptBridge.eval("window.__sjrpgTitleButtons = " + JSON.stringify(buttons))
 
 
 func _process(delta: float) -> void:
@@ -148,14 +162,10 @@ func _on_new_game_pressed() -> void:
 
 
 func _on_load_game_pressed() -> void:
-	if _web_entry != null:
-		_web_entry.hide()
 	load_game_requested.emit()
 
 
 func _on_settings_pressed() -> void:
-	if _web_entry != null:
-		_web_entry.hide()
 	settings_requested.emit()
 
 

@@ -152,10 +152,12 @@ static func texture_stylebox(path: String, left: int, top: int, right: int, bott
 	box.texture_margin_top = float(top)
 	box.texture_margin_right = float(right)
 	box.texture_margin_bottom = float(bottom)
-	box.content_margin_left = float(left) * 0.7
-	box.content_margin_right = float(right) * 0.7
-	box.content_margin_top = float(top) * 0.5
-	box.content_margin_bottom = float(bottom) * 0.5
+	# 테두리 자르기는 원본 이미지 픽셀, 내용 여백은 논리 UI 단위다.
+	# 큰 원화 테두리를 버튼의 최소 너비로 쓰면 뒤로가기·삭제가 본문을 밀어낸다.
+	box.content_margin_left = 12.0
+	box.content_margin_right = 12.0
+	box.content_margin_top = 8.0
+	box.content_margin_bottom = 8.0
 	box.modulate_color = modulate
 	return box
 

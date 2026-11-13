@@ -76,7 +76,7 @@ func _on_title_load_game() -> void:
 	panel.slot_loaded.connect(func(slot: int):
 		load_slot_adventure(slot)
 	)
-	add_child(panel)
+	_open_title_panel(panel)
 
 
 func _on_title_settings() -> void:
@@ -84,6 +84,11 @@ func _on_title_settings() -> void:
 	panel.load_requested.connect(func(slot: int):
 		load_slot_adventure(slot)
 	)
+	_open_title_panel(panel)
+
+
+func _open_title_panel(panel: PanelFrame) -> void:
+	panel.closed.connect(panel.queue_free)
 	add_child(panel)
 
 
@@ -317,10 +322,17 @@ func _on_web_back(_arguments: Array) -> void:
 	handle_system_back()
 
 
-## OS/browser Back always lands on settings, including while a panel pauses play.
+## 게임 중 Back은 설정으로, 시작 화면에서는 가장 위의 모달을 닫는다.
 func handle_system_back() -> void:
 	if _entry_starting or _edition_exiting or not is_instance_valid(current):
 		return
+	if not current is Adventure3D:
+		var panels := get_tree().get_nodes_in_group("panel_frames")
+		panels.reverse()
+		for panel: PanelFrame in panels:
+			if not panel.is_queued_for_deletion() and panel.get_viewport() == get_viewport():
+				panel.closed.emit()
+				return
 	if current is Adventure3D and is_instance_valid(current.simulation):
 		var hud: Hud = current.simulation.hud
 		if not hud._panel is SettingsPanel:
@@ -330,10 +342,12 @@ func handle_system_back() -> void:
 
 
 func _reload_adventure() -> void:
-	GameState.load_game()
 	var token := _open_entry_loading("continue", GameState.active_slot, GameState.hero_class)
 	await _paint_entry_phase("load")
 	if not _entry_valid(token):
 		return
 	_entry_loading.note_work()
+	if not GameState.load_game():
+		_entry_failed(token, GameState.active_slot, "모험을 읽지 못했습니다. 다른 슬롯을 선택해 주세요.")
+		return
 	await _build_entry_world(token, GameState.active_slot)

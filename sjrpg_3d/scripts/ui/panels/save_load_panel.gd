@@ -62,6 +62,7 @@ func _rebuild() -> void:
 
 func _create_slot_card(slot_num: int, summary: Dictionary) -> PanelContainer:
 	var occupied: bool = summary.get("occupied", false)
+	var valid: bool = summary.get("valid", false)
 	var is_selected := (selected_slot == slot_num)
 
 	var card := PanelContainer.new()
@@ -118,17 +119,18 @@ func _create_slot_card(slot_num: int, summary: Dictionary) -> PanelContainer:
 		var empty_sub := PanelFrame.wrap_label("저장된 모험 기록이 없습니다." if load_only else "새로운 수호자를 생성할 수 있습니다.", 14, Color("555045"))
 		info_col.add_child(empty_sub)
 
-	# 터치 인터랙션 지원 (호버/포커스 배제)
-	card.gui_input.connect(func(event: InputEvent):
-		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-			if occupied:
-				selected_slot = slot_num
-				_rebuild()
-			elif not load_only:
-				# 인게임 등 full 모드에서는 빈 슬롯 선택 시 새 모험 분기 가능
-				selected_slot = slot_num
-				_rebuild()
+	# 손가락을 댄 순간 목록을 재생성하면 스크롤이 끊긴다. 기본 버튼의 해제/드래그 취소를 쓴다.
+	var select := Button.new()
+	select.name = "SelectSaveSlot%d" % slot_num
+	select.tooltip_text = "슬롯 %d 선택" % slot_num
+	select.disabled = load_only and not valid
+	for state: String in ["normal", "hover", "pressed", "focus", "disabled"]:
+		select.add_theme_stylebox_override(state, StyleBoxEmpty.new())
+	select.pressed.connect(func():
+		selected_slot = slot_num
+		_rebuild()
 	)
+	card.add_child(select)
 
 	return card
 

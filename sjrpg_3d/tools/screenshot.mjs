@@ -221,17 +221,37 @@ const tap = async (x, y) => {
         await page.mouse.click(x, y);
     }
 };
+const tapTitle = async () => {
+    const native = await page.evaluate(() => window.__sjrpgTitleButtons?.new_game);
+    if (native) await tap(vp.width * native[0], vp.height * native[1]);
+    else if (await page.locator('#entry-start').isVisible()) await page.locator('#entry-start').click();
+    else await tap(vp.width / 2, vp.height / 2);
+};
 if (scene === 'title') {
+	if (args.menu) {
+		const point = await page.evaluate(key => window.__sjrpgTitleButtons?.[key], args.menu);
+		if (!point) throw new Error('Unknown title menu '+args.menu);
+		await tap(vp.width * point[0], vp.height * point[1]);
+		await page.waitForTimeout(700);
+	}
     await capture({path: out});
+	if (args.menu) {
+		await page.keyboard.press('Escape');
+		await page.waitForTimeout(400);
+		await tapTitle();
+		await page.waitForFunction(() => window.__sjrpgClassSelectReady === true, null, {timeout:30000});
+	}
     if (args['entry-flow'] === '1') {
-        if (JSON.stringify(await page.locator('h1').boundingBox()) !== JSON.stringify(loadingHeader)) throw new Error('Loading/title header moved');
-        await page.locator('#entry-start').click();
+        if (await page.evaluate(() => Boolean(window.__sjrpgTitleButtons))) {
+            if (await page.locator('#loading').isVisible()) throw new Error('Native title is covered by loading overlay');
+        } else if (JSON.stringify(await page.locator('h1').boundingBox()) !== JSON.stringify(loadingHeader)) throw new Error('Loading/title header moved');
+        await tapTitle();
         await page.waitForFunction(() => window.__sjrpgClassSelectReady === true, null, {timeout: 30000});
         const back = await page.evaluate(() => window.__sjrpgClassButtons.back);
         await tap(vp.width * back[0], vp.height * back[1]);
         await page.waitForFunction(() => window.__sjrpgTitleReady && window.__sjrpgEntryReady, null, {timeout: 30000});
         await capture({path: out.replace(/\.png$/, '-returned.png')});
-        await page.locator('#entry-start').click();
+        await tapTitle();
         await page.waitForFunction(() => window.__sjrpgClassSelectReady === true, null, {timeout: 30000});
         console.log('Entry flow: real loading → stable title → selection → back → start passed');
     }
@@ -240,11 +260,7 @@ if (scene === 'title') {
     console.log(`저장: ${out}; 콘솔 오류 ${errors.length}건`);
     process.exit(errors.length ? 1 : 0);
 }
-if (await page.locator('#entry-start').isVisible()) {
-    await page.locator('#entry-start').click();
-} else {
-    await tap(vp.width / 2, vp.height / 2); // native-title fallback
-}
+await tapTitle();
 await page.waitForTimeout(4000);
 // Use real responsive controls for both classes, independent of viewport or orientation.
 await page.waitForFunction(() => window.__sjrpgClassSelectReady === true && window.__sjrpgClassButtons, null, {timeout: 30000});
