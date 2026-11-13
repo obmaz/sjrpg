@@ -96,8 +96,8 @@ func _ready() -> void:
 		var model := EnemyRenderer3D.build(kind)
 		var root: Node3D = model["root"]
 		var legacy_height: float = float(Enemy.KINDS[kind]["height"]) / (WorldSpace3D.GROUND_UNITS_PER_METER * Iso.S)
-		var height_metres: float = float(native_heights.get(kind, legacy_height))
-		root.scale = Vector3.ONE * height_metres / float(model["base_height"])
+		var height_m: float = float(native_heights.get(kind, legacy_height))
+		root.scale = Vector3.ONE * height_m / float(model["base_height"])
 		_add(root, kind)
 	_resident_factory = load("res://scripts/rendering/actors/resident_renderer_3d.gd")
 	for source: Villager in game.village.npc_nodes.values():

@@ -8,8 +8,8 @@ func _bounds(root: Node3D, align_axes := true, skinned := false) -> AABB:
 	var orientation: Basis = (
 		root.global_transform.basis.orthonormalized().inverse() if align_axes else Basis.IDENTITY
 	)
-	if skinned and root is NativeEnemyVisual:
-		for vertex in (root as NativeEnemyVisual).posed_vertices():
+	if skinned and root is EnemyVisual:
+		for vertex in (root as EnemyVisual).posed_vertices():
 			var point: Vector3 = orientation * root.global_basis * vertex
 			minimum = minimum.min(point)
 			maximum = maximum.max(point)
@@ -31,7 +31,7 @@ func _bounds(root: Node3D, align_axes := true, skinned := false) -> AABB:
 
 func _stance_radius(root: Node3D, height: float) -> float:
 	var radius := 0.0
-	var visual := root as NativeEnemyVisual
+	var visual := root as EnemyVisual
 	for name: String in visual.manifest["body_core_bones"]:
 		var bone := visual.skeleton.find_bone(name)
 		if not check("body core marker exists: " + name, bone >= 0):

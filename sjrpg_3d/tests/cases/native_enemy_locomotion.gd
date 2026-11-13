@@ -7,7 +7,7 @@ const Fixture := preload("res://tests/native_combat_fixture.gd")
 func run() -> void:
 	for kind: String in EnemyRenderer3D.KINDS + [EnemyRenderer3D.CRAWLER]:
 		var model := EnemyRenderer3D.build(kind)
-		var visual: NativeEnemyVisual = model["visual"]
+		var visual: EnemyVisual = model["visual"]
 		add_child(visual)
 		var gait: Dictionary = visual.manifest["locomotion"]
 		var actual := MeasureStride.measure(visual)
@@ -84,7 +84,7 @@ func run() -> void:
 	enemy._state = "chase"
 	game.world_renderer._enemy_renderer.sync()
 	var live: Dictionary = game.world_renderer._enemy_renderer.entries[enemy.get_instance_id()]
-	var rendered: NativeEnemyVisual = live["visual"]
+	var rendered: EnemyVisual = live["visual"]
 	check(
 		"production presenter uses measured metres instead of the old 70px cycle",
 		is_equal_approx(
@@ -115,7 +115,7 @@ func _curve_at(curve: Array, phase: float) -> float:
 	return lerpf(float(curve[first]), float(curve[first + 1]), index - first)
 
 
-func _check_foot_slide(kind: String, visual: NativeEnemyVisual) -> void:
+func _check_foot_slide(kind: String, visual: EnemyVisual) -> void:
 	var gait: Dictionary = visual.manifest["locomotion"]
 	var names: Array = gait["contact_bones"]
 	var curve: Array = gait["distance_curve"]

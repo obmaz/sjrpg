@@ -26,7 +26,7 @@
 
 ## 게임과 표시의 연결
 
-`EnemyRenderer3D`는 게임 상태를 읽는 표시 어댑터입니다. `NativeEnemyAssets`는 종별 `visual.tscn`을 캐시하며 `NativeEnemyVisual`이 GLB의 `AnimationPlayer`를 수동 시계로 샘플링합니다. `asset.json`은 실제 클립 이름·길이·타격 시각·높이·사망 접지·몸통 기준 뼈·공격 기준 뼈를 보관합니다. 존재하지 않는 제어 뼈 이름을 런타임 마커로 쓰지 않습니다.
+`EnemyRenderer3D`는 게임 상태를 읽는 표시 어댑터입니다. `EnemyAssets`는 종별 `visual.tscn`을 캐시하며 `EnemyVisual`이 GLB의 `AnimationPlayer`를 수동 시계로 샘플링합니다. `asset.json`은 실제 클립 이름·길이·타격 시각·높이·사망 접지·몸통 기준 뼈·공격 기준 뼈를 보관합니다. 존재하지 않는 제어 뼈 이름을 런타임 마커로 쓰지 않습니다.
 
 기존 준비/회복 진행도0.60이 실제 피해 판정 시점입니다. 표시기는 클립별 `contact_time`을 이 시점에 맞추고 마지막에 같은 idle로 돌아갑니다. 보행은 `Enemy._run_distance_m`의 실제 자력 이동 XZ 거리를 모델별 `locomotion.distance_curve`로 역보간해 GLB 시각에 연결합니다. 한 클립 평균 보폭만 맞추지 않고 접지 중 발의 속도 변화까지 반영합니다. 화면 픽셀 거리와 무관하며 보스의 균일 확대는 보폭도 늘립니다. 밀침·순간이동은 보폭에 더하지 않고 벽에 막히거나 일시정지하면 진행하지 않습니다. root motion으로 물리를 이동시키지 않습니다. idle은 전달된 delta로 진행하고 일시정지·개별 hitstop 때 고정합니다. 화면 밖 모델은 포즈·색·그림자 갱신을 생략합니다. 피격은 씬의 `HitPivot` 전체에 적용하며 실제 캡슐·발 위치는 옮기지 않습니다.
 

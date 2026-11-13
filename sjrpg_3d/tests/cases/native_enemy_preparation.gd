@@ -159,7 +159,7 @@ func run() -> void:
 	renderer._enemy_renderer.sync(0)
 	# 도약의 크기를 특정 납품 클립에 고정하지 않고 실제 골격 입력으로 가장자리를 검사한다.
 	var jumping_model: Dictionary = renderer._enemy_renderer.entries[jumper.get_instance_id()]
-	var visual: NativeEnemyVisual = jumping_model["visual"]
+	var visual: EnemyVisual = jumping_model["visual"]
 	var hips := visual.skeleton.find_bone("ORG-hips")
 	visual.skeleton.set_bone_pose_position(
 		hips, visual.skeleton.get_bone_pose_position(hips) + Vector3.UP * 2

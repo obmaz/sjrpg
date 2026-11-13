@@ -1,4 +1,4 @@
-class_name NativeEnemyAssets
+class_name EnemyAssets
 extends RefCounted
 ## 몬스터 폴더의 visual.tscn이 독립 교체 단위다. 월드·물리·종별 전투 규칙은 소유하지 않는다.
 static var _scenes: Dictionary = {}
@@ -16,7 +16,7 @@ static func build(kind: String) -> Dictionary:
 		loads += 1
 	else:
 		hits += 1
-	var root := (_scenes[kind] as PackedScene).instantiate() as NativeEnemyVisual
+	var root := (_scenes[kind] as PackedScene).instantiate() as EnemyVisual
 	root.prepare()
 	return {
 		"root": root,

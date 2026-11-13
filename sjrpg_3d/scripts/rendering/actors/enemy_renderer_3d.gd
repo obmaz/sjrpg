@@ -15,17 +15,17 @@ func setup(presenter: Node) -> EnemyRenderer3D:
 
 static func build(kind: String) -> Dictionary:
 	assert(kind in KINDS or kind == CRAWLER)
-	return NativeEnemyAssets.build(kind)
+	return EnemyAssets.build(kind)
 
 
 static func pose(
 	model: Dictionary, facing: float, cycle: float, attack: float, dead := false
 ) -> void:
-	(model["visual"] as NativeEnemyVisual).pose(facing, cycle, attack, dead)
+	(model["visual"] as EnemyVisual).pose(facing, cycle, attack, dead)
 
 
 static func cache_stats() -> Dictionary:
-	return NativeEnemyAssets.cache_stats()
+	return EnemyAssets.cache_stats()
 
 
 static func model_kind(enemy: Enemy) -> String:
@@ -141,7 +141,7 @@ func sync(delta := 0.0) -> void:
 					)
 				)
 			)
-		var visual: NativeEnemyVisual = model["visual"]
+		var visual: EnemyVisual = model["visual"]
 		var cycle := (
 			visual.travel_cycle(enemy._run_distance_m, size)
 			if enemy._state == "chase" or (enemy._state == "idle" and enemy._wander != Vector2.ZERO)
@@ -180,7 +180,7 @@ func snapshot() -> Dictionary:
 		if not is_instance_valid(enemy):
 			continue
 		var root: Node3D = model["root"]
-		var visual: NativeEnemyVisual = model["visual"]
+		var visual: EnemyVisual = model["visual"]
 		var gait: Dictionary = visual.manifest["locomotion"]
 		sources.append(
 			{

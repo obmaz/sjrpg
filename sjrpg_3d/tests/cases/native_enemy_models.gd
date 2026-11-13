@@ -5,7 +5,7 @@ extends TestCase
 func run() -> void:
 	for kind: String in EnemyRenderer3D.KINDS + [EnemyRenderer3D.CRAWLER]:
 		var model := EnemyRenderer3D.build(kind)
-		var visual: NativeEnemyVisual = model["visual"]
+		var visual: EnemyVisual = model["visual"]
 		add_child(visual)
 		var triangles := 0
 		for instance in visual.meshes:

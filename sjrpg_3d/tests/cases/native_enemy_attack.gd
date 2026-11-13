@@ -5,7 +5,7 @@ extends TestCase
 func run() -> void:
 	for kind: String in EnemyRenderer3D.KINDS + [EnemyRenderer3D.CRAWLER]:
 		var model := EnemyRenderer3D.build(kind)
-		var visual: NativeEnemyVisual = model["visual"]
+		var visual: EnemyVisual = model["visual"]
 		add_child(visual)
 		var bone := visual.skeleton.find_bone(visual.manifest["attack_bone"])
 		check("authored attack marker exists " + kind, bone >= 0)

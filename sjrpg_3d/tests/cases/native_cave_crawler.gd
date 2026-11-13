@@ -34,7 +34,7 @@ func run() -> void:
 	)
 	var body: CharacterBody3D = game.spatial_world.actor_bodies[enemy.get_instance_id()]
 	var capsule := (body.get_child(0) as CollisionShape3D).shape as CapsuleShape3D
-	var visual: NativeEnemyVisual = model["visual"]
+	var visual: EnemyVisual = model["visual"]
 	visual.skeleton.force_update_all_bone_transforms()
 	var core_radius := 0.0
 	for name: String in visual.manifest["body_core_bones"]:
@@ -80,7 +80,7 @@ func run() -> void:
 		"crawler instances own skeleton and hit materials",
 		(
 			other["root"] != root
-			and (other["visual"] as NativeEnemyVisual).skeleton != visual.skeleton
+			and (other["visual"] as EnemyVisual).skeleton != visual.skeleton
 			and other["materials"][0] != model["materials"][0]
 		)
 	)

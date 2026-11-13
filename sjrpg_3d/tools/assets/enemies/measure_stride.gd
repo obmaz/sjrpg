@@ -22,7 +22,7 @@ func _ready() -> void:
 			kinds = selected
 	for kind: String in kinds:
 		var model := EnemyRenderer3D.build(kind)
-		var visual: NativeEnemyVisual = model["visual"]
+		var visual: EnemyVisual = model["visual"]
 		add_child(visual)
 		var measured := measure(visual)
 		print("ENEMY_STRIDE ", kind, " ", JSON.stringify(measured))
@@ -34,7 +34,7 @@ func _ready() -> void:
 	get_tree().quit()
 
 
-static func measure(visual: NativeEnemyVisual) -> Dictionary:
+static func measure(visual: EnemyVisual) -> Dictionary:
 	visual.prepare()
 	var config: Dictionary = visual.manifest["locomotion"]
 	var names: Array = config["contact_bones"]

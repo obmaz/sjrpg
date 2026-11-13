@@ -38,7 +38,7 @@ func run() -> void:
 	var torso: Node3D = model["torso"]
 	var first_lean := Vector2(torso.rotation.x, torso.rotation.z)
 	check("confirmed hit tilts real chest and head while keeping the collision foot", first_lean.length() > 0.15 and foe.position == at and float(model["hit_lean"]) > 0.2)
-	var visual: NativeEnemyVisual = model["visual"]
+	var visual: EnemyVisual = model["visual"]
 	EnemyRenderer3D.pose(model, foe.facing, 0.0, 0.0)
 	visual.skeleton.force_update_all_bone_transforms()
 	var bone := visual.skeleton.find_bone("shoulder_R")

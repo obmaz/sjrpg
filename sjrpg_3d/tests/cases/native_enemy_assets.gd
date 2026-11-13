@@ -13,10 +13,10 @@ func run() -> void:
 	for kind: String in EnemyRenderer3D.KINDS + [EnemyRenderer3D.CRAWLER]:
 		check(
 			"species uses its independently editable imported scene " + kind,
-			NativeEnemyAssets.uses_asset(kind)
+			EnemyAssets.uses_asset(kind)
 		)
 		var model := EnemyRenderer3D.build(kind)
-		var visual: NativeEnemyVisual = model["visual"]
+		var visual: EnemyVisual = model["visual"]
 		add_child(visual)
 		await _frames(2)
 		EnemyRenderer3D.pose(model, 0, 0, 0)
@@ -87,7 +87,7 @@ func run() -> void:
 			not _different(idle, visual.posed_vertices()) and visual.position == root_at
 		)
 		var second := EnemyRenderer3D.build(kind)
-		var other: NativeEnemyVisual = second["visual"]
+		var other: EnemyVisual = second["visual"]
 		add_child(other)
 		await _frames(2)
 		var untouched := other.posed_vertices()

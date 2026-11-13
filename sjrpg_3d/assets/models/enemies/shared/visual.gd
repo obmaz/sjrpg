@@ -1,4 +1,4 @@
-class_name NativeEnemyVisual
+class_name EnemyVisual
 extends Node3D
 ## GLB의 클립을 게임이 소유한 이동/공격 시각으로 샘플링한다. 물리나 피해는 만들지 않는다.
 @export_file("*.json") var manifest_path: String

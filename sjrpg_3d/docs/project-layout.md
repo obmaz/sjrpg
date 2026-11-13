@@ -35,6 +35,8 @@
 
 파일은 `snake_case`, 전역 클래스는 `PascalCase`, 3D 공간 전용 클래스는 필요할 때 `3D` 접미사를 사용합니다. 자산 식별자는 `asset_id`, 씬 경로는 `*_scene_path`, GLB 경로는 `*_model_path`처럼 내용을 구별합니다. 벡터는 화면 좌표/미터 좌표를 구분하고 변환은 공용 좌표 함수를 거칩니다.
 
+클래스 이름은 현재 책임을 나타냅니다. 새 클래스에 3D 전환 이력만을 나타내는 `Native` 접두사를 붙이지 않습니다. 몬스터 씬 캐시는 `EnemyAssets`, 개별 GLB의 표시와 클립 샘플링은 `EnemyVisual`, 게임 상태를 읽는 표시 어댑터는 `EnemyRenderer3D`입니다. 모델 계열의 공용 파일은 해당 폴더의 `shared/catalog.gd`·`shared/visual.gd`로 찾습니다.
+
 ## 제작·검사 도구
 
 - `tools/assets/<분류>/`: 재현 가능한 모델·재질·이미지 제작/변환 도구.
@@ -51,3 +53,5 @@
 - `UiMetrics.units_per_display_pixel()`은 논리 뷰포트 단위와 표시 픽셀의 비율입니다. 웹에서는 CSS 픽셀을 사용하고 DPR을 중복 적용하지 않습니다. UI의 기존 배율 메서드는 레이아웃 테스트가 재정의하는 경계로 유지합니다.
 
 불리언은 `_uses_mage_model`처럼 조건을, 서비스 참조는 `_enemy_renderer`·`_resident_renderer`처럼 책임을 나타냅니다. 거리·높이·배율의 이름에는 `*_m`, `*_pixels`, `*_PER_METER`처럼 단위를 드러냅니다. 주석은 현재 책임·단위·제약을 설명하며, 이미 끝난 전환 작업의 지시나 옛 비교 모드를 운영 설명으로 남기지 않습니다. 미사용 여부는 일반 호출뿐 아니라 신호·Callable·문자열 조회·엔진 콜백도 확인한 뒤 판단합니다.
+
+미터 단위 수치 필드·변수는 `height_m`·`death_floor_m`·`distance_m`처럼 `_m`을 사용합니다. 반환 단위를 이름으로 설명하는 GDScript API는 `radius_metres(radius_pixels)`·`pose_lift_metres()`처럼 `_metres()`를 사용합니다. 두 표기는 동일한 미터 단위이므로 JSON 필드를 읽을 때 표기 차이를 이유로 추가 배율을 적용하지 않습니다. 기존 자산 스키마·셰이더 uniform·검수 출력의 키는 해당 생산자와 소비자가 공유하는 계약이므로 새 이름 규칙을 이유로 일괄 교체하지 않습니다.

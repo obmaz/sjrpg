@@ -521,7 +521,7 @@ func enemy_pose_lift(enemy: Enemy) -> float:
 	if _enemy_renderer == null:
 		return 0.0
 	var model: Dictionary = _enemy_renderer.entries.get(enemy.get_instance_id(), {})
-	var visual: NativeEnemyVisual = model.get("visual")
+	var visual: EnemyVisual = model.get("visual")
 	return visual.pose_lift_metres() if is_instance_valid(visual) else 0.0
 
 

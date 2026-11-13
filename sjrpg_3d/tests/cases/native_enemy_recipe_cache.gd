@@ -19,8 +19,8 @@ func _meshes(root: Node3D) -> Array[MeshInstance3D]:
 
 func _world_vertices(root: Node3D) -> PackedVector3Array:
 	var result := PackedVector3Array()
-	if root is NativeEnemyVisual:
-		for vertex in (root as NativeEnemyVisual).posed_vertices():
+	if root is EnemyVisual:
+		for vertex in (root as EnemyVisual).posed_vertices():
 			result.append(root.global_transform * vertex)
 		return result
 	for instance: MeshInstance3D in _meshes(root):
