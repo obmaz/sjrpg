@@ -20,14 +20,14 @@ func run() -> void:
 	check("actual basic attack starts", hero.cast_slot(0))
 	hero._process(hero._attack_duration * 0.20)
 	native.sync(hero)
-	var windup := native.arms[1].rotation
+	var windup := native.joint_rotation("upperarm_r")
 	var health := foe.hp
 	hero._process(hero._attack_duration * 0.32)
 	native.sync(hero)
-	check("confirmed contact installs the strike pose before hit-stop", foe.hp < health and hero.contact_serial > 0 and hero._hitstop.remaining > 0.0 and is_equal_approx(native.last_pose["attack_progress"], Player.CONTACT_PROGRESS) and windup.distance_to(native.arms[1].rotation) > 1.0)
-	var contact := native.arms[1].rotation
+	check("confirmed contact installs the strike pose before hit-stop", foe.hp < health and hero.contact_serial > 0 and hero._hitstop.remaining > 0.0 and is_equal_approx(native.last_pose["attack_progress"], Player.CONTACT_PROGRESS) and windup.angle_to(native.joint_rotation("upperarm_r")) > 0.5)
+	var contact := native.joint_rotation("upperarm_r")
 	native.sync(hero)
-	check("subsequent frozen samples retain the actual strike", native.arms[1].rotation.is_equal_approx(contact))
+	check("subsequent frozen samples retain the actual strike", native.joint_rotation("upperarm_r").is_equal_approx(contact))
 	var clock := hero._attack_time
 	hero._process(0.15)
 	check("local hold does not freeze the whole game or extend damage callbacks", Engine.time_scale == 1.0 and hero._attack_time < clock and hero.contact_serial == 1)

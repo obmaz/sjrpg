@@ -25,11 +25,11 @@
     },
     {
       "path": "scripts/world/geometry/ground_relief_3d.gd",
-      "sha256": "cc14f5e1537fe834bcd2d6e94cf4cec95f99f74a8a4232b383faea059ab925bb"
+      "sha256": "a1e046530f69a93f18f4e73ffe352729eed0b8472b4591ced6fcf9e4078caf33"
     },
     {
       "path": "assets/materials/terrain/ground.gdshader",
-      "sha256": "40f058e41c7143993edb315cddf89342e95ace77326d96273bb2454998042135"
+      "sha256": "1050f5eebaf1fb592276a41af95cdef9832d5c71790ee9f0bc12939ee174b9cf"
     },
     {
       "path": "assets/materials/water/river.gdshader",

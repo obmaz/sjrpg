@@ -21,14 +21,29 @@ func run() -> void:
 	game.town_gates.set_process(false)
 	check("physics shares the actual native rendering World3D", spatial.get_world_3d() == spatial.get_parent().get_world_3d() and spatial.physics_ticks > 0)
 	var valid_faces := true
+	var cave_collision := PackedVector3Array()
 	for collision: CollisionShape3D in spatial._geometry.find_children("*", "CollisionShape3D", true, false):
 		var concave := collision.shape as ConcavePolygonShape3D
 		if concave == null:
 			continue
 		var faces := concave.get_faces()
+		if collision.get_parent().get_meta("physics_kind", "") == "NativeCaveHill":
+			cave_collision = faces
+			var cave_body := collision.get_parent() as StaticBody3D
+			check("cave rock retains its authored transform and one-sided small margin", cave_body.transform.is_equal_approx(NativeCavePlan.frame(game.dungeon.entry_point())) and is_equal_approx(concave.margin, .001) and not concave.backface_collision)
 		for index in range(0, faces.size(), 3):
 			valid_faces = valid_faces and (faces[index + 1] - faces[index]).cross(faces[index + 2] - faces[index]).length_squared() > 0.0000000001
 	check("all native floor and cliff collision triangles have nonzero area", valid_faces)
+	# 실제 GLB의 안정 면만 같은 순서/정점으로 물리에 전달해야 한다.
+	var source_faces := NativeCaveEntrance3D.mesh(NativeCavePlan.HILL_HEIGHT, SpatialWorld3D.radius_metres(NativeCavePlan.SOURCE_RADIUS)).get_faces()
+	var stable_source_faces := PackedVector3Array()
+	for index in range(0, source_faces.size(), 3):
+		var a := source_faces[index]
+		var b := source_faces[index + 1]
+		var c := source_faces[index + 2]
+		if (b - a).cross(c - a).length_squared() > 0.0000000001:
+			stable_source_faces.append_array(PackedVector3Array([a, b, c]))
+	check("actual cave collision preserves every stable source face without changing geometry", not cave_collision.is_empty() and cave_collision == stable_source_faces and cave_collision.size() < source_faces.size())
 	var source: Player = game.player
 	var body := spatial.register_actor(source, Player.RADIUS)
 	var dimensions := SpatialWorld3D.actor_dimensions(source, Player.RADIUS)

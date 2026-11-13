@@ -7,8 +7,8 @@
   "family": "assets/data/cave_art.json",
   "generator": {
     "path": "scripts/rendering/environment/cave_wall_geometry_3d.gd",
-    "sha256": "d01a0a867b29e497d6d548c5b443190621dd79383460925a4b617d9998a2368f",
-    "method": "기존 닫힌 암반 프로필을 DungeonRelief의 같은 바닥 높이에 올리고 실제 단면을 벽 부착 메타데이터로 보존한다. 같은 기울기의 직선 경계는 합쳐 드로콜을 제한하고 높이 꺾임은 남긴다."
+    "sha256": "35f9bb0dc8440bd0a340b54db09594f5688719ba6d9fa7bbe96667e56461e951",
+    "method": "같은4cm 물리 경계의 하부를 넓게 물리고 중간 크기 파쇄층을 경계 바깥에 같은 닫힌 벽 메시로 구성한다. 전경을 낮게 유지하고 지층 함수와 끝점을 공유하며 보행 바닥과 트랩 진입을 침범하지 않는다."
   },
   "material": {
     "path": "assets/materials/cave/wall/wall-0.png",
@@ -31,15 +31,17 @@
     "up": "+Y",
     "ground": "XZ",
     "collision_inner_inset": 0.04,
-    "outer_depth": 1.05,
+    "outer_depth": 1.6,
     "rear_chamber_height_max": 3.5,
     "rear_corridor_height": 1.45,
-    "front_cutaway_height": 0.45,
+    "front_cutaway_height": 0.32,
     "triangle_budget": 20000,
     "actual_runtime_counts": "native_cave_geometry가 원래 경계 수와 모델 수의 일치·닫힌 삼각형·2재질·예산을 검사한다.",
-    "material_boundary": "PROFILE[4]의 실제 능선; 안쪽 0–3면, 바깥 4–7면. 실제 높이에 맞는 단면에서 법선을 계산한다.",
+    "material_boundary": "PROFILE[4]의 실제 능선; 안쪽0–3면과 바깥4–7면은 같은 굴곡 단면을 공유한다. 외부 하부는 실제 바닥 아래로1.35m연장된다.",
     "grouping": "원래 연결된 직선 벽 구간마다 하나의 가림 오브젝트; 안쪽/바깥쪽 두 재질을 함께 투명화한다.",
-    "floor": "DungeonRelief의 정수 mm 합집합 격자와 셀 평면을 표시/FLOOR/드문 내부 이음새 조회 복구에 공유한다."
+    "floor": "DungeonRelief의 정수 mm 합집합 격자와 셀 평면을 표시/FLOOR/드문 내부 이음새 조회 복구에 공유한다.",
+    "foundation_depth": 1.35,
+    "fractured_transition": "뒤쪽/옆쪽 벽의 하부 chamfer와 경계 밖 중간 암반을 겹쳐 발치 전이대를 만든다. 전경 낮은 벽과 트랩/중앙 보행 바닥에는 새 돌을 놓지 않는다."
   },
   "replacement": {
     "metadata": "cave_role",
@@ -48,7 +50,9 @@
       "arch",
       "lantern"
     ],
-    "source_nodes": "Preserved as hidden rules/art adapters; no ancestor-visibility gating."
+    "source_nodes": "Preserved as hidden rules/art adapters; no ancestor-visibility gating.",
+    "arch_count": 5,
+    "first_trap_approach": "처음 가시판을 가리던 입구 장식 아치를 제거한다. 나머지5개방/분기암반리브와원래통행폭은보존한다."
   },
   "lighting": {
     "ambient_energy": 0.34,
@@ -90,8 +94,8 @@
   },
   "floor_shader": {
     "path": "assets/materials/cave/floor.gdshader",
-    "sha256": "4cedc9a8e0eec7f6e99258def3a02f667328bc0b6b06b0624da8acc80703e108",
-    "method": "Shared lit slab shader; original2.6m UV and pixels, reduced albedo contrast/detail0.68 and a warm neutral base. No emission, normal-map fabrication or light changes."
+    "sha256": "e2bfcc4cec7575e82c2a961fdf4571ced52eba5773d3ba6c4d858cffdc3da803",
+    "method": "원래6개생성형알베도와2.6m UV를보존하고큰밝은반점의색차를낮춘광원반응바닥이다. 발광이나 새 법선맵을 추가하지 않는다."
   },
   "floor_material": {
     "path": "assets/materials/cave/floor/floor-0.png",
@@ -116,10 +120,10 @@
   },
   "wall_shader": {
     "path": "assets/materials/cave/wall.gdshader",
-    "sha256": "420268158c2a586af3306cf4cc56a5d50ee6fd117014bd009a3c13ac9f40c42a"
+    "sha256": "cdb7cef9beb40cbb1c76722133af31eb99519fd3c305ad44adf7902c2d370368"
   },
   "variant_shader": {
     "path": "assets/materials/cave/variants.gdshaderinc",
-    "sha256": "96f10418b8f84fbff0a5316dc04c2c8423cc8bd9db0cea40055d1d9a28e5336b"
+    "sha256": "cdd3002c0c5f9d5a17c3c600b5c53e605590254493da5c19d89ad9d72950417f"
   }
 }

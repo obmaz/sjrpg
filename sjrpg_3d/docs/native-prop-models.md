@@ -4,7 +4,7 @@
 
 | 자산 | 형상·씬 | 게임에서 유지하는 책임 |
 | --- | --- | --- |
-| 전사 | `heroes/warrior/{model.glb,visual.tscn}` | 실제 이동 거리·공격·피격·사망 시계로 Torso/Leg/Arm/Sword 피벗 제어 |
+| 전사 | `heroes/warrior/{model.glb,visual.tscn}` | 성인 스킨·65관절·내장 클립. [전사 계약](native-warrior.md)의 실제 이동/명중 시계로 샘플링 |
 | 마법사 | `heroes/mage/visual.tscn` → 보존된 CC0 GLB | 기존 골격·클립 수동 샘플링 |
 | 주민8명 | `residents/<id>/visual.tscn` | Villager 발치·방향·대기·피격·의뢰·지역 수명 |
 | 상자3종 | `environment/treasure_chest/visual.tscn` | 같은 메시와 목재/철/황금 재질, 내구도·전리품·힌지 열림 |
@@ -15,7 +15,7 @@
 | 나무5종·수풀2종 | `vegetation/<id>/visual.tscn` | 씬에서 공유 메시를 한 번 읽어 공간 청크 MultiMesh에 배치 |
 | 동굴 표지·벽 횃불 | `environment/{trail_sign,wall_torch}/visual.tscn` | 안내 글자·방향, 실제 벽 접촉 배치·불꽃·광원·배칭 |
 
-분수·워프게이트·마법사·상인·미라·참나무의 기존 GLB와 출처는 원래 경로에 보존한다. 씬이 원본을 직접 인스턴스화하므로 골격·동작·기존 제작기의 출력 경로를 중복하지 않는다. 나머지 고정 형상 제작기는 `tools/assets/props/`에만 있으며 앱에서 제외한다. 외형이 GLB여도 전사의 동작을 새 클립으로 바꿀 필요는 없다. 현재 플레이어 거리·명중 시계를 읽는 관절 제어를 보존한다.
+분수·워프게이트·마법사·상인·미라·참나무의 기존 GLB와 출처는 원래 경로에 보존한다. 씬이 원본을 직접 인스턴스화하므로 골격·동작·기존 제작기의 출력 경로를 중복하지 않는다. 나머지 고정 형상 제작기는 `tools/assets/props/`에만 있으며 앱에서 제외한다. 전사는 전용 Blender 제작기로 스킨과 클립을 굽고, 런타임은 플레이어 거리·명중 시계로 자세를 샘플링한다.
 
 ## 교체와 검증
 
@@ -27,7 +27,7 @@
 
 ```sh
 sjrpg_3d/tools/godot.sh --headless res://tools/assets/props/bake.tscn
-sjrpg_3d/tools/godot.sh --headless res://tools/assets/props/bake.tscn -- --only=heroes/warrior
+sjrpg_3d/tools/godot.sh --headless res://tools/assets/props/bake.tscn -- --only=environment/waypoint
 sjrpg_3d/tools/check.sh --only=native_prop_assets,native_warrior,native_residents,native_encounter_props
 ```
 

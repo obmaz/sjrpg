@@ -14,7 +14,7 @@ void fragment() {
 		vec3 p=cave_world/2.6;
 		color=cave_surface(p.zy,cave_world.xz)*weights.x+cave_surface(p.xz,cave_world.xz)*weights.y+cave_surface(p.xy,cave_world.xz)*weights.z;
 	} else { color=cave_surface(UV,cave_world.xz); }
-	ALBEDO=color*vec3(.78,.80,.82);
+	ALBEDO=color*vec3(.84,.83,.79);
 	ROUGHNESS=.98;
 	SPECULAR=.16;
 }

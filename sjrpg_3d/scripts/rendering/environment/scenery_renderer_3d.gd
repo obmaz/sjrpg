@@ -32,29 +32,59 @@ static func _box(tool: SurfaceTool, origin: Vector3, size: Vector3) -> void:
 			normal = -normal
 		LandmarkRenderer3D._tri(tool, a, b, c, normal)
 
-static func arch_mesh(clear_width: float, height: float, thickness := 0.36, depth := 0.62) -> ArrayMesh:
+## 동굴의 실제 통과 폭은 보존하고, 얇은 완성 석조 문틀 대신 두꺼운 암반 지지부를 만든다.
+static func _arch_column(tool: SurfaceTool, side: float, radius: float, spring: float, thickness: float, depth: float) -> void:
+	var previous: Array[Vector3] = []
+	var first: Array[Vector3] = []
+	var centre := Vector3(side * (radius + thickness * .5), spring * .5, 0)
+	for station in 4:
+		var height: float = [0.0, .32, spring * .58, spring][station]
+		var width: float = thickness * [1.18, 1.05, 1.26, 1.0][station]
+		# 방 경계에서30/65m 바깥에 놓이므로 아래 기둥은 기존 보행면에 침범하지 않는다.
+		var half_depth: float = minf(.44, depth * [0.57, 0.49, 0.55, 0.50][station])
+		var inner := side * radius
+		var outer := side * (radius + width)
+		var section: Array[Vector3] = [Vector3(inner, height, -half_depth), Vector3(outer, height, -half_depth), Vector3(outer, height, half_depth), Vector3(inner, height, half_depth)]
+		if first.is_empty():
+			first = section
+		if not previous.is_empty():
+			for face in 4:
+				var next := (face + 1) % 4
+				_face(tool, previous[face], previous[next], section[next], section[face], centre)
+		previous = section
+	_face(tool, first[0], first[3], first[2], first[1], centre)
+	_face(tool, previous[0], previous[1], previous[2], previous[3], centre)
+
+
+static func arch_mesh(clear_width: float, height: float, thickness := 0.58, depth := 1.12) -> ArrayMesh:
 	var tool := SurfaceTool.new()
 	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var radius := clear_width * 0.5
-	var spring := maxf(1.85, height - (radius + thickness) * 0.85)
-	_box(tool, Vector3(-radius - thickness * 0.5, spring * 0.5, 0), Vector3(thickness, spring, depth))
-	_box(tool, Vector3(radius + thickness * 0.5, spring * 0.5, 0), Vector3(thickness, spring, depth))
+	var radius := clear_width * .5
+	var spring := maxf(1.85, height - (radius + thickness) * .85)
+	for side: float in [-1.0, 1.0]:
+		_arch_column(tool, side, radius, spring, thickness, depth)
 	for i in 12:
 		var a := PI * i / 12.0
 		var b := PI * (i + 1) / 12.0
-		var inner_a := Vector3(cos(a) * radius, spring + sin(a) * radius * 0.85, 0)
-		var inner_b := Vector3(cos(b) * radius, spring + sin(b) * radius * 0.85, 0)
-		var outer_a := Vector3(cos(a) * (radius + thickness), spring + sin(a) * (radius + thickness) * 0.85, 0)
-		var outer_b := Vector3(cos(b) * (radius + thickness), spring + sin(b) * (radius + thickness) * 0.85, 0)
-		var front := Vector3.BACK * depth * 0.5
-		var back := -front
-		var centre := (inner_a + inner_b + outer_a + outer_b) * 0.25
-		_face(tool, inner_a + front, inner_b + front, outer_b + front, outer_a + front, centre)
-		_face(tool, inner_b + back, inner_a + back, outer_a + back, outer_b + back, centre)
-		_face(tool, inner_a + back, inner_b + back, inner_b + front, inner_a + front, centre)
-		_face(tool, outer_b + back, outer_a + back, outer_a + front, outer_b + front, centre)
-		_face(tool, inner_a + back, inner_a + front, outer_a + front, outer_a + back, centre)
-		_face(tool, inner_b + front, inner_b + back, outer_b + back, outer_b + front, centre)
+		var inner_a := Vector3(cos(a) * radius, spring + sin(a) * radius * .85, 0)
+		var inner_b := Vector3(cos(b) * radius, spring + sin(b) * radius * .85, 0)
+		var width_a := thickness * (.98 + .16 * sin(a * 3.0 + .3))
+		var width_b := thickness * (.98 + .16 * sin(b * 3.0 + .3))
+		var outer_a := Vector3(cos(a) * (radius + width_a), spring + sin(a) * (radius + width_a) * .85, 0)
+		var outer_b := Vector3(cos(b) * (radius + width_b), spring + sin(b) * (radius + width_b) * .85, 0)
+		var over_a := smoothstep(0.0, .55, sin(a))
+		var over_b := smoothstep(0.0, .55, sin(b))
+		var front_a := Vector3.BACK * lerpf(.44, depth * (.50 + .10 * sin(a * 4.0)), over_a)
+		var front_b := Vector3.BACK * lerpf(.44, depth * (.50 + .10 * sin(b * 4.0)), over_b)
+		var back_a := -Vector3.BACK * lerpf(.44, depth * (.50 + .08 * sin(a * 3.0 + .5)), over_a)
+		var back_b := -Vector3.BACK * lerpf(.44, depth * (.50 + .08 * sin(b * 3.0 + .5)), over_b)
+		var centre := (inner_a + inner_b + outer_a + outer_b) * .25
+		_face(tool, inner_a + front_a, inner_b + front_b, outer_b + front_b, outer_a + front_a, centre)
+		_face(tool, inner_b + back_b, inner_a + back_a, outer_a + back_a, outer_b + back_b, centre)
+		_face(tool, inner_a + back_a, inner_b + back_b, inner_b + front_b, inner_a + front_a, centre)
+		_face(tool, outer_b + back_b, outer_a + back_a, outer_a + front_a, outer_b + front_b, centre)
+		_face(tool, inner_a + back_a, inner_a + front_a, outer_a + front_a, outer_a + back_a, centre)
+		_face(tool, inner_b + front_b, inner_b + back_b, outer_b + back_b, outer_b + front_b, centre)
 	return tool.commit()
 
 static func _rock_mesh(radius: float, height: float) -> ArrayMesh:
@@ -115,6 +145,7 @@ static func build(renderer: Node, parent: Node3D, world: Node2D, cave: bool, exc
 		var variant := stone.duplicate() as StandardMaterial3D
 		variant.albedo_texture = load("res://assets/materials/shared/" + surface + ".webp")
 		stone_variants.append(variant)
+	var cave_rock: ShaderMaterial = NativeCaveSurfaces.material("wall", true) if cave else null
 	var crystal := StandardMaterial3D.new()
 	crystal.albedo_color = Color("648889")
 	crystal.roughness = 0.42
@@ -170,6 +201,8 @@ static func build(renderer: Node, parent: Node3D, world: Node2D, cave: bool, exc
 		node.mesh = mesh
 		var variant_index: int = posmod(roundi(at.x * 7.0 + at.z * 11.0), stone_variants.size())
 		node.material_override = crystal if role == "crystal" else stone_variants[variant_index]
+		if role == "arch" and cave:
+			node.material_override = cave_rock
 		if role == "entrance":
 			var hill := ShaderMaterial.new()
 			hill.shader = load("res://assets/models/environment/cave_entrance/surface.gdshader")

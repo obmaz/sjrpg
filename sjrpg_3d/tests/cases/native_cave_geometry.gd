@@ -97,7 +97,7 @@ func run() -> void:
 			)
 	check(
 		"wall boundaries and non-wall props each retain exact native owners",
-		ownership and wall_count > 10 and keep_count >= 16
+		ownership and wall_count > 10 and keep_count >= 15
 	)
 	var return_portal: IsoSprite = game.world.get_node("CaveReturnPortal")
 	var portal_anchor := Iso.project(DungeonLayout.EXIT + Vector2(50, -110))
@@ -132,6 +132,7 @@ func run() -> void:
 	var edges := {}
 	var valid := true
 	var peak := 0.0
+	var supported_cutaways := 0
 	for node: MeshInstance3D in rock["meshes"]:
 		valid = (
 			valid
@@ -162,6 +163,8 @@ func run() -> void:
 					int(vertex_roles.get(vertex_key, 0)) | (1 if inner else 2)
 				)
 				peak = maxf(peak, vertices[index].y)
+				if vertices[index].y < DungeonRelief.flat_height(Vector2(vertices[index].x, vertices[index].z) * 65) - .9:
+					supported_cutaways += 1
 			for index in range(0, indices.size(), 3):
 				var a := vertices[indices[index]]
 				var b := vertices[indices[index + 1]]
@@ -245,6 +248,17 @@ func run() -> void:
 		"front cutaways keep combat readable while rear walls retain real volume",
 		int(rock["front_cutaways"]) > 0 and CaveWallGeometry3D.OUTER_DEPTH >= 1.0
 	)
+	check("cutaway walls have real lower bedrock rather than a floating surface rim", supported_cutaways > 20 and float(rock.get("foundation_depth", 0.0)) >= 1.0)
+	var fragments_outside := true
+	var footprints: Array = rock.get("rubble_footprints", [])
+	for footprint: PackedVector2Array in footprints:
+		var centre := Vector2.ZERO
+		for point: Vector2 in footprint:
+			centre += point
+			fragments_outside = fragments_outside and not layout.contains(Iso.project(point * 65))
+		centre /= footprint.size()
+		fragments_outside = fragments_outside and not layout.contains(Iso.project(centre * 65))
+	check("medium fractured bedrock stays outside the original walkable union", fragments_outside and footprints.size() > 10)
 	game.player.set_process(false)
 	game.spatial_world.sync_scope()
 	await get_tree().physics_frame

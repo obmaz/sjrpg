@@ -8,7 +8,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 IDS = (
-    "heroes/warrior",
     *("residents/" + name for name in ("smith", "stable", "elder", "elin", "noah", "rowen")),
     *("environment/" + name for name in (
         "encounter_stone", "treasure_chest", "waypoint", "cave_entrance", "wall_torch", "trail_sign"
@@ -18,7 +17,7 @@ IDS = (
     )),
 )
 WRAPPERS = (
-    "heroes/mage", "residents/merchant", "residents/mira", "environment/fountain",
+    "heroes/mage", "heroes/warrior", "residents/merchant", "residents/mira", "environment/fountain",
     "environment/warp_gate", "vegetation/town_oak_0", "vegetation/town_oak_1",
 )
 

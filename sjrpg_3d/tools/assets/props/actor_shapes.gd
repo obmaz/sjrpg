@@ -169,18 +169,3 @@ static func chest() -> ArrayMesh:
 		],
 		16
 	)
-
-
-static func blade() -> ArrayMesh:
-	# Flattened diamond section with a tapering point, +Y length before socket rotation.
-	return loft(
-		[
-			Vector4(0, 0.038, 0.013, 0),
-			Vector4(0.10, 0.044, 0.015, 0),
-			Vector4(0.63, 0.031, 0.013, 0),
-			Vector4(0.81, 0.002, 0.002, 0)
-		],
-		4,
-		0.0,
-		PI * 0.25
-	)

@@ -57,35 +57,44 @@ static func build(renderer: Node, parent: Node3D, sources: Array) -> Dictionary:
 static func _wall_mount(anchor: Vector3, profiles: Array) -> Dictionary:
 	var best := {}
 	var distance := INF
-	var origin := Vector3(anchor.x, anchor.y + MOUNT_HEIGHT, anchor.z)
+	var source_origin := Vector3(anchor.x, anchor.y + MOUNT_HEIGHT, anchor.z)
 	for profile: Dictionary in profiles:
 		if float(profile["height"]) < CaveWallGeometry3D.CHAMBER_HEIGHT:
 			continue
 		var outward: Vector2 = profile["outward"]
 		var ray := Vector3(outward.x, 0, outward.y)
+		var tangent := Vector3(-outward.y, 0, outward.x)
 		var sections: Array = profile.get("sections", [])
-		for station in range(sections.size() - 1):
-			var a: PackedVector3Array = sections[station]
-			var b: PackedVector3Array = sections[station + 1]
-			for face in 4:
-				for triangle: Array in [[a[face], b[face], b[face + 1]], [a[face], b[face + 1], a[face + 1]]]:
-					var hit: Variant = Geometry3D.ray_intersects_triangle(origin, ray, triangle[0], triangle[1], triangle[2])
-					if not hit is Vector3:
-						continue
-					var point: Vector3 = hit
-					var gap := point.distance_squared_to(origin)
-					if gap >= distance:
-						continue
-					var normal: Vector3 = (triangle[1] - triangle[0]).cross(triangle[2] - triangle[0]).normalized()
-					if normal.dot(ray) > 0.0:
-						normal = -normal
-					var right := Vector3.UP.cross(normal).normalized()
-					var up := normal.cross(right).normalized()
-					distance = gap
-					best = {"transform": Transform3D(Basis(right, up, normal), point),
-						"triangle": triangle, "inward": normal, "source_origin": origin,
-						"wall_outward": ray, "wall_height": profile["height"]}
+		# 코너의 낮은 절단부는 피하되 같은 가까운 벽의 수직 패치에만 부착한다.
+		# 무한 ray로 방 건너편7m 이상의 다른 벽을 고르지 않는다.
+		for slide: float in [0.0, .30, -.30, .60, -.60, .85, -.85]:
+			var origin := source_origin + tangent * slide
+			for station in range(sections.size() - 1):
+				var a: PackedVector3Array = sections[station]
+				var b: PackedVector3Array = sections[station + 1]
+				for face in 4:
+					for triangle: Array in [[a[face], b[face], b[face + 1]], [a[face], b[face + 1], a[face + 1]]]:
+						var hit: Variant = Geometry3D.ray_intersects_triangle(origin, ray, triangle[0], triangle[1], triangle[2])
+						if not hit is Vector3:
+							continue
+						var point: Vector3 = hit
+						var gap := point.distance_squared_to(source_origin)
+						if gap >= distance or gap > 1.5 * 1.5 or point.distance_squared_to(origin) > 1.15 * 1.15:
+							continue
+						var normal: Vector3 = (triangle[1] - triangle[0]).cross(triangle[2] - triangle[0]).normalized()
+						if normal.dot(ray) > 0.0:
+							normal = -normal
+						var right := Vector3.UP.cross(normal).normalized()
+						var up := normal.cross(right).normalized()
+						if normal.dot(-ray) < .97 or up.y < .97:
+							continue
+						distance = gap
+						best = {"transform": Transform3D(Basis(right, up, normal), point),
+							"triangle": triangle, "inward": normal, "source_origin": origin,
+							"authored_origin": source_origin, "mount_distance": sqrt(gap),
+							"wall_outward": ray, "wall_height": profile["height"]}
 	return best
+
 
 
 ## No extra process callback, particle system, light or shadow pass.

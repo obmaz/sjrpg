@@ -39,7 +39,7 @@
   "implementation": [
     {
       "path": "assets/models/environment/cave_entrance/plan.gd",
-      "sha256": "4a3f986ffa52cda343d3b731f8041b25c4c6768437e9637af3d7af07071aa266"
+      "sha256": "48e4936532b6e8bab227e06ab854ae213346613f5ee8018f5d1606439a7d9f36"
     },
     {
       "path": "scripts/world/geometry/chapel_plan_3d.gd",
@@ -59,7 +59,7 @@
     },
     {
       "path": "scripts/rendering/environment/scenery_renderer_3d.gd",
-      "sha256": "b45d95d9d6ed3fdb830bcbb36ef35b16229412281cf2f5c0b7ccbee4c9ab0ae4"
+      "sha256": "f20e68fec88c113b36908fe7746799d1bcefa763a8f3690ec80e4fb8aa479d52"
     },
     {
       "path": "scripts/rendering/environment/landmark_renderer_3d.gd",
@@ -75,7 +75,7 @@
     },
     {
       "path": "scripts/world/physics/spatial_world_3d.gd",
-      "sha256": "d631ecd0b5ba0cba7ea0323612cd86896cd1bd44006fc12a1a4210d5a91e254b"
+      "sha256": "e14aa4c312106ee4deaf460bf76b219f7cda2a51cd1d03e93179ae2448f36e0a"
     },
     {
       "path": "scripts/world/village.gd",
@@ -83,7 +83,7 @@
     },
     {
       "path": "assets/materials/terrain/ground.gdshader",
-      "sha256": "75e78eb41fd47a0c7e40991f46809b95b1ea48cf550f6d459bbae9a50533ddea"
+      "sha256": "1050f5eebaf1fb592276a41af95cdef9832d5c71790ee9f0bc12939ee174b9cf"
     },
     {
       "path": "scripts/rendering/terrain/ground_renderer_3d.gd",

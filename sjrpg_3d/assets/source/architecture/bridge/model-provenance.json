@@ -45,7 +45,7 @@
     },
     {
       "path": "scripts/rendering/environment/scenery_renderer_3d.gd",
-      "sha256": "b45d95d9d6ed3fdb830bcbb36ef35b16229412281cf2f5c0b7ccbee4c9ab0ae4"
+      "sha256": "f20e68fec88c113b36908fe7746799d1bcefa763a8f3690ec80e4fb8aa479d52"
     }
   ],
   "outputs": [

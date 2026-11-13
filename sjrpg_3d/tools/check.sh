@@ -25,6 +25,7 @@ python3 "$ROOT/tools/check_resource_layout.py" || exit 1
 python3 "$ROOT/tools/check_enemy_assets.py" || exit 1
 python3 "$ROOT/tools/check_architecture_assets.py" || exit 1
 python3 "$ROOT/tools/check_prop_assets.py" || exit 1
+python3 "$ROOT/tools/check_warrior_asset.py" || exit 1
 python3 "$ROOT/tools/check_feedback_audio.py" || exit 1
 
 echo "── 2/3 테스트"

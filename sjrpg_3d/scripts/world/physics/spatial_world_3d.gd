@@ -542,7 +542,9 @@ func _build_forest() -> void:
 		if point.is_equal_approx(NativeCavePlan.body_center(game.dungeon.entry_point())):
 			var cave_frame := NativeCavePlan.frame(game.dungeon.entry_point())
 			var cave_mesh := NativeCaveEntrance3D.mesh(NativeCavePlan.HILL_HEIGHT,radius_metres(radius))
-			var rock := cave_mesh.create_trimesh_shape()
+			var rock := ConcavePolygonShape3D.new()
+			# 렌더의 닫힌 면은 보존하고 물리 엔진에는 기존 지형과 같은 안정 면만 전달한다.
+			rock.set_faces(_valid_triangle_faces(cave_mesh.get_faces()))
 			rock.margin = 0.001
 			_shape_body(rock,cave_frame,SOLID,"NativeCaveHill")
 			continue
@@ -800,17 +802,22 @@ static func _floor_region(polygon: PackedVector2Array, surface: Dictionary, cons
 	return result
 
 
-func _triangle_body(vertices: PackedVector3Array, layer: int, label: String) -> StaticBody3D:
+static func _valid_triangle_faces(vertices: PackedVector3Array) -> PackedVector3Array:
 	var valid := PackedVector3Array()
 	for index in range(0, vertices.size(), 3):
 		var a := vertices[index]
 		var b := vertices[index + 1]
 		var c := vertices[index + 2]
-		# A cliff side at a zero-rise ramp endpoint collapses one of its two
-		# triangles. Invalid faces produce spurious native recovery contacts.
+		# 경사 끝점과 밀도장 절단의 극소 면은 물리 복구 접점을 불안정하게 만든다.
+		# 원본 정점/감기는 그대로 두고 모든 지형에 같은 면적 기준을 적용한다.
 		if (b - a).cross(c - a).length_squared() <= 0.0000000001:
 			continue
 		valid.append_array(PackedVector3Array([a, b, c]))
+	return valid
+
+
+func _triangle_body(vertices: PackedVector3Array, layer: int, label: String) -> StaticBody3D:
+	var valid := _valid_triangle_faces(vertices)
 	if valid.is_empty():
 		return null
 	var shape := ConcavePolygonShape3D.new()

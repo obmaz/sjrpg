@@ -39,15 +39,15 @@
     },
     {
       "path": "assets/models/environment/cave_entrance/plan.gd",
-      "sha256": "4a3f986ffa52cda343d3b731f8041b25c4c6768437e9637af3d7af07071aa266"
+      "sha256": "48e4936532b6e8bab227e06ab854ae213346613f5ee8018f5d1606439a7d9f36"
     },
     {
       "path": "tools/assets/props/cave_builder.gd",
-      "sha256": "778784cf58150e34c1e4f3420160ee76d651a7d65f3500aa3cbf35b5ea9b7ac0"
+      "sha256": "abda67ebfbb169eec5a6fad6b7dea6dee7dcd4809f28086bb52b2ff52b0d852c"
     },
     {
       "path": "assets/models/environment/cave_entrance/surface.gdshader",
-      "sha256": "672b442ad35e52824e514660010e0c8a23b7c21f8cc88f8897318dce558beb8f"
+      "sha256": "31834cda80702157cd629ab4ecfd156dacad4c3cbc4af1c68c2bb9c4cbd25b43"
     },
     {
       "path": "assets/models/environment/cave_entrance/visual.tscn",
@@ -70,15 +70,19 @@
     },
     {
       "path": "scripts/world/geometry/ground_relief_3d.gd",
-      "sha256": "cc14f5e1537fe834bcd2d6e94cf4cec95f99f74a8a4232b383faea059ab925bb"
+      "sha256": "a1e046530f69a93f18f4e73ffe352729eed0b8472b4591ced6fcf9e4078caf33"
     },
     {
       "path": "assets/materials/terrain/ground.gdshader",
-      "sha256": "40f058e41c7143993edb315cddf89342e95ace77326d96273bb2454998042135"
+      "sha256": "1050f5eebaf1fb592276a41af95cdef9832d5c71790ee9f0bc12939ee174b9cf"
     },
     {
       "path": "assets/materials/water/river.gdshader",
       "sha256": "5fd6a51de5aee5c5a84bed2b1ae8d9d382a1a478859d9f39175e4d5876b5556b"
+    },
+    {
+      "path": "assets/materials/terrain/cave_depth.gdshaderinc",
+      "sha256": "82f245c59aaec53cbc8c48bdd9e87ae95e9b23c18ad96f002c8420e20607d75f"
     }
   ]
 }

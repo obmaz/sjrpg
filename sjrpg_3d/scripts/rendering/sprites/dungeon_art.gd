@@ -136,7 +136,8 @@ func _register_visual(piece: IsoSprite, role: String) -> void:
 func _build_passages() -> void:
 	var frames: Dictionary = data()["frames"]
 	# The back-facing mouths carry the generated arches; front edges remain cut away.
-	var passages: Array[Array] = [[Vector2(360, 0), "arch_negative", 220.0]]
+	# 첫 가시판 바로 뒤의 장식 아치는 위험 범위와 회피 바닥을 가리므로 비운다.
+	var passages: Array[Array] = []
 	for index in DungeonLayout.ROOMS.size():
 		var room: Vector2 = DungeonLayout.ROOMS[index]
 		if index < 4:

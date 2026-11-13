@@ -120,6 +120,11 @@ func _check_wall_ownership(game: Node) -> void:
 	]
 	for room: Vector2 in DungeonLayout.ROOMS:
 		samples.append(room + Vector2(180, 180))
+	# 낮은 전경 절단면은 발+0.35m 아래라 정상적으로 가리지 않는다. 올라가는
+	# 실제 연결 통로에서 다음 방의 높은 뒷벽이 보행자 시선을 가리는 위치도 검사한다.
+	for approach in [Vector2(2010, 88), Vector2(3690, 88)]:
+		check("wall occlusion fixture uses a real walkable rising corridor", game.spatial_world.contains(Iso.project(approach), Player.RADIUS))
+		samples.append(approach)
 	for sample: Vector2 in samples:
 		game.spatial_world.teleport_source_actor(game.player, Iso.project(sample), Player.RADIUS)
 		game.camera.position = game._camera_focus()

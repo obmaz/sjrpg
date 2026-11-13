@@ -2,30 +2,30 @@
 	"forward": "+Z",
 	"id": "environment/cave_entrance",
 	"inputs": {
-		"res://assets/models/environment/cave_entrance/plan.gd": "4a3f986ffa52cda343d3b731f8041b25c4c6768437e9637af3d7af07071aa266",
+		"res://assets/models/environment/cave_entrance/plan.gd": "48e4936532b6e8bab227e06ab854ae213346613f5ee8018f5d1606439a7d9f36",
 		"res://scripts/core/world_space_3d.gd": "59a32f64790e612a4528ddc2934ddb4aa6f59c309f090ad2bcbeea7b07568892",
-		"res://tools/assets/props/bake.gd": "81d6e6b8fe14ba139a3c7ebd332feba2fdbbd5a7f0a1dabb6d17dbb48571c01c",
-		"res://tools/assets/props/cave_builder.gd": "778784cf58150e34c1e4f3420160ee76d651a7d65f3500aa3cbf35b5ea9b7ac0"
+		"res://tools/assets/props/bake.gd": "61e990e1347402833c733561c0e811582549280c10af045bbb438202029a94a7",
+		"res://tools/assets/props/cave_builder.gd": "abda67ebfbb169eec5a6fad6b7dea6dee7dcd4809f28086bb52b2ff52b0d852c"
 	},
 	"layout_sha256": "0a2291d66436562c15b862dab0b7f7ccfb4b6a7a244ade9ef8c6d5d18f17e155",
 	"meshes": {
 		"Body": {
 			"min": [
-				-6.02405309677124,
+				-6.02225017547607,
 				-1.60000002384186,
-				-9.56004428863525
+				-9.54480838775635
 			],
 			"size": [
-				12.2869987487793,
-				6.28185272216797,
-				10.0837554931641
+				12.2912569046021,
+				7.24445915222168,
+				10.065034866333
 			],
 			"surfaces": 1
 		}
 	},
-	"model_sha256": "4a9278e6d54eed39c14e910a0fe763f167f019f763aeb51df914117ed3aa2fa2",
+	"model_sha256": "97554d2482e17460599fbdf30c0e86babdd97cfc9a918ded8c1ad6c660b3e2b6",
 	"pivot": "ground",
 	"scene_sha256": "4bdbcc987475b4ef0356d0ee908cc0849f6b263cb811fa6f969c8b8a27379cca",
-	"triangles": 33336,
+	"triangles": 38756,
 	"units": "metres"
 }

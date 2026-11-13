@@ -1,4 +1,5 @@
 shader_type spatial;
+#include "res://assets/materials/terrain/cave_depth.gdshaderinc"
 uniform sampler2D stone : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D grass : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D earth : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
@@ -14,7 +15,6 @@ void fragment() {
  vec3 olive=texture(grass,p.xz/2.56).rgb*vec3(0.64,0.67,0.43);
  vec3 soil=texture(earth,p.xz/3.2).rgb*vec3(0.72,0.69,0.57);
  ALBEDO=mix(rock*vec3(0.72,0.75,0.72),mix(soil,olive,patches),turf);
- float hollow = (1.0-smoothstep(1.7,2.2,abs(p.x))) * (1.0-smoothstep(3.1,3.6,p.y)) * smoothstep(0.0,3.0,-p.z);
- ALBEDO *= 1.0-hollow*0.72;
+ ALBEDO *= cave_depth_visibility(p);
  ROUGHNESS=0.98;
 }

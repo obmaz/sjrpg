@@ -21,7 +21,10 @@ vec3 cave_sample(vec2 uv,int variant) {
 	return texture(surface_5,uv).rgb;
 }
 vec3 cave_surface(vec2 uv,vec2 region) {
-	float selector=fract(cave_noise(region/7.2)*1.91+.13)*6.0;
+	// 미러 반복의 축이 방 모서리와 겹쳐 거대한 V자를 만들지 않게 비대칭으로 옮긴다.
+	vec2 warp=vec2(cave_noise(region/4.9+vec2(2.7,1.3)),cave_noise(region/5.3+vec2(-1.1,4.6)));
+	uv=uv*.91+vec2(.271,.113)+(warp-.5)*.19;
+	float selector=clamp(cave_noise(region/7.2)*1.91+.13,0.0,1.99)*3.0;
 	int first=int(floor(selector)), next=(first+1)%6;
 	vec3 a=cave_sample(uv,first), b=cave_sample(uv,next);
 	float weight=smoothstep(.16,.84,fract(selector)+(dot(b-a,vec3(.3,.55,.15)))*.55);

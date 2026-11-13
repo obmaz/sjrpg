@@ -122,6 +122,14 @@ func _ready() -> void:
 
 func _add(model: Node3D, key: String) -> void:
 	stage.add_child(model)
+	if model is WarriorRenderer3D:
+		# 검수용 복제본도 실제 내장 정지 클립을 평가한다. 스킨의 휴지 T포즈를 표시하지 않는다.
+		var animator := ModelTree3D.first_animation_player(model)
+		for clip: StringName in animator.get_animation_list():
+			if str(clip).to_lower().contains("idle"):
+				animator.play(clip, 0.0)
+				animator.seek(0.0, true)
+				break
 	_models.append(model)
 	_keys.append(key)
 	var label := EntryUi.label(key, 20, Color("dfd8c4"), true)

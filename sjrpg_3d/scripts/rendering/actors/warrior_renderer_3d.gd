@@ -1,27 +1,31 @@
 class_name WarriorRenderer3D
 extends Node3D
-## 전사 GLB 씬의 관절·무기·피격 표시를 갱신한다. 이동·공격 시계는 Player가 소유한다.
+## 성인 골격 GLB의 자세를 Player의 실제 이동·명중 시계로 샘플링한다.
 var torso: Node3D
-var legs: Array[Node3D] = []
-var arms: Array[Node3D] = []
+var skeleton: Skeleton3D
 var meshes: Array[MeshInstance3D] = []
-var last_pose: Dictionary = {}
 var weapon: Node3D
-var _last_distance: float = -1.0
+var last_pose: Dictionary = {}
+var _motion: HeroAnimation3D
+var _animator: AnimationPlayer
 var _flash: ShaderMaterial
-var _contact_serial := 0
+var _death_clip := ""
+var _death_clock := 0.0
+var _was_dead := false
 
 
 func build() -> WarriorRenderer3D:
 	name = "NativeWarrior"
-	var model := ModelSceneLibrary.create("heroes/warrior")
-	add_child(model)
-	torso = model.get_node("Torso")
-	for index: int in 2:
-		legs.append(torso.get_node("Leg%d" % index))
-		arms.append(torso.get_node("Arm%d" % index))
-	weapon = arms[1].get_node("Sword")
-	meshes = ModelTree3D.meshes_including_root(model)
+	torso = ModelSceneLibrary.create("heroes/warrior")
+	add_child(torso)
+	skeleton = ModelTree3D.first_skeleton(torso)
+	_animator = ModelTree3D.first_animation_player(torso)
+	_motion = HeroAnimation3D.new().setup(_animator, torso)
+	weapon = torso.find_child("Sword", true, false) as Node3D
+	meshes = ModelTree3D.meshes_including_root(torso)
+	for clip: StringName in _animator.get_animation_list():
+		if str(clip).to_lower().contains("death"):
+			_death_clip = str(clip)
 	var shader := Shader.new()
 	shader.code = WorldRenderer3D.ACTOR_FLASH_SHADER_SOURCE
 	_flash = ShaderMaterial.new()
@@ -29,7 +33,7 @@ func build() -> WarriorRenderer3D:
 	return self
 
 
-func sync(player: Player) -> void:
+func sync(player: Player, delta := 0.0) -> void:
 	var overlay: Material = _flash if player.sprite.flash > 0.0 else null
 	if overlay != null:
 		_flash.set_shader_parameter("flash_color", player.sprite.flash_tint.lerp(Color.WHITE, 0.35))
@@ -39,57 +43,54 @@ func sync(player: Player) -> void:
 			mesh.material_overlay = overlay
 	if is_inside_tree() and get_tree().paused:
 		return
-	var contact := (
-		player.contact_serial != _contact_serial
-		and player.contact_action_serial == player._action_serial
-		and player._attack_time > 0.0
-	)
-	_contact_serial = player.contact_serial
-	if not contact and (player._hitstop.remaining > 0.0 or player.sprite.contact_hold > 0.0):
-		return
-	var moving: bool = player._run_distance != _last_distance
-	_last_distance = player._run_distance
-	var phase: float = player._run_distance / 23.0
-	var swing: float = sin(phase) * 0.55 if moving else 0.0
-	if Prefs.reduce_motion:
-		swing *= 0.45
-	for index: int in 2:
-		legs[index].rotation.x = swing * (-1.0 if index == 0 else 1.0)
-		arms[index].rotation.x = (
-			swing * (0.6 if index == 0 else -0.6) + (0.45 if index == 1 else 0.0)
-		)
-		arms[index].rotation.z = -0.06 if index == 0 else 0.06
-		arms[index].rotation.y = 0.0
-	torso.rotation = Vector3.ZERO
-	var progress: float = 0.0
-	if player._attack_time > 0.0:
-		progress = clampf(1.0 - player._attack_time / player._attack_duration, 0, 1)
-		if contact:
-			progress = Player.CONTACT_PROGRESS
-		var prepare := smoothstep(0.0, 0.27, progress)
-		var strike := smoothstep(0.28, Player.CONTACT_PROGRESS, progress)
-		var recover := smoothstep(0.60, 1.0, progress)
-		arms[1].rotation.x = lerpf(-1.55 * prepare, 0.90, strike) * (1.0 - recover)
-		arms[1].rotation.y = lerpf(-0.85 * prepare, 0.95, strike) * (1.0 - recover)
-		arms[1].rotation.z = -0.18 * sin(progress * PI)
-		arms[0].rotation.x = -0.55 * sin(progress * PI)
-		torso.rotation.y = lerpf(-0.28 * prepare, 0.30, strike) * (1.0 - recover)
-		torso.rotation.x = 0.10 * strike * (1.0 - recover)
-	if player._roll_time > 0.0:
-		torso.rotation.x = -0.75
 	if player.dead:
-		torso.rotation.x = PI * 0.5
-		torso.position.y = 0.25
+		_was_dead = true
+		torso.rotation = Vector3.ZERO
+		# 전투 상태는 Player가 확정한다. 사망 이후의 표시 시간만 여기서 진행한다.
+		_death_clock += maxf(delta, 0.0)
+		if not _death_clip.is_empty():
+			if _animator.current_animation != _death_clip:
+				_animator.play(_death_clip, 0.0)
+			var clip: Animation = _animator.get_animation(_death_clip)
+			# 끝 이벤트가 자세를 해제하지 않도록 마지막 표시 샘플을 유지한다.
+			_animator.seek(minf(_death_clock, maxf(0.0, clip.length - 0.001)), true)
 	else:
-		torso.position.y = 0.0
+		if _was_dead:
+			# death를 직접 재생했으므로 부활 때 이전 idle/run 클립 캐시도 새로 맞춘다.
+			_motion = HeroAnimation3D.new().setup(_animator, torso)
+			_was_dead = false
+		_death_clock = 0.0
+		_motion.sync(player, delta)
+		if not _motion.held:
+			torso.rotation.x = -0.75 if player._roll_time > 0.0 else 0.0
 	weapon.visible = not player.dead
+	var progress := 0.0
+	if not player.dead and player._attack_time > 0.0 and _motion.active_clip.to_lower().contains("cast"):
+		var clip: Animation = _animator.get_animation(_motion.active_clip)
+		progress = _motion.sample_time / clip.length
+	var animation_state := _motion.snapshot()
+	if player.dead:
+		animation_state["active_clip"] = _death_clip
+		animation_state["sample_time"] = _animator.current_animation_position
 	last_pose = {
 		"walk_distance": player._run_distance,
 		"attack_progress": progress,
 		"dead": player.dead,
-		"parts": meshes.size()
+		"parts": meshes.size(),
+		"animation": animation_state,
+		"death_time": _death_clock
 	}
 
 
+func joint_rotation(bone_name: String) -> Quaternion:
+	var index := skeleton.find_bone(bone_name)
+	return skeleton.get_bone_pose_rotation(index) if index >= 0 else Quaternion.IDENTITY
+
+
 func review_snapshot() -> Dictionary:
-	return last_pose.duplicate()
+	var snapshot := last_pose.duplicate(true)
+	var animation_state: Dictionary = snapshot.get("animation", _motion.snapshot())
+	# 마법사와 같은 최상위 애니메이션 진단 계약을 제공하며 전사 전용 값도 보존한다.
+	snapshot.merge(animation_state, true)
+	snapshot["bone_count"] = skeleton.get_bone_count()
+	return snapshot

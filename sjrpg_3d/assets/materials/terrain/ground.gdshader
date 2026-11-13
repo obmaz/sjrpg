@@ -1,4 +1,5 @@
 shader_type spatial;
+#include "res://assets/materials/terrain/cave_depth.gdshaderinc"
 render_mode cull_back;
 uniform sampler2D distance_field : filter_linear, repeat_disable;
 uniform vec4 town_bounds;
@@ -195,6 +196,7 @@ void fragment() {
 	vec3 detail = normalize(cross(dx,dy));
 	if (detail.y < 0.0) { detail = -detail; }
 	NORMAL = normalize(NORMAL+(VIEW_MATRIX*vec4(detail-vec3(0.0,1.0,0.0),0.0)).xyz);
-	ALBEDO = color;
+	// 실제 터널의 바닥과 암반은 같은 깊이 감쇠를 사용한다.
+	ALBEDO = color*cave_depth_visibility(site);
 	ROUGHNESS = 0.98;
 }

@@ -22,6 +22,7 @@ python3 sjrpg_3d/tools/test_import_project.py
 python3 sjrpg_3d/tools/test_resource_layout.py
 node sjrpg_3d/tools/review/test_diagnostic_contracts.mjs
 node --test sjrpg_3d/tools/review/village/harness.test.mjs
+node --test sjrpg_3d/tools/review/cave/harness.test.mjs
 node --check sjrpg_3d/tools/check_native_style.mjs
 node --check sjrpg_3d/tools/check_combat_visibility.mjs
 if [[ "$ALL" == 1 ]]; then

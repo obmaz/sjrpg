@@ -85,6 +85,7 @@ var _was_paused := false
 var _static_batch := {}
 var _batch_gpu_error := -1.0
 var _hero_animation: HeroAnimation3D
+var _hero_skeleton: Skeleton3D
 var _warp_fx: WarpEffects3D
 var _level_up_fx: ProgressionEffects3D
 var _combat_fx: CombatEffects3D
@@ -384,10 +385,12 @@ func _build_residents() -> void:
 	_resident_renderer = ResidentRenderer3D.new().setup(self)
 
 func _load_actor() -> void:
+	_hero_skeleton = null
 	_uses_mage_model = GameState.hero_class == "mage"
 	if not _uses_mage_model:
 		actor = WarriorRenderer3D.new().build()
 		stage.add_child(actor)
+		_hero_skeleton = (actor as WarriorRenderer3D).skeleton
 		return
 	if not ResourceLoader.exists(MAGE_SCENE_PATH):
 		push_warning("Mage visual scene is missing: " + MAGE_SCENE_PATH)
@@ -395,6 +398,7 @@ func _load_actor() -> void:
 	var scene := load(MAGE_SCENE_PATH) as PackedScene
 	actor = scene.instantiate() as Node3D
 	stage.add_child(actor)
+	_hero_skeleton = ModelTree3D.first_skeleton(actor)
 	# 씬에 구운 미터 단위 크기를 유지한다. 같은 발 기준을 관절 모션과 실제 충돌체가 공유한다.
 	for child in actor.find_children("*", "MeshInstance3D", true, false):
 		_actor_meshes.append(child as MeshInstance3D)
@@ -595,7 +599,7 @@ func _publish_probe() -> void:
 		"actor_scale": [actor.scale.x, actor.scale.y, actor.scale.z],
 		"actor_position": [actor.position.x, actor.position.y, actor.position.z],
 		"azimuth": rad_to_deg(atan2(eye.x, eye.z)), "elevation": rad_to_deg(asin(eye.y)),
-		"projection": "orthographic", "simulation": "3d", "scope": "cave" if game.dungeon.active else "forest", "skeletal_actor": _uses_mage_model and actor != null and animation != null,
+		"projection": "orthographic", "simulation": "3d", "scope": "cave" if game.dungeon.active else "forest", "skeletal_actor": is_instance_valid(_hero_skeleton),
 		"actor_mode": "skeletal_mage" if _uses_mage_model else "native_warrior",
 		"animation": _hero_animation.snapshot() if _hero_animation != null else (actor as WarriorRenderer3D).review_snapshot() if actor is WarriorRenderer3D else {}}
 	JavaScriptBridge.eval("window.__sjrpg3dProbe = " + JSON.stringify(report))
@@ -612,7 +616,7 @@ func _sync_actor(delta: float) -> void:
 		actor.position = actor_foot(player) + WorldSpace3D.projected_to_world(player.sprite.position)
 		var heading := WorldSpace3D.projected_to_world(Vector2.from_angle(player.facing))
 		actor.rotation.y = atan2(heading.x, heading.z)
-		(actor as WarriorRenderer3D).sync(player)
+		(actor as WarriorRenderer3D).sync(player, delta)
 		return
 	actor.position = actor_foot(player) + WorldSpace3D.projected_to_world(player.sprite.position)
 	if _actor_flash != null:

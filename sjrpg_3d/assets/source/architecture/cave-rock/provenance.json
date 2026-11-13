@@ -34,15 +34,15 @@
     },
     {
       "path": "assets/models/environment/cave_entrance/plan.gd",
-      "sha256": "4a3f986ffa52cda343d3b731f8041b25c4c6768437e9637af3d7af07071aa266"
+      "sha256": "48e4936532b6e8bab227e06ab854ae213346613f5ee8018f5d1606439a7d9f36"
     },
     {
       "path": "tools/assets/props/cave_builder.gd",
-      "sha256": "778784cf58150e34c1e4f3420160ee76d651a7d65f3500aa3cbf35b5ea9b7ac0"
+      "sha256": "abda67ebfbb169eec5a6fad6b7dea6dee7dcd4809f28086bb52b2ff52b0d852c"
     },
     {
       "path": "assets/models/environment/cave_entrance/surface.gdshader",
-      "sha256": "672b442ad35e52824e514660010e0c8a23b7c21f8cc88f8897318dce558beb8f"
+      "sha256": "31834cda80702157cd629ab4ecfd156dacad4c3cbc4af1c68c2bb9c4cbd25b43"
     },
     {
       "path": "assets/models/environment/cave_entrance/visual.tscn",

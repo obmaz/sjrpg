@@ -3,7 +3,7 @@ extends TestCase
 
 
 func run() -> void:
-	var ids: Array[String] = ["heroes/warrior"]
+	var ids: Array[String] = []
 	for id: String in ["smith", "stable", "elder", "elin", "noah", "rowen"]:
 		ids.append("residents/" + id)
 	for id: String in [

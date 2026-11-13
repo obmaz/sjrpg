@@ -3,7 +3,7 @@
 	"id": "environment/trail_sign",
 	"inputs": {
 		"res://scripts/core/world_space_3d.gd": "59a32f64790e612a4528ddc2934ddb4aa6f59c309f090ad2bcbeea7b07568892",
-		"res://tools/assets/props/bake.gd": "81d6e6b8fe14ba139a3c7ebd332feba2fdbbd5a7f0a1dabb6d17dbb48571c01c"
+		"res://tools/assets/props/bake.gd": "61e990e1347402833c733561c0e811582549280c10af045bbb438202029a94a7"
 	},
 	"layout_sha256": "331ad492990300b5a97aec5f47ba45cd1d0e7aee130c40a2e32f7f063d8b3ab1",
 	"meshes": {

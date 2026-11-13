@@ -10,8 +10,6 @@ func _ready() -> void:
 	for argument: String in OS.get_cmdline_user_args():
 		if argument.begins_with("--only="):
 			_selected = argument.trim_prefix("--only=")
-	if _wants("heroes/warrior"):
-		_export("heroes/warrior", WarriorModelBuilder.new().build(), true)
 	for id: String in ResidentModelBuilder.AUTHORED_IDS:
 		if _wants("residents/" + id):
 			var root := Node3D.new()
@@ -200,8 +198,6 @@ func _export(id: String, root: Node3D, actor := false) -> void:
 				"res://scripts/rendering/materials/actor_surface_materials.gd"
 			]
 		)
-		if id == "heroes/warrior":
-			sources.append("res://tools/assets/props/warrior_builder.gd")
 	elif id in ["environment/treasure_chest", "environment/encounter_stone"]:
 		sources.append("res://tools/assets/props/encounter_builder.gd")
 	elif id.begins_with("vegetation/"):

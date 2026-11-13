@@ -121,6 +121,7 @@ func run() -> void:
 		mounts.size() == 10 and contacts.size() == 10 and str(report["mounting"]) == "wall"
 	)
 	var normals := {}
+	var mount_diagnostics: Array[Dictionary] = []
 	for torch_index in mounts.size():
 		var mount: Transform3D = mounts[torch_index]
 		var contact: Dictionary = contacts[torch_index]
@@ -130,6 +131,7 @@ func run() -> void:
 		)
 		var outward: Vector3 = contact["wall_outward"]
 		normals["%d:%d" % [roundi(outward.x), roundi(outward.z)]] = true
+		mount_diagnostics.append({"index": torch_index, "origin": str(mount.origin), "anchor": str(anchors[torch_index]), "normal_dot": mount.basis.z.dot(-outward), "up_y": mount.basis.y.y, "height_error": mount.origin.y - anchors[torch_index].y - CaveLanternRenderer3D.MOUNT_HEIGHT, "hit_match": hit is Vector3 and mount.origin.is_equal_approx(hit), "wall_height": contact["wall_height"]})
 		mounted = mounted and hit is Vector3 and mount.origin.is_equal_approx(hit)
 		mounted = (
 			mounted
@@ -144,6 +146,7 @@ func run() -> void:
 			and is_equal_approx(mount.basis.determinant(), 1.0)
 		)
 		mounted = mounted and float(contact["wall_height"]) == CaveWallGeometry3D.CHAMBER_HEIGHT
+		mounted = mounted and mount.origin.distance_to(anchors[torch_index] + Vector3.UP * CaveLanternRenderer3D.MOUNT_HEIGHT) <= 1.5
 		mounted = (
 			mounted
 			and light_positions[torch_index].is_equal_approx(
@@ -159,7 +162,8 @@ func run() -> void:
 		)
 	check(
 		"each backplate actually touches a rendered tall inner wall on both wall orientations",
-		mounted and normals.size() == 2
+		mounted and normals.size() == 2,
+		JSON.stringify(mount_diagnostics)
 	)
 	var wood: MultiMeshInstance3D = batches["wood"]
 	var wood_bounds := wood.multimesh.mesh.get_aabb()

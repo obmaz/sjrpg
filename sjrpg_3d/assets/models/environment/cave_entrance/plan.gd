@@ -7,6 +7,7 @@ const ENTRY_OFFSET := Vector2(30, 100)
 const HILL_HEIGHT := 5.8
 const OPENING_WIDTH := 3.92
 const DESCENT := 1.20
+const RECESS_DEPTH := 6.50
 const SITE_DEPTH := 3.20
 const APPROACH_LENGTH := 20.0
 const SITE_RADIUS := 32.0

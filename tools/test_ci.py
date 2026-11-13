@@ -61,7 +61,7 @@ class LocalEntryTest(unittest.TestCase):
         self.write('tools/ci.sh', (ROOT / 'tools/ci.sh').read_text())
         for name in ['tools/check_workflows.py', 'tools/test_ci.py', 'sjrpg_3d/tools/test_stamp_web.py', 'sjrpg_3d/tools/test_import_project.py', 'sjrpg_3d/tools/test_resource_layout.py']:
             self.write(name, 'pass\n')
-        for name in ['sjrpg_3d/tools/review/test_diagnostic_contracts.mjs', 'sjrpg_3d/tools/review/village/harness.test.mjs', 'sjrpg_3d/tools/check_native_style.mjs', 'sjrpg_3d/tools/check_combat_visibility.mjs']:
+        for name in ['sjrpg_3d/tools/review/test_diagnostic_contracts.mjs', 'sjrpg_3d/tools/review/village/harness.test.mjs', 'sjrpg_3d/tools/review/cave/harness.test.mjs', 'sjrpg_3d/tools/check_native_style.mjs', 'sjrpg_3d/tools/check_combat_visibility.mjs']:
             self.write(name, '// valid module\n')
         self.write('tools/check.sh', '''#!/bin/bash
 set -e

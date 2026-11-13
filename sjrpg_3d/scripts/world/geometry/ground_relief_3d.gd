@@ -37,7 +37,8 @@ static func height(p: Vector2, river: PackedVector2Array, cave_frame: Transform3
 	var valley := NativeCavePlan.approach_height(local.z)
 	var half_width := lerpf(2.16,4.5,smoothstep(1.2,NativeCavePlan.APPROACH_LENGTH,local.z))
 	var shoulder := smoothstep(half_width,half_width+5.0,absf(local.x))
-	shoulder = maxf(shoulder,1.0-smoothstep(-7.0,-3.7,local.z))
+	# 실제 터널 끝까지 같은 계곡 바닥을 지지하고 그 뒤에서만 구릉으로 복귀한다.
+	shoulder = maxf(shoulder,1.0-smoothstep(-NativeCavePlan.RECESS_DEPTH-3.3,-NativeCavePlan.RECESS_DEPTH-.2,local.z))
 	var geology := lerpf(valley,rim,shoulder)*site_blend
 	return river_y+geology
 

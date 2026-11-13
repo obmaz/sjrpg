@@ -1,5 +1,5 @@
 extends TestCase
-## Background music: area tracks loop gapless, follow the hero, crossfade, and respect the setting.
+## 지역 음악은 반복·포커스·설정을 따르며 전환 중에도 한 곡만 재생한다.
 
 
 func run() -> void:
@@ -39,9 +39,19 @@ func run() -> void:
 	check("outside the village the field track is chosen", MusicDirector.context_for(game) == "field")
 	music._next_check = 0.0
 	music._process(0.1)
-	check("walking out starts a crossfade", music.current == "field" and music.is_playing("field") and music.is_playing("town") and music.level_of("town") < 1.0 and music.level_of("field") > 0.0)
+	check("walking out fades town before starting field", music.current == "field" and not music.is_playing("field") and music.is_playing("town") and music.level_of("town") < 1.0)
+	for frame in 120:
+		music.step(1.0 / 60.0)
+		check("town to field never overlaps actual decoders", _playing_count(music) <= 1)
+	check("the transition finishes with only the field track playing", not music.is_playing("town") and music.is_playing("field") and is_equal_approx(music.level_of("field"), 1.0))
+	# Boundary reversals and a cave entry can interrupt a fade before it completes.
+	for cycle in 6:
+		for context: String in ["town", "field", "dungeon", "field"]:
+			music.current = context
+			music.step(0.1)
+			check("rapid context changes never layer songs", _playing_count(music) <= 1)
+	music.current = "field"
 	music.step(MusicDirector.FADE_SECONDS)
-	check("the crossfade finishes with only the field track playing", not music.is_playing("town") and is_equal_approx(music.level_of("field"), 1.0))
 
 	Prefs.music_enabled = false
 	music._next_check = 0.0
@@ -58,14 +68,14 @@ func run() -> void:
 	check("music keeps fading while a menu pauses the game", get_tree().paused and music.process_mode == Node.PROCESS_MODE_ALWAYS)
 	game.hud.close_panel()
 	check("music setting is saved with the device settings", Prefs.music_enabled == true)
-	# Exercise real overlapping voices before exit, not merely allocated silent players.
+	# Exercise a real interrupted transition before exit, not merely silent players.
 	var exits: Array[Dictionary] = []
 	music.tree_exited.connect(_observe_exit.bind(music, exits))
-	_activate_three(game, music, town_position)
-	check("all three real tracks are active in the interrupted crossfade", _all_playing(music))
+	_interrupt_transition(game, music, town_position)
+	check("an interrupted three-context transition retains only one real playback", _playing_count(music) == 1)
 	music._notification(Node.NOTIFICATION_APPLICATION_FOCUS_OUT)
 	for player: AudioStreamPlayer in music._players.values():
-		check("focus loss pauses each actual audio player", player.stream_paused)
+		check("focus loss pauses every active audio player", not player.has_stream_playback() or player.stream_paused)
 	pause_writes = music.focus_pause_updates
 	music._notification(Node.NOTIFICATION_WM_WINDOW_FOCUS_OUT)
 	for frame in 120:
@@ -126,8 +136,8 @@ func run() -> void:
 	music.step(MusicDirector.FADE_SECONDS)
 	var field_player: AudioStreamPlayer = music._players["field"]
 	check("focus return resumes the actual field playback and normal fade", not field_player.stream_paused and field_player.playing and is_equal_approx(music.level_of("field"), 1.0))
-	_activate_three(game, music, town_position)
-	check("game shutdown starts with all three overlapping voices active", _all_playing(music))
+	_interrupt_transition(game, music, town_position)
+	check("game shutdown interrupts one active song without layering tracks", _playing_count(music) == 1)
 	var director_ref: WeakRef = weakref(music)
 	var player_refs: Array[WeakRef] = []
 	for player: AudioStreamPlayer in music._players.values():
@@ -141,7 +151,7 @@ func run() -> void:
 	Prefs.music_enabled = old_music
 
 
-func _activate_three(game: Node, director: MusicDirector, town_position: Vector2) -> void:
+func _interrupt_transition(game: Node, director: MusicDirector, town_position: Vector2) -> void:
 	var previous_scope: bool = game.dungeon.active
 	game.dungeon.active = false
 	game.player.position = town_position
@@ -156,11 +166,13 @@ func _activate_three(game: Node, director: MusicDirector, town_position: Vector2
 	game.dungeon.active = previous_scope
 
 
-func _all_playing(director: MusicDirector) -> bool:
+func _playing_count(director: MusicDirector) -> int:
+	var count := 0
 	for name: String in MusicDirector.TRACKS:
-		if not director.is_playing(name):
-			return false
-	return true
+		var player: AudioStreamPlayer = director._players[name]
+		if player.has_stream_playback():
+			count += 1
+	return count
 
 
 func _observe_exit(director: MusicDirector, events: Array[Dictionary]) -> void:
