@@ -10,3 +10,4 @@ export_credentials.cfg
 __pycache__/
 
 node_modules/
+.vscode/
