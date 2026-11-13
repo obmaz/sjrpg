@@ -45,10 +45,10 @@ static func style(button: Button, primary := false, selected := false) -> void:
 	button.add_theme_constant_override("outline_size", 0)
 
 	var path := UiKit.TEX_GOLD_BTN if primary else UiKit.TEX_BRONZE_BTN
-	var ml := 50 if primary else 24
-	var mt := 25 if primary else 20
-	var mr := 50 if primary else 24
-	var mb := 25 if primary else 20
+	var ml := 58
+	var mt := 26
+	var mr := 58
+	var mb := 26
 
 	var normal_box := UiKit.texture_stylebox(path, ml, mt, mr, mb)
 	var pressed_box := UiKit.texture_stylebox(path, ml, mt, mr, mb, Color(0.75, 0.75, 0.75))

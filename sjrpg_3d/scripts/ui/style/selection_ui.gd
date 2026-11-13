@@ -47,10 +47,13 @@ static func style(button: Button, primary := false, selected := false) -> void:
 	button.add_theme_constant_override("outline_size", 0)
 
 	var path := UiKit.TEX_GOLD_BTN if primary else (UiKit.TEX_SLOT_SELECTED if selected else UiKit.TEX_SLOT_NORMAL)
-	var ml := 50 if primary else 25
-	var mt := 25 if primary else 25
-	var mr := 50 if primary else 25
-	var mb := 25 if primary else 25
+	var is_slot_card := selected or (not primary and button.name.begins_with("SaveSlot"))
+	if not primary and not is_slot_card:
+		path = UiKit.TEX_BRONZE_BTN
+	var ml := 25 if is_slot_card else 58
+	var mt := 25 if is_slot_card else 26
+	var mr := 25 if is_slot_card else 58
+	var mb := 25 if is_slot_card else 26
 
 	var normal_box := UiKit.texture_stylebox(path, ml, mt, mr, mb)
 	var pressed_box := UiKit.texture_stylebox(path, ml, mt, mr, mb, Color(0.75, 0.75, 0.75))

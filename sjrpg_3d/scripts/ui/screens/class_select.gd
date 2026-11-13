@@ -273,6 +273,7 @@ func _update() -> void:
 		_quiet_row_text(slot_buttons[index])
 		SelectionUi.style(delete_buttons[index])
 		slot_portraits[index].visible = bool(entry["valid"])
+		slot_portrait_frames[index].visible = bool(entry["valid"])
 		slot_portraits[index].texture = SelectionUi.portrait(SelectionUi.hero_image(str(entry["class"]))) if bool(entry["valid"]) else null
 	_refresh_disabled()
 
@@ -645,12 +646,12 @@ func _layout_slots() -> void:
 	_slot_css = _css_scale()
 	var u := _unit
 	var compact := area.size.y / _slot_css < 460.0
-	var pad := maxf(22.0 * u, 10.0 * _slot_css)
+	var pad := maxf(42.0 * u, 26.0 * _slot_css)
 	var gap := maxf(12.0 * u, 6.0 * _slot_css)
 	var outer := maxf(22.0 * u, 12.0 * _slot_css)
-	_slot_pad = maxf(12.0 * u, 7.0 * _slot_css)
+	_slot_pad = maxf(14.0 * u, 8.0 * _slot_css)
 	_slot_gap = gap
-	_slot_badge = maxf(76.0 * u, 42.0 * _slot_css)
+	_slot_badge = maxf(68.0 * u, 40.0 * _slot_css)
 	_slot_touch = maxf(72.0 * u, 44.0 * _slot_css)
 	var summary := _selected()
 	var preview := bool(summary["valid"])
@@ -658,7 +659,7 @@ func _layout_slots() -> void:
 	var side_left := area.position.x + area.size.x * 0.52
 	var width := area.end.x - outer - side_left if side_preview else minf(area.size.x - outer * 2.0, maxf(1000.0 * u, 292.0 * _slot_css))
 	var inner := maxf(1.0, width - pad * 2.0)
-	var preview_h := maxf(150.0 * _slot_css, 180.0 * u) if preview and portrait else 0.0
+	var preview_h := 0.0
 	slot_surface.show()
 	slot_scroll.show()
 	slot_footer.show()
@@ -668,7 +669,7 @@ func _layout_slots() -> void:
 	slot_switch.hide()
 	start_button.hide()
 	continue_button.show()
-	showcase.visible = preview
+	showcase.visible = side_preview
 	_hero_backdrop.modulate.a = 0.44 if side_preview else 0.0
 	hero_art.texture = SelectionUi.vignette(SelectionUi.hero_image(selected_class)) if portrait else SelectionUi.hero_image(selected_class)
 	brand_label.visible = not compact
@@ -688,8 +689,7 @@ func _layout_slots() -> void:
 	var subtitle_y := maxf(_slot_touch, title_y + title_h) + gap
 	var subtitle_width := inner
 	var subtitle_h := _measure(subtitle, subtitle_width)
-	var vignette_y := subtitle_y + subtitle_h + gap
-	var header_h := vignette_y + preview_h if preview and portrait else subtitle_y + subtitle_h
+	var header_h := subtitle_y + subtitle_h
 	slot_context.size.x = inner
 	var context_h := _measure(slot_context, inner)
 	var action_h := maxf(88.0 * u, 48.0 * _slot_css)
@@ -767,13 +767,24 @@ func _place_slot_labels(index: int) -> void:
 	if not status.visible:
 		status_w = 0.0
 	var title_h := title.get_combined_minimum_size().y
-	EntryUi.place(slot_portrait_frames[index], Rect2(Vector2(pad, pad), Vector2.ONE * _slot_badge))
-	var number_h := number.get_combined_minimum_size().y
-	var badge_w := maxf(30.0 * _unit, 24.0 * _slot_css)
-	var badge_h := number_h + 6.0 * _slot_css
-	var badge_rect := Rect2(Vector2(pad - 3.0 * _slot_css, pad + _slot_badge - badge_h + 3.0 * _slot_css), Vector2(badge_w, badge_h))
-	EntryUi.place(slot_number_badges[index], badge_rect)
-	EntryUi.place(number, badge_rect.grow(-2.0 * _slot_css))
+	var has_save := bool(_summaries[index]["valid"])
+	slot_portrait_frames[index].visible = has_save
+	slot_portraits[index].visible = has_save
+
+	if has_save:
+		EntryUi.place(slot_portrait_frames[index], Rect2(Vector2(pad, pad), Vector2.ONE * _slot_badge))
+		var number_h := number.get_combined_minimum_size().y
+		var badge_w := maxf(30.0 * _unit, 24.0 * _slot_css)
+		var badge_h := number_h + 6.0 * _slot_css
+		var badge_rect := Rect2(Vector2(pad - 3.0 * _slot_css, pad + _slot_badge - badge_h + 3.0 * _slot_css), Vector2(badge_w, badge_h))
+		EntryUi.place(slot_number_badges[index], badge_rect)
+		EntryUi.place(number, badge_rect.grow(-2.0 * _slot_css))
+	else:
+		var badge_size := maxf(42.0 * _unit, 34.0 * _slot_css)
+		var badge_y := pad + (_slot_badge - badge_size) * 0.5
+		var badge_rect := Rect2(Vector2(pad, badge_y), Vector2(badge_size, badge_size))
+		EntryUi.place(slot_number_badges[index], badge_rect)
+		EntryUi.place(number, badge_rect)
 	EntryUi.place(title, Rect2(Vector2(left, pad), Vector2(maxf(1.0, text_w - status_w - (gap if status.visible else 0.0)), title_h)))
 	EntryUi.place(status, Rect2(Vector2(row.size.x - pad - status_w, pad), Vector2(status_w, title_h)))
 	var meta_h := _measure(meta, text_w, 22.0 * _unit)

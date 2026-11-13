@@ -152,6 +152,10 @@ static func texture_stylebox(path: String, left: int, top: int, right: int, bott
 	box.texture_margin_top = float(top)
 	box.texture_margin_right = float(right)
 	box.texture_margin_bottom = float(bottom)
+	box.content_margin_left = float(left) * 0.7
+	box.content_margin_right = float(right) * 0.7
+	box.content_margin_top = float(top) * 0.5
+	box.content_margin_bottom = float(bottom) * 0.5
 	box.modulate_color = modulate
 	return box
 
@@ -159,10 +163,10 @@ static func texture_stylebox(path: String, left: int, top: int, right: int, bott
 ## The action hierarchy is carried by bronze rims and warmer faces, not pale full-width blocks.
 static func style_button(button: Button, primary := false, selected := false) -> void:
 	var path := TEX_GOLD_BTN if primary else (TEX_SLOT_SELECTED if selected else TEX_BRONZE_BTN)
-	var ml := 50 if primary else 24
-	var mt := 25 if primary else 20
-	var mr := 50 if primary else 24
-	var mb := 25 if primary else 20
+	var ml := 58
+	var mt := 26
+	var mr := 58
+	var mb := 26
 	var normal_box := texture_stylebox(path, ml, mt, mr, mb)
 	var pressed_box := texture_stylebox(path, ml, mt, mr, mb, Color(0.75, 0.75, 0.75))
 	var disabled_box := texture_stylebox(path, ml, mt, mr, mb, Color(0.4, 0.4, 0.4))
