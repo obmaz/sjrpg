@@ -1,0 +1,143 @@
+{
+  "version": 1,
+  "task": "selection-controls-generative-cleanup",
+  "authority": {
+    "path": "selection-and-continue-concept.png",
+    "sha256": "888e5698de6b5e5326db6c35a5beb8f7144c440641452ca6cb43be85be5e33eb"
+  },
+  "cropInputs": {
+    "primary": [
+      45,
+      1024,
+      610,
+      1107
+    ],
+    "tab_selected": [
+      94,
+      224,
+      335,
+      287
+    ],
+    "tab_idle": [
+      339,
+      224,
+      575,
+      274
+    ],
+    "back": [
+      25,
+      22,
+      89,
+      77
+    ]
+  },
+  "passes": [
+    {
+      "tool": "image_gen.imagegen",
+      "source": "selection-controls-stage1.png",
+      "prompt": "Edit and clean the provided cut-out game UI references into a production-ready TRANSPARENT RGBA sprite atlas. The first reference is a sheet of actual crops from the user's approved design; the second is the approved complete screen for exact style context. Preserve this specific restrained medieval woodland UI design, not a new design. We need clean thin aged bronze/gold outlines, natural dark teal and muted brown textured fills, straight consistent edges and symmetric clipped corners, no pasted forest rectangles, no muddy text erasure, no repeating stripe patches. Front-facing flat UI, no perspective.\n\nGenerate ONE landscape 1536x1024 atlas with ONLY FOUR completely separated assets on genuine transparency. Maintain ample transparent gutters:\nTOP: one wide primary action button around x128..1408 y100..280, long hexagonal pointed left/right ends, fine double warm bronze outline, subtle engraved inward-pointing motifs at ends, muted aged brown metallic interior with delicate organic mottling. Match the first crop silhouette; no text.\nMIDDLE LEFT: selected class tab around x128..704 y430..550 with clipped top corners, thin warm bronze border, muted brown/teal interior, a small downward outlined selection chevron centered under its bottom edge, restrained tiny warm highlight at the chevron. Body and chevron one connected coherent asset. No text or crossed swords.\nMIDDLE RIGHT: unselected class tab around x832..1408 y430..550, same body dimensions/corner profile as selected tab, thin subdued bronze border and deep charcoal-teal fill. No chevron, text, staff, or symbols.\nBOTTOM CENTER: one compact square Back button around x656..880 y730..930 with all four corners subtly clipped (octagonal square), deep translucent charcoal-teal interior, thin muted bronze rim, a clean ivory LEFT ARROW WITH A HORIZONTAL SHAFT as in the source (not a lone chevron), centered and comfortably inset.\n\nRemove ALL Korean lettering and class/stat icons from the source button and tabs. Only the Back arrow remains. Empty generous center areas will receive live engine labels. Match surface detail and restrained brightness across the four pieces. Do not add labels, mockups, characters, background, checkerboard, shadows outside sprites, flourishes, scrollwork or extra buttons. Crisp anti-aliased alpha edges with fully transparent space surrounding every sprite. The fills should be subtle, not chunky embossed frames or bright yellow.",
+      "references": [
+        "selection-controls-input.png",
+        "selection-and-continue-concept.png"
+      ],
+      "transparentBackground": true,
+      "sourceSha256": "f8fc16fd344a2a4e29476086028e154de530a4135461fcffd267881d4c74370c",
+      "referenceSha256": {
+        "selection-controls-input.png": "76578304b9cc7d427f9210fffd8646bf7faf717b07a887a21e30874cdbd8ce5e",
+        "selection-and-continue-concept.png": "888e5698de6b5e5326db6c35a5beb8f7144c440641452ca6cb43be85be5e33eb"
+      }
+    },
+    {
+      "tool": "image_gen.imagegen",
+      "source": "selection-controls-clean.png",
+      "prompt": "Refine this existing transparent UI sprite atlas with a very local correction. Preserve the primary button, unselected tab, Back button and their exact locations, shapes, bronze palette and artwork. On the SELECTED TAB at middle left, REMOVE the entire unwanted dark turquoise rectangular band that extends horizontally under its bottom border. Beneath that straight bottom border, ONLY the small centered downward bronze V-shaped selection chevron may protrude. The areas on either side of the V must be genuinely transparent; no rectangle, ledge or band. Keep the V compact and clearly centered, with a tiny restrained warm highlight. Keep the interior surface in all buttons continuous and free of text. No letters or class symbols. Also remove the huge cloudy halos outside ALL FOUR sprite silhouettes: make outside pixels transparent, with only antialiasing on their edges and at most a few pixels of glow directly at the selection V. Four isolated game sprites, no background or checkerboard, genuine RGBA transparency. Same 1536x1024 landscape atlas, no new elements.",
+      "references": [
+        "selection-controls-stage1.png"
+      ],
+      "transparentBackground": true,
+      "sourceSha256": "8f425b798da3ea7dce71c10b2c2155ad0e65ee658ce8297d32a9a507b8c239fc",
+      "referenceSha256": {
+        "selection-controls-stage1.png": "f8fc16fd344a2a4e29476086028e154de530a4135461fcffd267881d4c74370c"
+      }
+    }
+  ],
+  "acceptedSource": "selection-controls-clean.png",
+  "runtimeCrops": {
+    "primary": [
+      80,
+      108,
+      1454,
+      320
+    ],
+    "tab_selected": [
+      104,
+      450,
+      724,
+      608
+    ],
+    "tab_idle": [
+      810,
+      450,
+      1430,
+      608
+    ],
+    "back": [
+      668,
+      742,
+      868,
+      934
+    ]
+  },
+  "processing": "Pixel-preserving rectangular crops only. No procedural texture repaint, text patch mirroring, resizing or alpha replacement.",
+  "sourceSha256": "8f425b798da3ea7dce71c10b2c2155ad0e65ee658ce8297d32a9a507b8c239fc",
+  "runtime": {
+    "primary": {
+      "path": "assets/ui/entry/controls/primary.png",
+      "size": [
+        1374,
+        212
+      ],
+      "sha256": "78d908d7c68beba616f36c8c04314abd46cdb8c781c0fed6bce3bc5bc8d46a36",
+      "alphaRange": [
+        0,
+        254
+      ]
+    },
+    "tab_selected": {
+      "path": "assets/ui/entry/controls/tab_selected.png",
+      "size": [
+        620,
+        158
+      ],
+      "sha256": "76ace4eba9cc4dadcd16a6a6254ec38ffa6b7e4c972eec8da8c23e8d3e142b19",
+      "alphaRange": [
+        0,
+        254
+      ]
+    },
+    "tab_idle": {
+      "path": "assets/ui/entry/controls/tab_idle.png",
+      "size": [
+        620,
+        158
+      ],
+      "sha256": "b2ce8e5a26a85ece355ba8e0bad6016242ab855b55358261b3cf355ebe0430d0",
+      "alphaRange": [
+        0,
+        254
+      ]
+    },
+    "back": {
+      "path": "assets/ui/entry/controls/back.png",
+      "size": [
+        200,
+        192
+      ],
+      "sha256": "2b867af8131053be4a442006a30251271073b9b4e2409d2a0e2c62aa51cdc617",
+      "alphaRange": [
+        0,
+        254
+      ]
+    }
+  }
+}

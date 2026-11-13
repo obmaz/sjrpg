@@ -3,32 +3,6 @@
   "sourceSha256": "888e5698de6b5e5326db6c35a5beb8f7144c440641452ca6cb43be85be5e33eb",
   "method": "Original corners/edges, text-free source fill, live runtime labels; no generative redraw",
   "parts": {
-    "primary": {
-      "sourceRect": [
-        45,
-        1024,
-        610,
-        1107
-      ],
-      "sourceFillRect": [
-        145,
-        1045,
-        161,
-        1061
-      ],
-      "margins": [
-        45,
-        14,
-        45,
-        14
-      ],
-      "size": [
-        565,
-        83
-      ],
-      "runtime": "assets/ui/entry/concept/primary.png",
-      "sha256": "948fcb1496d9a86d60ec8071b808f58a2f47ffcdd02764fa6b65a4ec7973c408"
-    },
     "info": {
       "sourceRect": [
         30,
@@ -106,32 +80,6 @@
       ],
       "runtime": "assets/ui/entry/concept/slot_selected.png",
       "sha256": "f08c9694db3fbcdc6f5bd9c64d6b4e08ed84dd7817e0ec4292f63ca40aeed1e7"
-    },
-    "tab": {
-      "sourceRect": [
-        94,
-        224,
-        330,
-        270
-      ],
-      "sourceFillRect": [
-        120,
-        241,
-        136,
-        253
-      ],
-      "margins": [
-        13,
-        9,
-        13,
-        9
-      ],
-      "size": [
-        50,
-        42
-      ],
-      "runtime": "assets/ui/entry/concept/tab.png",
-      "sha256": "d675d56b9f06ad7fe3148b361e520d08f04f2c06c6b6a5e7f09c1861f65d289e"
     },
     "stat": {
       "sourceRect": [

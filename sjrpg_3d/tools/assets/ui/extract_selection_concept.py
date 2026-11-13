@@ -4,7 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image
 
 PROJECT = Path(__file__).resolve().parents[3]
 SOURCE = PROJECT / "assets/source/entry-redesign/selection-and-continue-concept.png"
@@ -13,11 +13,9 @@ RECORD = PROJECT / "assets/source/entry-redesign/concept-extraction.json"
 
 # 원본 좌표. 글자가 없는 내부 색 표본만 사용하고 테두리·모서리는 그대로 유지한다.
 PARTS = {
-    "primary": ((45, 1024, 610, 1107), (45, 14), (145, 1045, 161, 1061)),
     "info": ((30, 755, 639, 996), (14, 14), (570, 972, 586, 980)),
     "slot": ((694, 596, 1303, 702), (14, 14), (1210, 610, 1226, 626)),
     "slot_selected": ((694, 476, 1303, 584), (14, 14), (1210, 492, 1226, 508)),
-    "tab": ((94, 224, 330, 270), (13, 9), (120, 241, 136, 253)),
     "stat": ((94, 915, 329, 968), (10, 8), (153, 932, 163, 948)),
 }
 ICONS = {
@@ -58,21 +56,6 @@ def main():
         result.paste(crop.crop((width//2-12, height-top, width//2+12, height)), (left, top+middle))
         result.paste(crop.crop((0, height//2-12, left, height//2+12)), (0, top))
         result.paste(crop.crop((width-left, height//2-12, width, height//2+12)), (left+middle, top))
-        if name == "primary":
-            # 사선 화살촉은 세로를 자르면 연결부가 꺾인다. 원래 높이를 통째로 보존한다.
-            result = crop.copy()
-            # 넓은 원본 텍스처를 유지한다. 24px 한 줄을 늘리면 가로 줄무늬가 된다.
-            patch = crop.crop((64, top, 128, height-top))
-            for index, x in enumerate(range(left, width-left, patch.width)):
-                tile = patch.transpose(Image.Transpose.FLIP_LEFT_RIGHT) if index % 2 else patch
-                span = min(tile.width, width-left-x)
-                result.paste(tile.crop((0, 0, span, tile.height)), (x, top))
-            mask = Image.new("L", result.size)
-            draw = ImageDraw.Draw(mask)
-            w, h = result.size
-            draw.polygon([(0, h//2), (left-2, 0), (w-left+2, 0), (w-1, h//2),
-                          (w-left+2, h-1), (left-2, h-1)], fill=255)
-            result.putalpha(mask)
         path = OUTPUT / (name + ".png")
         result.save(path, optimize=True)
         report["parts"][name] = {"sourceRect": list(rect), "sourceFillRect": list(sample),

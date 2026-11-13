@@ -80,6 +80,8 @@ func _ready() -> void:
 	SelectionUi.backdrop(self)
 	EntryUi.shade(self, 0.52)
 	back_button = _button("‹  돌아가기", _request_back)
+	back_button.name = "SelectionBack"
+	SelectionUi.style(back_button)
 	heading = _label("모험 선택", 36, EntryUi.TEXT, true)
 	subtitle = _label("네 개의 여정, 당신만의 수호자", 23, EntryUi.MUTED)
 	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -652,6 +654,9 @@ func _layout_class() -> void:
 		icon.custom_minimum_size = Vector2.ONE * maxf(32.0 * u, 18.0 * css)
 		var group: HBoxContainer = _class_tab_groups[cls]
 		group.add_theme_constant_override("separation", roundi(maxf(12.0 * u, 6.0 * css)))
+		# 탭 원화 하단의 V를 제외한 몸체 중심에 아이콘·문구를 맞춘다.
+		var center := group.get_parent() as CenterContainer
+		center.offset_bottom = -6.0 * css
 	continue_button.hide()
 	start_button.show()
 	slot_switch.show()

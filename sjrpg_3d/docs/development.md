@@ -4,6 +4,8 @@
 설정 안의 불러오기 모달은 `SettingsPanel`이 닫힘과 해제를 소유합니다. 게임 중 슬롯 전환은
 `Game.load_slot()`이 현재 진행의 저장에 성공한 뒤 HUD를 닫고, `Main`이 대상 저장의 읽기 결과를 확인합니다.
 
+`SelectionUi`는 선택 화면의 전용 재질을 소유합니다. 버튼·탭·뒤로가기는 `assets/ui/entry/controls/`의 생성형 정제 이미지이며, 원본·추출 좌표·생성 문구는 [선택 화면 기준](selection-screen-design.md)을 따릅니다.
+
 `ForestTreeRuntime`이 일반 숲 나무의 원소·내구도·재생·저장을 소유합니다.
 `TreeDamageRenderer3D`는 같은 키와 고정 슬롯으로 손상 메시·가림·충돌 상태를 동기화하고
 `TreeDebris3D`는 가지에 붙은 불과 작은 파편을 재사용하고, `TreeBreakup3D`는 탄 나무·얼음 나무의 실제 메시 조각을 최대3그루까지 분해합니다. [나무 파괴 구조와 예산](destructible-trees.md)을 따릅니다.

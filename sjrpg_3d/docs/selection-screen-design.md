@@ -11,14 +11,21 @@
 인물과 숲은 이미 이 시안을 바탕으로 제작한 `assets/ui/entry/selection-{warrior,mage,forest}.webp`를
 재사용합니다. 원본과 배포 이미지의 해시·크기·압축은 `selection-packing.json`을 따릅니다.
 이전 `assets/ui/selection/`의 인물·트림과 공용 `woodland_panels`도 비교했으며,
-이번 두 화면에는 시안에서 직접 추출한 테두리를 사용합니다. 다른 화면의 자산은 변경하지 않습니다.
+이번 두 화면에는 시안에서 추출한 패널과 생성형으로 정제한 버튼을 사용합니다. 다른 화면의 자산은 변경하지 않습니다.
 
 사용자는 버튼 등 필요한 부분을 원본에서 잘라 사용하는 것을 허용했습니다.
-`tools/assets/ui/extract_selection_concept.py`가 CTA·정보 패널·저장 카드·탭·능력치의
-모서리와 테두리를 그대로 추출합니다. 내부는 글자가 없는 원본 표본을 사용해 조립하고,
+`tools/assets/ui/extract_selection_concept.py`가 정보 패널·저장 카드·능력치의
+모서리와 테두리를 추출합니다. 내부는 글자가 없는 원본 표본을 사용해 조립하고,
 정확한 원본 좌표와 결과 해시는 `assets/source/entry-redesign/concept-extraction.json`에 남깁니다.
 인물·직업명·수치·버튼 이름·슬롯 정보는 실제 Godot 컨트롤입니다.
 글자가 들어간 시안 전체를 배경으로 깔아 중복 글자를 만들지 않습니다.
+
+주 버튼·직업 탭·뒤로가기는 원본에서 해당 부분을 잘라 생성형 편집에 실제 참조로 넣고,
+글자·반복 패치·불필요한 배경 띠를 제거한 전용 이미지로 사용합니다. 생성 문구·참조·두 편집 단계와
+해시는 `assets/source/entry-redesign/selection-controls-generation.json`에 보존합니다.
+`tools/assets/ui/pack_selection_controls.py`는 채택한 RGBA 원본에서 네 이미지를 픽셀 변경 없이 자릅니다.
+주 버튼의 뾰족한 끝·탭의 중앙 V·뒤로가기의 팔각 프레임과 화살표는 작은9패치로 분해하지 않습니다.
+선택/비선택 탭은 각각의 이미지이며, 직업 아이콘·한글·수치는 실제 컨트롤로 그립니다.
 
 선택 전용 글꼴은 NanumMyeongjo Regular/Bold이며 출처·OFL·해시는
 [글꼴 안내](../assets/fonts/README.md)를 따릅니다. HUD와 공용 패널의 글꼴은 유지합니다.
@@ -55,5 +62,5 @@
 저장·패드 회귀를 검사합니다. 실제 브라우저 하네스는 `tools/check_save_layout.mjs`이며
 `SJRPG_ENTRY_VISUAL_ONLY=1`이면 인물·슬롯·삭제의 가로/세로 그림과 측정값을 남깁니다.
 `tools/compare_entry_design.py`는 원본·변경 전·후를 비율을 유지해 나란히 표시합니다.
-감독자 검토는 최대10회로 제한하며 일회성 결과는 `build/reports/`에 둡니다.
+이번 버튼 정제의 감독자 검토는 최대5회로 제한하며 일회성 결과는 `build/reports/`에 둡니다.
 시작/로딩 원화·2D판은 변경하지 않습니다.

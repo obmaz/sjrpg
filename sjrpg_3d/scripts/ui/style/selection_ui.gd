@@ -78,11 +78,9 @@ static func skin(fill := INK, edge := Color("5f6655"), radius := 8) -> StyleBoxF
 
 static func concept_skin(kind: String) -> StyleBoxTexture:
 	var margins: Array = {
-		"primary": [45, 14],
 		"info": [14, 14],
 		"slot": [14, 14],
 		"slot_selected": [14, 14],
-		"tab": [13, 9],
 		"stat": [10, 8]
 	}[kind]
 	return UiKit.texture_stylebox(
@@ -94,16 +92,21 @@ static func concept_skin(kind: String) -> StyleBoxTexture:
 	)
 
 
+## 전체 테두리를 함께 늘려 대각 끝·선택 V를 아홉 구간으로 분리하지 않는다.
+static func control_skin(kind: String) -> StyleBoxTexture:
+	return UiKit.texture_stylebox("res://assets/ui/entry/controls/" + kind + ".png", 0, 0, 0, 0)
+
+
 static func style(button: Button, primary := false, selected := false) -> void:
 	button.add_theme_font_override("font", TITLE_FONT)
 	button.add_theme_constant_override("outline_size", 0)
 	var normal: StyleBox
 	if primary:
-		normal = concept_skin("primary")
+		normal = control_skin("primary")
 	elif button.name in ["warrior", "mage"] or selected:
-		normal = concept_skin("tab")
-		if not selected:
-			(normal as StyleBoxTexture).modulate_color = Color(0.64, 0.78, 0.74)
+		normal = control_skin("tab_selected" if selected else "tab_idle")
+	elif button.name == "SelectionBack":
+		normal = control_skin("back")
 	else:
 		normal = skin(Color(0.025, 0.075, 0.065, 0.74), Color("747459"), 4)
 	for state: String in ["normal", "hover", "pressed", "focus", "disabled"]:
@@ -115,15 +118,25 @@ static func style(button: Button, primary := false, selected := false) -> void:
 				box.bg_color = box.bg_color.darkened(0.14)
 		elif box is StyleBoxTexture:
 			if state == "pressed":
-				box.modulate_color *= Color(0.84, 0.84, 0.84)
+				box.modulate_color *= Color(0.90, 0.90, 0.90)
 			elif state == "disabled":
-				box.modulate_color *= Color(0.6, 0.6, 0.6)
+				box.modulate_color *= Color(0.48, 0.48, 0.48)
 		button.add_theme_stylebox_override(state, box)
 	for state: String in [
 		"font_color", "font_hover_color", "font_pressed_color", "font_focus_color"
 	]:
 		button.add_theme_color_override(state, Color("f7e7c7") if primary or selected else IVORY)
 	button.add_theme_color_override("font_disabled_color", MUTED)
+	if button.name == "SelectionBack":
+		# 실제 화살표는 원화에 있다. 원래 문자는 접근성과 입력 식별을 위해 남긴다.
+		for state: String in [
+			"font_color",
+			"font_hover_color",
+			"font_pressed_color",
+			"font_focus_color",
+			"font_disabled_color"
+		]:
+			button.add_theme_color_override(state, Color(1, 1, 1, 0))
 
 
 static func slot_style(band: Control, button: Button, selected: bool) -> void:
