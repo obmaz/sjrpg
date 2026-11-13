@@ -2,7 +2,7 @@
 
 The review runs the exported main scene in fresh, isolated Chromium contexts. It uses the normal title, class choice and explicit Start controls; it does not fabricate a screenshot, teleport through a JavaScript test API or replace gameplay with a mock HUD. Existing debug locations select the actual town, bridge, landmarks, encounter and optional cave.
 
-`?native_style_review=1` attaches `NativeStyleReview`, a read-only observer of the live `Adventure3D.simulation`. It publishes actual HUD and panel rectangles, current class/zoom, retained actor-card ownership and the environment's retained-source inventory. Normal launches do not attach it. The only review action creates/hides the explicitly requested model-inspection overlay; no save files are written by the observer.
+`?inspection=1&native_style_review=1` attaches `NativeStyleReview`, a read-only observer of the live `Adventure3D.simulation`. It publishes actual HUD and panel rectangles, current class/zoom, retained actor-card ownership and the environment's retained-source inventory. Normal launches do not attach it. The only review action creates/hides the explicitly requested model-inspection overlay; no save files are written by the observer.
 
 ```sh
 node sjrpg_3d/tools/check_native_style.mjs http://127.0.0.1:8781/ build/native-style-review/after

@@ -10,6 +10,8 @@
 - 기존 `Game`, `Player`, `Enemy`는 진행·AI·UI 호환 어댑터입니다. 화면 좌표를 실제 X/Z 지면과 Y 높이로 변환합니다.
 - `SpatialCombat3D`가 높이·벽·몸체를 기준으로 근접 공격과 투사체를 제한합니다. 피해·재사용 시간·저장은 기존 규칙을 공유합니다.
 - `WorldRenderer3D`는 마을·숲·기존 동굴의 운영 공간 표시기입니다. 소유 참조는 `game.world_renderer`, 모듈의 표시기 참조는 `renderer`로 통일합니다.
+
+검수 쿼리의 배치·통화·레벨·포즈 변경은 `AdventureInspection`과 `AdventureReviewScenes`가 소유합니다. `inspection=1`을 명시해야 세션을 만들며 일반 모험에는 검수 노드를 붙이지 않습니다. `zoom`·`at`·`panel`·`gold` 등 기존 쿼리 이름은 유지하고 `tools/review/inspection_url.mjs`를 통해 브라우저 검수 도구에서 진입합니다. 예를 들어 `?inspection=1&at=field&gold=300`으로 검수합니다. `tools/screenshot.mjs`는 이 플래그를 자동으로 추가합니다. 자식 노드 수명과 `EncounterRuntime.state_captured` 신호로 관찰 코드를 정리하며, 운영 규칙은 검수 모듈을 직접 호출하지 않습니다.
 - 카메라는 방위45°·고도35.2643897° 직교 투영입니다. HUD와 미니맵은2D UI이며, 지면·물·효과·알파 잎의 평면은 입체 물리와 함께 사용합니다.
 
 마을 정원·마당은 `ChapelGardenPlan3D`와 [VillageCourtyardPlan3D](../scripts/world/geometry/village_courtyard_plan_3d.gd)가 실제 건물 접점에서 미터 배치를 계산해 마을 인스턴스에 보관합니다. 예배당과 주택4채·전용 상점·대장간이 [GardenPath3D](../scripts/world/geometry/garden_path_3d.gd)의 판석 상면/경사 삼각형을 표시와 FLOOR에 함께 사용합니다. [GardenDetailRenderer3D](../scripts/rendering/vegetation/garden_detail_renderer_3d.gd)는 예배당과 나머지 마당을 각각 판석1개 메시·식생 최대4개 MultiMesh로 묶고 잎 메시·재질을 공유합니다. 생성형 마을 바닥 아틀라스1장을 포장·무늬 없는 판석·부엽토·올리브풀에 함께 쓰며 추가 광원은 없습니다. 작업장 앞은 흙·쇄석, 주택은 낮은 화단으로 구분하고 NPC·문·상자·광장을 비웁니다. 기존 단순 풀은 새 화단과 통로에서 중복 표시하지 않습니다. 울타리 같은 긴 화단 대신 넓이와 높이가 다른 군락, 꺾인 가장자리와 빠진 끝 돌로 구성합니다. 식생 원본과 참조 해시는 `assets/source/vegetation/chapel_garden/`, 낮은 담쟁이는 지면을 덮고 곧은 흰꽃/황토색 꽃과 뒤쪽 고사리의 높이를 나눕니다. 바닥 원본·정확한 프롬프트·물리 셀 크기는 `assets/source/materials/village_ground/`, 현재 배치/구현 출처는 `assets/source/environment/world_refinement/`에 기록합니다. 주택 마당은1.8m 폭의 북서 연결길·남쪽 골목으로 실제 광장까지 이어집니다. 같은 `VillageCourtyardPlan3D.lanes()` 다각형을 `Village.map_roads`·지도·길 거리장에 사용하고, 높이는 기존 네이티브 지면의 FLOOR를 따릅니다. 골목이 생기면 나무/식생 배치도 그 길을 비웁니다. 정원은 숲 루트와 함께 숨겨 동굴에 남지 않습니다. 예배당 왼쪽은 명시적인1.5×2m 조경 섬에 높은 침엽수·중간 참나무·어두운 고사리/담쟁이를 겹칩니다. 같은 섬 다각형으로 흙 화단·판석 노치·지도 표시를 만들며 나무는 실제 몸체/계단과 분수 사이 통행 폭을 검사합니다. 실제 채택된 잎 정점의 인물 상대 투영과 분수 둘레 네이티브 보행도 확인합니다. 상자는 식재 전에 실제 옮긴 위치를 확정해 과거 원본 좌표를 잘못 피하지 않습니다. 기본 상대 시야는 `Prefs.WORLD_ZOOM_BASE=1.05`이고 HUD·미터 배율은 바꾸지 않습니다. 낮은 판석의4.5cm 이하 높이는 발의 실제 FLOOR를 따르되 카메라 상하 떨림에는 반영하지 않습니다.
@@ -65,6 +67,8 @@
 예배당은 사용자가 재확인한 실제 게임 화면을 기준으로 전체 면 원화를 입힌 입체 구조를 사용합니다. 돌출 입구·두 박공·열린 종탑과 L자 몸체/왼쪽 계단은 [예배당](native-chapel-refinement.md)의 공유 설계를 따릅니다.
 
 데이터 추출물은 `tools/extract/`에서 재생성합니다. 수치 단위는 원본 단위이며 HUD 체력·피해는100배, 자원은10배로 표시합니다. 조정은 추출 JSON을 수동 변경하는 대신 별도 설정으로 적용합니다.
+
+전투의 강타 국소 정지 상한은 `HitTier`에서 관리합니다. `EnemyVisual`은 피격 emission 기능을 배우별 재질 생성 시 켜고 `EnemyRenderer3D.tint()`가 짧은 밝기 균일값만 갱신합니다. 준비 경고·동작 줄이기·피격 종료와 배우 간 재질 격리는 `native_hit_feel`에서 검사합니다. 자세·타이밍·표시 예산은 [타격감](juice.md)을 따릅니다.
 
 ## 검사와 내보내기
 

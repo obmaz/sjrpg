@@ -23,7 +23,7 @@ try {
     page.on('pageerror', (error) => errors.push(error.message));
     const tap = async (x, y) => device.startsWith('phone') ? page.touchscreen.tap(x, y) : page.mouse.click(x, y);
     const location = args.at ?? (preview3d ? 'chapel_reference' : 'field');
-    const query = new URLSearchParams({ at: location, quality, benchmark: "1" });
+    const query = new URLSearchParams({ inspection: "1", at: location, quality, benchmark: "1" });
     if (args.combat === '1') query.set('combat_preview', '1');
     if (args.lighting) query.set('lighting', args.lighting);
     if (args.atmosphere) query.set('atmosphere', args.atmosphere);

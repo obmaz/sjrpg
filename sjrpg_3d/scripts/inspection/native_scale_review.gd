@@ -30,7 +30,7 @@ func _physics_process(delta: float) -> void:
 		centre += enemy.position
 		count += 1
 	if count > 0:
-		_game._fx_review_focus = centre / count + Vector2(0, 15)
+		_game.inspection.focus_point = centre / count + Vector2(0, 15)
 
 func setup(root: Node) -> NativeScaleReview:
 	_root = root
@@ -93,12 +93,12 @@ func _prepare() -> void:
 			_review_enemies.append(enemy)
 			index += 1
 		_game.player.set_process(false)
-		_game._fx_review_focus = centre + Vector2(0, 15)
+		_game.inspection.focus_point = centre + Vector2(0, 15)
 	elif _scene == "chest":
 		_chest = _game.chests[clampi(_chest_index, 0, _game.chests.size() - 1)]
 		var approach: Vector2 = _chest.position + Vector2(70, 100)
 		_game.spatial_world.teleport_source_actor(_game.player, approach, Player.RADIUS)
-		_game._fx_review_focus = _chest.position + Vector2(0, -42)
+		_game.inspection.focus_point = _chest.position + Vector2(0, -42)
 	elif _scene in ["landmark0", "landmark2", "landmark3", "cave_mouth", "chapel", "fountain", "shop", "stable", "wall", "bank", "road_end"]:
 		_frame_environment(_scene)
 	_game.camera.position = _game._camera_focus()
@@ -169,7 +169,7 @@ func _frame_environment(scene: String) -> void:
 		focus = Iso.project(_game.village.forecourt_g + Vector2(140, 0))
 	elif scene == "road_end":
 		focus = Iso.project(Vector2(0, -4520))
-	_game._fx_review_focus = focus
+	_game.inspection.focus_point = focus
 	_game.camera.position = focus
 	_game.camera.reset_smoothing()
 	_game.camera.force_update_scroll()
@@ -224,7 +224,7 @@ func _snapshot() -> Dictionary:
 		var root: Node3D = entry["root"]
 		chests.append({"index": chest.index, "selected": chest == _chest, "opened": chest.dead, "foot": _vec2(chest.position), "screen_foot": _vec2(_project(WorldSpace3D.projected_to_world(chest.position, _renderer.surface_height(chest.position)))), "model": _measure(root), "collision": collision, "lid_angle": (entry["lid"] as Node3D).rotation.x, "splinters_visible": (entry["splinters"] as MeshInstance3D).visible})
 	var logical_view: Vector2 = _game.get_viewport_rect().size
-	return {"logical_view": _vec2(logical_view), "minimap": [_game.hud.minimap.global_position.x, _game.hud.minimap.global_position.y, _game.hud.minimap.size.x, _game.hud.minimap.size.y], "scene": _scene, "phase": _phase, "frame": Engine.get_process_frames(), "paused": get_tree().paused, "world_zoom": Prefs.world_zoom, "debug_zoom": _game._debug_zoom, "legacy_zoom": _game.camera.zoom.x, "native_camera_size": _renderer.camera.size, "player": _vec2(_game.player.position), "player_moving": _game.player.has_move_target, "player_radius_px": Player.RADIUS, "enemy_default_radius_px": Enemy.RADIUS, "hero": _measure(_renderer.actor), "actors": actors, "corpses": corpses, "chests": chests, "opened_chests": GameState.opened_chests, "gold": GameState.gold, "physics_ticks": _game.spatial_world.physics_ticks, "bounds_kind": "CPU mesh AABB with actual hierarchy transforms; hero skinned envelope is an upper bound, not a GPU silhouette"}
+	return {"logical_view": _vec2(logical_view), "minimap": [_game.hud.minimap.global_position.x, _game.hud.minimap.global_position.y, _game.hud.minimap.size.x, _game.hud.minimap.size.y], "scene": _scene, "phase": _phase, "frame": Engine.get_process_frames(), "paused": get_tree().paused, "world_zoom": Prefs.world_zoom, "debug_zoom": (_game.inspection.zoom_multiplier if is_instance_valid(_game.inspection) else 1.0), "legacy_zoom": _game.camera.zoom.x, "native_camera_size": _renderer.camera.size, "player": _vec2(_game.player.position), "player_moving": _game.player.has_move_target, "player_radius_px": Player.RADIUS, "enemy_default_radius_px": Enemy.RADIUS, "hero": _measure(_renderer.actor), "actors": actors, "corpses": corpses, "chests": chests, "opened_chests": GameState.opened_chests, "gold": GameState.gold, "physics_ticks": _game.spatial_world.physics_ticks, "bounds_kind": "CPU mesh AABB with actual hierarchy transforms; hero skinned envelope is an upper bound, not a GPU silhouette"}
 
 func _capsule(body: CharacterBody3D) -> Dictionary:
 	if not is_instance_valid(body):

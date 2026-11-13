@@ -1,5 +1,7 @@
 class_name EncounterRuntime
 extends Node
+
+signal state_captured
 ## Forest adaptation of sjrpg EncounterArea: first pack, then attack-triggered re-summons.
 ## Compact fixed sites replace the original huge world's dynamically discovered 3072-unit areas.
 
@@ -190,7 +192,6 @@ func spawn_wave(id: String, initial: bool) -> int:
 	return added
 
 
-
 ## Reserve a complete pack before changing charges or retiring ambient actors.
 ## A full/blocked battlefield never creates a misleading partial twenty-pack.
 func _spawn_cave_wave() -> int:
@@ -316,7 +317,7 @@ func capture() -> void:
 			if is_instance_valid(enemy) and not enemy.dead:
 				saved.append({"kind": enemy.kind, "level": enemy.spawn_level, "hp": enemy.hp, "position": [enemy.position.x, enemy.position.y]})
 		states[id]["members"] = saved
-	game._update_encounter_audit()
+	state_captured.emit()
 
 
 func in_radius(center: Vector2, radius: float, source: Node2D, angle := INF, half_angle := PI, melee := false) -> void:

@@ -60,7 +60,7 @@ func setup(presenter: WorldRenderer3D) -> HitFeedback3D:
 	_focus_ink.shader.code = FOCUS_CODE
 	renderer.display.material = _focus_ink
 	_realm = renderer.game.dungeon.active
-	if OS.has_feature("web") and renderer._probe_enabled:
+	if AdventureInspection.web_requested() and renderer._probe_enabled:
 		_pause_for_review = bool(JavaScriptBridge.eval("new URLSearchParams(location.search).get('hitfeel_preview') === 'peak'"))
 	return self
 

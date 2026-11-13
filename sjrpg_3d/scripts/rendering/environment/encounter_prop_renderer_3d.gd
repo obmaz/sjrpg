@@ -36,7 +36,7 @@ func setup(presenter: Node, material_map: Dictionary) -> EncounterPropRenderer3D
 		var material := _chest_material.duplicate() as ShaderMaterial
 		material.set_shader_parameter("variant",1 if kind == "iron" else 2)
 		_chest_variants[kind] = material
-	if OS.has_feature("web") and str(JavaScriptBridge.eval("window.location.search", true)).contains("loot_review=1"):
+	if AdventureInspection.web_requested() and AdventureInspection.parameters(str(JavaScriptBridge.eval("window.location.search", true))).get("loot_review", "") == "1":
 		_start_review.call_deferred()
 	return self
 

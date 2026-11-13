@@ -1,11 +1,12 @@
 #!/usr/bin/env node
+import {inspectionUrl} from './review/inspection_url.mjs';
 // CI-only real browser GPU-format measurements. It never retains upload buffers.
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import path from 'node:path';
 import {createRequire} from 'node:module';
 const {chromium}=createRequire(import.meta.url)('playwright');
-const base=new URL(process.argv[2]||'http://127.0.0.1:8792/');
+const base=inspectionUrl(process.argv[2]||'http://127.0.0.1:8792/');
 const out=path.resolve(process.argv[3]||'build/texture-compression-review');
 const edition=process.env.SJRPG_TEXTURE_EDITION||'after';
 assert(['before','after'].includes(edition),'explicit before/after edition');
@@ -95,7 +96,7 @@ async function boot(scene,masked){
  page=await context.newPage();
  page.on('pageerror',e=>errors.push(String(e)));
  page.on('console',m=>{if(m.type()==='error'||/SCRIPT ERROR|ERROR:|INVALID_(OPERATION|VALUE|ENUM)/.test(m.text()))errors.push(m.text());});
- const url=new URL(base);url.searchParams.set('native_style_review','1');url.searchParams.set('quality',quality);
+ const url=inspectionUrl(base);url.searchParams.set('native_style_review','1');url.searchParams.set('quality',quality);
  if(scene==='town')url.searchParams.set('at','npc_courtyard');else if(scene==='river')url.searchParams.set('at','bridge');else url.searchParams.set('dungeon_preview','entry');
  await timed(page.goto(url.href,{waitUntil:'domcontentloaded'}),'game document',60000);
  await page.waitForFunction(()=>window.__sjrpgTitleReady&&window.__sjrpgEntryReady,null,{timeout:90000});

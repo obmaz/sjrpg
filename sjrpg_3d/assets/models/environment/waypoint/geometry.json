@@ -3,7 +3,7 @@
 	"id": "environment/waypoint",
 	"inputs": {
 		"res://scripts/core/world_space_3d.gd": "59a32f64790e612a4528ddc2934ddb4aa6f59c309f090ad2bcbeea7b07568892",
-		"res://scripts/rendering/environment/landmark_renderer_3d.gd": "ba35e003febbc3df2556963955e4ef140ddc4e46b1685ce2307bd2e2f570210b",
+		"res://scripts/rendering/environment/landmark_renderer_3d.gd": "ea7737bee9d27a6b5fa9d55386263cd30f0f5ff2eae29c39d7d4e70100eae299",
 		"res://scripts/rendering/environment/scenery_renderer_3d.gd": "f20e68fec88c113b36908fe7746799d1bcefa763a8f3690ec80e4fb8aa479d52",
 		"res://tools/assets/props/bake.gd": "61e990e1347402833c733561c0e811582549280c10af045bbb438202029a94a7",
 		"res://tools/assets/props/waypoint_builder.gd": "83ad19b855b759a50920776d66ebe1da7212c508e0cec2e61ad08d0fd4017dbb"

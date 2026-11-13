@@ -57,7 +57,6 @@ func _floor(polygon: PackedVector2Array, path: String) -> Polygon2D:
 	return surface
 
 
-
 func _build_walls() -> void:
 	var frames: Dictionary = data()["frames"]
 	for edge in boundary_segments:

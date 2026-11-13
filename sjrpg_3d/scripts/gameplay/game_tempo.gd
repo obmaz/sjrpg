@@ -16,7 +16,7 @@ class ContactStop:
 	var remaining := 0.0
 	var recovery := 0.0
 
-	## JUICE #5: only a killing blow may exceed the usual 55ms ceiling (see HitTier.KILL_STOP_LIMIT).
+	## 호출자가 강타·처치 상한을 지정한다. 기본값은 일반 접촉의55ms다.
 	func trigger(seconds: float, limit := 0.055) -> void:
 		if Prefs.reduce_motion or remaining > 0.0 or recovery > 0.0:
 			return

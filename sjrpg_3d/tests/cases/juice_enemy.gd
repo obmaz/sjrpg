@@ -110,7 +110,7 @@ func _check_kill() -> void:
 	var heavy_foe := _foe(game, 300.0)
 	hero._resolving_melee_contact = true
 	heavy_foe.take_damage(35.0, hero)
-	check("a heavy non-lethal blow keeps the usual pause ceiling", heavy_foe.last_hit_tier == HitTier.HEAVY and hero._hitstop.remaining <= 0.055 + 0.0001)
+	check("a heavy non-lethal blow applies distinct bounded actor pauses", heavy_foe.last_hit_tier == HitTier.HEAVY and is_equal_approx(hero._hitstop.remaining, HitTier.HEAVY_ATTACKER_STOP) and is_equal_approx(heavy_foe._hitstop.remaining, HitTier.HEAVY_VICTIM_STOP))
 	hero._hitstop.clear()
 	var foe := _foe(game, 340.0)
 	var novas_before: int = game.cosmetic_effects.filter(func(e: Effect) -> bool: return e.kind == "nova").size()

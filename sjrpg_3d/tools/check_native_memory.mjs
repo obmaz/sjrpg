@@ -1,11 +1,12 @@
 #!/usr/bin/env node
+import {inspectionUrl} from './review/inspection_url.mjs';
 // Isolated native-allocation diagnostic. Uses an immutable existing export; no game-source overlay.
 import assert from 'node:assert/strict';
 import {mkdir,writeFile,appendFile,readFile,readdir} from 'node:fs/promises';
 import path from 'node:path';
 import {createRequire} from 'node:module';
 const {chromium}=createRequire(import.meta.url)('playwright');
-const base=new URL(process.argv[2]||'http://127.0.0.1:8795/'),out=path.resolve(process.argv[3]||'build/native-memory-profile');
+const base=inspectionUrl(process.argv[2]||'http://127.0.0.1:8795/'),out=path.resolve(process.argv[3]||'build/native-memory-profile');
 await mkdir(out,{recursive:true});
 const report={diagnostic_only:true,source_sha:process.env.SJRPG_NATIVE_APP_SHA||'991d38c6bbba7ddf347721a489f74160909d1133',source_run:42440737243,
  target_pose_updates:160,minimum_observation_ms:15000,deadline_ms:90000,pss_safeguard_bytes:3*1024**3,
@@ -107,7 +108,7 @@ try{
  page.on('close',()=>{if(!closing)report.errors.push('page-closed');});
  cdp=await context.newCDPSession(page);browserCdp=await browser.newBrowserCDPSession();await cdp.send('Log.enable');
  cdp.on('Log.entryAdded',({entry})=>{if(entry.level==='error')report.errors.push(entry.text);});
- const url=new URL(base);url.searchParams.set('quality','low');
+ const url=inspectionUrl(base);url.searchParams.set('quality','low');
  await page.goto(url.href,{waitUntil:'domcontentloaded'});await wait(s=>s.title&&!s.ready,'normal title');token=(await read()).token;
  await page.locator('#entry-start').click();await wait(s=>s.entry?.stage==='slots'||s.entry?.stage==='class','normal selection');
  let selected=await read();

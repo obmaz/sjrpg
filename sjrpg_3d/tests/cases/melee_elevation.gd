@@ -160,8 +160,8 @@ func _check_stairs_and_bridge(game: Node) -> void:
 	var landmark: Landmark = game.village.landmarks[0]
 	var definition: Dictionary = Landmark.data()[0]
 	var outline: Array = definition["outline"]
-	var bottom := (landmark._pt(outline[0]) + landmark._pt(outline[1])) * 0.5
-	var upper := (landmark._pt(outline[2]) + landmark._pt(outline[outline.size() - 1])) * 0.5
+	var bottom := (landmark.atlas_to_world(outline[0]) + landmark.atlas_to_world(outline[1])) * 0.5
+	var upper := (landmark.atlas_to_world(outline[2]) + landmark.atlas_to_world(outline[outline.size() - 1])) * 0.5
 	var forward := (upper - bottom).normalized()
 	check("adjacent combat across the actual stair entrance remains possible", game.can_melee_reach(bottom - forward * 12.0, bottom + forward * 12.0) and game.can_melee_reach(bottom + forward * 12.0, bottom - forward * 12.0))
 	var bridge: Bridge = game.village.bridge

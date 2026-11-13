@@ -43,13 +43,13 @@ var _blaze_distance := 0.0
 var _storm_timer := 0.0
 var _attack_time := 0.0
 var _attack_duration := 0.42
-var _attack_melee := false
+var _attack_is_melee := false
 ## JUICE #7: a basic melee swing steps toward a target before contact (weapon-agnostic, off for reduced motion).
 const LUNGE_DISTANCE := 16.0
 const LUNGE_END := 0.45  # swing progress at which the contact callback fires
 const LUNGE_SEEK := 140.0  # only lunge when a target is this close...
 const LUNGE_STOP_GAP := 40.0  # ...and not already in front of the hero
-var _attack_lunges := false
+var _attack_has_lunge := false
 var _resolving_melee_contact := false
 var _pending: Callable
 var _action_serial := 0
@@ -232,7 +232,7 @@ func _process(delta: float) -> void:
 		if _pending.is_valid() and progress >= CONTACT_PROGRESS:
 			var action := _pending
 			_pending = Callable()
-			_resolving_melee_contact = _attack_melee
+			_resolving_melee_contact = _attack_is_melee
 			action.call()
 			if not dead and not _release_sound.is_empty():
 				SoundFx.play(_release_sound)
@@ -279,7 +279,7 @@ func clear_move_target() -> void:
 ## collision resolver. It adds movement only; damage, reach checks and cooldowns are unchanged.
 func _lunge(delta: float, progress: float) -> void:
 	if (
-		not _attack_lunges
+		not _attack_has_lunge
 		or Prefs.reduce_motion
 		or progress >= LUNGE_END
 		or not _pending.is_valid()
@@ -399,9 +399,9 @@ func cast_slot(index: int, repeat := false) -> bool:
 	var reuse := SkillDefs.cooldown(s)
 	if reuse > 0.0:
 		cooldowns[id] = reuse
-	_attack_melee = d["type"] in ["melee", "spin", "shadow"]
-	_attack_lunges = d["type"] == "melee"
-	_attack_duration = GameTempo.duration((0.4 if _attack_melee else 0.46) / (1.0 + frenzy_stacks * 0.08))
+	_attack_is_melee = d["type"] in ["melee", "spin", "shadow"]
+	_attack_has_lunge = d["type"] == "melee"
+	_attack_duration = GameTempo.duration((0.4 if _attack_is_melee else 0.46) / (1.0 + frenzy_stacks * 0.08))
 	if id in ["cleave", "sorceressAttack"]:
 		_attack_duration = float(weapon_melee()["tempo"])
 	_attack_time = _attack_duration
@@ -447,7 +447,7 @@ func _cast_feedback(d: Dictionary) -> void:
 		SoundFx.play("prepare")
 	else:
 		_release_sound = ""
-		_swing_sound_pending = not is_mage and _attack_melee
+		_swing_sound_pending = not is_mage and _attack_is_melee
 		SoundFx.play("weapon_draw" if _swing_sound_pending else sound)
 	Prefs.pulse("skill")
 
@@ -509,7 +509,7 @@ func confirm_melee_contact(heavy: bool, kill := false) -> void:
 		if kill:
 			_hitstop.trigger(HitTier.KILL_STOP, HitTier.KILL_STOP_LIMIT)  # JUICE #5
 		else:
-			_hitstop.trigger(0.050 if heavy else 0.035)
+			_hitstop.trigger(HitTier.HEAVY_ATTACKER_STOP if heavy else 0.035, HitTier.HEAVY_STOP_LIMIT)
 		sprite.hold_contact(0.060 if heavy else 0.040)
 
 
@@ -798,7 +798,7 @@ func _prepare(id: String, d: Dictionary, rank: int) -> Callable:
 		"buff":
 			return func(): _buff(id, d, rank)
 		"corpse":
-			var corpse = game.nearest_corpse(position, 170.0)
+			var corpse: Variant = game.nearest_corpse(position, 170.0)
 			if corpse == null:
 				game.toast("가까운 시체가 없습니다")
 				return Callable()
@@ -1190,8 +1190,8 @@ func _cancel_actions() -> void:
 	_action_serial += 1
 	_pending = Callable()
 	_attack_time = 0.0
-	_attack_melee = false
-	_attack_lunges = false
+	_attack_is_melee = false
+	_attack_has_lunge = false
 	_resolving_melee_contact = false
 	_release_pending = false
 	_release_sound = ""

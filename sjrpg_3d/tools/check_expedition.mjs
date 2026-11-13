@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {inspectionUrl} from './review/inspection_url.mjs';
 // 실제 모바일 입력으로 계약 → 월드 재생성 → 시작 기술 → 룬 → 임무 선택을 검수한다.
 import {createRequire} from 'node:module';
 import {mkdir, writeFile} from 'node:fs/promises';
@@ -17,7 +18,7 @@ try {
     const errors = [];
     page.on('pageerror', error => errors.push(String(error)));
     page.on('console', message => {if (/SCRIPT ERROR|^ERROR:/.test(message.text())) errors.push(message.text());});
-    const target = new URL(url);
+    const target = inspectionUrl(url);
     target.searchParams.set('panel','expedition');
     target.searchParams.set('expedition_review','1');
     await page.goto(target.toString());

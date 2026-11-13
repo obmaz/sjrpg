@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {inspectionUrl} from './review/inspection_url.mjs';
 // Actual ordinary mage route. No teleport, immortal state, camera lock, forced GC,
 // tracing, GL wrappers, or production-source mutations. Pair both editions on one worker.
 import assert from 'node:assert/strict';
@@ -6,7 +7,7 @@ import {mkdir, writeFile} from 'node:fs/promises';
 import path from 'node:path';
 import {createRequire} from 'node:module';
 const {chromium} = createRequire(import.meta.url)('playwright');
-const base = new URL(process.argv[2] || 'http://127.0.0.1:8796/');
+const base = inspectionUrl(process.argv[2] || 'http://127.0.0.1:8796/');
 const out = path.resolve(process.argv[3] || 'build/frame-pacing');
 const target = Math.max(120, Math.min(600, Number(process.env.SJRPG_PACING_FRAMES || 120)));
 const deadline = Math.max(60000, Math.min(600000, Number(process.env.SJRPG_PACING_DEADLINE_MS || 300000)));
@@ -63,7 +64,7 @@ try {
   page.on('pageerror',e=>current.errors.push({type:'pageerror',message:String(e)}));page.on('crash',()=>current.errors.push({type:'page-crash'}));
   page.on('console',m=>{if(m.type()==='error'||/SCRIPT ERROR|INVALID_(OPERATION|VALUE|ENUM)/.test(m.text()))current.errors.push({type:'console',message:m.text()});});
   cdp=await context.newCDPSession(page);await cdp.send('Performance.enable');
-  const url=new URL(base);url.searchParams.set('frame_pacing_profile','1');url.searchParams.set('quality',quality);
+  const url=inspectionUrl(base);url.searchParams.set('frame_pacing_profile','1');url.searchParams.set('quality',quality);
   await page.goto(url.href,{waitUntil:'domcontentloaded',timeout:180000});
   await wait(s=>s.title&&!s.ready&&s.runtime,'ordinary title');current.document_token=(await read()).token;
   await page.locator('#entry-start').click();let selected=await wait(s=>s.entry?.stage==='class'||s.entry?.stage==='slots','ordinary character/slot screen');

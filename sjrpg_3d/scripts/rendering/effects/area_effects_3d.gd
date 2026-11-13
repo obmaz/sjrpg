@@ -97,8 +97,8 @@ func _create(source: Effect) -> Dictionary:
 		"cell": -1, "mesh_builds": 0}
 
 
-## Gameplay areas use the legacy screen-world distance budget. Inverse-project
-## that perimeter onto XZ; do not replace it with an unrelated circular metre radius.
+## 투영 월드 단위의 범위 경계를 XZ로 옮긴다.
+## 반경만 미터 원으로 바꾸면 피해 범위와 표시가 어긋난다.
 static func footprint(source: Effect) -> PackedVector2Array:
 	var result := PackedVector2Array()
 	var reach := source.radius + (10.0 if source.params.has("wall") else 0.0)

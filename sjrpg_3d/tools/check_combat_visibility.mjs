@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {inspectionUrl} from './review/inspection_url.mjs';
 // Explicit visual fixtures. These captures are NOT normal-play/performance results.
 import assert from 'node:assert/strict';
 import {assertWallTorchHeights} from './review/diagnostic_contracts.mjs';
@@ -6,7 +7,7 @@ import {mkdir,writeFile} from 'node:fs/promises';
 import path from 'node:path';
 import {createRequire} from 'node:module';
 const {chromium}=createRequire(import.meta.url)('playwright');
-const base=new URL(process.argv[2]||'http://127.0.0.1:8797/');
+const base=inspectionUrl(process.argv[2]||'http://127.0.0.1:8797/');
 const out=path.resolve(process.argv[3]||'build/combat-visibility');
 const edition=process.env.SJRPG_VISIBILITY_EDITION||'candidate';
 const all=['cave_torches','cave_torches_north','combat_health','boss_warning','meteor_warning','firewall','cave_swarm','crawler_directions','crawler_corpses'];
@@ -57,7 +58,7 @@ try{
    page.on('pageerror',e=>{if(!closing)current.errors.push({type:'pageerror',message:String(e)});});
    page.on('crash',()=>{if(!closing)current.errors.push({type:'crash'});});
    page.on('console',m=>{if(!closing&&(m.type()==='error'||/SCRIPT ERROR|ERROR:|INVALID_(OPERATION|VALUE|ENUM)/.test(m.text())))current.errors.push({type:'console',message:m.text()});});
-   const url=new URL(base);url.searchParams.set('combat_visibility_review','1');url.searchParams.set('quality','high');
+   const url=inspectionUrl(base);url.searchParams.set('combat_visibility_review','1');url.searchParams.set('quality','high');
    await page.goto(url.href,{waitUntil:'domcontentloaded',timeout:180000});
    const normal=await start(hero),token=normal.token;
    for(const scenario of scenarios){

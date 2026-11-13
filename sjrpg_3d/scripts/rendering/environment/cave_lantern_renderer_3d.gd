@@ -1,6 +1,6 @@
 class_name CaveLanternRenderer3D
 extends RefCounted
-## Legacy lantern ownership is retained; actual rock triangles own wall-sconce placement.
+## 횃불 소스가 수명과 시간을 소유하며 실제 암반 삼각형이 벽 부착 위치를 결정한다.
 ## Four shared batches cover ten larger torches; the existing cave clock drives fire.
 const SCALE := 1.7
 const MOUNT_HEIGHT := 1.55
@@ -94,7 +94,6 @@ static func _wall_mount(anchor: Vector3, profiles: Array) -> Dictionary:
 							"authored_origin": source_origin, "mount_distance": sqrt(gap),
 							"wall_outward": ray, "wall_height": profile["height"]}
 	return best
-
 
 
 ## No extra process callback, particle system, light or shadow pass.

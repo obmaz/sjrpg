@@ -62,7 +62,7 @@ func start(source: Node) -> void:
 		game.player._process(1.0 / 60.0)
 		await get_tree().physics_frame
 	_serial = game.player._action_serial
-	game._fx_review_focus = (foe.position + game.player.position) * 0.5
+	game.inspection.focus_point = (foe.position + game.player.position) * 0.5
 	game.camera.position = game._camera_focus()
 	game.camera.reset_smoothing()
 	game.camera.force_update_scroll()

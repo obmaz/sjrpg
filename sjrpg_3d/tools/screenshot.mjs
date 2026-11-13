@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {inspectionUrl} from './review/inspection_url.mjs';
 // 웹 빌드를 실제 브라우저(Playwright/Chromium)로 열어 장면을 캡처합니다.
 //   node tools/screenshot.mjs --scene town --device phone --out shot.png
 //   node tools/screenshot.mjs --scene bag --class mage --device desktop
@@ -131,7 +132,7 @@ if (!(scene in SCENES)) {
 }
 const device = args.device ?? 'desktop';
 const base = args.url ?? 'http://localhost:8765/3d/';
-const cls = args.class ?? (scene === 'cooldowns' || scene === 'preview3d' || args.preview3d === '1' || new URL(base).pathname.endsWith('/3d.html') ? 'mage' : 'warrior');
+const cls = args.class ?? (scene === 'cooldowns' || scene === 'preview3d' || args.preview3d === '1' || inspectionUrl(base).pathname.endsWith('/3d.html') ? 'mage' : 'warrior');
 const out = args.out ?? `shot-${scene}-${device}.png`;
 const settle = Number(args.settle ?? 9000);
 if (!Number.isFinite(settle) || settle < 500 || settle > 30000) throw new Error('--settle must be 500–30000 ms');
@@ -164,7 +165,7 @@ diagnosticLog.on('Log.entryAdded', ({entry}) => {
         logs.push(`error: ${entry.source}: ${entry.text}`);
     }
 });
-const launchURL = new URL(base);
+const launchURL = inspectionUrl(base);
 for (const [key, value] of new URLSearchParams(SCENES[scene])) launchURL.searchParams.set(key, value);
 for (const key of ['quality', 'zoom', 'lighting', 'at', 'atmosphere', 'preview3d', 'village_review']) {
     if (args[key]) launchURL.searchParams.set(key, args[key]);

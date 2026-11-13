@@ -45,6 +45,11 @@ static func tint(
 ) -> void:
 	var materials: Array = model["materials"]
 	var colors: Array = model["colors"]
+	# 알베도 곱셈으로는 어두운 텍스처가 밝아지지 않는다. 첫 약25ms만 밝게,
+	# 약88ms 안에 사라지는 악센트이며 준비 경고(강도0.55)에는 적용하지 않는다.
+	var emission := Color("fff1d5") * (0.8 * smoothstep(0.65, 0.90, flash))
+	if Prefs.reduce_motion:
+		emission = Color.BLACK
 	for index in materials.size():
 		var material := materials[index] as StandardMaterial3D
 		var ink: Color = colors[index] * color
@@ -53,6 +58,8 @@ static func tint(
 		# GLES3 queues a uniform update even when the assigned value is unchanged.
 		if material.albedo_color != ink:
 			material.albedo_color = ink
+		if material.emission != emission:
+			material.emission = emission
 		material.transparency = (
 			BaseMaterial3D.TRANSPARENCY_ALPHA
 			if alpha < 0.999
@@ -73,7 +80,7 @@ static func hit_reaction(model: Dictionary, enemy: Enemy) -> void:
 	var mass := (
 		0.35 if enemy.is_boss or enemy.kind == "golem" else (0.65 if enemy.kind == "boar" else 1.0)
 	)
-	var strength: float = [0.16, 0.23, 0.32, 0.38][enemy.last_hit_tier] * envelope * mass
+	var strength: float = [0.20, 0.28, 0.40, 0.45][enemy.last_hit_tier] * envelope * mass
 	model["hit_lean"] = strength
 	var torso: Node3D = model["torso"]
 	var lean := Basis.from_euler(Vector3(local.z * strength, 0.0, -local.x * strength))
@@ -193,6 +200,7 @@ func snapshot() -> Dictionary:
 				"facing": enemy.facing,
 				"visible": root.visible,
 				"hit_lean": model.get("hit_lean", 0.0),
+				"contact_flash": (model["materials"][0] as StandardMaterial3D).emission.r,
 				"pivot_error":
 				root.position.distance_to(
 					(

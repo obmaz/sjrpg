@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {inspectionUrl} from '../inspection_url.mjs';
 // One browser/GPU owner at a time. Use TMPDIR on a filesystem with free space.
 import {createRequire} from 'node:module';
 import {mkdir,writeFile} from 'node:fs/promises';
@@ -21,7 +22,7 @@ try {
     const cdp=await context.newCDPSession(page);
     await cdp.send('Log.enable');
     cdp.on('Log.entryAdded',({entry})=>{if(entry.level==='error'||/INVALID_(OPERATION|VALUE|ENUM)/.test(entry.text))errors.push(entry.text);});
-    const url=new URL(base);url.searchParams.set('loot_review','1');url.searchParams.set('quality',quality);
+    const url=inspectionUrl(base);url.searchParams.set('loot_review','1');url.searchParams.set('quality',quality);
     await page.goto(url.href);
     await page.waitForFunction(()=>window.__sjrpgTitleReady&&window.__sjrpgEntryReady,{},{timeout:90000});
     await page.locator('#entry-start').click();

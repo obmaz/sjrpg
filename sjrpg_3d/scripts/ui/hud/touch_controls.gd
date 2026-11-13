@@ -607,7 +607,6 @@ func _draw() -> void:
 				_draw_skill_points(c, r, float(b["radius"]))
 
 
-
 ## Compact Xbox cues follow the existing buttons; keyboard/touch art is unchanged.
 func _draw_gamepad_hints(canvas: CanvasItem = null) -> void:
 	var target: CanvasItem = self if canvas == null else canvas

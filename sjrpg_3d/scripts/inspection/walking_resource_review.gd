@@ -92,7 +92,7 @@ func _process(delta: float) -> void:
 		report["player_run_distance"] = game.player._run_distance
 		report["has_move_target"] = game.player.has_move_target
 		report["move_input"] = [game.player.move_input.x, game.player.move_input.y]
-		report["camera_locked"] = game._fx_review_focus != Vector2.ZERO
+		report["camera_locked"] = is_instance_valid(game.inspection) and game.inspection.focus_point != Vector2.ZERO
 		report["camera_2d"] = [game.camera.global_position.x, game.camera.global_position.y]
 		var polygon: Array = []
 		for point: Vector2 in game.village.safe_zone:

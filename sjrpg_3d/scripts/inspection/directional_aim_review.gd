@@ -38,7 +38,7 @@ func start(source: Node) -> void:
 	game.player._assisted_facing = INF
 	game.player.resource = game.player.resource_max
 	_serial = game.player._action_serial
-	game._fx_review_focus = game.player.position
+	game.inspection.focus_point = game.player.position
 	game.camera.position = game._camera_focus()
 	game.camera.reset_smoothing()
 	game.camera.force_update_scroll()

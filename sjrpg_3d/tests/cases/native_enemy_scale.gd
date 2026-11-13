@@ -87,7 +87,7 @@ func run() -> void:
 		renderer._enemy_renderer.sync()
 		var model: Dictionary = renderer._enemy_renderer.entries[enemy.get_instance_id()]
 		var root: Node3D = model["root"]
-		var metres: float = Enemy.NATIVE_HEIGHT_METRES[kind]
+		var metres: float = Enemy.MODEL_HEIGHT_M[kind]
 		var old_heights := {
 			"goblin": 1.30, "wolf": 1.13, "boar": 1.22, "skeleton": 1.70, "golem": 2.85
 		}

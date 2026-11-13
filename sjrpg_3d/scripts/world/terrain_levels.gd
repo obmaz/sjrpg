@@ -46,13 +46,13 @@ static func surfaces(village: Village) -> Array[Dictionary]:
 		var outline: Array = definition["outline"]
 		var entrance := int(definition["entrance"])
 		var count := outline.size()
-		var a := landmark._pt(outline[entrance])
-		var b := landmark._pt(outline[(entrance + 1) % count])
-		var c := landmark._pt(outline[(entrance + 2) % count])
-		var d := landmark._pt(outline[(entrance + count - 1) % count])
+		var a := landmark.atlas_to_world(outline[entrance])
+		var b := landmark.atlas_to_world(outline[(entrance + 1) % count])
+		var c := landmark.atlas_to_world(outline[(entrance + 2) % count])
+		var d := landmark.atlas_to_world(outline[(entrance + count - 1) % count])
 		var faces: Array[PackedVector2Array] = []
 		for face: Array in definition["faces"]:
-			faces.append(landmark._poly(face))
+			faces.append(landmark.atlas_polygon_to_world(face))
 		var blockers := faces.duplicate()
 		blockers.append_array(landmark.ledges)
 		var rise := measured_rise(faces)

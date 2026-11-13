@@ -69,6 +69,7 @@ export function validateCapture(state, packName, normalFollow = false) {
     if (!state.probe?.native_active || !(state.probe.physics_ticks > 0)) throw new Error('운영3D 물리 준비 상태가 아닙니다.');
     if (!state.pckUrls?.some(url=>new URL(url).pathname.endsWith('/'+packName))) throw new Error('다른 빌드를 읽은 캡처입니다.');
     if (state.village?.schemaVersion !== 1 || !(state.village.buildings?.length >= 6)) throw new Error('실제 마을 공간 스냅샷이 필요합니다.');
+    if (new URL(state.launchUrl).searchParams.get('inspection') !== '1') throw new Error('명시적 검수 진입 플래그가 필요합니다.');
     if (normalFollow && state.village.cameraMode !== 'follow') throw new Error('주택 가독성은 정상 인물 추적 카메라로 확인해야 합니다.');
 }
 

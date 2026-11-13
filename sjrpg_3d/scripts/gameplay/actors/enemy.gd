@@ -11,10 +11,9 @@ const KINDS := {
 	"golem": {"name": "숲의 파수꾼", "hp": 3600.0, "speed": 92.0, "height": 150.0, "damage": 22.0, "xp": 600, "range": 150.0},
 }
 
-## Native body heights in metres, independent of the legacy atlas catalogue.
-## Source body_height drives meshes, corpse size, health labels and attack origin height.
+## 바인드 자세의 몸체 높이(m). 표시·시체·체력바·공격 시작 높이의 기준을 공유한다.
 const SIZE_FACTOR := 1.30
-const NATIVE_HEIGHT_METRES := {"goblin": 1.30 * SIZE_FACTOR, "wolf": 1.13 * SIZE_FACTOR, "boar": 1.22 * SIZE_FACTOR, "skeleton": 1.70 * SIZE_FACTOR, "golem": 2.85 * SIZE_FACTOR}
+const MODEL_HEIGHT_M := {"goblin": 1.30 * SIZE_FACTOR, "wolf": 1.13 * SIZE_FACTOR, "boar": 1.22 * SIZE_FACTOR, "skeleton": 1.70 * SIZE_FACTOR, "golem": 2.85 * SIZE_FACTOR}
 const RADIUS := 25.0 * SIZE_FACTOR  # 알 수 없는 종의 기본 반경도 같은 배율을 따른다.
 const NATIVE_RADIUS_PIXELS := {"goblin": 25.0 * SIZE_FACTOR, "wolf": 36.0 * SIZE_FACTOR, "boar": 38.0 * SIZE_FACTOR, "skeleton": 25.0 * SIZE_FACTOR, "golem": 44.0 * SIZE_FACTOR}
 var radius: float:
@@ -101,7 +100,7 @@ func setup(g: Node, k: String, level: int) -> void:
 	attack_range = float(def["range"]) + radius * (1.0 - 1.0 / SIZE_FACTOR)
 	atlas = ActorAtlas.get_atlas(k)
 	sprite = ActorSprite.new()
-	sprite.body_height = float(NATIVE_HEIGHT_METRES[k]) * WorldSpace3D.VERTICAL_PIXELS_PER_METER
+	sprite.body_height = float(MODEL_HEIGHT_M[k]) * WorldSpace3D.VERTICAL_PIXELS_PER_METER
 	sprite.show_behind_parent = true
 	add_child(sprite)
 	facing = randf() * TAU
@@ -214,7 +213,7 @@ func take_damage(amount: float, source: Node2D, visual_source: Node2D = null) ->
 		_recoil_started = false
 		_recoil = _recoil_direction * _recoil_size
 		sprite.position = _recoil
-	_hitstop.trigger(0.055 if heavy else 0.040)
+	_hitstop.trigger(HitTier.HEAVY_VICTIM_STOP if heavy else 0.040, HitTier.HEAVY_STOP_LIMIT)
 	sprite.hold_contact(0.065 if heavy else 0.045)
 	if source is Player:
 		source.confirm_melee_contact(heavy, tier == HitTier.KILL)
@@ -309,13 +308,13 @@ func _process(delta: float) -> void:
 	var to_player := player.position - position
 	var dist := to_player.length()
 	# 도발 중에는 영웅을 우선하고, 종료 후 가까운 조사관/영웅을 다시 고릅니다.
-	var guard := false
+	var targets_defender := false
 	if is_threat and game.quest_runtime.defender_active():
 		var to_def: Vector2 = game.quest_runtime.defender_position() - position
 		if player.dead or (_taunt_time <= 0.0 and to_def.length() < dist):
 			to_player = to_def
 			dist = to_def.length()
-			guard = true
+			targets_defender = true
 	match _state:
 		"idle":
 			_timer -= delta
@@ -332,11 +331,11 @@ func _process(delta: float) -> void:
 			if not player.dead and dist < 340.0:
 				_state = "chase"
 		"chase":
-			if (player.dead and not guard) or (dist > 700.0 and _taunt_time <= 0.0 and not is_threat):
+			if (player.dead and not targets_defender) or (dist > 700.0 and _taunt_time <= 0.0 and not is_threat):
 				_state = "idle"
 			elif dist <= attack_range and game.can_melee_reach(position, position + to_player):
 				_state = "windup"
-				if not guard and not player.dead:
+				if not targets_defender and not player.dead:
 					SoundFx.play_warning(str(get_meta("visual_variant", kind)), position.distance_to(player.position))
 				# JUICE #9: ordinary enemies get a brief warning flash so the swing can be read and dodged.
 				# Bosses already show their danger ring; the colour differs from hit and hurt flashes.
@@ -360,7 +359,7 @@ func _process(delta: float) -> void:
 				if _cry_time > 0.0:
 					mult *= 0.75
 				var hit_range := attack_range + (60.0 if is_boss else 22.0)
-				if guard:
+				if targets_defender:
 					if dist <= hit_range and game.can_melee_reach(position, position + to_player):
 						game.quest_runtime.damage_defender(damage * mult * randf_range(0.85, 1.15))
 				elif not player.dead and attack_distance(player.position) <= hit_range and game.can_melee_reach(position, player.position):

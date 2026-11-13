@@ -23,15 +23,15 @@ func _ready() -> void:
 	get_tree().root.size_changed.connect(_fit_orientation)
 	_fit_orientation()
 	show_title()
-	if OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('expedition_review')", true)) == "1":
+	if AdventureInspection.web_requested() and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('expedition_review')", true)) == "1":
 		add_child(preload("res://scripts/inspection/expedition_review.gd").new().setup(self))
-	if OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('gamepad_review')", true)) == "1":
+	if AdventureInspection.web_requested() and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('gamepad_review')", true)) == "1":
 		add_child(preload("res://scripts/inspection/gamepad_review.gd").new().setup(self))
-	if OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('scale_review')", true)) == "1":
+	if AdventureInspection.web_requested() and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('scale_review')", true)) == "1":
 		add_child(preload("res://scripts/inspection/native_scale_review.gd").new().setup(self))
-	if OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('save_layout_review')", true)) == "1":
+	if AdventureInspection.web_requested() and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('save_layout_review')", true)) == "1":
 		add_child(preload("res://scripts/inspection/save_layout_review.gd").new().setup(self))
-	if OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('native_style_review')", true)) == "1":
+	if AdventureInspection.web_requested() and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('native_style_review')", true)) == "1":
 		add_child(preload("res://scripts/inspection/native_style_review.gd").new().setup(self))
 
 

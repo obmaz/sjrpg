@@ -13,8 +13,8 @@ func run() -> void:
 	var definition: Dictionary = Landmark.data()[landmark.index]
 	var outline: Array = definition["outline"]
 	var entrance: int = definition["entrance"]
-	var a := landmark._pt(outline[entrance])
-	var b := landmark._pt(outline[(entrance + 1) % outline.size()])
+	var a := landmark.atlas_to_world(outline[entrance])
+	var b := landmark.atlas_to_world(outline[(entrance + 1) % outline.size()])
 	var middle := (a + b) * 0.5
 	var center := Vector2.ZERO
 	for point in landmark.top:

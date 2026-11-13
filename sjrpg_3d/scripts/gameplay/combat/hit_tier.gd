@@ -41,6 +41,11 @@ static func number_color(tier: int) -> Color:
 ## bosses so their slam pacing does not change. This is the one tier effect that moves the target.
 const BOSS_KNOCKBACK := 160.0
 
+## 강타만 국소 정지를 늘린다. 회복 제한은 유지해 연타가 행동을 계속 묶지 않는다.
+const HEAVY_VICTIM_STOP := 0.065
+const HEAVY_ATTACKER_STOP := 0.060
+const HEAVY_STOP_LIMIT := 0.070
+
 ## JUICE #5: the attacker's pause on a killing blow, and the slightly larger death recoil / longer fade.
 const KILL_STOP := 0.075
 const KILL_STOP_LIMIT := 0.08

@@ -22,7 +22,7 @@ async function select(page,key){
 async function enter(page,edition,hero,resume=false){
  console.log('Entering',edition,hero,resume?'continue':'new');
  await page.bringToFront();
- await page.goto(base+edition+'/?quality=low');
+ await page.goto(base+edition+'/?'+(edition==='3d'?'inspection=1&':'')+'quality=low');
  await page.waitForFunction(()=>window.__sjrpgTitleReady&&window.__sjrpgEntryReady,null,{timeout:90000});
  console.log('Title ready',edition);
  await page.locator('#entry-start').click();

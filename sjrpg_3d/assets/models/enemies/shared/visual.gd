@@ -65,6 +65,9 @@ func prepare() -> void:
 			if not cloned.has(id):
 				var ink := source.duplicate() as StandardMaterial3D
 				ink.roughness = .94
+				# 첫 피격 때 셰이더 기능을 바꾸지 않고, 배우별 재질의 균일값만 갱신한다.
+				ink.emission_enabled = true
+				ink.emission = Color.BLACK
 				cloned[id] = ink
 				materials.append(ink)
 				colors.append(ink.albedo_color)

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {inspectionUrl} from './review/inspection_url.mjs';
 // Actual exported Adventure3D, real pointer/keyboard input, fresh profiles only.
 import assert from 'node:assert/strict';
 import {assertImportedMerchantAsset} from './review/diagnostic_contracts.mjs';
@@ -12,7 +13,7 @@ const modelsOnly=process.env.SJRPG_STYLE_MODELS_ONLY==='1';
 const merchantOnly=process.env.SJRPG_STYLE_MERCHANT_ONLY==='1';
 const merchantPhotoOnly=process.env.SJRPG_MERCHANT_PHOTO_ONLY==='1';
 const worldOnly=process.env.SJRPG_STYLE_WORLD_ONLY==='1';
-const base=new URL(process.argv[2]||'http://127.0.0.1:8781/');
+const base=inspectionUrl(process.argv[2]||'http://127.0.0.1:8781/');
 const out=path.resolve(process.argv[3]||'build/native-style-review');
 await mkdir(out,{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']});
@@ -118,7 +119,7 @@ async function boot(cls,params={},dpr=1){
  context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:dpr});page=await context.newPage();
  page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error'||/SCRIPT ERROR|ERROR:|INVALID_(OPERATION|VALUE|ENUM)/.test(m.text()))errors.push(m.text());});
  const cdp=await context.newCDPSession(page);await cdp.send('Log.enable');cdp.on('Log.entryAdded',({entry})=>{if(entry.level==='error')errors.push(entry.text);});
- const url=new URL(base);url.searchParams.set('native_style_review','1');url.searchParams.set('quality','low');
+ const url=inspectionUrl(base);url.searchParams.set('native_style_review','1');url.searchParams.set('quality','low');
  for(const[k,v]of Object.entries(params))url.searchParams.set(k,v);
  await page.goto(url.href,{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>window.__sjrpgTitleReady&&window.__sjrpgEntryReady,null,{timeout:90000});

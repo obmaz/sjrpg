@@ -188,7 +188,7 @@ static func build(renderer: Node, parent: Node3D) -> Dictionary:
 			_finish(geology, terrain_materials["%s:true" % source.index], group, "NaturalGeology")
 		var definition: Dictionary = Landmark.data()[source.index]
 		for i in definition["solids"].size():
-			var polygon := source._poly(definition["solids"][i])
+			var polygon := source.atlas_polygon_to_world(definition["solids"][i])
 			var at := Iso.poly_bounds(polygon).get_center()
 			var base := SpatialWorld3D.surface_height_at(renderer.game.village, at)
 			# Existing native Obstacle colliders use exactly base+3.5m.

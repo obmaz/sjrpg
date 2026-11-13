@@ -238,7 +238,7 @@ func _landmark(source: Landmark, buckets: Dictionary) -> void:
 	else:
 		var cell := Landmark.CELL
 		for point in [Vector2.ZERO, Vector2(cell, 0), Vector2(cell, cell), Vector2(0, cell)]:
-			var local := source._pt([point.x, point.y]) - source.position
+			var local := source.atlas_to_world([point.x, point.y]) - source.position
 			vertices.append(Vector3(local.x, -local.y, 0) / factor)
 			uv.append((Vector2((source.index % 2) * cell, (source.index / 2) * cell) + point) / Landmark._sheet.get_size())
 		indices = PackedInt32Array([0, 1, 2, 0, 2, 3])

@@ -29,7 +29,7 @@
     },
     {
       "path": "scripts/world/village.gd",
-      "sha256": "016a6d0f751f5c415a4a40f289357b0d29338b42fee96a39f87087718c098695"
+      "sha256": "a9bcfa834930107f3ffcad0b00eaffecadac15904c7e159adbdab847da842de9"
     },
     {
       "path": "scripts/world/forest_region.gd",

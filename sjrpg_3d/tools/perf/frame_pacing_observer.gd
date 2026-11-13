@@ -62,7 +62,7 @@ func _state() -> Dictionary:
 	report["dead"] = game.player.dead
 	report["town"] = game.in_town(game.player.position)
 	report["dungeon"] = game.dungeon.active
-	report["camera_locked"] = game._fx_review_focus != Vector2.ZERO
+	report["camera_locked"] = is_instance_valid(game.inspection) and game.inspection.focus_point != Vector2.ZERO
 	report["physics_ticks"] = game.spatial_world.physics_ticks
 	# Player.move_input is touch-only; keyboard reads Input directly in Player._process.
 	# Observe the same read-only precedence without writing either input source.

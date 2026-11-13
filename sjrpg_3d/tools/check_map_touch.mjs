@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {inspectionUrl} from './review/inspection_url.mjs';
 // 실제 터치로 행 위 드래그→장소 선택→가로 회전을 검사한다. 휠 입력으로 대체하지 않는다.
 import {createRequire} from 'node:module';
 import {mkdir, writeFile} from 'node:fs/promises';
@@ -35,7 +36,7 @@ const swipe = (state, direction, amount = .6) => {
     return touch(point(state, x + width * .5, y + height * (.5 - direction * amount / 2)), point(state, x + width * .5, y + height * (.5 + direction * amount / 2)));
 };
 try {
-    const url = new URL(args.url ?? 'http://localhost:8878/index.html');
+    const url = inspectionUrl(args.url ?? 'http://localhost:8878/index.html');
     url.searchParams.set('panel', cave ? 'dungeon_map' : 'map'); url.searchParams.set('probe', '1'); url.searchParams.set('quality', 'low');
     await page.goto(String(url));
     await page.locator('#entry-start').click({timeout: 90000});

@@ -427,7 +427,7 @@ func _sync_camera() -> void:
 	var focus := WorldSpace3D.projected_to_world(focus_point, floor_height)
 	camera.position = focus + CAMERA_DIRECTION * 30.0
 	camera.look_at(focus, Vector3.UP)
-	# Read the actual2D rendering viewport/zoom; low-quality's half-size cancels its half zoom.
+	# 실제 논리 뷰포트와 줌을 읽는다. 절약 화질의 크기와 줌은 같은 비율로 줄어든다.
 	var source_view: Vector2 = game.scene_view.get_visible_rect().size
 	camera.size = source_view.y / WorldSpace3D.pixels_per_meter(game.camera.zoom.y)
 	# Orthographic directional shadows ignore max_distance and cover the entire
@@ -665,8 +665,6 @@ func _set_card_frame(card: MeshInstance3D, texture: Texture2D, frame: Rect2) -> 
 	ink.set_shader_parameter("frame_blend", 0.0)
 
 
-
-
 func _place_card(card: MeshInstance3D, at: Vector2, rect: Rect2, angle := 0.0, native_foot := Vector3(INF, INF, INF)) -> void:
 	var factor := WorldSpace3D.GROUND_UNITS_PER_METER * WorldSpace3D.GROUND_PROJECTION_FACTOR
 	var mesh_size: Vector2 = (card.mesh as QuadMesh).size
@@ -726,7 +724,7 @@ func _sync_cards() -> void:
 					fresh_label.pixel_size = 1.0 / (WorldSpace3D.GROUND_UNITS_PER_METER * WorldSpace3D.GROUND_PROJECTION_FACTOR)
 					fresh_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 					fresh_label.no_depth_test = true
-					# Combat text sits above foreground foliage, like the source2D z20.
+					# 전투 문자는 전경 잎보다 위에 표시한다.
 					fresh_label.render_priority = 20
 					stage.add_child(fresh_label)
 				else:
@@ -838,8 +836,6 @@ func _sync_cards() -> void:
 			_labels.erase(id)
 		else:
 			(_labels[id]["node"] as Label3D).visible = owner.get_parent() == game.world and owner.age >= 0.0
-
-
 
 
 ## Cap only the native 3D render target. Display/HUD coordinates and orthographic

@@ -1,11 +1,12 @@
 #!/usr/bin/env node
+import {inspectionUrl} from './review/inspection_url.mjs';
 // Native world/model photography. The CI-only observer never moves physical actors.
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import path from 'node:path';
 import {createRequire} from 'node:module';
 const {chromium}=createRequire(import.meta.url)('playwright');
-const base=new URL(process.argv[2]||'http://127.0.0.1:8786/');
+const base=inspectionUrl(process.argv[2]||'http://127.0.0.1:8786/');
 const out=path.resolve(process.argv[3]||'build/terrain-npc-review');
 const baseline=process.env.SJRPG_TERRAIN_EDITION==='before';
 const scope=process.env.SJRPG_REVIEW_SCOPE||'terrain';
@@ -30,7 +31,7 @@ async function boot(params={},quality=worldQuality){
  page=await context.newPage();
  page.on('pageerror',e=>errors.push(String(e)));
  page.on('console',m=>{if(m.type()==='error'||/SCRIPT ERROR|ERROR:|INVALID_(OPERATION|VALUE|ENUM)/.test(m.text()))errors.push(m.text());});
- const url=new URL(base);url.searchParams.set('native_style_review','1');url.searchParams.set('quality',quality);
+ const url=inspectionUrl(base);url.searchParams.set('native_style_review','1');url.searchParams.set('quality',quality);
  for(const[k,v]of Object.entries(params))url.searchParams.set(k,v);
  await page.goto(url.href,{waitUntil:'domcontentloaded'});mark('document ready',{url:url.href});
  await page.waitForFunction(()=>window.__sjrpgTitleReady&&window.__sjrpgEntryReady,null,{timeout:90000});

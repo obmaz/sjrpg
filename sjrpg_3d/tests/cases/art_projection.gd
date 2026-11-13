@@ -19,7 +19,7 @@ func _point(record: Dictionary, raw: Array, pose: Node, game: Node) -> Vector2:
 			var packing: float = float(definition["source"][2]) / float(record["source_size"][0])
 			return pose.global_position + pose._xf * (p * packing + Vector2(0, definition["source"][1]))
 		"landmark":
-			return pose._pt([p.x * Landmark.CELL / record["source_size"][0], p.y * Landmark.CELL / record["source_size"][1]])
+			return pose.atlas_to_world([p.x * Landmark.CELL / record["source_size"][0], p.y * Landmark.CELL / record["source_size"][1]])
 	return p
 
 

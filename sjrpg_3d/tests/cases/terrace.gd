@@ -21,8 +21,8 @@ func run() -> void:
 			center += p
 		center /= lm.top.size()
 		var e: int = int(d["entrance"])
-		var a: Vector2 = lm._pt(outline[e])
-		var b: Vector2 = lm._pt(outline[(e + 1) % outline.size()])
+		var a: Vector2 = lm.atlas_to_world(outline[e])
+		var b: Vector2 = lm.atlas_to_world(outline[(e + 1) % outline.size()])
 		var mid := (a + b) / 2.0
 		var start := mid + (mid - center).normalized() * 70.0
 		player.position = start
@@ -34,8 +34,8 @@ func run() -> void:
 		for k in outline.size():
 			if k == e:
 				continue
-			var p0: Vector2 = lm._pt(outline[k])
-			var p1: Vector2 = lm._pt(outline[(k + 1) % outline.size()])
+			var p0: Vector2 = lm.atlas_to_world(outline[k])
+			var p1: Vector2 = lm.atlas_to_world(outline[(k + 1) % outline.size()])
 			var m := (p0 + p1) / 2.0
 			if m.distance_to(mid) < 120.0 or (p1 - p0).length() < 60.0:
 				continue

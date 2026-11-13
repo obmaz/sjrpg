@@ -47,7 +47,8 @@ func run() -> void:
 	check("recovering to the threshold clears the warning and its clock", not hud._critical_warning.visible and hud._critical_clock == 0.0)
 	# The explicit browser audit keeps actors still without freezing the genuine HUD clock.
 	hud.set_process(true)
-	await game._hud_preview("danger")
+	game.inspection = AdventureInspection.create(game, "inspection=1")
+	await game.inspection.scenes.preview_hud("danger")
 	var audit_hp := player.hp
 	var audit_clock := hud._critical_clock
 	await get_tree().create_timer(0.08).timeout

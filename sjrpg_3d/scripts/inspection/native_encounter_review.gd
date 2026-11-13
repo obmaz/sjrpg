@@ -110,8 +110,8 @@ func _focus() -> void:
 	var source: Node2D = _game.encounters.stones[_stone_id] if _role == "stone" else _game.chests[0]
 	var approach := source.position + Vector2(70, 85)
 	_game.spatial_world.teleport_source_actor(_game.player, approach, Player.RADIUS)
-	_game._fx_review_focus = source.position + Vector2(0, -42)
-	_game.camera.position = _game._fx_review_focus
+	_game.inspection.focus_point = source.position + Vector2(0, -42)
+	_game.camera.position = _game.inspection.focus_point
 	_game.camera.reset_smoothing()
 	_game.hud._toast_queue.clear()
 	_game.hud._toast_time = 0.0

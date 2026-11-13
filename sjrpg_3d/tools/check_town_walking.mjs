@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {inspectionUrl} from './review/inspection_url.mjs';
 // Real uninterrupted town movement. No spawn fixtures, teleportation, HP edits or forced GC.
 import assert from 'node:assert/strict';
 import {mkdir,writeFile,appendFile,readFile,readdir} from 'node:fs/promises';
@@ -7,7 +8,7 @@ import {createRequire} from 'node:module';
 import {installResourceTelemetry} from './resource_telemetry.mjs';
 import {installWalkingTelemetry} from './walking_resource_telemetry.mjs';
 const {chromium}=createRequire(import.meta.url)('playwright');
-const base=new URL(process.argv[2]||'http://127.0.0.1:8792/'),out=path.resolve(process.argv[3]||'build/town-walk');
+const base=inspectionUrl(process.argv[2]||'http://127.0.0.1:8792/'),out=path.resolve(process.argv[3]||'build/town-walk');
 const variant=process.env.SJRPG_WALK_VARIANT||'mage-high-touch';
 const [hero,quality,input]=variant.split('-');
 const profile={width:input==='keys'?390:768,height:input==='keys'?844:1024,dpr:3};
@@ -106,7 +107,7 @@ try{
  cdp=await context.newCDPSession(page);await cdp.send('Performance.enable');await cdp.send('Log.enable');
  cdp.on('Log.entryAdded',({entry})=>{if(entry.level==='error')void event('browser-log',entry.text);});
  monitor=setInterval(()=>void osSample().catch(e=>{report.os_error=String(e);}),5000);monitor.unref();await osSample();
- const url=new URL(base);url.searchParams.set('walking_profile','1');url.searchParams.set('quality',quality==='low'?'low':'high');
+ const url=inspectionUrl(base);url.searchParams.set('walking_profile','1');url.searchParams.set('quality',quality==='low'?'low':'high');
  // No at/preview/zoom fixture: ordinary spawn and following camera are required.
  await page.goto(url.href,{waitUntil:'domcontentloaded'});await wait(s=>s.title&&!s.ready,'normal title');report.document_token=(await read()).document_token;
  await page.locator('#entry-start').click();await wait(s=>s.entry?.stage==='class'||s.entry?.stage==='slots','normal selection');

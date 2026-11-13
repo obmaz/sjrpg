@@ -107,7 +107,7 @@ func run() -> void:
 		game.enemies_in_arc(origin, 0.0, 100.0, PI / 3.0).has(foes[1])
 	)
 	foes[1].position = origin + Vector2(-90, 0)
-	player._attack_lunges = true
+	player._attack_has_lunge = true
 	player._attack_duration = 0.4
 	player._pending = func(): pass
 	var reduced := Prefs.reduce_motion

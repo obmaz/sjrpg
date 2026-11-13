@@ -91,7 +91,7 @@ func _ready() -> void:
 	var warrior := WarriorRenderer3D.new().build()
 	_add(warrior, "warrior")
 	var enemy_script: Script = load("res://scripts/gameplay/actors/enemy.gd")
-	var native_heights: Dictionary = enemy_script.get_script_constant_map().get("NATIVE_HEIGHT_METRES", {})
+	var native_heights: Dictionary = enemy_script.get_script_constant_map().get("MODEL_HEIGHT_M", {})
 	for kind: String in ["goblin", "wolf", "boar", "skeleton", "golem"]:
 		var model := EnemyRenderer3D.build(kind)
 		var root: Node3D = model["root"]

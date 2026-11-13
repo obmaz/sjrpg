@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {inspectionUrl} from './review/inspection_url.mjs';
 // Real uninterrupted town movement. No spawn fixtures, teleportation, HP edits or forced GC during normal resource gates.
 import assert from 'node:assert/strict';
 import {mkdir,writeFile,appendFile,readFile,readdir} from 'node:fs/promises';
@@ -8,7 +9,7 @@ import {installResourceTelemetry,installWalkingTelemetry} from './stability_tele
 import {installCanvasAllocationTelemetry} from './canvas_allocation_telemetry.mjs';
 import {insideTown as inside,townDirections as directions,chooseTownDirection as choose} from './town_stability_route.mjs';
 const {chromium}=createRequire(import.meta.url)('playwright');
-const base=new URL(process.argv[2]||'http://127.0.0.1:8792/'),out=path.resolve(process.argv[3]||'build/town-walk');
+const base=inspectionUrl(process.argv[2]||'http://127.0.0.1:8792/'),out=path.resolve(process.argv[3]||'build/town-walk');
 const fold=process.env.SJRPG_STABILITY_PROFILE==='fold';
 const idleMode=process.env.SJRPG_STABILITY_MODE==='idle';
 const variant=fold?'mage-high-touch':'mage-low-keys';
@@ -140,7 +141,7 @@ try{
  cdp=await context.newCDPSession(page);await cdp.send('Performance.enable');await cdp.send('Log.enable');
  cdp.on('Log.entryAdded',({entry})=>{if(entry.level==='error')void event('browser-log',entry.text);});
  monitor=setInterval(()=>void osSample().catch(e=>{report.os_error=String(e);}),5000);monitor.unref();await osSample();
- const url=new URL(base);url.searchParams.set('walking_profile','1');url.searchParams.set('quality',quality==='low'?'low':'high');
+ const url=inspectionUrl(base);url.searchParams.set('walking_profile','1');url.searchParams.set('quality',quality==='low'?'low':'high');
  // No at/preview/zoom fixture: ordinary spawn and following camera are required.
  await page.goto(url.href,{waitUntil:'domcontentloaded'});await wait(s=>s.title&&!s.ready,'normal title');report.document_token=(await read()).document_token;
  await page.locator('#entry-start').click();await wait(s=>s.entry?.stage==='class'||s.entry?.stage==='slots','normal selection');

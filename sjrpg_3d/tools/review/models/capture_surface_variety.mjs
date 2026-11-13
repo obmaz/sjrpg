@@ -1,3 +1,4 @@
+import {inspectionUrl} from '../inspection_url.mjs';
 // 집·지형과 선택한 배우 검수 장면을 실제 게임의 세로/가로 화면에서 검수한다.
 import {createRequire} from 'node:module';
 import {mkdir,writeFile} from 'node:fs/promises';
@@ -16,7 +17,7 @@ try{
   page.on('pageerror',e=>errors.push(String(e)));
   page.on('console',m=>{if(m.type()==='error'||/SCRIPT ERROR|^ERROR:|INVALID_(OPERATION|VALUE|ENUM)/.test(m.text()))errors.push(m.text());});
   await page.setViewportSize({width:390,height:844});
-  const url=new URL(base);for(const [k,v] of Object.entries({at,quality:'high',native_style_review:'1'}))url.searchParams.set(k,v);
+  const url=inspectionUrl(base);for(const [k,v] of Object.entries({at,quality:'high',native_style_review:'1'}))url.searchParams.set(k,v);
   await page.goto(url.href,{waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>window.__sjrpgTitleReady&&window.__sjrpgEntryReady,null,{timeout:90000});
   await page.locator('#entry-start').click();

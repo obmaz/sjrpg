@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {inspectionUrl} from './review/inspection_url.mjs';
 // 실제 터치로 버튼 위에서 시작한 스와이프와 짧은 탭을 구분한다.
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
@@ -13,7 +14,7 @@ try {
  const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
  page.on('pageerror',e=>errors.push(String(e)));
  page.on('console',m=>{if(/SCRIPT ERROR|^ERROR:/.test(m.text()))errors.push(m.text());});
- const url=new URL(base);url.searchParams.set('native_style_review','1');url.searchParams.set('panel','settings');
+ const url=inspectionUrl(base);url.searchParams.set('native_style_review','1');url.searchParams.set('panel','settings');
  await page.goto(url.href);
  await page.waitForFunction(()=>window.__sjrpgTitleReady&&window.__sjrpgEntryReady,null,{timeout:120000});
  await page.locator('#entry-start').click();

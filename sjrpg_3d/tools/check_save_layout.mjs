@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {inspectionUrl} from './review/inspection_url.mjs';
 // Real exported Godot UI in a fresh browser profile. The fixture only prepares test files.
 import assert from 'node:assert/strict';
 import path from 'node:path';
@@ -6,7 +7,7 @@ import {mkdir,writeFile} from 'node:fs/promises';
 import {createRequire} from 'node:module';
 
 const {chromium}=createRequire(import.meta.url)('playwright');
-const url=new URL(process.argv[2]||'http://127.0.0.1:8767/');
+const url=inspectionUrl(process.argv[2]||'http://127.0.0.1:8767/');
 url.searchParams.set('save_layout_review','1');
 url.searchParams.set('quality','low');
 const entryVisualOnly=process.env.SJRPG_ENTRY_VISUAL_ONLY==='1';

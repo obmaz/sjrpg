@@ -52,8 +52,8 @@ func _ready() -> void:
 		elif arg.begins_with("--label="):
 			label = arg.trim_prefix("--label=")
 	for kind: String in kinds:
-		var height: float = Enemy.NATIVE_HEIGHT_METRES.get(
-			kind, Enemy.NATIVE_HEIGHT_METRES["goblin"]
+		var height: float = Enemy.MODEL_HEIGHT_M.get(
+			kind, Enemy.MODEL_HEIGHT_M["goblin"]
 		)
 		camera.size = height * 2.6
 		camera.position = Vector3(8, 8 + height * .5, 8)

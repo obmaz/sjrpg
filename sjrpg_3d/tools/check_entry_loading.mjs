@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {inspectionUrl} from './review/inspection_url.mjs';
 // Actual exported entry flow, isolated save files, and real compositor frames.
 // No review delay, synthetic overlay, page pause, or production save files.
 import assert from 'node:assert/strict';
@@ -6,7 +7,7 @@ import path from 'node:path';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {createRequire} from 'node:module';
 const {chromium}=createRequire(import.meta.url)('playwright');
-const base=new URL(process.argv[2]||'http://127.0.0.1:8779/');
+const base=inspectionUrl(process.argv[2]||'http://127.0.0.1:8779/');
 base.searchParams.set('save_layout_review','1');base.searchParams.set('quality','low');
 const out=path.resolve(process.argv[3]||'build/entry-loading-review');
 await mkdir(out,{recursive:true});

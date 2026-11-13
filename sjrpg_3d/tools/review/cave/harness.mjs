@@ -61,6 +61,7 @@ export function validateCapture(state, packName, item) {
     if (state.probe.scope !== item.scope) throw new Error('촬영한 실제 지역이 다릅니다: '+item.id);
     if (!state.pckUrls?.some(url=>new URL(url).pathname.endsWith('/'+packName))) throw new Error('다른 빌드를 읽은 캡처입니다.');
     const launch = new URL(state.launchUrl);
+    if (launch.searchParams.get('inspection') !== '1') throw new Error('명시적 검수 진입 플래그가 필요합니다.');
     if (launch.searchParams.get('zoom') !== '1') throw new Error('기본1× 시야가 아닙니다.');
     if (item.at && launch.searchParams.get('at') !== item.at) throw new Error('입구 검수 위치가 다릅니다.');
     if (item.scene.startsWith('cave_') && launch.searchParams.get('dungeon_preview') !== item.scene.slice(5)) throw new Error('동굴 검수 장면이 다릅니다.');

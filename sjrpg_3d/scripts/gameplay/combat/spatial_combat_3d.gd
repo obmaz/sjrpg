@@ -1,7 +1,7 @@
 class_name SpatialCombat3D
 extends RefCounted
-## Combat adapters query the same native floors, capsules and solid sweeps as movement.
-## Legacy skill ranges remain screen-world units; native elevation is measured in metres.
+## 이동과 같은 바닥·캡슐·장애물 스윕으로 전투 공간을 검사한다.
+## 스킬 사거리는 투영 월드 단위, 실제 높이는 미터 단위다.
 
 const PROJECTILE_LIFT := 34.0 / WorldSpace3D.VERTICAL_PIXELS_PER_METER
 const PROJECTILE_RADIUS := 26.0

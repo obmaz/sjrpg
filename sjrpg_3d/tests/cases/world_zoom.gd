@@ -19,10 +19,11 @@ func run() -> void:
 	var view_size: Vector2 = game.get_viewport_rect().size
 	var original_camera_scale: float = clampf(minf(view_size.x, view_size.y) / 720.0, 0.5, 1.6) * game.CAMERA_WORLD_SCALE
 	check("displayed default 1x applies the configured composition scale once", is_equal_approx(Prefs.world_zoom, 1.0) and is_equal_approx(Prefs.actual_world_zoom(), Prefs.WORLD_ZOOM_BASE) and baseline.is_equal_approx(Vector2.ONE * original_camera_scale * Prefs.WORLD_ZOOM_BASE))
-	game._debug_zoom = 0.75
+	game.inspection = AdventureInspection.create(game, "inspection=1")
+	game.inspection.zoom_multiplier = 0.75
 	game._update_zoom()
 	check("URL debug scale remains an independent relative multiplier", game.camera.zoom.is_equal_approx(baseline * 0.75) and is_equal_approx(Prefs.world_zoom, 1.0))
-	game._debug_zoom = 1.0
+	game.inspection.zoom_multiplier = 1.0
 	game._update_zoom()
 	var hud_size: Vector2 = game.hud.minimap.size
 	var controls_before: Dictionary = game.hud.controls._buttons["bar_bag"].duplicate(true)

@@ -58,7 +58,7 @@ func _check_lunge() -> void:
 	game.enemies.append(foe)
 	foe.set_process(false)
 	check("a basic melee swing starts", hero.cast_slot(0))
-	check("the basic swing is a lunging attack", hero._attack_lunges)
+	check("the basic swing is a lunging attack", hero._attack_has_lunge)
 	var start := hero.position
 	var duration: float = hero._attack_duration
 	hero._process(duration * 0.2)

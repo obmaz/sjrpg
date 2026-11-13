@@ -1,6 +1,6 @@
 class_name SpatialWorld3D
 extends Node3D
-## Native3D authority. Node2D positions are projected-ground gameplay/HUD adapters.
+## 실제 몸체·지지 높이·충돌의 기준. Node2D 위치는 게임 규칙과 HUD의 투영 지면 좌표다.
 ## Source polygons construct collision shapes once; movement never calls Iso.push_out.
 
 const SOLID := 1

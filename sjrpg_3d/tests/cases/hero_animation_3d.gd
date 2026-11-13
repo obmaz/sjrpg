@@ -17,7 +17,8 @@ func _pose_difference(first: Dictionary, second: Dictionary) -> float:
 
 func run() -> void:
 	var game := await make_game("mage")
-	game._place_at_chapel_reference()
+	game.inspection = AdventureInspection.create(game, "inspection=1")
+	game.inspection.scenes.place_at_chapel()
 	game._create_world_renderer()
 	await _frames(3)
 	var renderer: WorldRenderer3D = game.world_renderer

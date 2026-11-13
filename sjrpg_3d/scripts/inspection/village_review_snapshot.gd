@@ -94,7 +94,7 @@ static func snapshot(game: Node) -> Dictionary:
 		"buildings": buildings,
 		"modelGaps": gaps,
 		"playerFoot": _v3(foot),
-		"cameraMode": "follow" if game._fx_review_focus == Vector2.ZERO else "inspection",
+		"cameraMode": "follow" if (not is_instance_valid(game.inspection) or game.inspection.focus_point == Vector2.ZERO) else "inspection",
 		"note": "모든 모델 부품을 포함한 실제 회전 XZ AABB 간격이다. 지붕 간격·시선 겹침·전체 보행을 대신 판정하지 않는다. 문앞 blocked에는 주민 충돌도 포함한다."
 	}
 

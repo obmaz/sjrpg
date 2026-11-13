@@ -47,8 +47,9 @@ test('a historical original viewed by the verifier must match the preserved capt
     }finally{rmSync(f.root,{recursive:true,force:true});}
 });
 test('capture must come from the expected PCK and running native world',()=>{
-    const state={errors:[],loadingOverlayVisible:false,entryLoading:{visible:false,result:'ready'},pckUrls:['http://localhost/index-a.pck'],probe:{native_active:true,physics_ticks:1},village:{schemaVersion:1,buildings:Array(6).fill({})}};
+    const state={launchUrl:'http://localhost/?inspection=1',errors:[],loadingOverlayVisible:false,entryLoading:{visible:false,result:'ready'},pckUrls:['http://localhost/index-a.pck'],probe:{native_active:true,physics_ticks:1},village:{schemaVersion:1,buildings:Array(6).fill({})}};
     assert.doesNotThrow(()=>validateCapture(state,'index-a.pck'));
+    assert.throws(()=>validateCapture({...state,launchUrl:'http://localhost/'},'index-a.pck'),/검수 진입/);
     assert.throws(()=>validateCapture(state,'index-b.pck'),/다른 빌드/);
     assert.throws(()=>validateCapture({...state,probe:{native_active:false}},'index-a.pck'),/물리/);
     assert.throws(()=>validateCapture({...state,village:null},'index-a.pck'),/스냅샷/);

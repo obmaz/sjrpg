@@ -38,7 +38,7 @@ static func run(game: Node, mode: String) -> void:
 			.04 if mode == "hit" else (.08 if mode == "opening" else Chest.OPEN_SECONDS)
 		)
 		target.set_process(false)
-	game._fx_review_focus = target.position
+	game.inspection.focus_point = target.position
 	game.camera.position = game._camera_focus()
 	game.camera.reset_smoothing()
 	game.camera.force_update_scroll()

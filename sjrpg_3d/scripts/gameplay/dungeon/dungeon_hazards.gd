@@ -1,7 +1,7 @@
 class_name DungeonHazards
 extends RefCounted
 ## 입구/귀환문을 비우고 선택 경로와 방의 보상 근처에 읽을 수 있는 주기형 장치를 둔다.
-const COMBAT_RADIUS_METRES := 20.0
+const COMBAT_RADIUS_M := 20.0
 var game: Node
 var traps: Array[DungeonTrap] = []
 var clock := 0.0
@@ -46,7 +46,7 @@ func tick(delta: float) -> void:
 		if changed and trap.phase == DungeonTrap.Phase.ACTIVE and _near(trap, 8):
 			SoundFx.play("fire" if trap.kind == "flame" else "weapon_draw")
 		# 먼 방의 적이 순찰만 하다 소모되지 않게 한다. 예고/발동 시계는 계속 흐른다.
-		if not trap.dangerous() or not _near(trap, COMBAT_RADIUS_METRES):
+		if not trap.dangerous() or not _near(trap, COMBAT_RADIUS_M):
 			continue
 		var player: Player = game.player
 		if not player.dead and not trap.hit_actors.has(player.get_instance_id()):

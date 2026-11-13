@@ -263,7 +263,6 @@ func open_skill_tree() -> void:
 		_open(RunBuildPanel.new() if ExpeditionState.active() else SkillTreePanel.new())
 
 
-
 func open_expedition() -> void:
 	_open(ExpeditionPanel.new().setup(game))
 

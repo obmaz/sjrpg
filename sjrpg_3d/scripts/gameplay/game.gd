@@ -1,5 +1,5 @@
 extends Node2D
-## The adventure field (원본: lib/src/game/adventure.dart의 핵심 루프 일부).
+## 숲1장의 월드·진행·HUD를 조립하고 공유 게임 규칙의 수명을 관리한다.
 
 signal quit_requested
 signal restart_requested
@@ -23,7 +23,7 @@ var forest_atmosphere: ForestAtmosphere
 var world_renderer: WorldRenderer3D
 var spatial_world: SpatialWorld3D
 var native_ready := false
-var _fx_review_focus := Vector2.ZERO
+var inspection: AdventureInspection
 var player: Player
 var _impact_offset := Vector2.ZERO
 var _impact_fresh := false
@@ -164,7 +164,9 @@ func _ready() -> void:
 	await get_tree().process_frame
 	if is_queued_for_deletion():
 		return
-	_read_debug_params()
+	inspection = AdventureInspection.create_for_web(self)
+	if inspection != null:
+		inspection.apply()
 	for i in 12:
 		_spawn_enemy(true)
 	await world_renderer._occlusion.warm_up()
@@ -186,7 +188,7 @@ func _update_zoom() -> void:
 	# Keep characters similarly sized in portrait and landscape.
 	var short_side := minf(size.x, size.y)
 	var z := clampf(short_side / 720.0, 0.5, 1.6)
-	_base_zoom = Vector2(z, z) * CAMERA_WORLD_SCALE * Prefs.actual_world_zoom() * _debug_zoom
+	_base_zoom = Vector2(z, z) * CAMERA_WORLD_SCALE * Prefs.actual_world_zoom() * (inspection.zoom_multiplier if is_instance_valid(inspection) else 1.0)
 	camera.zoom = _base_zoom * (1.0 + _zoom_punch)
 
 
@@ -219,265 +221,22 @@ func _update_zoom_punch(delta: float) -> void:
 
 ## Keep the hero near 60% height in either orientation while revealing the scene ahead.
 func _camera_focus() -> Vector2:
-	if _fx_review_focus != Vector2.ZERO:
-		return _fx_review_focus
+	if is_instance_valid(inspection) and inspection.focus_point != Vector2.ZERO:
+		return inspection.focus_point
 	var view_height := scene_view.get_visible_rect().size.y
 	var lead := minf(110.0, view_height * 0.10 / maxf(0.01, camera.zoom.y))
 	return player.position + Vector2(0, -lead)
 
 
 func _update_render_quality() -> void:
-	# The legacy canvas is a hidden rules adapter, never a render target. Reparenting
-	# its cached Polygon2D surfaces triggers a4.7.2 WebGL index-buffer update bug.
-	# Native viewport quality is owned by WorldRenderer3D._resize instead.
+	# 숨겨진 Canvas는 규칙 어댑터다. 부모를 바꾸면
+	# 캐시된 Polygon2D 표면에서 4.7.2 WebGL 인덱스 버퍼 갱신 오류가 발생한다.
+	# 실제 월드 해상도는 WorldRenderer3D._resize가 관리한다.
 	_update_zoom()
 	camera.make_current()
 
 
-## Web debug: ?zoom=0.4 multiplies the selected relative view (used for layout screenshots).
-## ?zoom=1 keeps Prefs.WORLD_ZOOM_BASE and the player's selected view size.
-var _debug_zoom := 1.0
-var _encounter_audit := false
-
-
-func _debug_open_panel(which: String) -> void:
-	if which == "expedition" and not native_ready:
-		await get_tree().process_frame
-		_debug_open_panel.call_deferred(which)
-		return
-	# Debug rewards may have opened a memory; always show the requested capture panel.
-	if hud.panel_open():
-		hud.close_panel()
-	match which:
-		"warp":
-			hud.interact("워프게이트")
-		"bag":
-			hud.open_bag(false)
-		"shop":
-			hud.open_bag(true)
-		"skills":
-			hud.open_skill_tree()
-		"settings":
-			hud.open_settings()
-		"journal":
-			hud.open_journal()
-		"expedition":
-			hud.open_expedition()
-		"elin":
-			hud.interact("수녀 엘린")
-		"mira":
-			hud.interact("보급원 미라")
-		"smith":
-			hud.open_smith()
-		"dungeon":
-			player.position = dungeon.entry_point()
-			dungeon.enter()
-		"dungeon_map":
-			player.position = dungeon.entry_point()
-			dungeon.enter()
-			hud._bars.queue_redraw()
-			hud.minimap.queue_redraw()
-			hud.controls._layout()
-			hud.controls.queue_redraw()
-			hud.open_map()
-		"map":
-			hud.open_map()
-		"travel":
-			hud.open_map(true)
-		"boss":
-			hud._open(BossPanel.new().setup(self))
-		"victory":
-			hud.open_victory()
-
-
-func _read_debug_params() -> void:
-	if not OS.has_feature("web"):
-		return
-	var query = JavaScriptBridge.eval("window.location.search", true)
-	if typeof(query) != TYPE_STRING:
-		return
-	for part in String(query).trim_prefix("?").split("&"):
-		var kv := part.split("=")
-		if kv.size() == 2 and kv[0] == "zoom":
-			_debug_zoom = clampf(float(kv[1]), 0.1, 4.0)
-		elif kv.size() == 2 and kv[0] == "benchmark" and kv[1] == "1":
-			add_child(RenderProbe.new().setup(self))
-		elif kv.size() == 2 and kv[0] == "defender_preview" and kv[1] == "1":
-			_defender_feedback_preview.call_deferred()
-		elif kv.size() == 2 and kv[0] == "quality":
-			Prefs.set_low_resolution(kv[1] == "low")
-		elif kv.size() == 2 and kv[0] == "lighting":
-			forest_lighting.set_enabled(kv[1] != "off")
-			WorldLighting.set_enabled(forest_lighting.enabled)
-		elif kv.size() == 2 and kv[0] == "atmosphere":
-			forest_atmosphere.set_enabled(kv[1] == "trial")
-		elif kv.size() == 2 and kv[0] == "panel":
-			var which: String = kv[1]
-			get_tree().create_timer(1.5).timeout.connect(_debug_open_panel.bind(which))
-		elif kv.size() == 2 and kv[0] == "hud_preview" and kv[1] in ["full", "low", "nearfull", "large", "danger"]:
-			_hud_preview.call_deferred(kv[1])
-		elif kv.size() == 2 and kv[0] == "encounter_preview" and kv[1] in ["ready", "active", "empty"]:
-			_encounter_preview.call_deferred(kv[1])
-		elif (
-			kv.size() == 2 and kv[0] == "dungeon_preview"
-			and kv[1] in ["entry", "room", "branch", "exit", "upper", "lower", "dodge",
-				"spikes", "spikes_warn", "spikes_live", "flame", "flame_warn", "flame_live",
-				"entry_live", "room_clear", "all_clear_live"]
-		):
-			_dungeon_preview.call_deferred(kv[1])
-		elif kv.size() == 2 and kv[0] == "warp_preview" and kv[1] == "1":
-			_warp_preview.call_deferred()
-		elif kv.size() == 2 and kv[0] == "hitfeel_preview" and kv[1] in ["1", "peak"]:
-			_hit_feel_preview.call_deferred()
-		elif kv.size() == 2 and kv[0] == "waypoint_preview" and kv[1] == "1":
-			_waypoint_discovery_preview.call_deferred()
-		elif kv.size() == 2 and kv[0] == "combat_preview":
-			_combat_preview.call_deferred()
-		elif kv.size() == 2 and kv[0] == "combat_text_preview" and kv[1] == "1":
-			_damage_stream_preview.call_deferred()
-		elif kv.size() == 2 and kv[0] == "fx_preview" and kv[1] in ["cleave", "whirlwind", "leapAttack", "iceBolt", "frostNova", "meteor"]:
-			_reference_fx_preview.call_deferred(kv[1])
-		elif kv.size() == 2 and kv[0] == "gate_preview" and kv[1] in ["0", "1", "2", "3"]:
-			_gate_closure_preview.call_deferred(int(kv[1]))
-		elif kv.size() == 2 and kv[0] == "enemy_warning" and kv[1] in ["wolf", "goblin", "skeleton"]:
-			NativeEnemyReview.run.call_deferred(self, kv[1])
-		elif kv.size() == 2 and kv[0] == "dodge_feedback" and kv[1] == "enemy":
-			NativeEnemyReview.run.call_deferred(self, "goblin", true)
-		elif kv.size() == 2 and kv[0] == "chest_response" and kv[1] in ["hit", "opening", "open", "closed"]:
-			NativeChestReview.run.call_deferred(self, kv[1])
-		elif kv.size() == 2 and kv[0] == "corpse_preview" and kv[1] in ["1", "bridge", "terrace", "beasts"]:
-			_corpse_preview.call_deferred(kv[1])
-		elif kv.size() == 2 and kv[0] == "aim_preview" and kv[1] == "1":
-			var review := DirectionalAimReview.new()
-			add_child(review)
-			review.start.call_deferred(self)
-		elif kv.size() == 2 and kv[0] == "feel_preview" and kv[1] == "1":
-			var review := GameFeelReview.new()
-			add_child(review)
-			review.start.call_deferred(self)
-		elif kv.size() == 2 and kv[0] == "reward_preview" and kv[1] in ["1", "levelup"]:
-			_reward_preview.call_deferred(kv[1])
-		elif kv.size() == 2 and kv[0] == "village_review" and kv[1] == "1":
-			VillageReviewSnapshot.publish.call_deferred(self)
-		elif kv.size() == 2 and kv[0] == "gold":
-			GameState.gold = int(kv[1])
-		elif kv.size() == 2 and kv[0] == "chests":
-			for c in chests:
-				c.take_damage(1.0, null)
-		elif kv.size() == 2 and kv[0] == "at":
-			match kv[1]:
-				"npc_nw", "npc_ne", "npc_sw", "npc_se":
-					var key := kv[1].trim_prefix("npc_")
-					for service in Village.NPCS:
-						if service[0] == key:
-							var resident: Vector2 = village.npc_points[service[1]]
-							player.position = resolve_movement(resident, resident + Vector2(65, 75), Player.RADIUS)
-							_fx_review_focus = resident + Vector2(25, -60)
-				"npc_courtyard":
-					var middle: Vector2 = (village.npc_points["탈것 상인"] + village.npc_points["촌장"]) * 0.5
-					player.position = resolve_movement(middle, middle + Vector2(0, 70), Player.RADIUS)
-					_fx_review_focus = middle + Vector2(0, -140)
-				"portal":
-					player.position = exploration.gate_approach("town")
-				"waypoint_tree", "waypoint_cave", "waypoint_tree_active", "waypoint_cave_active":
-					var id := "tree" if kv[1].contains("tree") else "cave"
-					var at: Vector2 = village.portal_points[id]
-					player.position = at if kv[1].ends_with("active") else at+Vector2(0,165)
-					_fx_review_focus = at
-				"boss":
-					player.position = village.boss_point + Vector2(0, 130)
-				"field":
-					player.position = village.point(Vector2(0.5, 1.15))
-				"gate0", "gate1", "gate2", "gate3":
-					player.position = village.gate_points[int(kv[1].substr(4))] + Vector2(0, 150)
-				"cave_trail", "cave_trail_middle":
-					var trail := CaveTrailPlan3D.points(village)
-					var index := 0 if kv[1] == "cave_trail" else 3
-					var frame := CaveTrailPlan3D.frame(village)
-					player.position = WorldSpace3D.world_to_projected(frame*Vector3(trail[index].x,0,trail[index].y))
-					_fx_review_focus = player.position
-				"cave_descent":
-					var cave_frame := NativeCavePlan.frame(dungeon.entry_point())
-					player.position = WorldSpace3D.world_to_projected(cave_frame*Vector3(0,0,18))
-					_fx_review_focus = WorldSpace3D.world_to_projected(cave_frame*Vector3(0,0,6))
-				"cave_exterior":
-					player.position = dungeon.entry_point() + Vector2(0, 180)
-					_fx_review_focus = dungeon.entry_point() + Vector2(0, -180)
-				"bridge":
-					player.position = village.bridge.axis_point(0.5)
-				"mira":
-					var approach: Vector2 = village.spawn_point.lerp(village.npc_points["보급원 미라"], 0.55)
-					player.position = resolve_movement(village.spawn_point, approach, Player.RADIUS)
-				"elin":
-					player.position = village.quest_sites["roots"] + Vector2(60, 40)
-				"rowen":
-					player.position = village.quest_sites["sun"] + Vector2(-90, 110)
-				"lm0", "lm1", "lm2", "lm3":
-					var lmk: Landmark = village.landmarks[int(kv[1].substr(2))]
-					player.position = lmk.position + Vector2(0, 140)
-				"tree_occlusion":
-					var tree: IsoSprite = village.town_trees[0]
-					player.position = WorldSpace3D.world_to_projected(WorldSpace3D.projected_to_world(tree.position) - Vector3(1.7, 0, 1.7))
-				"occlusion":
-					var building: IsoSprite = village.buildings["nw"]
-					var footprint := building.atlas_polygon(village.data["frames"]["nw"]["ground"])
-					var bounds := Iso.poly_bounds(footprint)
-					player.position = Vector2(bounds.get_center().x, bounds.position.y - Player.RADIUS - 10.0)
-				"chapel":
-					player.position = village.chapel_steps[village.chapel_steps.size() - 1]
-				"chapel_reference":
-					_place_at_chapel_reference()
-				"house_nw", "house_ne", "house_sw", "house_se":
-					_place_at_house_review(kv[1].trim_prefix("house_"))
-				"plaza_detail":
-					var outline := village.fountain.atlas_polygon(village.data["frames"]["pool"]["ground"])
-					var middle := Vector2.ZERO
-					for point: Vector2 in outline:
-						middle += point/outline.size()
-					spatial_world.teleport_source_actor(player,middle+Vector2(0,230),Player.RADIUS)
-					_fx_review_focus = middle-Vector2(0,90)
-				"bank":
-					player.position = Iso.project(village.forecourt_g + Vector2(0, -60))
-				"corner0":
-					player.position = village.point(Vector2(0.04, 0.10)) + Vector2(0, 150)
-				"corner1":
-					player.position = village.point(Vector2(0.94, 0.10)) + Vector2(0, 150)
-				"corner2":
-					player.position = village.point(Vector2(0.04, 0.90)) + Vector2(0, 150)
-				"corner3":
-					player.position = village.point(Vector2(0.94, 0.90)) + Vector2(0, 150)
-			camera.position = player.position
-			camera.reset_smoothing()
-	# Debug zoom is parsed after initial camera setup. Apply it independent of
-	# query ordering or whether a quality setting happens to emit a resize.
-	_update_zoom()
-
-
-func _place_at_house_review(key: String) -> void:
-	var id: String = NativeHousePlan.STYLES[key]["wall"]
-	var layout := (
-		load(ArchitectureSceneLibrary.ARCHITECTURE_SCENE_ROOT + id + "/layout.tres") as Resource
-	)
-	var report: Dictionary = layout.get_meta("report")
-	var entry: Rect2 = report["door_approach"]
-	var pose := TownPlazaPlan3D.frame(key)
-	var at := pose * Vector3(entry.get_center().x, 0, entry.position.y + 1.2)
-	spatial_world.teleport_source_actor(player, WorldSpace3D.world_to_projected(at), Player.RADIUS)
-	# 정상 플레이의 인물 추적으로 문 앞 가독성과 UI 겹침을 함께 검수한다.
-	_fx_review_focus = Vector2.ZERO
-
-
-func _place_at_chapel_reference() -> void:
-	# Use the same real walkable entry for direct links and saved adventures.
-	var entry: Vector2 = village.chapel_steps[0]
-	player.position = entry
-	for offset: Vector2 in [Vector2(80, 75), Vector2(100, 100), Vector2(120, 130)]:
-		if not _blocked(entry + offset, Player.RADIUS):
-			player.position = entry + offset
-			break
-
-
-## Native3D owns spatial movement; this node adapts the existing rules and HUD.
+## 표시기와 같은 World3D에 실제 이동·충돌 공간을 만든다.
 func _create_world_renderer() -> void:
 	if is_instance_valid(world_renderer):
 		world_renderer.refresh()
@@ -491,8 +250,7 @@ func _create_world_renderer() -> void:
 			spatial_world.register_actor(enemy, enemy.radius, true)
 
 
-## Native3D never restores source canvas rendering, including cave return.
-## Keep children's local visibility and processing for native cards and rules.
+## 숨겨진 Canvas는 표시 소스와 진행 소유권을 유지하며 동굴 귀환 때도 직접 그리지 않는다.
 func set_forest_rendered(_value: bool) -> void:
 	field_root.hide()
 	field_root.visibility_layer = 0
@@ -535,521 +293,6 @@ func near_npc() -> String:
 		if distance < best_d:
 			best = "안식처"
 	return best
-
-
-## Explicit cave-art review only: enter the real instance and freeze a reproducible view.
-func _dungeon_preview(which: String) -> void:
-	JavaScriptBridge.eval("window.__sjrpgDungeonPreviewReady = false")
-	await get_tree().create_timer(1.5, false).timeout
-	if is_queued_for_deletion():
-		return
-	if hud.panel_open():
-		hud.close_panel()
-	player.position = dungeon.entry_point()
-	if not dungeon.enter():
-		push_error("Cave preview could not enter the actual dungeon")
-		return
-	var ground := Vector2.ZERO
-	match which:
-		"room", "room_clear", "all_clear_live":
-			ground = DungeonLayout.ROOMS[0]
-		"branch":
-			ground = Vector2(1125, -500)
-		"exit":
-			# 원래 완료 판정이 빠지던 문 반대편의 실제 보행 지점을 검수한다.
-			ground = Iso.unproject(dungeon.return_portal().position + Vector2(110, 0))
-		"upper":
-			ground = Vector2(1125, -500)
-		"lower":
-			ground = Vector2(2825, 500)
-		"dodge":
-			var target: DungeonTrap = dungeon.hazards.traps[1]
-			target.phase = DungeonTrap.Phase.ACTIVE
-			target.age = .3
-			ground = Iso.unproject(target.position)
-		"spikes", "spikes_warn", "spikes_live", "flame", "flame_warn", "flame_live":
-			var target: DungeonTrap = dungeon.hazards.traps[5 if which.begins_with("flame") else 0]
-			target.phase = (
-				DungeonTrap.Phase.WARNING if which.ends_with("warn") else DungeonTrap.Phase.ACTIVE
-			)
-			target.age = .40
-			ground = (
-				Iso.unproject(target.position)
-				+ (Vector2(0, 225) if target.kind == "flame" else Vector2(-130, 0))
-			)
-			_fx_review_focus = (
-				target.position + Iso.project(Vector2(0, 75))
-				if target.kind == "flame"
-				else target.position
-			)
-
-	if which in ["room_clear", "all_clear_live"]:
-		for enemy: Enemy in enemies.duplicate():
-			if which == "all_clear_live" or enemy.patrol_center == Iso.project(DungeonLayout.ROOMS[0]):
-				enemy.take_damage(enemy.hp, null)
-	player.position = Iso.project(ground)
-	player.move_input = Vector2.ZERO
-	if which == "dodge":
-		spatial_world.teleport_source_actor(player, player.position, Player.RADIUS)
-		player.set_process(false)
-		player.move_input = Vector2.RIGHT
-		var before := player.hp
-		player.try_roll()
-		player._process(.04)
-		dungeon.hazards.tick(.01)
-		for effect: Effect in Effect.in_world(world):
-			if effect.kind in ["text", "nova", "dodge_echo"]:
-				effect._process(.08)
-		if not player._roll_confirmed or player.hp != before:
-			push_error("Cave dodge review failed to avoid actual spike contact")
-			return
-		JavaScriptBridge.eval("window.__sjrpgDodgeFeedback = {confirmed:true, mode:'trap'}")
-	hud.controls.release_all()
-	_impact_offset = Vector2.ZERO
-	camera.offset = Vector2.ZERO
-	camera.position = _camera_focus()
-	camera.reset_smoothing()
-	camera.force_update_scroll()
-	WorldOcclusion.update(player.global_position, false)
-	hud._update_layout()
-	hud.controls._layout()
-	hud.controls.queue_redraw()
-	hud._bars.queue_redraw()
-	hud.minimap.queue_redraw()
-	# The fresh entry notice would otherwise stay frozen across the cave artwork.
-	if which != "entry_live":
-		hud._toast_plaque.hide()
-	get_tree().paused = not which.ends_with("live")
-	if which.ends_with("live"):
-		for enemy: Enemy in enemies:
-			enemy.set_process(false)
-	JavaScriptBridge.eval("window.__sjrpgDungeonPreviewReady = true")
-
-
-## Explicit visual audit only: freeze genuine numeric state at difficult fill/label cases.
-func _encounter_preview(which: String) -> void:
-	await get_tree().create_timer(2.0, false).timeout
-	if is_queued_for_deletion():
-		return
-	_encounter_audit = true
-	_spawn_timer = 10000.0
-	encounters.set_process(false)
-	for enemy in enemies:
-		enemy.queue_free()
-	enemies.clear()
-	for id in encounters._members:
-		encounters._members[id] = []
-	var stone: EncounterStone = encounters.stones["west"]
-	player.position = resolve_movement(stone.position + Vector2(60, 45), stone.position + Vector2(60, 45), Player.RADIUS)
-	player.facing = (stone.position - player.position).angle()
-	encounters.states["west"]["initial_spawned"] = true
-	if which == "empty":
-		encounters.states["west"]["charges"] = 0
-	elif which == "active":
-		encounters.spawn_wave("west", false)
-	camera.position = _camera_focus()
-	camera.reset_smoothing()
-	hud._toast_queue.clear()
-	hud._toast_time = 0.0
-	hud._toast_plaque.hide()
-	_update_encounter_audit()
-	if OS.has_feature("web"):
-		JavaScriptBridge.eval("window.__sjrpgEncounterPreviewReady = true")
-
-
-func _update_encounter_audit() -> void:
-	if not _encounter_audit or not OS.has_feature("web"):
-		return
-	var state: Dictionary = encounters.states["west"]
-	JavaScriptBridge.eval("window.__sjrpgEncounterAudit = " + JSON.stringify({"charges": state["charges"], "living": encounters.living("west"), "ready": encounters.can_summon("west")}))
-
-
-func _hud_preview(which: String) -> void:
-	await get_tree().create_timer(2.0, false).timeout
-	if is_queued_for_deletion():
-		return
-	match which:
-		"low", "danger":
-			player.hp = player.max_hp * 0.05
-			player.resource = player.resource_max * 0.01
-			GameState.xp = 1
-		"nearfull":
-			player.hp = player.max_hp * 0.99
-			player.resource = player.resource_max * 0.99
-			GameState.xp = GameState.xp_to_next() - 1
-		"large":
-			GameState.level = 100
-			player.max_hp = 99999.99
-			player.hp = 79543.21
-			player.resource_max = 99999.9
-			player.resource = 12345.6
-		_:
-			player.hp = player.max_hp
-			player.resource = player.resource_max
-	# Inspect the steady fill rather than a transient damage trail.
-	hud._health_trail = player.hp / player.max_hp
-	hud._last_hp = player.hp
-	hud._last_max_hp = player.max_hp
-	hud._hurt_feedback = 0.0
-	hud._heal_feedback = 0.0
-	hud._update_critical_warning(0.0)
-	hud._update_layout()
-	hud._bars.queue_redraw()
-	hud.minimap.queue_redraw()
-	if which == "danger":
-		# Keep the genuine HUD pulse running while holding the audit hero and enemies still.
-		set_process(false)
-		player.set_process(false)
-		exploration.set_process(false)  # The portal's independent rest healing would clear the audit warning.
-		for enemy in enemies:
-			enemy.set_process(false)
-	else:
-		get_tree().paused = true
-	if OS.has_feature("web"):
-		JavaScriptBridge.eval("window.__sjrpgHudPreviewReady = true")
-
-
-## Explicit browser review only: discover by visiting, then exercise a real destination button.
-func _warp_preview() -> void:
-	await get_tree().create_timer(2.0, false).timeout
-	if is_queued_for_deletion():
-		return
-	player.position = exploration.gate_approach("tree")
-	exploration.discover_current()
-	player.position = exploration.gate_approach("town")
-	exploration.discover_current()
-	camera.position = player.position
-	camera.reset_smoothing()
-	hud.interact("워프게이트")
-	var panel: WarpGatePanel = hud._panel
-	for frame in 3:
-		await get_tree().process_frame
-	var button: Button = panel.destination_buttons["tree"]
-	panel.scroll.ensure_control_visible(button)
-	for frame in 3:
-		await get_tree().process_frame
-	var center := button.get_global_rect().get_center() / get_viewport_rect().size
-	if OS.has_feature("web"):
-		JavaScriptBridge.eval("window.__sjrpgWarpPreviewButton = " + JSON.stringify([center.x, center.y]))
-	await panel.closed
-	if exploration.transition.active:
-		await exploration.transition.finished
-	if not is_queued_for_deletion() and OS.has_feature("web"):
-		var arrived := GameState.last_sanctuary == "tree" and exploration.gate_origin() == "tree" and not _blocked(player.position, Player.RADIUS)
-		JavaScriptBridge.eval("window.__sjrpgWarpPreviewArrived = " + ("true" if arrived else "false"))
-
-
-## Explicit visual-review query only: real equipped-skill casts against a stationary target.
-## 기본 체력의 실제 적에게 실제 기본 공격을 반복한다. 피해/모션을 가짜로 재생하지 않는다.
-func _hit_feel_preview() -> void:
-	encounters.set_process(false)
-	_spawn_timer = 10000.0
-	for foe: Enemy in enemies:
-		foe.queue_free()
-	enemies.clear()
-	await get_tree().create_timer(2.0).timeout
-	var target: Enemy
-	var species := ["goblin", "skeleton", "wolf", "boar"]
-	var round := 0
-	for index in 160:
-		if not is_inside_tree() or is_queued_for_deletion():
-			return
-		if not is_instance_valid(target) or target.dead:
-			target = Enemy.new()
-			target.setup(self, species[round % species.size()], 1)
-			target.xp_reward = 0
-			round += 1
-			target.position = player.position + Vector2(65, 10)
-			target.facing = (player.position - target.position).angle()
-			world.add_child(target)
-			enemies.append(target)
-			target.stun(90.0)
-		if player._attack_time <= 0.0 and float(player.cooldowns.get(GameState.slots[0], 0.0)) <= 0.0:
-			target.position = player.position + Vector2(65, 10)
-			target._knockback = Vector2.ZERO
-			player.cast_slot(0, true)
-		await get_tree().create_timer(0.37, false).timeout
-
-func _combat_preview() -> void:
-	encounters.set_process(false)
-	_spawn_timer = 10000.0
-	for enemy in enemies:
-		enemy.queue_free()
-	enemies.clear()
-	await get_tree().create_timer(2.0).timeout
-	var target := Enemy.new()
-	target.setup(self, "goblin", 1)
-	target.position = player.position + Vector2(65, 10)
-	target.hp = 100000.0
-	target.max_hp = target.hp
-	world.add_child(target)
-	enemies.append(target)
-	# Keep presentation and timers running; only prevent this review target from attacking.
-	target.stun(60.0)
-	for i in 120:
-		if not is_inside_tree() or is_queued_for_deletion():
-			return
-		if player._attack_time <= 0.0 and float(player.cooldowns.get(GameState.slots[0], 0.0)) <= 0.0:
-			# Re-seat the review dummy between swings after real knockback moved it away.
-			target.position = player.position + Vector2(65, 10)
-			target._knockback = Vector2.ZERO
-			player.cast_slot(0, true)
-		await get_tree().create_timer(0.37, false).timeout
-
-
-## Real zone ticks create the per-monster streams for an explicit visual review.
-func _damage_stream_preview() -> void:
-	encounters.set_process(false)
-	_spawn_timer = 10000.0
-	for enemy in enemies:
-		enemy.queue_free()
-	enemies.clear()
-	await get_tree().create_timer(2.0, false).timeout
-	var targets: Array[Enemy] = []
-	for offset in [Vector2(70, 75), Vector2(-70, 75)]:
-		var enemy := Enemy.new()
-		enemy.setup(self, "goblin", 1)
-		enemy.position = player.position + offset
-		enemy.hp = 100000.0
-		enemy.max_hp = enemy.hp
-		world.add_child(enemy)
-		enemies.append(enemy)
-		enemy.stun(60.0)
-		targets.append(enemy)
-	spawn_zone({"pos": player.position + Vector2(0, 75), "radius": 110.0,
-		"duration": 2.0, "tick": 0.10, "damage": 16.81, "color": SkillDefs.FIRE})
-	for frame in 200:
-		await get_tree().process_frame
-		var rows := 0
-		for effect in cosmetic_effects:
-			if is_instance_valid(effect) and not effect.is_queued_for_deletion() and effect is Effect and effect.kind == "text" and effect.age >= 0.0 and effect._text_target_id == targets[0].get_instance_id():
-				rows += 1
-		if rows >= 4:
-			get_tree().paused = true
-			JavaScriptBridge.eval("window.__sjrpgDamageStreamReady = true")
-			return
-
-
-## Explicit visual review only: equip one existing skill, perform its real cast,
-## then pause the actual simulation near the authored effect's peak for inspection.
-func _reference_fx_preview(which: String) -> void:
-	encounters.set_process(false)
-	for enemy in enemies:
-		enemy.queue_free()
-	enemies.clear()
-	_spawn_timer = 10000.0
-	await get_tree().create_timer(4.0, false).timeout
-	for enemy in enemies:
-		enemy.queue_free()
-	enemies.clear()
-	GameState.ranks[which] = 1
-	GameState.slots[0] = which
-	player.resource = player.resource_max
-	var offsets: Array[Vector2] = [Vector2(60, 0), Vector2(-55, 10), Vector2(0, -65)]
-	if which in ["iceBolt", "meteor"]:
-		offsets = [Vector2(430 if which == "iceBolt" else 240, -50)]
-	_fx_review_focus = player.position + offsets[0] * 0.45 + Vector2(0, -65)
-	camera.position = _fx_review_focus
-	camera.reset_smoothing()
-	for offset in offsets:
-		var target := Enemy.new()
-		target.setup(self, "goblin", 1)
-		target.position = player.position + offset
-		target.hp = 100000.0
-		target.max_hp = target.hp
-		target.xp_reward = 0
-		world.add_child(target)
-		enemies.append(target)
-		target.stun(60.0)
-	var cast_started := player.cast_slot(0)
-	JavaScriptBridge.eval("window.__sjrpgFxReviewStatus = " + JSON.stringify({"started": cast_started, "skill": which}))
-	var key: String = {"cleave": "slash", "whirlwind": "spin", "leapAttack": "slam", "iceBolt": "bolt", "frostNova": "frost", "meteor": "meteor"}[which]
-	for frame in 300:
-		await get_tree().process_frame
-		for node in world.get_children():
-			var effect := node as Effect
-			if effect == null or effect.is_queued_for_deletion():
-				continue
-			var matches: bool = (effect.kind == "slash" and key == "slash") or str(effect.params.get("visual", "")) == key
-			if matches and ((key == "bolt" and effect.kind == "proj" and effect.age >= 0.10) or (effect.kind in ["slash", "skill_fx"] and effect.visual_phase() >= 0.24)):
-				get_tree().paused = true
-				JavaScriptBridge.eval("window.__sjrpgFxReview = " + JSON.stringify({"skill": which, "key": key, "phase": effect.visual_phase(), "actual_cast": true}))
-				return
-
-
-## Isolated visual inspection: one real threat completes its attack against the protected NPC.
-func _defender_feedback_preview() -> void:
-	encounters.set_process(false)
-	quest_runtime.set_process(false)
-	_spawn_timer = 10000.0
-	for enemy in enemies:
-		enemy.queue_free()
-	enemies.clear()
-	quest_runtime.accept("sun")
-	quest_runtime.start_protection()
-	var defender := quest_runtime.defender as Villager
-	player.position = resolve_movement(player.position, defender.position + Vector2(-90, 110), Player.RADIUS)
-	_fx_review_focus = defender.position + Vector2(0, -45)
-	camera.position = _fx_review_focus
-	camera.reset_smoothing()
-	await get_tree().create_timer(4.0, false).timeout
-	var target := Enemy.new()
-	target.setup(self, "goblin", 1)
-	target.position = defender.position + Vector2(30, 0)
-	target.is_threat = true
-	target.force_chase()
-	world.add_child(target)
-	enemies.append(target)
-	var hp: float = Quests.state("sun")["defender_hp"]
-	for frame in 300:
-		await get_tree().process_frame
-		if float(Quests.state("sun")["defender_hp"]) < hp and defender._hurt_flash > 0.0:
-			get_tree().paused = true
-			JavaScriptBridge.eval("window.__sjrpgDefenderReview = true")
-			return
-
-
-## Actual threat scan and door animation; the dummy cannot attack during visual review.
-func _gate_closure_preview(index: int) -> void:
-	await get_tree().create_timer(4.0, false).timeout
-	for enemy in enemies:
-		enemy.queue_free()
-	enemies.clear()
-	_spawn_timer = 10000.0
-	player.position = village.spawn_point
-	var at := village.gate_points[index]
-	_fx_review_focus = at + Vector2(0, 20)
-	camera.position = _fx_review_focus
-	camera.reset_smoothing()
-	var direction := (at - village.spawn_point).normalized()
-	var target := Enemy.new()
-	target.setup(self, "goblin", 1)
-	target.position = at + direction * 140.0
-	world.add_child(target)
-	enemies.append(target)
-	target.stun(60.0)
-	target.set_process(false)
-	for frame in 300:
-		await get_tree().process_frame
-		if town_gates.closed[index] and town_gates.progress[index] >= 0.99:
-			JavaScriptBridge.eval("window.__sjrpgGateReview = " + JSON.stringify({"gate": index, "closed": true, "progress": town_gates.progress[index]}))
-			return
-
-
-## Explicit art review only: real deaths keep all five body illustrations visible in the plaza.
-func _corpse_preview(surface := "1") -> void:
-	await get_tree().create_timer(2.0, false).timeout
-	if is_queued_for_deletion():
-		return
-	player.position = resolve_movement(village.spawn_point, village.spawn_point + Vector2(0, -10), Player.RADIUS)
-	var positions: Array[Vector2] = []
-	var kinds: Array[String] = []
-	if surface == "beasts":
-		player.position = village.point(Vector2(0.5, 1.15))
-		positions = [player.position + Vector2(-130, -70), player.position + Vector2(130, -70)]
-		kinds = ["boar", "goblin"]
-	elif surface == "bridge":
-		player.position = village.bridge.axis_point(0.5)
-		positions = [village.bridge.axis_point(0.4), village.bridge.axis_point(0.65)]
-		kinds = ["wolf", "skeleton"]
-	elif surface == "terrace":
-		player.position = village.chapel_steps[village.chapel_steps.size() - 2]
-		var body: Vector2 = village.chapel_steps[village.chapel_steps.size() - 1]
-		var further := body + Vector2(-60, -35)
-		if Geometry2D.is_point_in_polygon(further, village.terrace) and not _blocked(further, Enemy.radius_for("goblin")):
-			body = further
-		positions = [body]
-		kinds = ["goblin"]
-	else:
-		var offsets := [Vector2(-330, 70), Vector2(-175, 70), Vector2(-20, 70), Vector2(140, 70), Vector2(330, 70)]
-		var offset_index := 0
-		for kind in Enemy.KINDS:
-			kinds.append(kind)
-			positions.append(player.position + offsets[offset_index])
-			offset_index += 1
-	camera.position = player.position
-	camera.reset_smoothing()
-	var index := 0
-	var review_bodies: Array = []
-	for kind in kinds:
-		var enemy := Enemy.new()
-		enemy.setup(self, kind, 1)
-		if surface == "beasts" and kind == "goblin":
-			enemy.set_meta("visual_variant", EnemyRenderer3D.CRAWLER)
-		enemy.position = positions[index]
-		enemy.xp_reward = 0
-		world.add_child(enemy)
-		enemies.append(enemy)
-		enemy.take_damage(enemy.hp + 1.0, null)
-		review_bodies.append(corpses.back())
-		index += 1
-	await get_tree().create_timer(0.25, false).timeout
-	if not is_queued_for_deletion() and OS.has_feature("web"):
-		if surface == "beasts":
-			get_tree().paused = true
-		JavaScriptBridge.eval("window.__sjrpgCorpsePreviewReady = true")
-	await get_tree().create_timer(CORPSE_LIFETIME + 0.1, false).timeout
-	if not is_queued_for_deletion() and OS.has_feature("web"):
-		# Read-only browser assertion: normal gameplay ticks, without aging or removing the review bodies here.
-		var expired := review_bodies.all(func(body): return float(body["time"]) <= 0.0 and body["used"])
-		JavaScriptBridge.eval("window.__sjrpgCorpsePreviewExpired = " + ("true" if expired else "false"))
-
-
-## Explicit review query only. Exercise real grant/chest paths, never run in a normal adventure.
-## 실제 첫 활성화가 발생한 뒤 표시 시계만 진행하여 검수 장면을 고정한다.
-func _waypoint_discovery_preview() -> void:
-	for frame in 180:
-		await get_tree().process_frame
-		if is_queued_for_deletion():
-			return
-		if not native_ready:
-			continue
-		for effect: Effect in cosmetic_effects:
-			if effect.is_queued_for_deletion() or not effect.params.has("waypoint_position"):
-				continue
-			effect._process(0.16)
-			effect._process(0.16)
-			hud._level_up._process(0.06)
-			hud._level_up._process(0.12)
-			world_renderer._process(0.0)
-			world_renderer._publish_probe()
-			get_tree().paused = true
-			JavaScriptBridge.eval("window.__sjrpgWaypointDiscoveryReview = true")
-			return
-
-
-func _reward_preview(mode := "1") -> void:
-	await get_tree().create_timer(2.0, false).timeout
-	if is_queued_for_deletion():
-		return
-	if mode == "1":
-		for chest in chests:
-			if not chest.dead:
-				player.position = chest.position + Vector2(70, 35)
-				chest.take_damage(1.0, player)
-				break
-	await get_tree().create_timer(0.8, false).timeout
-	if not is_queued_for_deletion():
-		if mode == "levelup":
-			hud._toast_queue.clear()
-			hud._toast_time = 0.0
-			hud._toast_plaque.hide()
-			camera.position = _camera_focus()
-			camera.reset_smoothing()
-		grant_xp(GameState.xp_to_next())
-		if mode == "levelup" and OS.has_feature("web"):
-			# Let the real character effect rise before the explicit capture pause.
-			await get_tree().create_timer(0.30, false).timeout
-		if OS.has_feature("web"):
-			hud._update_vital_feedback(0.0)
-			hud._update_layout()
-			if is_instance_valid(hud._level_up):
-				hud._level_up._process(0.06)
-				hud._level_up._process(0.06)
-			hud._bars.queue_redraw()
-			hud.controls.queue_redraw()
-			get_tree().paused = true  # Explicit capture preview freezes the confirmed reward at its visual peak.
-			JavaScriptBridge.eval("window.__sjrpgRewardPreviewReady = true")
 
 
 func in_town(p: Vector2) -> bool:
@@ -1491,7 +734,6 @@ func on_chest_broken(chest: Chest) -> void:
 				hud.open_memory(mem))
 
 
-
 func _spawn_enemy_near(at: Vector2) -> void:
 	var enemy := Enemy.new()
 	enemy.setup(self, "goblin", maxi(1, GameState.level))
@@ -1650,8 +892,9 @@ func corpse_available(corpse: Dictionary) -> bool:
 	return corpses.has(corpse) and not corpse.get("used", false) and float(corpse.get("time", 0.0)) > 0.0 and corpse.get("searchable", true)
 
 
-func nearest_corpse(from: Vector2, max_range: float):
-	var best = null
+## 가까운 사용 가능 시체 Dictionary, 없으면 null을 돌려준다.
+func nearest_corpse(from: Vector2, max_range: float) -> Variant:
+	var best: Variant = null
 	var best_d := max_range
 	for corpse in corpses:
 		var distance := from.distance_to(corpse["pos"])

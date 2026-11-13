@@ -241,7 +241,7 @@ func _prepare(requested: String) -> void:
 	_halt(game)
 	game._impact_offset = Vector2.ZERO
 	game.camera.offset = Vector2.ZERO
-	game._fx_review_focus = focus
+	game.inspection.focus_point = focus
 	game.camera.position_smoothing_enabled = false
 	game.camera.position = focus
 	game.camera.reset_smoothing()

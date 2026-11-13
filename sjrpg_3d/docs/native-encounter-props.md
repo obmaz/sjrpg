@@ -24,4 +24,4 @@
 python3 tools/review/models/record_encounter_props.py --log /path/to/native-encounter-test.log
 ```
 
-`?loot_review=1`은 격리 브라우저 프로필에서 실제 숲 소스의 닫힘·열림·후면·소환·왕복을 검사하는 명시적 fixture입니다. 실제 모바일 가로/세로와 동굴 화면을 별도로 확인합니다. 검수 자료는 `build/`에 두며 이전 후보의 완료 기록을 현재 검증으로 사용하지 않습니다.
+`?inspection=1&loot_review=1`은 격리 브라우저 프로필에서 실제 숲 소스의 닫힘·열림·후면·소환·왕복을 검사하는 명시적 fixture입니다. 실제 모바일 가로/세로와 동굴 화면을 별도로 확인합니다. 검수 자료는 `build/`에 두며 이전 후보의 완료 기록을 현재 검증으로 사용하지 않습니다.

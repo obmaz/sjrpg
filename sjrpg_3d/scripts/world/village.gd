@@ -135,7 +135,7 @@ func _build_chest_points() -> void:
 	for g in MEMORY_SPOTS:
 		chest_points.append(Iso.project(g))
 		clear_rects.append(Rect2(Iso.project(g) - Vector2(80, 80), Vector2(160, 160)))
-	chest_points.append(landmarks[3]._pt(Vector2(215, 472)))
+	chest_points.append(landmarks[3].atlas_to_world(Vector2(215, 472)))
 
 
 # ───────── ground ─────────
@@ -827,7 +827,7 @@ func _build_sanctuaries(world: Node2D) -> void:
 	var tree: Landmark = landmarks[0]
 	var outline: Array = Landmark.data()[tree.index]["outline"]
 	var entrance: int = Landmark.data()[tree.index]["entrance"]
-	var mid := (tree._pt(outline[entrance]) + tree._pt(outline[(entrance + 1) % outline.size()])) / 2.0
+	var mid := (tree.atlas_to_world(outline[entrance]) + tree.atlas_to_world(outline[(entrance + 1) % outline.size()])) / 2.0
 	var tree_point := mid + (mid - _top_center(tree)).normalized() * 160.0
 	sanctuary_points = {"town": spawn_point, "tree": tree_point}
 	for id in ["tree", "cave"]:

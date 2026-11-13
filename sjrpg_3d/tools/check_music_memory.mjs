@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {inspectionUrl} from './review/inspection_url.mjs';
 // Permanent regression: normal exported music must not copy whole songs every rendered update.
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
@@ -51,7 +52,7 @@ async function contract(){
 }
 
 async function review(){
- const {chromium}=createRequire(import.meta.url)('playwright'),base=new URL(process.argv[2]||'http://127.0.0.1:8779/'),out=path.resolve(process.argv[3]||'build/music-memory');
+ const {chromium}=createRequire(import.meta.url)('playwright'),base=inspectionUrl(process.argv[2]||'http://127.0.0.1:8779/'),out=path.resolve(process.argv[3]||'build/music-memory');
  await mkdir(out,{recursive:true});
  const fold=process.env.SJRPG_MUSIC_PROFILE==='fold',profile=fold?{width:768,height:1024,dpr:3,quality:'high',deadline_ms:180000}:{width:390,height:844,dpr:1,quality:'low',deadline_ms:90000};
  const report={profile,normal_export:true,extra_godot_observers:false,pcm_threshold_bytes:1024*1024,pose_target:40,errors:[],samples:[],passed:false};
@@ -67,7 +68,7 @@ async function review(){
   await context.addInitScript(()=>{window.__sjrpgMusicMemoryDocumentToken=crypto.randomUUID();});
   page=await context.newPage();page.on('pageerror',error=>report.errors.push(String(error)));page.on('crash',()=>report.errors.push('page-crash'));
   page.on('console',message=>{if(message.type()==='error'||/SCRIPT ERROR|ERROR:|INVALID_(OPERATION|VALUE|ENUM)/.test(message.text()))report.errors.push(message.text());});
-  const url=new URL(base);url.searchParams.set('quality',profile.quality);await page.goto(url.href,{waitUntil:'domcontentloaded'});
+  const url=inspectionUrl(base);url.searchParams.set('quality',profile.quality);await page.goto(url.href,{waitUntil:'domcontentloaded'});
   await wait(s=>s.title&&!s.ready,'normal title');token=(await read()).token;await page.locator('#entry-start').click();
   let selected=await wait(s=>s.entry?.stage==='slots'||s.entry?.stage==='class','normal selection');
   if(selected.entry.stage==='slots'){const empty=selected.entry.slots_state?.find(slot=>!slot.occupied);assert(empty,'fresh browser needs a normal empty slot');await entry('slot'+empty.slot);selected=await wait(s=>s.entry?.selected_slot===empty.slot&&s.entry?.stage==='class','normal new-character selection');}

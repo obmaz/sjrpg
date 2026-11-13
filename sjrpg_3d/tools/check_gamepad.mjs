@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {inspectionUrl} from './review/inspection_url.mjs';
 // Virtual standard Xbox device -> navigator.getGamepads -> Godot's real web input.
 // No physical-controller claim, injected Godot action, or direct gameplay-method call.
 import assert from 'node:assert/strict';
@@ -6,7 +7,7 @@ import path from 'node:path';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {createRequire} from 'node:module';
 const {chromium}=createRequire(import.meta.url)('playwright');
-const base=new URL(process.argv[2]||'http://127.0.0.1:8784/');
+const base=inspectionUrl(process.argv[2]||'http://127.0.0.1:8784/');
 base.searchParams.set('gamepad_review','1');base.searchParams.set('quality','low');base.searchParams.set('at','npc_nw');
 const out=path.resolve(process.argv[3]||'build/gamepad-review');await mkdir(out,{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']});

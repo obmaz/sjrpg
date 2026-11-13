@@ -11,7 +11,7 @@ import {MAX_REVIEWS, REFERENCE_SHA, SCORE_KEYS, assertRound, sourceSnapshot, cap
 const reference=resolve(dirname(fileURLToPath(import.meta.url)),'../../../assets/source/style/approved-game-reference.jpg');
 const digest=value=>createHash('sha256').update(value).digest('hex');
 function stateFor(item) {
-    const url=new URL('http://localhost/index.html?zoom=1');
+    const url=new URL('http://localhost/index.html?inspection=1&zoom=1');
     if (item.at) url.searchParams.set('at',item.at);
     if (item.scene.startsWith('cave_')) url.searchParams.set('dungeon_preview',item.scene.slice(5));
     return {errors:[],loadingOverlayVisible:false,entryLoading:{visible:false,result:'ready'},launchUrl:url.href,pckUrls:['http://localhost/index-a.pck'],probe:{native_active:true,physics_ticks:1,simulation:'3d',scope:item.scope,dungeon_traps:[{kind:'spike',phase:1}]}};
@@ -115,3 +115,9 @@ test('technical failures preserve files but cannot become a fake supervisor revi
     assert.doesNotThrow(()=>validateReview(sixth,{...f.manifest,round:6},4));
     assert.throws(()=>validateReview(sixth,{...f.manifest,round:6},5),/5회/);
 }));
+
+test('captures require an explicit inspection launch',()=>{
+    const item=captureCases()[0];
+    const state=stateFor(item);
+    assert.throws(()=>validateCapture({...state,launchUrl:state.launchUrl.replace('inspection=1&','')},'index-a.pck',item),/검수 진입/);
+});

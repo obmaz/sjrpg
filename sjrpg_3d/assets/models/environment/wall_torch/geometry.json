@@ -3,7 +3,7 @@
 	"id": "environment/wall_torch",
 	"inputs": {
 		"res://scripts/core/world_space_3d.gd": "59a32f64790e612a4528ddc2934ddb4aa6f59c309f090ad2bcbeea7b07568892",
-		"res://scripts/rendering/environment/cave_lantern_renderer_3d.gd": "760282817a3833b97efdebb802372aa48075eb94ca11fd42d8a77e4a46f30804",
+		"res://scripts/rendering/environment/cave_lantern_renderer_3d.gd": "1740feebd3370c8734998422583e8bf07f669d8f47cca9b76d6b597fad987c59",
 		"res://tools/assets/props/bake.gd": "61e990e1347402833c733561c0e811582549280c10af045bbb438202029a94a7",
 		"res://tools/assets/props/torch_builder.gd": "6987004bf255ce65375da78279bd0068dce01e8d0c2fc05484451db6dd0241c2"
 	},

@@ -54,7 +54,7 @@ static func run(game: Node, kind: String, dodge := false) -> void:
 		JavaScriptBridge.eval("window.__sjrpgDodgeFeedback = {confirmed:true, mode:'enemy'}")
 	else:
 		game.player.facing = (enemy.position - game.player.position).angle()
-	game._fx_review_focus = (enemy.position + game.player.position) * .5
+	game.inspection.focus_point = (enemy.position + game.player.position) * .5
 	game.camera.position = game._camera_focus()
 	game.camera.reset_smoothing()
 	# 멈추기 전에 Camera2D의 실제 스크롤도 적용해 이전 마을 화면이 남지 않게 한다.

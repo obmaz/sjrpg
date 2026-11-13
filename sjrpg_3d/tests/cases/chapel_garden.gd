@@ -149,7 +149,8 @@ func run() -> void:
 
 ## 실제 채택된 나뭇잎 메시를 기준 인물 발치에 상대 투영한다. 루트 AABB 교차와 구별한다.
 func _check_canopy_frame(game: Node) -> void:
-	game._place_at_chapel_reference()
+	game.inspection = AdventureInspection.create(game, "inspection=1")
+	game.inspection.scenes.place_at_chapel()
 	game.spatial_world.teleport_source_actor(game.player, game.player.position, Player.RADIUS)
 	var hero: Vector3 = game.spatial_world.actor_foot(game.player)
 	var report: Dictionary = game.world_renderer._trees.get_meta("native_tree_report")

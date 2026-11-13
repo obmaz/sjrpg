@@ -1,7 +1,6 @@
 class_name Adventure3D
 extends Node3D
-## Native project entry. Legacy rules/UI observe projected coordinates; collision,
-## elevation and actors are owned by SpatialWorld3D in the spatial viewport.
+## 모험 진입점. 진행·UI는 투영 좌표를 사용하고 실제 몸체·높이·충돌은 SpatialWorld3D가 소유한다.
 
 signal quit_requested
 signal restart_requested
