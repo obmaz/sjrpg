@@ -65,9 +65,9 @@ func _ready() -> void:
 	if OS.has_feature("web"):
 		_web_entry = JavaScriptBridge.get_interface("__sjrpgEntry")
 		if _web_entry != null:
-			_web_start = JavaScriptBridge.create_callback(func(_arguments: Array): _begin())
-			_web_entry.show(_web_start, Prefs.reduce_motion)
-			hide()
+			# 엔진 로딩이 완료되면 웹 HTML 쉘의 다운로드 오버레이를 닫고 Godot 메인 화면을 노출합니다.
+			_web_entry.hide()
+		show()
 		JavaScriptBridge.eval("window.__sjrpgTitleReady = true")
 
 

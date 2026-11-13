@@ -123,6 +123,10 @@
       let entering = false;
       let settled = false;
       function showTitle() {
+        if (window.__sjrpgTitleReady) {
+          overlay.hidden = true;
+          return;
+        }
         if (!engineReady || !startAdventure) return;
         overlay.hidden = false;
         overlay.setAttribute('aria-label', '모험 시작');
@@ -136,6 +140,10 @@
       // Godot supplies a callback for the current title, including a return from selection/settings.
       window.__sjrpgEntry = {
         show(callback, reduceMotion = false) {
+          if (window.__sjrpgTitleReady) {
+            overlay.hidden = true;
+            return;
+          }
           startAdventure = callback;
           overlay.classList.toggle('reduce-motion', reduceMotion);
           showTitle();
