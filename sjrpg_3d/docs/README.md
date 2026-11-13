@@ -24,6 +24,7 @@
 - [지도·장소 목록·실제 위치 동기화](world-map.md)
 - [타격감](juice.md)
 - [나무 파괴·원소 반응·재생](destructible-trees.md)
+- [타격감 진단 리포트](game-feel-review.md)
 - [음악](music.md)
 
 ## 3D 제작
