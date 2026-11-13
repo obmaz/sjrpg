@@ -65,9 +65,10 @@ func _create_slot_card(slot_num: int, summary: Dictionary) -> PanelContainer:
 	var is_selected := (selected_slot == slot_num)
 
 	var card := PanelContainer.new()
-	var bg_color := Color("28231a") if is_selected else (Color("1c1b18") if occupied else Color("161513"))
-	var border_color := Color("c9af7c") if is_selected else (Color("8c7653") if occupied else Color("443e35"))
-	var style := UiKit.panel_style(bg_color, border_color, 8)
+	var path := UiKit.TEX_SLOT_SELECTED if is_selected else UiKit.TEX_SLOT_NORMAL
+	var style := UiKit.texture_stylebox(path, 25, 25, 25, 25)
+	if not occupied and not is_selected:
+		style.modulate_color = Color(0.65, 0.65, 0.65, 0.75)
 	style.content_margin_left = 18
 	style.content_margin_right = 18
 	style.content_margin_top = 14

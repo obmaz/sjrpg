@@ -25,40 +25,51 @@ static func backdrop(parent: Control) -> TextureRect:
 	return art
 
 
-static func skin(fill := INK, edge := Color("5f6655"), radius := 8) -> StyleBoxFlat:
-	var box := StyleBoxFlat.new()
-	box.bg_color = fill
-	box.border_color = edge
-	box.set_border_width_all(1)
-	box.set_corner_radius_all(radius)
-	return box
+static func skin(fill := INK, edge := Color("5f6655"), radius := 8) -> StyleBox:
+	if radius >= 8:
+		var frame := UiKit.texture_stylebox(UiKit.TEX_PANEL_FRAME, 65, 65, 65, 65)
+		frame.content_margin_left = 24
+		frame.content_margin_top = 24
+		frame.content_margin_right = 24
+		frame.content_margin_bottom = 24
+		return frame
+	else:
+		var card := UiKit.texture_stylebox(UiKit.TEX_SLOT_NORMAL, 25, 25, 25, 25)
+		card.content_margin_left = 12
+		card.content_margin_top = 10
+		card.content_margin_right = 12
+		card.content_margin_bottom = 10
+		return card
 
 
 static func style(button: Button, primary := false, selected := false) -> void:
 	button.add_theme_font_override("font", UiKit.BOLD_FONT)
 	button.add_theme_constant_override("outline_size", 0)
+
+	var path := UiKit.TEX_GOLD_BTN if primary else (UiKit.TEX_SLOT_SELECTED if selected else UiKit.TEX_SLOT_NORMAL)
+	var ml := 50 if primary else 25
+	var mt := 25 if primary else 25
+	var mr := 50 if primary else 25
+	var mb := 25 if primary else 25
+
+	var normal_box := UiKit.texture_stylebox(path, ml, mt, mr, mb)
+	var pressed_box := UiKit.texture_stylebox(path, ml, mt, mr, mb, Color(0.75, 0.75, 0.75))
+	var disabled_box := UiKit.texture_stylebox(path, ml, mt, mr, mb, Color(0.4, 0.4, 0.4))
+
 	for state: String in ["normal", "hover", "pressed", "focus", "disabled"]:
-		var fill := Color("655638") if primary else Color("14211f")
-		fill.a = 0.96 if primary else 0.88
-		var edge := BRONZE if primary or selected else Color("4e5b50")
-		# 호버 및 포커스 효과는 프로젝트 규칙에 따라 배제 (normal 상태와 동일 유지)
+		var box: StyleBoxTexture
 		if state == "pressed":
-			fill = fill.darkened(0.18)
+			box = pressed_box
 		elif state == "disabled":
-			fill = Color("15201d")
-			edge = Color("39453c")
-		if primary:
-			# The existing layered metal/leather renderer supplies a restrained
-			# highlight and inner bevel; the generated board keeps the face quiet.
-			var metal := UiKit.panel_style(fill, edge, 7)
-			metal.raised = true
-			button.add_theme_stylebox_override(state, metal)
+			box = disabled_box
 		else:
-			var box := skin(fill, edge, 7)
-			box.set_border_width_all(2 if selected else 1)
-			button.add_theme_stylebox_override(state, box)
+			# 호버 및 포커스 효과는 프로젝트 규칙에 따라 배제 (normal 상태와 동일 유지)
+			box = normal_box
+		button.add_theme_stylebox_override(state, box)
+
+	var text_color := Color("fff2d1") if primary or selected else IVORY
 	for state: String in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
-		button.add_theme_color_override(state, IVORY)
+		button.add_theme_color_override(state, text_color)
 	button.add_theme_color_override("font_disabled_color", Color("758077"))
 
 

@@ -83,7 +83,22 @@ class MetalSkin:
 			RenderingServer.canvas_item_add_line(item, Vector2(rect.position.x + 10, rect.end.y - 2), rect.end - Vector2(10, 2), Color(0, 0, 0, 0.55), 1.0, true)
 
 
-static func panel_style(bg := SURFACE, border := EDGE, radius := 6) -> MetalSkin:
+static func panel_style(bg := SURFACE, border := EDGE, radius := 6) -> StyleBox:
+	if ResourceLoader.exists(TEX_PANEL_FRAME) or ResourceLoader.exists(TEX_SLOT_NORMAL):
+		if radius >= 10:
+			var p := texture_stylebox(TEX_PANEL_FRAME, 65, 65, 65, 65)
+			p.content_margin_left = 22
+			p.content_margin_right = 22
+			p.content_margin_top = 18
+			p.content_margin_bottom = 18
+			return p
+		else:
+			var c := texture_stylebox(TEX_SLOT_NORMAL, 25, 25, 25, 25)
+			c.content_margin_left = 18
+			c.content_margin_right = 18
+			c.content_margin_top = 12
+			c.content_margin_bottom = 12
+			return c
 	var skin := MetalSkin.new()
 	skin.fill = bg
 	skin.metal = border
@@ -120,29 +135,63 @@ static func button(text: String, size := 24) -> Button:
 	return b
 
 
+const TEX_GOLD_BTN := "res://assets/ui/woodland_panels/button_gold_primary.png"
+const TEX_BRONZE_BTN := "res://assets/ui/woodland_panels/button_bronze_secondary.png"
+const TEX_SLOT_NORMAL := "res://assets/ui/woodland_panels/slot_card_normal.png"
+const TEX_SLOT_SELECTED := "res://assets/ui/woodland_panels/slot_card_selected.png"
+const TEX_PANEL_FRAME := "res://assets/ui/woodland_panels/panel_ornate_frame.png"
+const TEX_DIVIDER := "res://assets/ui/woodland_panels/divider_ornate.png"
+
+
+static func texture_stylebox(path: String, left: int, top: int, right: int, bottom: int, modulate := Color.WHITE) -> StyleBoxTexture:
+	var box := StyleBoxTexture.new()
+	var tex := load(path) as Texture2D
+	if tex != null:
+		box.texture = tex
+	box.texture_margin_left = float(left)
+	box.texture_margin_top = float(top)
+	box.texture_margin_right = float(right)
+	box.texture_margin_bottom = float(bottom)
+	box.modulate_color = modulate
+	return box
+
+
 ## The action hierarchy is carried by bronze rims and warmer faces, not pale full-width blocks.
 static func style_button(button: Button, primary := false, selected := false) -> void:
-	var surface := Color("3b3022") if primary else Color("302b22") if selected else Color("201f1b")
-	var border := Color("b39865") if primary else Color("b8a071") if selected else Color("65563f")
-	var ink := Color("f1e4c7") if primary or selected else TEXT
+	var path := TEX_GOLD_BTN if primary else (TEX_SLOT_SELECTED if selected else TEX_BRONZE_BTN)
+	var ml := 50 if primary else 24
+	var mt := 25 if primary else 20
+	var mr := 50 if primary else 24
+	var mb := 25 if primary else 20
+	var normal_box := texture_stylebox(path, ml, mt, mr, mb)
+	var pressed_box := texture_stylebox(path, ml, mt, mr, mb, Color(0.75, 0.75, 0.75))
+	var disabled_box := texture_stylebox(path, ml, mt, mr, mb, Color(0.4, 0.4, 0.4))
+
 	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
-		var fill := surface
-		var edge := border
+		var box: StyleBoxTexture
 		if state == "pressed":
-			fill = surface.darkened(0.15)
+			box = pressed_box
 		elif state == "disabled":
-			fill = Color("191915")
-			edge = Color("443d31")
-		# 호버 및 포커스 효과는 프로젝트 규칙상 제거 (기본 상태 유지)
-		var box := panel_style(fill, edge, 6)
-		box.raised = true
+			box = disabled_box
+		else:
+			# hover 및 focus 효과는 프로젝트 규칙상 제거 (기본 상태 유지)
+			box = normal_box
 		button.add_theme_stylebox_override(state, box)
+	var ink := Color("fff2d1") if primary or selected else TEXT
 	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
 		button.add_theme_color_override(state, ink)
 	button.add_theme_color_override("font_disabled_color", Color("746e60"))
 
 
-static func divider() -> HSeparator:
+static func divider() -> Control:
+	if ResourceLoader.exists(TEX_DIVIDER):
+		var div := TextureRect.new()
+		div.texture = load(TEX_DIVIDER)
+		div.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		div.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		div.custom_minimum_size = Vector2(0, 18)
+		div.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		return div
 	var separator := HSeparator.new()
 	var style := StyleBoxLine.new()
 	style.color = Color("69563a")

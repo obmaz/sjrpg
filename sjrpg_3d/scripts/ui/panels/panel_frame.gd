@@ -55,14 +55,11 @@ func _ready() -> void:
 	add_child(dim)
 
 	_panel = PanelContainer.new()
-	var surface := UiKit.panel_style(Color("1c1b18"), Color("8c7653"), 10)
-	surface.raised = true
-	surface.content_margin_left = 24
-	surface.content_margin_right = 24
-	surface.content_margin_top = 26
-	surface.content_margin_bottom = 26
-	surface.shadow_color = Color(0, 0, 0, 0.32)
-	surface.shadow_size = 18
+	var surface := UiKit.texture_stylebox(UiKit.TEX_PANEL_FRAME, 65, 65, 65, 65)
+	surface.content_margin_left = 32
+	surface.content_margin_right = 32
+	surface.content_margin_top = 34
+	surface.content_margin_bottom = 34
 	_panel.add_theme_stylebox_override("panel", surface)
 	add_child(_panel)
 	_column = VBoxContainer.new()
@@ -94,8 +91,9 @@ func _ready() -> void:
 	close.custom_minimum_size = Vector2(MIN_TOUCH, MIN_TOUCH)
 	close.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	for state in ["normal", "hover", "pressed", "focus"]:
-		var coin := UiKit.panel_style(Color("211e18"), Color("a18a60") if state != "pressed" else Color("6d5c40"), 32)
-		coin.raised = true
+		var coin := UiKit.panel_style(Color("211e18"), Color("a18a60") if state == "pressed" else Color("6d5c40"), 32)
+		if "raised" in coin:
+			coin.raised = true
 		coin.content_margin_left = 0
 		coin.content_margin_right = 0
 		coin.content_margin_top = 0
@@ -139,6 +137,7 @@ func _ready() -> void:
 	_column.minimum_size_changed.connect(func(): _layout.call_deferred())
 
 	_trim = FrameTrim.new()
+	_trim.visible = false
 	_trim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_trim)
 	get_viewport().size_changed.connect(_layout)
