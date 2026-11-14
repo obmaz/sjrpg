@@ -1,5 +1,5 @@
 class_name ScrollArrows
-extends Control
+extends Node2D
 ## 실제 스크롤 값으로 남은 방향을 표시한다. 장식은 터치를 가로채지 않는다.
 
 const ARROW := preload("res://assets/ui/woodland_panels/scroll_arrow.png")
@@ -10,6 +10,7 @@ var _configuration := Vector3(-1, -1, -1)
 var _remaining := Vector4.ZERO
 var _frame: PanelFrame
 var _backing: StyleBoxFlat
+var _size := Vector2.ZERO
 
 
 static func prepare(scroll: ScrollContainer) -> void:
@@ -31,10 +32,9 @@ static func attach(scroll: ScrollContainer) -> void:
 	scroll.set_meta("scroll_arrows", true)
 	var arrows := ScrollArrows.new()
 	arrows._scroll = scroll
-	arrows.top_level = true
-	arrows.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# 비-Control 자식은 스크롤 콘텐츠 크기에 참여하지 않고, 상위 클리핑·모달 순서는 유지한다.
 	arrows.process_mode = Node.PROCESS_MODE_ALWAYS
-	scroll.add_child(arrows, false, Node.INTERNAL_MODE_FRONT)
+	scroll.add_child(arrows, false, Node.INTERNAL_MODE_BACK)
 
 
 func _ready() -> void:
@@ -47,7 +47,6 @@ func _ready() -> void:
 	_base = _scroll.get_theme_stylebox("panel").duplicate()
 	_backing = UiKit.panel_style(Color(0.10, 0.105, 0.11, 0.98), Color.TRANSPARENT, 4)
 	_backing.set_border_width_all(0)
-	resized.connect(queue_redraw)
 	_scroll.visibility_changed.connect(_visibility_changed)
 	_visibility_changed()
 	_process(0.0)
@@ -80,7 +79,9 @@ func _process(_delta: float) -> void:
 			skin.content_margin_right = _base.get_content_margin(SIDE_RIGHT) + GUTTER_DP * scale
 		_scroll.add_theme_stylebox_override("panel", skin)
 	global_position = _scroll.global_position
-	size = _scroll.size
+	if _size != _scroll.size:
+		_size = _scroll.size
+		queue_redraw()
 	var v := _scroll.get_v_scroll_bar()
 	var h := _scroll.get_h_scroll_bar()
 	var remaining := Vector4(float(vertical and v.value > 1.0), float(vertical and v.value < v.max_value - v.page - 1.0),
@@ -99,10 +100,10 @@ func _draw() -> void:
 	for direction: int in 4:
 		if _remaining[direction] == 0.0:
 			continue
-		var center := Vector2(size.x - edge, edge if direction == 0 else size.y - edge)
+		var center := Vector2(_size.x - edge, edge if direction == 0 else _size.y - edge)
 		var angle := PI if direction == 0 else 0.0
 		if direction >= 2:
-			center = Vector2(edge if direction == 2 else size.x - edge, size.y - edge if _configuration.y > 0.0 else size.y * 0.5)
+			center = Vector2(edge if direction == 2 else _size.x - edge, _size.y - edge if _configuration.y > 0.0 else _size.y * 0.5)
 			angle = PI * 0.5 if direction == 2 else -PI * 0.5
 		# 가로로 잘린 탭의 글자가 화살표 뒤로 비치지 않게 작은 바탕만 가린다.
 		draw_style_box(_backing, Rect2(center - Vector2.ONE * edge, Vector2.ONE * edge * 2.0))
