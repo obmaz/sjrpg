@@ -74,7 +74,7 @@ static func _file_hashes() -> Dictionary:
 	var files: Dictionary = {}
 	if not GameState.slot_path(1).begins_with(PREFIX):
 		return files
-	for number: int in range(1, 5):
+	for number: int in range(1, GameState.MAX_SAVE_SLOTS + 1):
 		var hashes: Dictionary = {}
 		for suffix: String in GameState.SAVE_SUFFIXES:
 			var path: String = GameState.slot_path(number) + suffix

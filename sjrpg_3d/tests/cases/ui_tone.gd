@@ -119,14 +119,14 @@ func run() -> void:
 	var toggle_actions := toggle.find_children("*", "Button", true, false)
 	check("settings toggle keeps one focusable whole-card action", toggle_actions.size() == 1 and (toggle_actions[0] as Button).focus_mode == Control.FOCUS_ALL)
 	var switch_layout := toggle.find_child("SwitchLayout", true, false) as BoxContainer
-	var switch_pill := toggle.find_child("SwitchPill", true, false) as SettingsPanel.Pill
-	check("settings preserve the ON/OFF pill state", switch_pill != null and switch_pill.on == Prefs.show_fps)
+	var switch_state := toggle.find_child("SwitchState", true, false) as SettingsPanel.ToggleState
+	check("settings preserve the bronze toggle state", switch_state != null and switch_state.on == Prefs.show_fps)
 	for width: float in [260.0, 720.0]:
 		switch_layout.vertical = true
 		switch_layout.size.x = width
 		settings._fit_toggle_rows()
-		check("settings switch copy and pill adapt to available width", switch_layout.vertical == (width == 260.0))
-		check("settings pill keeps readable ON/OFF text", float(switch_pill.font_pixels) / settings.display_pixel_scale() >= 14.0)
+		check("settings switch copy and state seal adapt to available width", switch_layout.vertical == (width == 260.0))
+		check("settings state seal keeps readable text", float(switch_state.font_pixels) / settings.display_pixel_scale() >= 14.0)
 		check("whole-card switch keeps a 56dp touch height", (toggle_actions[0] as Button).custom_minimum_size.y / settings.display_pixel_scale() >= 56.0)
 	view.queue_free()
 	await _frames(2)

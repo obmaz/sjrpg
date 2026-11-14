@@ -68,7 +68,7 @@ static func _create(number: int, cls: String, level: int, where := "forest") -> 
 static func prepare_scenario(name: String) -> bool:
 	if not in_test_namespace() or not SCENARIOS.has(name):
 		return false
-	for number in range(1, 5):
+	for number in range(1, GameState.MAX_SAVE_SLOTS + 1):
 		if not GameState.delete_slot(number):
 			return false
 	var success := true
@@ -77,12 +77,11 @@ static func prepare_scenario(name: String) -> bool:
 			pass
 		"mixed":
 			success = _create(1, "warrior", 7) and _create(3, "mage", 8, "cave")
-			success = _write(GameState.slot_path(4), "{unreadable review save") and success
 		"full", "long":
-			for number in range(1, 5):
-				success = _create(number, "warrior" if number % 2 == 1 else "mage", 7 + number, "cave" if number == 4 else "forest") and success
+			for number in range(1, GameState.MAX_SAVE_SLOTS + 1):
+				success = _create(number, "warrior" if number % 2 == 1 else "mage", 7 + number, "cave" if number == GameState.MAX_SAVE_SLOTS else "forest") and success
 		"corrupt":
-			for number in range(1, 5):
+			for number in range(1, GameState.MAX_SAVE_SLOTS + 1):
 				success = _write(GameState.slot_path(number), "{unreadable review save") and success
 		"backup":
 			success = _create(1, "mage", 8)
@@ -98,7 +97,7 @@ static func file_hashes() -> Dictionary:
 	var result := {}
 	if not in_test_namespace():
 		return result
-	for number in range(1, 5):
+	for number in range(1, GameState.MAX_SAVE_SLOTS + 1):
 		var files := {}
 		for suffix: String in GameState.SAVE_SUFFIXES:
 			var path := GameState.slot_path(number) + suffix

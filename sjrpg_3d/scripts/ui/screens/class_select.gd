@@ -175,7 +175,7 @@ func _ready() -> void:
 	slot_context = _label("", 22, SelectionUi.MUTED)
 	slot_context.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	slot_context.minimum_size_changed.connect(_queue_slot_layout)
-	for index in 4:
+	for index in GameState.MAX_SAVE_SLOTS:
 		var number := index + 1
 		var band := HBoxContainer.new()
 		band.name = "SaveBand%d" % number
@@ -302,7 +302,7 @@ func show_slots() -> void:
 
 
 func select_slot(number: int) -> void:
-	if _modal_open() or number < 1 or number > 4:
+	if _modal_open() or number < 1 or number > GameState.MAX_SAVE_SLOTS:
 		return
 	if _stage == "slots":
 		_class_back_to_slots = true
@@ -353,7 +353,7 @@ func _update() -> void:
 		class_tab_labels[key].add_theme_color_override(
 			"font_color", Color("f7e7c7") if key == selected_class else SelectionUi.IVORY
 		)
-	for index in 4:
+	for index in GameState.MAX_SAVE_SLOTS:
 		var entry: Dictionary = _summaries[index]
 		var title := "새로운 모험"
 		var meta := "새 수호자를 선택하세요"
@@ -382,7 +382,7 @@ func _update() -> void:
 		slot_meta_labels[index].text = meta
 		slot_status_labels[index].text = status
 		slot_buttons[index].text = "%02d    %s\n        %s" % [index + 1, title, meta]
-		SelectionUi.slot_style(slot_bands[index], slot_buttons[index])
+		SelectionUi.slot_style(slot_bands[index], slot_buttons[index], selected_slot == index + 1)
 		_quiet_row_text(slot_buttons[index])
 		SelectionUi.style(delete_buttons[index])
 		for state in ["normal", "hover", "pressed", "focus", "disabled"]:
@@ -412,7 +412,7 @@ func _choose() -> void:
 
 
 func confirm_delete(number: int) -> void:
-	if _modal_open() or _stage != "slots" or number < 1 or number > 4:
+	if _modal_open() or _stage != "slots" or number < 1 or number > GameState.MAX_SAVE_SLOTS:
 		return
 	var summary: Dictionary = _summaries[number - 1]
 	if not bool(summary["occupied"]) or is_instance_valid(_delete_dialog):
@@ -509,7 +509,7 @@ func _setup_presentation() -> void:
 		icon.texture = SelectionUi.icon_texture("heart" if index == 0 else "resource")
 		details.add_child(icon)
 		stat_icons.append(icon)
-	for index in 4:
+	for index in GameState.MAX_SAVE_SLOTS:
 		var frame := Panel.new()
 		frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		frame.add_theme_stylebox_override(
@@ -791,7 +791,7 @@ func _publish_buttons() -> void:
 		"back": back_button,
 		"slots": slot_switch
 	}
-	for index in 4:
+	for index in GameState.MAX_SAVE_SLOTS:
 		targets["slot%d" % (index + 1)] = slot_buttons[index]
 		targets["delete%d" % (index + 1)] = delete_buttons[index]
 	if is_instance_valid(_delete_dialog) and _delete_dialog.footer.get_child_count() == 2:
@@ -909,7 +909,7 @@ func _refresh_disabled() -> void:
 	continue_button.disabled = (
 		blocked or (bool(_selected()["occupied"]) and not bool(_selected()["valid"]))
 	)
-	for index in 4:
+	for index in GameState.MAX_SAVE_SLOTS:
 		delete_buttons[index].disabled = blocked or not bool(_summaries[index]["occupied"])
 
 
@@ -1085,7 +1085,7 @@ func _layout_slots() -> void:
 	var natural_heights: Array[float] = []
 	for button: Button in class_buttons.values():
 		button.hide()
-	for index in 4:
+	for index in GameState.MAX_SAVE_SLOTS:
 		var row := slot_buttons[index]
 		var remove := delete_buttons[index]
 		row.show()
@@ -1115,14 +1115,14 @@ func _layout_slots() -> void:
 		var row_h := ceilf(maxf(row_minimum, _slot_pad * 2.0 + text_metrics["height"]))
 		natural_heights.append(row_h)
 		natural_content_h += row_h
-	# 네 행이 모두 들어가는 화면은 카드 높이를 나누어 고정 행동까지 자연스럽게 연결한다.
+	# 모든 행이 모두 들어가는 화면은 카드 높이를 나누어 고정 행동까지 자연스럽게 연결한다.
 	# 자연 최소 높이는 텍스트 측정값뿐이며, 중앙 배치한 자식 위치를 다시 읽지 않는다.
 	var plain_footer_h := plain_context_h + gap * 2.0 + action_h
 	var plain_list_h := area.end.y - bottom_gap - plain_footer_h - gap - list_y
 	var overflowing := natural_content_h > plain_list_h + 1.0
-	var expansion := 0.0 if overflowing else floorf(maxf(0.0, plain_list_h - natural_content_h) / 4.0)
+	var expansion := 0.0 if overflowing else floorf(maxf(0.0, plain_list_h - natural_content_h) / float(GameState.MAX_SAVE_SLOTS))
 	var content_h := float(roundi(gap) * (slot_bands.size() - 1))
-	for index in 4:
+	for index in GameState.MAX_SAVE_SLOTS:
 		var row := slot_buttons[index]
 		var row_h := natural_heights[index] + expansion
 		row.custom_minimum_size = Vector2(0, row_h)
@@ -1337,7 +1337,7 @@ func _save_layout_probe() -> Dictionary:
 	if slot_scroll == null:
 		return {}
 	var cards := []
-	for index in 4:
+	for index in GameState.MAX_SAVE_SLOTS:
 		cards.append(
 			{
 				"slot": index + 1,

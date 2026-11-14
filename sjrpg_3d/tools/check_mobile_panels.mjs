@@ -148,7 +148,7 @@ try {
   }
   throw new Error('Actual touch scrolling could not expose requested detail button');
  }
- async function tapControl(predicate, beforeTap=null) {
+ async function tapControl(predicate, beforeTap=null, reseek=0) {
   let {state,target}=await seekControl(predicate);
   // A touch immediately after a swipe can stop inertia instead of activating.
   // Observe three stable probe samples, then recompute the real clipped target.
@@ -164,7 +164,13 @@ try {
   }
   if(stable<3)throw new Error(`Touch scrolling never settled before ${target.text||target.key||target.path}`);
   if(target.disabled)throw new Error(`Actual detail button is disabled: ${target.text||target.path}`);
-  if(!area(target.visible_rect))throw new Error(`Actual detail button is clipped: ${target.text||target.path}`);
+  // Inertia can carry a previously revealed button past the clip while it settles.
+  // Re-seek with real touch input; never tap a stale or invisible rectangle.
+  if(!area(target.visible_rect)) {
+   if(reseek>=2)throw new Error(`Actual detail button is clipped: ${target.text||target.path}`);
+   detailFlow.push({event:'reseek-after-inertia',text:target.text,reseek:reseek+1});
+   return tapControl(predicate,beforeTap,reseek+1);
+  }
   const trace={event:'tap',at:new Date().toISOString(),path:target.path,key:target.key,text:target.text,rect:target.rect,visible_rect:target.visible_rect,point:point(state,target.visible_rect),panel:state.panel.type,phase:await page.evaluate(()=>window.__sjrpgExpedition?.phase),scrolls:state.panel.scrolls.map(({path,vertical,maximum})=>({path,vertical,maximum}))};
   detailFlow.push(trace);
   console.log(`PANEL_DETAIL_TAP ${JSON.stringify(trace)}`);

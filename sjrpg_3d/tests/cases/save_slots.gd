@@ -1,5 +1,5 @@
 extends TestCase
-## Four independent heroes, conservative migration and deletion that survives autosaves.
+## Three independent heroes, conservative migration and deletion that survives autosaves.
 
 const ROOT := "user://tests/save-slots"
 
@@ -14,31 +14,36 @@ func run() -> void:
 	DirAccess.make_dir_recursive_absolute(ROOT)
 	_cleanup()
 	GameState.select_slot(1)
-	GameState.save_path = ROOT + "/four.json"
-	check("there are exactly four initially empty slot summaries", GameState.slot_summaries().size() == 4 and _occupied() == 0)
-	check("indices outside the four-slot limit cannot mutate storage", not GameState.select_slot(0) and not GameState.create_slot(5, "mage") and not GameState.delete_slot(-1) and GameState.active_slot == 1)
+	GameState.save_path = ROOT + "/three.json"
+	var retired_slot := ROOT + "/three.slot4.json"
+	_write(retired_slot, "retired hero bytes")
+	check("there are exactly three initially empty slot summaries", GameState.slot_summaries().size() == 3 and _occupied() == 0)
+	check("indices outside the three-slot limit cannot mutate storage", not GameState.select_slot(0) and not GameState.create_slot(4, "mage") and not GameState.delete_slot(-1) and GameState.active_slot == 1)
 	check("invalid classes do not claim an empty slot", not GameState.create_slot(1, "unknown") and _occupied() == 0)
+	check("retired fourth-slot files stay untouched by summaries and rejected mutations",
+		not GameState.delete_slot(4) and not GameState.select_slot(4)
+		and FileAccess.get_file_as_string(retired_slot) == "retired hero bytes")
 	_check_create_failure()
-	var classes := ["warrior", "mage", "warrior", "mage"]
-	for slot in range(1, 5):
+	var classes := ["warrior", "mage", "warrior"]
+	for slot in range(1, GameState.MAX_SAVE_SLOTS + 1):
 		check("create hero in slot %d" % slot, GameState.create_slot(slot, classes[slot - 1]))
 		GameState.gold = slot * 100
 		GameState.level = slot + 2
 		GameState.xp = slot * 3
-		GameState.location_mode = "cave" if slot == 4 else "forest"
+		GameState.location_mode = "cave" if slot == 3 else "forest"
 		GameState.opened_chests.assign([slot])
 		GameState.quests = {"roots": {"phase": "completed" if slot == 2 else "offered"}}
 		GameState.inventory[0].weapon_level = slot
 		check("save independent progress in slot %d" % slot, GameState.save_game())
-	check("four occupied slots refuse a fifth and implicit replacement", _occupied() == 4 and not GameState.create_slot(1, "mage") and not GameState.new_game("warrior") and not GameState.create_slot(5, "warrior"))
-	for slot in range(1, 5):
+	check("three occupied slots refuse a fourth and implicit replacement", _occupied() == 3 and not GameState.create_slot(1, "mage") and not GameState.new_game("warrior") and not GameState.create_slot(4, "warrior"))
+	for slot in range(1, GameState.MAX_SAVE_SLOTS + 1):
 		var before := FileAccess.get_file_as_string(GameState.slot_path(slot))
 		check("selecting a slot does not permit a stale hero autosave %d" % slot, GameState.select_slot(slot) and not GameState.save_game() and FileAccess.get_file_as_string(GameState.slot_path(slot)) == before)
 		check("continue restores each slot's class and complete hero progress %d" % slot, GameState.load_game() and GameState.hero_class == classes[slot - 1] and GameState.gold == slot * 100 and GameState.level == slot + 2 and GameState.xp == slot * 3 and GameState.opened_chests == [slot] and GameState.inventory[0].weapon_level == slot)
 		check("quest state stays with its own hero %d" % slot, Quests.phase("roots") == ("completed" if slot == 2 else "offered"))
 	var summaries := GameState.slot_summaries()
-	check("summary exposes saved class, level, location and Unix timestamp", summaries[3]["class"] == "mage" and summaries[3]["level"] == 6 and summaries[3]["location"] == "cave" and float(summaries[3]["timestamp"]) > 0 and not summaries[3]["backup"])
-	check("previewing summaries never changes the live hero", GameState.active_slot == 4 and GameState.gold == 400 and GameState.save_game())
+	check("summary exposes saved class, level, location and Unix timestamp", summaries[2]["class"] == "warrior" and summaries[2]["level"] == 5 and summaries[2]["location"] == "cave" and float(summaries[2]["timestamp"]) > 0 and not summaries[2]["backup"])
+	check("previewing summaries never changes the live hero", GameState.active_slot == 3 and GameState.gold == 300 and GameState.save_game())
 	_check_recovery_and_delete()
 	_check_migration()
 	_cleanup()

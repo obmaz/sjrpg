@@ -5,7 +5,7 @@ signal save_finished(success: bool, message: String)
 
 const SAVE_PATH := "user://guardian_save.json"
 const SAVE_VERSION := 1
-const MAX_SAVE_SLOTS := 4
+const MAX_SAVE_SLOTS := 3
 const SAVE_SUFFIXES := ["", ".bak", ".tmp", ".bak.tmp"]
 var _slot_base_path := "/userfs/sjrpg_3d/guardian_save_slot_1.json" if OS.has_feature("web") else SAVE_PATH.trim_suffix(".json") + "_slot_1.json"
 var _session_path := ""

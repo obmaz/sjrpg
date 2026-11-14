@@ -19,7 +19,7 @@ func run() -> void:
 	var old_path := GameState.slot_path(1)
 	var old_slot := GameState.active_slot
 	GameState.save_path = "user://tests/local-save-time.json"
-	for slot in range(1, 5):
+	for slot in range(1, GameState.MAX_SAVE_SLOTS + 1):
 		GameState.delete_slot(slot)
 	GameState.create_slot(1, "warrior")
 	# Keep an actual valid save, with a fixed historical saved instant for the real preview.
@@ -43,7 +43,7 @@ func run() -> void:
 	check("formatting and preview preserve exact epoch/progress/save bytes", FileAccess.get_file_as_bytes(path) == bytes and GameState.hero_class == hero_before and GameState.gold == gold_before and float(GameState.slot_summaries()[0]["timestamp"]) == year_edge)
 	screen.queue_free()
 	await _frames(2)
-	for slot in range(1, 5):
+	for slot in range(1, GameState.MAX_SAVE_SLOTS + 1):
 		GameState.delete_slot(slot)
 	GameState.save_path = old_path
 	GameState.select_slot(old_slot)

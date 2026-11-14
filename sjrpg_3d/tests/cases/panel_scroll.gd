@@ -201,6 +201,9 @@ func _arrow_scroll_state() -> void:
 			arrows = child as ScrollArrows
 	check("scrolling keeps its actual range while native bars stay hidden", panel.scroll.vertical_scroll_mode == ScrollContainer.SCROLL_MODE_SHOW_NEVER and not panel.scroll.get_v_scroll_bar().visible and panel.scroll.get_v_scroll_bar().max_value > panel.scroll.get_v_scroll_bar().page)
 	if check("overflow has the generated direction cues", arrows != null):
+		check("scroll arrows leave content centered without reserving a side lane",
+			absf(panel.body.get_global_rect().get_center().x - panel.scroll.get_global_rect().get_center().x) < 1.0
+			and absf(panel.body.size.x - panel.scroll.size.x) < 1.0)
 		check("top of list shows only the remaining downward direction", arrows._remaining.x == 0.0 and arrows._remaining.y == 1.0)
 		panel.scroll.scroll_vertical = 100000
 		await _frames(6)

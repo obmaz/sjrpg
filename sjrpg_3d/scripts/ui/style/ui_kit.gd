@@ -212,13 +212,19 @@ class GeneratedSkin:
 		if kind == "frame":
 			# 메인 면도 같은 원화의 청회색 균열 슬레이트를 사용한다. 장식 없는 내부만 늘린다.
 			_piece(item, FRAME, rect.grow(-10.0 * unit), Rect2(144, 64, 363, 278))
-			var corner := (24.0 if short_frame else 42.0) * unit
+			var corner := (22.0 if short_frame else 32.0) * unit
 			_nine(item, rect, source_path, 144.0, corner, corner * 44.0 / 144.0)
 		elif kind == "card":
 			var texture := _texture(source_path)
-			_piece(item, source_path, rect.grow(-8.0 * unit),
+			_piece(item, source_path, rect,
 				Rect2(Vector2.ONE * 36.0, texture.get_size() - Vector2.ONE * 72.0))
-			_nine(item, rect, source_path, 36.0, 12.0 * unit)
+			if selected:
+				_nine(item, rect, source_path, 36.0, 5.0 * unit)
+			else:
+				# 내부 정보는 질감과 얇은 구분선으로 묶고 중첩된 장식 테두리를 줄인다.
+				var color := Color(0.46, 0.39, 0.28, 0.45) * tint
+				RenderingServer.canvas_item_add_line(item, rect.position, Vector2(rect.end.x, rect.position.y), color, unit, true)
+				RenderingServer.canvas_item_add_line(item, Vector2(rect.position.x, rect.end.y), rect.end, color, unit, true)
 		elif kind == "button" and selected and not primary:
 			# 선택 탭은 원래 금빛 선택 카드로 구분한다. 작은 옵션도 금속 띠를 보존한다.
 			var texture := _texture(SELECTED_CARD)

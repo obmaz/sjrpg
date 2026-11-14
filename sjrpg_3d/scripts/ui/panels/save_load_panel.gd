@@ -1,6 +1,6 @@
 class_name SaveLoadPanel
 extends PanelFrame
-## 수호자 저장 슬롯(1~4)을 선택하여 모험을 이어가는 불러오기 전용 패널.
+## 수호자 저장 슬롯(1~3)을 선택하여 모험을 이어가는 불러오기 전용 패널.
 ## 메인 타이틀 및 인게임 설정 모두에서 재사용 가능하며, load_only 모드 시 새 게임 없이 순수 불러오기만 제공합니다.
 
 signal slot_loaded(slot: int)
@@ -21,7 +21,7 @@ func setup(is_load_only := true) -> SaveLoadPanel:
 
 func _ready() -> void:
 	super._ready()
-	set_header("모험 불러오기", "수호자 기록 보관소 (4개 슬롯)")
+	set_header("모험 불러오기", "수호자 기록 보관소 (3개 슬롯)")
 	_refresh_data()
 	_rebuild()
 	add_footer("취소 / 돌아가기", func(): closed.emit(), true)
@@ -68,7 +68,7 @@ func _create_slot_card(slot_num: int, summary: Dictionary) -> PanelContainer:
 	var is_selected := (selected_slot == slot_num)
 
 	var card := PanelContainer.new()
-	var style := UiKit.card_style(false, not occupied)
+	var style := UiKit.card_style(is_selected, not occupied)
 	card.add_theme_stylebox_override("panel", style)
 
 	var row := HBoxContainer.new()
@@ -138,9 +138,12 @@ func _create_slot_card(slot_num: int, summary: Dictionary) -> PanelContainer:
 	select.pressed.connect(func():
 		selected_slot = slot_num
 		# 선택할 때 전체 목록을 재생성하면 스크롤 위치·진행 중인 터치가 사라진다.
-		# 고정 폭 번호 영역의 글자만 바꾸고 원화·행 배치는 유지한다.
+		# 선택 원화와 문구만 갱신해 행 크기와 손가락 스크롤을 유지한다.
 		for index in _slot_selection_marks.size():
 			_slot_selection_marks[index].modulate.a = 1.0 if selected_slot == index + 1 else 0.0
+			var skin := _slot_cards[index].get_theme_stylebox("panel") as UiKit.GeneratedSkin
+			skin.configure("card", false, selected_slot == index + 1)
+			_slot_cards[index].queue_redraw()
 		_load_button.disabled = false
 	)
 	card.add_child(select)

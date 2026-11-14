@@ -56,7 +56,7 @@ func _panel_snapshot(panel: PanelFrame) -> Dictionary:
 		var control := child as Control
 		if not control.is_visible_in_tree():
 			continue
-		if control.name == "SwitchPill":
+		if control.name == "SwitchState":
 			switches.append({"rect": _rect(control.get_global_rect()), "on": bool(control.get("on")),
 				"font": int(control.get("font_pixels"))})
 		if control is ScrollContainer:

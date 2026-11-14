@@ -93,7 +93,7 @@ func run() -> void:
 	check("turning FPS off stops polling immediately", not Prefs.show_fps and not counter.visible and not counter.is_processing() and counter.text.is_empty())
 	check("the same FPS switch can be changed repeatedly without stale state",
 		panel.find_child("ShowFps", true, false) == switch_row
-		and not (switch_row.find_child("SwitchPill", true, false) as SettingsPanel.Pill).on)
+		and not (switch_row.find_child("SwitchState", true, false) as SettingsPanel.ToggleState).on)
 	game.hud.close_panel()
 	view.queue_free()
 	await _frames(2)

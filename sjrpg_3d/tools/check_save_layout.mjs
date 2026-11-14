@@ -60,7 +60,7 @@ const pointInside=(p,r)=>p[0]>=r.x&&p[0]<=endX(r)&&p[1]>=r.y&&p[1]<=endY(r);
 function geometry(s,label){
  assert.equal(s.ui.stage,'slots',label+' must show the save list');
  const layout=s.ui.save_layout;
- assert(layout&&Array.isArray(layout.cards)&&layout.cards.length===4,label+' must expose all four source rows');
+ assert(layout&&Array.isArray(layout.cards)&&layout.cards.length===3,label+' must expose all three source rows');
  const windowRect={x:0,y:0,w:s.window[0],h:s.window[1]};
  const safe=css(s,layout.safe),sheet=css(s,layout.sheet),list=css(s,layout.list),footer=css(s,layout.footer);
  assert(encloses(windowRect,safe)&&encloses(safe,sheet)&&encloses(sheet,list)&&encloses(sheet,footer),label+' safe sheet/list/footer');
@@ -74,7 +74,7 @@ function geometry(s,label){
  assert(back.w>=43.5&&back.h>=43.5&&action.w>=43.5&&action.h>=43.5,label+' actual CSS header/footer touch targets');
  assert(encloses(footer,action),label+' main action must remain in its footer');
  const ratio=s.window[0]/s.ui.viewport[0];
- for(let i=0;i<4;i++){
+ for(let i=0;i<layout.cards.length;i++){
   const c=layout.cards[i],row=css(s,c.row),select=css(s,c.select),title=css(s,c.title),meta=css(s,c.meta),number=css(s,c.number);
   assert.equal(c.slot,i+1);assert(c.title_text&&c.meta_text,label+' actual title/metadata');
   assert(select.w>=43.5&&select.h>=43.5,label+' real CSS row touch target');
@@ -92,7 +92,7 @@ function geometry(s,label){
   }
  }
  if(layout.scroll_max<=1){
-  const last=css(s,layout.cards[3].row);
+  const last=css(s,layout.cards[2].row);
   assert(footer.y-endY(last)<=40,label+' no old unused gap after the last save');
  }
  record('geometry '+label);
@@ -123,7 +123,7 @@ async function ensureCard(number){
  throw new Error('Actual pointer scrolling cannot expose save slot '+number);
 }
 async function tap(key){
- if(/^(slot|delete)[1-4]$/.test(key))await ensureCard(Number(key.at(-1)));
+ if(/^(slot|delete)[1-3]$/.test(key))await ensureCard(Number(key.at(-1)));
  const s=await read();
  assert.equal(s.ui.visible[key],true,'cannot click hidden '+key);
  const point=s.ui[key];assert(Array.isArray(point),'missing actual target '+key);
@@ -228,9 +228,9 @@ async function focusedVisual(){
    await preserve(before,name+' actual visual preview');
    if(name==='full'&&w>h){
     const footer=css(state,state.ui.save_layout.footer);
-    await ensureCard(4);const last=await read();
+    await ensureCard(3);const last=await read();
     inspectVisual('full landscape last-row access',()=>{
-     assert(encloses(css(last,last.ui.save_layout.list),css(last,last.ui.save_layout.cards[3].row),1.5),'actual last save row visible');
+     assert(encloses(css(last,last.ui.save_layout.list),css(last,last.ui.save_layout.cards[2].row),1.5),'actual last save row visible');
      assert.deepEqual(css(last,last.ui.save_layout.footer),footer,'scroll must not move fixed action footer');
     });
     await capture('entry-save-full-'+w+'x'+h+'-bottom',true);
@@ -308,8 +308,8 @@ try{
    await resize(width,height);
    let s=await read();geometry(s,name+' '+width+'x'+height);
    const fixedFooter=css(s,s.ui.save_layout.footer);
-   await ensureCard(4);s=await read();
-   assert(encloses(css(s,s.ui.save_layout.list),css(s,s.ui.save_layout.cards[3].row),1.5),'last row must be reachable using actual wheel input');
+   await ensureCard(3);s=await read();
+   assert(encloses(css(s,s.ui.save_layout.list),css(s,s.ui.save_layout.cards[2].row),1.5),'last row must be reachable using actual wheel input');
    assert.deepEqual(css(s,s.ui.save_layout.footer),fixedFooter,'pointer scroll moved the footer');
    await preserve(before,name+' resize/scroll');
    const inline=(name==='full'&&((width===568&&height===320)||(width===844&&height===390)))||
@@ -377,7 +377,7 @@ try{
  await waitState(s=>!s.ui.save_layout.modal_open&&!s.ui.slots_state[0].occupied&&s.ui.focus==='slot1','explicit deletion and row focus restoration');
  s=await read();
  const original=JSON.parse(baseline);
- for(const number of ['2','3','4'])assert.deepEqual(s.review.file_hashes[number],original.hashes[number],'deletion altered another slot '+number);
+ for(const number of ['2','3'])assert.deepEqual(s.review.file_hashes[number],original.hashes[number],'deletion altered another slot '+number);
  assert(Object.values(s.review.file_hashes['1']).every(value=>value===''),'deleted primary/backup/temp files remain');
  assert.equal(s.ui.selected_slot,3,'deleting another slot changed the selected adventure');
  assert.equal(s.review.hero_class,original.hero);assert.equal(s.review.gold,original.gold);assert.equal(s.review.level,original.level);assert.equal(s.review.xp,original.xp);assert.equal(s.review.active_slot,original.active);

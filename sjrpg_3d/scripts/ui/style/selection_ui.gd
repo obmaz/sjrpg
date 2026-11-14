@@ -143,9 +143,9 @@ static func style(button: Button, primary := false, selected := false) -> void:
 			button.add_theme_color_override(state, Color(1, 1, 1, 0))
 
 
-static func slot_style(band: Control, button: Button) -> void:
-	# 저장 선택은 행의 '선택됨' 문구로 알린다. 터치 선택/포커스로 테두리를 바꾸지 않는다.
-	var box := concept_skin("slot")
+static func slot_style(band: Control, button: Button, selected := false) -> void:
+	# 선택된 모험만 청동 원화로 강조한다. 키보드 포커스와 실제 선택은 구분한다.
+	var box := concept_skin("slot_selected" if selected else "slot")
 	band.add_theme_stylebox_override("panel", box)
 	band.queue_redraw()
 	for state in ["normal", "hover", "pressed", "focus", "disabled"]:

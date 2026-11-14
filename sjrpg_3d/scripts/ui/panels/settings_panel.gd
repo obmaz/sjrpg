@@ -1,7 +1,7 @@
 class_name SettingsPanel
 extends PanelFrame
 ## 모험 설정 (원본 game_panels 'settings' + DeviceControls): 화면과 타격감 · 전투 효과음 ·
-## 저장 · 타이틀 · 새 모험. 폰에서 누르기 쉬운 큰 스위치 행으로 구성합니다.
+## 저장 · 타이틀 · 새 모험. 폰에서 누르기 쉬운 큰 터치 행과 청동 상태 표식으로 구성합니다.
 
 signal title_requested
 signal restart_requested
@@ -365,7 +365,7 @@ func _open_edition(edition: String) -> void:
 		show_save_error(GameState.save_error)
 
 
-## 설정 이름과 ON/OFF만 표시하며 좁은 폭에서는 스위치를 다음 줄로 배치한다.
+## 항목 이름과 청동 상태 표식을 표시하고 좁은 폭에서는 표식을 다음 줄에 배치한다.
 func _toggle(label: String, on: bool, on_change: Callable) -> Control:
 	var card := PanelContainer.new()
 	card.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
@@ -401,24 +401,24 @@ func _toggle(label: String, on: bool, on_change: Callable) -> Control:
 	title.custom_minimum_size.x = 0
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	text.add_child(title)
-	var pill := Pill.new()
-	pill.name = "SwitchPill"
-	pill.on = on
-	pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	pill.size_flags_horizontal = Control.SIZE_SHRINK_END
-	pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	pill.resized.connect(pill.queue_redraw)
-	row.add_child(pill)
+	var indicator := ToggleState.new()
+	indicator.name = "SwitchState"
+	indicator.on = on
+	indicator.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	indicator.size_flags_horizontal = Control.SIZE_SHRINK_END
+	indicator.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	indicator.resized.connect(indicator.queue_redraw)
+	row.add_child(indicator)
 	# 같은 위젯을 갱신해 손가락이 있던 위치와 현재 스크롤을 유지한다.
 	hit.pressed.connect(func():
-		var next := not pill.on
+		var next := not indicator.on
 		on_change.call(next)
-		pill.on = next
+		indicator.on = next
 		hit.set_pressed_no_signal(next)
 		hit.tooltip_text = "%s · %s" % [label, "켜짐" if next else "꺼짐"]
-		pill.queue_redraw()
+		indicator.queue_redraw()
 		_refresh_test_actions())
-	_toggle_widgets.append({"row": row, "pill": pill, "hit": hit, "title": title})
+	_toggle_widgets.append({"row": row, "indicator": indicator, "hit": hit, "title": title})
 	row.resized.connect(_fit_toggle_rows)
 	return card
 
@@ -428,43 +428,35 @@ func _fit_toggle_rows() -> void:
 	var gap := maxi(12, ceili(UiKit.ACTION_GAP_DP * scale))
 	for widgets: Dictionary in _toggle_widgets:
 		var row: BoxContainer = widgets["row"]
-		var pill: Pill = widgets["pill"]
+		var indicator: ToggleState = widgets["indicator"]
 		var hit: Button = widgets["hit"]
 		if not is_instance_valid(row) or row.is_queued_for_deletion():
 			continue
 		hit.custom_minimum_size = Vector2(0, ceilf(UiKit.ACTION_TOUCH_DP * scale))
-		pill.font_pixels = maxi(21, ceili(16.0 * scale))
-		pill.custom_minimum_size = Vector2(maxf(112.0, ceilf(88.0 * scale)), maxf(58.0, ceilf(48.0 * scale)))
+		indicator.font_pixels = maxi(21, ceili(16.0 * scale))
+		indicator.custom_minimum_size = Vector2(maxf(112.0, ceilf(88.0 * scale)), maxf(58.0, ceilf(48.0 * scale)))
 		row.add_theme_constant_override("separation", gap)
 		var title: Label = widgets["title"]
 		var title_width := title.get_theme_font("font").get_string_size(title.text, HORIZONTAL_ALIGNMENT_LEFT, -1, title.get_theme_font_size("font_size")).x
-		row.vertical = row.size.x < title_width + pill.custom_minimum_size.x + gap
-		pill.queue_redraw()
+		row.vertical = row.size.x < title_width + indicator.custom_minimum_size.x + gap
+		indicator.queue_redraw()
 
 
-class Pill:
+class ToggleState:
 	extends Control
 	var on := false
 	var font_pixels := 21
+	var skin := UiKit.card_style()
 
 	func _draw() -> void:
-		var sb := StyleBoxFlat.new()
-		sb.bg_color = Color("56533a") if on else Color("24251f")
-		sb.set_corner_radius_all(int(size.y / 2.0))
-		sb.border_color = Color("8c7651")
-		sb.set_border_width_all(2)
-		draw_style_box(sb, Rect2(Vector2.ZERO, size))
-		var knob := Vector2(size.x - size.y / 2.0 if on else size.y / 2.0, size.y / 2.0)
-		draw_circle(knob + Vector2(0, 1), size.y / 2.0 - 4.0, Color("14120d"))
-		draw_circle(knob, size.y / 2.0 - 6.0, UiKit.GOLD)
-		draw_arc(knob, size.y / 2.0 - 8.0, PI * 1.1, TAU, 24, Color("e1cca0"), 1.0, true)
-		var label := "ON" if on else "OFF"
+		skin.configure("card", false, on)
+		skin.set_unit(float(font_pixels) / 16.0)
+		draw_style_box(skin, Rect2(Vector2.ZERO, size))
+		var label := "켜짐" if on else "꺼짐"
 		var font := UiKit.BOLD_FONT
 		var width := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_pixels).x
-		var left := 0.0 if on else size.y
-		var right := size.x - size.y if on else size.x
 		var baseline := (size.y - font.get_height(font_pixels)) * 0.5 + font.get_ascent(font_pixels)
-		draw_string(font, Vector2((left + right - width) / 2.0, baseline), label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_pixels, UiKit.TEXT)
+		draw_string(font, Vector2((size.x - width) / 2.0, baseline), label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_pixels, UiKit.TEXT if on else UiKit.MUTED)
 
 
 ## 채택한 자산의 저작자·원본·라이선스와 수정 표기를 설정에서 읽을 수 있게 한다.

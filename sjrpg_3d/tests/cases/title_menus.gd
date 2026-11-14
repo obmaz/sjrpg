@@ -175,14 +175,14 @@ func _is_title(node: Node) -> bool:
 
 func _failed_title_load_returns_to_selection(root: EntryRoot) -> void:
 	# 타이틀 설정의 불러오기는 기존 게임이 없어도 읽기 실패를 같은 슬롯 화면에서 안내한다.
-	var path := GameState.slot_path(4)
+	var path := GameState.slot_path(3)
 	var file := FileAccess.open(path, FileAccess.WRITE)
 	file.store_string("{unreadable")
 	file.close()
 	root.current._btn_settings.pressed.emit()
 	await _frames(2)
 	var settings: SettingsPanel = _panels(root)[0]
-	settings.load_requested.emit(4)
+	settings.load_requested.emit(3)
 	settings.closed.emit()
 	for frame in 120:
 		await _frames(1)
@@ -193,7 +193,7 @@ func _failed_title_load_returns_to_selection(root: EntryRoot) -> void:
 		(
 			_is_selection(root.current)
 			and root.current.entry_mode == "continue"
-			and root.current.selected_slot == 4
+			and root.current.selected_slot == 3
 			and root.current.subtitle.text.contains("모험을 읽지 못했습니다")
 			and not root._entry_starting
 			and root.launches == 0
@@ -205,7 +205,7 @@ func _failed_title_load_returns_to_selection(root: EntryRoot) -> void:
 	)
 	root.handle_system_back()
 	await _frames(2)
-	GameState.delete_slot(4)
+	GameState.delete_slot(3)
 
 
 func _new_entry_modes(root: EntryRoot) -> void:
@@ -260,7 +260,7 @@ func _new_entry_modes(root: EntryRoot) -> void:
 	)
 	root.handle_system_back()
 	await _frames(2)
-	for slot in [1, 3, 4]:
+	for slot in [1, 3]:
 		check("entry fixture fills save slot %d" % slot, GameState.create_slot(slot, "mage"))
 	var bytes: Array[String] = []
 	for slot in range(1, GameState.MAX_SAVE_SLOTS + 1):

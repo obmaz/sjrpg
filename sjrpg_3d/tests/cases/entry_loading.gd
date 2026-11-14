@@ -35,7 +35,7 @@ func _settle(root: Node) -> void:
 
 
 func _clean_slots() -> void:
-	for number in range(1, 5):
+	for number in range(1, GameState.MAX_SAVE_SLOTS + 1):
 		GameState.delete_slot(number)
 
 

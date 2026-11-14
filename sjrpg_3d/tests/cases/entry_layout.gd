@@ -11,7 +11,7 @@ class EntryRoot:
 		_swap(Node.new())
 
 func _clean_slots() -> void:
-	for slot in range(1, 5):
+	for slot in range(1, GameState.MAX_SAVE_SLOTS + 1):
 		GameState.delete_slot(slot)
 
 func _buttons_fit(select: Control, dimensions: Vector2i) -> void:
@@ -78,7 +78,7 @@ func _buttons_fit(select: Control, dimensions: Vector2i) -> void:
 	else:
 		var clipping: Rect2 = select.slot_scroll.get_global_rect()
 		check("save scroll and fixed footer remain separate and safe", bounds.encloses(clipping) and bounds.encloses(select.slot_footer.get_global_rect()) and not clipping.intersects(select.slot_footer.get_global_rect()))
-		for index in 4:
+		for index in GameState.MAX_SAVE_SLOTS:
 			if select.delete_buttons[index].is_visible_in_tree():
 				check("slot row and its delete action have separate targets", not select.slot_buttons[index].get_global_rect().intersects(select.delete_buttons[index].get_global_rect()))
 			check("save row stays thumb-sized inside its clipping viewport", select.slot_buttons[index].size.y >= 64.0 * unit and clipping.size.y >= select.slot_buttons[index].size.y)
@@ -110,7 +110,7 @@ func run() -> void:
 		check("generated class illustration exists with actual transparent pixels", illustration != null and illustration.get_size() == Vector2(1024, 1536) and pixels != null and pixels.detect_alpha() != Image.ALPHA_NONE)
 	var old_path := GameState.slot_path(1)
 	var old_slot := GameState.active_slot
-	GameState.save_path = "user://tests/entry-four.json"
+	GameState.save_path = "user://tests/entry-three.json"
 	_clean_slots()
 	GameState.select_slot(1)
 	var view := SubViewport.new()
@@ -133,7 +133,7 @@ func run() -> void:
 			_buttons_fit(select, dimensions)
 		select.slot_switch.pressed.emit()
 		await _frames(3)
-		check("slot change exposes exactly four independent choices", select._stage == "slots" and select.slot_buttons.size() == 4)
+		check("slot change exposes exactly three independent choices", select._stage == "slots" and select.slot_buttons.size() == 3)
 		_buttons_fit(select, dimensions)
 		select.slot_buttons[2].pressed.emit()
 		check("empty slot selection opens hero choice in that slot", select.selected_slot == 3 and select._stage == "class")
@@ -158,7 +158,7 @@ func run() -> void:
 	check("deletion names a real slot and waits for confirmation", is_instance_valid(loaded._delete_dialog) and FileAccess.get_file_as_string(path) == saved)
 	var dimmer := loaded._delete_dialog.get_child(0) as CanvasItem
 	var below_dimmer := true
-	for index in 4:
+	for index in GameState.MAX_SAVE_SLOTS:
 		below_dimmer = below_dimmer and _canvas_z(loaded.slot_number_labels[index]) <= _canvas_z(dimmer)
 		below_dimmer = below_dimmer and _canvas_z(loaded.slot_number_badges[index]) <= _canvas_z(dimmer)
 	check("actual save badges stay beneath the delete dimmer and action controls",
@@ -172,17 +172,18 @@ func run() -> void:
 	await _frames(2)
 	check("confirmed deletion frees only the named slot", not FileAccess.file_exists(path) and not bool(GameState.slot_summaries()[1]["occupied"]))
 	# An unreadable file is occupied, never an invitation to silently overwrite.
-	var broken_path := GameState.slot_path(4)
+	var broken_path := GameState.slot_path(3)
 	var broken := FileAccess.open(broken_path, FileAccess.WRITE)
 	broken.store_string("{broken")
 	broken.close()
 	loaded.refresh_slots()
-	loaded.select_slot(4)
-	check("unreadable slot blocks both continue and new creation", loaded.continue_button.disabled and loaded.start_button.disabled and "읽을 수 없는" in loaded.slot_buttons[3].text)
+	loaded.select_slot(3)
+	check("unreadable slot blocks both continue and new creation", loaded.continue_button.disabled and loaded.start_button.disabled and "읽을 수 없는" in loaded.slot_buttons[2].text)
 	loaded._choose()
 	check("unreadable slot preview preserves exact original bytes", FileAccess.get_file_as_string(broken_path) == "{broken")
 	view.queue_free()
 	await _frames(2)
+	GameState.delete_slot(3)
 	var root := EntryRoot.new()
 	add_child(root)
 	root.show_class_select()

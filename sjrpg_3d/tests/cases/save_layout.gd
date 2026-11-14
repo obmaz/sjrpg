@@ -21,15 +21,15 @@ func _layout_check(select: Control, view: SubViewport, scenario: String) -> void
 	check("footer context stays separate from its main action " + label, _inside(footer, select.slot_context.get_global_rect()) and select.slot_context.get_global_rect().end.y <= select.continue_button.get_global_rect().position.y + EPS)
 	check("main action remains fully inside its fixed footer after every rotation " + label,
 		_inside(footer, select.continue_button.get_global_rect()))
-	check("save sheet exposes exactly four real source rows " + label, select.slot_buttons.size() == 4 and select.slot_bands.size() == 4)
+	check("save sheet exposes exactly three real source rows " + label, select.slot_buttons.size() == 3 and select.slot_bands.size() == 3)
 	check("touch list never follows an incidental pressed-row focus", not select.slot_scroll.follow_focus)
 	if not select._slot_overflow:
-		var last_row: Rect2 = select.slot_bands[3].get_global_rect()
+		var last_row: Rect2 = select.slot_bands[-1].get_global_rect()
 		check("all-visible save cards fill the body up to the fixed action on unfolded screens " + label,
 			footer.position.y - last_row.end.y <= 40.0
 			and _inside(list, last_row))
 	var summaries := GameState.slot_summaries()
-	for index in 4:
+	for index in GameState.MAX_SAVE_SLOTS:
 		var row: Button = select.slot_buttons[index]
 		var band: HBoxContainer = select.slot_bands[index]
 		var remove: Button = select.delete_buttons[index]
@@ -161,7 +161,7 @@ func _modal_check(select: Control, view: SubViewport) -> void:
 	dialog.footer.get_child(1).pressed.emit()
 	await _frames(4)
 	var after := REVIEW.file_hashes()
-	check("confirmed deletion changes exactly the explicitly named slot", after["1"] == before["1"] and after["2"] == before["2"] and after["4"] == before["4"] and not bool(GameState.slot_summaries()[2]["occupied"]) and select.selected_slot == 1)
+	check("confirmed deletion changes exactly the explicitly named slot", after["1"] == before["1"] and after["2"] == before["2"] and not bool(GameState.slot_summaries()[2]["occupied"]) and select.selected_slot == 1)
 	check("deleting another slot keeps the live hero untouched", GameState.hero_class == hero and GameState.gold == gold and GameState.active_slot == active)
 	check("removed delete action restores focus to its remaining slot card", view.gui_get_focus_owner() == select.slot_buttons[2])
 	check("a hidden empty-slot delete target cannot open another modal", not select.delete_buttons[2].is_visible_in_tree())
@@ -243,7 +243,7 @@ func run() -> void:
 			await _short_modal_check(select, view)
 		select.queue_free()
 		await _frames(3)
-	for number in range(1, 5):
+	for number in range(1, GameState.MAX_SAVE_SLOTS + 1):
 		GameState.delete_slot(number)
 	view.queue_free()
 	await _frames(2)

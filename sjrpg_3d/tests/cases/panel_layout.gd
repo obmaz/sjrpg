@@ -50,7 +50,10 @@ func _check_frame(panel: PanelFrame, size: Vector2i, scenario: String) -> void:
 	var context := "%s %s" % [scenario, size]
 	var bounds := Rect2(Vector2.ZERO, Vector2(size))
 	var frame := panel._panel.get_global_rect()
-	var close: Button = panel._header.get_child(-1)
+	var close: Button = panel._close
+	check("popup title remains centered across the full frame " + context,
+		panel.title_label.horizontal_alignment == HORIZONTAL_ALIGNMENT_CENTER
+		and absf(panel.title_label.get_global_rect().get_center().x - frame.get_center().x) < 1.0)
 	check("dialog stays in viewport " + context, bounds.encloses(frame))
 	check("title and subtitle have breathing room " + context, panel.subtitle_label.get_global_rect().position.y - panel.title_label.get_global_rect().end.y >= 9.9)
 	check("subtitle stays above body " + context, panel.subtitle_label.get_global_rect().end.y + 18.0 <= panel.body_holder.get_global_rect().position.y)

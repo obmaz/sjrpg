@@ -25,6 +25,8 @@ var footer: BoxContainer
 var _panel: PanelContainer
 var _column: VBoxContainer
 var _header: HBoxContainer
+var _header_actions: HBoxContainer
+var _header_balance: Control
 var _titles: VBoxContainer
 var _close: Button
 var _header_divider: Control
@@ -74,6 +76,8 @@ func _ready() -> void:
 	_header = HBoxContainer.new()
 	_header.add_theme_constant_override("separation", 16)
 	_column.add_child(_header)
+	_header_balance = Control.new()
+	_header.add_child(_header_balance)
 	_titles = VBoxContainer.new()
 	var titles := _titles
 	titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -83,15 +87,21 @@ func _ready() -> void:
 	title_label = UiKit.label("", 28, UiKit.TEXT, true)
 	title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title_label.custom_minimum_size.x = 120
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	titles.add_child(title_label)
 	subtitle_label = UiKit.label("", 16, UiKit.MUTED)
 	subtitle_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	subtitle_label.add_theme_constant_override("line_spacing", 4)
+	subtitle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	titles.add_child(subtitle_label)
+	_header_actions = HBoxContainer.new()
+	_header_actions.add_theme_constant_override("separation", 8)
+	_header_actions.resized.connect(_request_layout)
+	_header.add_child(_header_actions)
 	trailing = HBoxContainer.new()
 	trailing.add_theme_constant_override("separation", 8)
 	trailing.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_header.add_child(trailing)
+	_header_actions.add_child(trailing)
 	var close := UiKit.button("×", 30)
 	_close = close
 	close.tooltip_text = "모험으로 돌아가기"
@@ -99,7 +109,7 @@ func _ready() -> void:
 	close.custom_minimum_size = Vector2(MIN_TOUCH, MIN_TOUCH)
 	close.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	close.pressed.connect(func(): closed.emit())
-	_header.add_child(close)
+	_header_actions.add_child(close)
 	_header_divider = UiKit.divider()
 	_column.add_child(_header_divider)
 
@@ -200,6 +210,10 @@ func _layout() -> void:
 		generated_frame.short_frame = short_screen
 	_header_divider.visible = not short_screen
 	_fit_widgets(self, scale)
+	trailing.visible = trailing.get_children().any(func(child: Node): return child is Control and child.visible)
+	_header_actions.visible = trailing.visible or _close.visible
+	_header_balance.visible = _header_actions.visible
+	_header_balance.custom_minimum_size.x = _header_actions.get_combined_minimum_size().x if _header_actions.visible else 0.0
 	var m := safe_margins(get_viewport())
 	var pad := maxf(12.0, 8.0 * scale)
 	var inside := 34.0 * scale
