@@ -47,7 +47,7 @@
     },
     {
       "path": "scripts/world/geometry/fortress_plan_3d.gd",
-      "sha256": "2ef4ef473119e7f4b44322b606ba6b328a8eba1087c0faeff1be07ef26989523"
+      "sha256": "1e02633148a11b894430d10ecc759d38921f2a916c7b4247d070962f52ad8e0c"
     },
     {
       "path": "scripts/world/geometry/terrain_forms_3d.gd",
@@ -79,11 +79,11 @@
     },
     {
       "path": "scripts/world/village.gd",
-      "sha256": "a9bcfa834930107f3ffcad0b00eaffecadac15904c7e159adbdab847da842de9"
+      "sha256": "1eb35ccf995e1459e22b2a160375b7f75bc6be39f3043a8debe0927b275bd8d1"
     },
     {
       "path": "assets/materials/terrain/ground.gdshader",
-      "sha256": "1050f5eebaf1fb592276a41af95cdef9832d5c71790ee9f0bc12939ee174b9cf"
+      "sha256": "172cad94ab9e1caf15bbc391c350dfeef51d3a357565f41af805e01f5feb4489"
     },
     {
       "path": "scripts/rendering/terrain/ground_renderer_3d.gd",
@@ -135,7 +135,7 @@
     },
     {
       "path": "scripts/world/geometry/village_courtyard_plan_3d.gd",
-      "sha256": "44272d78fd52063a7fc126efd7d8c7b6bcc248eca4b58b917f19abbdfa3659e4"
+      "sha256": "325be125fa4c5172d0d91b59e1dd5116a3eacf5ad843e7608fbe9ab1d5c4ee96"
     },
     {
       "path": "scripts/rendering/vegetation/garden_detail_renderer_3d.gd",
@@ -143,7 +143,7 @@
     },
     {
       "path": "scripts/world/geometry/chapel_garden_plan_3d.gd",
-      "sha256": "4856cb142e69d158dd24084d65a9caf155d27dbb6d3f9647db90df969bc5350a"
+      "sha256": "41ae8c19283dfe8c4e68428b92af3e098b53b84b36fa4af7771f5fc2b025ecf0"
     },
     {
       "path": "scripts/rendering/vegetation/chapel_garden_3d.gd",
@@ -155,7 +155,7 @@
     },
     {
       "path": "scripts/world/geometry/town_plaza_plan_3d.gd",
-      "sha256": "b4384f6a2171c89472fae6631bf130bc5908701d77d40eadacc6c293e0227050"
+      "sha256": "5002acf1aa44ce6d032b5a1acf9539639fe66ac4fc87eda40965ede2c834df6c"
     }
   ],
   "fortress_surface_provenance": "assets/source/environment/fortress/provenance.json",

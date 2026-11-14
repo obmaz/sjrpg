@@ -160,6 +160,15 @@ func _check_canopy_frame(game: Node) -> void:
 		var role := str(source.get_meta("chapel_canopy_role", ""))
 		if not role.is_empty():
 			frames[role] = _leaf_bounds(tree, hero)
+		if role == "right_frame":
+			var ground := Iso.unproject(source.position) / WorldSpace3D.GROUND_UNITS_PER_METER
+			var road_clear := true
+			for route: Dictionary in TownPlazaPlan3D.gate_routes(game.village):
+				var points: PackedVector2Array = route["points"]
+				var nearest := Geometry2D.get_closest_point_to_segment(ground, points[0], points[1])
+				road_clear = road_clear and ground.distance_to(nearest) >= float(route["width"]) * .5 + .6
+			check("restored right canopy roots leave the expanded plaza and gate approaches clear",
+				not TownPlazaPlan3D.PLAZA.grow(.55).has_point(ground) and road_clear)
 	check(
 		"three actual canopy layers replace raw placement candidates",
 		frames.size() == 3,

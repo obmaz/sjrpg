@@ -10,7 +10,8 @@ const {chromium}=createRequire(import.meta.url)('playwright');
 const url=inspectionUrl(process.argv[2]||'http://127.0.0.1:8767/');
 url.searchParams.set('save_layout_review','1');
 url.searchParams.set('quality','low');
-const entryVisualOnly=process.env.SJRPG_ENTRY_VISUAL_ONLY==='1';
+const classVisualOnly=process.env.SJRPG_ENTRY_CLASS_VISUAL_ONLY==='1';
+const entryVisualOnly=process.env.SJRPG_ENTRY_VISUAL_ONLY==='1'||classVisualOnly;
 const captureBaseline=process.env.SJRPG_ENTRY_BASELINE==='1';
 const visualFailures=[];
 const out=path.resolve(process.argv[3]||'build/save-layout-review');
@@ -176,6 +177,7 @@ function classGeometry(s,label){
  assert(!overlaps(back,heading)&&encloses(safe,back),label+' back does not cover title '+JSON.stringify({stage:s.ui.stage,css_scale:p.css_scale,heading,back,visible:p.visible,texts:p.texts}));
  const tabs=['warrior','mage'].map(key=>css(s,p.tabs[key]));
  assert(!overlaps(tabs[0],tabs[1]),label+' independent class tabs');
+ assert(tabs.every(tab=>!overlaps(details,tab)),label+' class information never overlaps a tab');
  if(p.tab_contents){
   for(const key of ['warrior','mage']){
    const content=p.tab_contents[key],tab=css(s,p.tabs[key]);
@@ -215,6 +217,7 @@ function inspectVisual(label,callback){
 }
 async function focusedVisual(){
  const sizes=[[390,844],[844,390],[320,568],[568,320],[344,883],[883,344],[768,896],[896,768],[800,800]];
+ if(!classVisualOnly){
  for(const name of ['empty','mixed','full','corrupt','backup']){
   await resize(390,844);const before=stateKey(await scenario(name));
   if(name==='mixed'){await tap('slot3');await waitState(s=>s.ui.selected_slot===3,'selected mage save preview');}
@@ -244,6 +247,7 @@ async function focusedVisual(){
  await page.keyboard.press('Escape');
  await waitState(s=>!s.ui.save_layout.modal_open,'actual Escape cancel');
  await preserve(modalBefore,'cancelled visual delete');
+ }
  await resize(390,844);const emptyBefore=stateKey(await scenario('empty'));
  await tap('continue');await waitState(s=>s.ui.stage==='class','actual new-hero selection');
  for(const [w,h]of [...sizes,[320,640]]){

@@ -14,6 +14,11 @@ static func layout(village: Village) -> Dictionary:
 	for body: Rect2 in bodies:
 		bounds = bounds.merge(body)
 	var center := bounds.get_center()
+	# 광장이 넓어져도 오른쪽 수관은 포장 밖의 식재 띠에 남긴다.
+	# 건물 상대 위치만 사용하면 확대된 광장 제외 검사에서 이 나무가 사라진다.
+	var right_frame := Vector2(
+		maxf(center.x + 3.60, TownPlazaPlan3D.PLAZA.end.x + .85), center.y + 3.40
+	)
 	var entry := Iso.unproject(chapel["bottom"]) / WorldSpace3D.GROUND_UNITS_PER_METER
 	var path := Rect2(entry + Vector2(-1.05, .12), Vector2(2.10, 3.85))
 	var island := Vector4(center.x - 3.05, center.y + 4.70, .75, 1.0)
@@ -48,7 +53,7 @@ static func layout(village: Village) -> Dictionary:
 				"variant": 0,
 				"tint": Color(.48, .60, .45)
 			},
-			{"at": center + Vector2(3.60, 3.40), "height": 230.0, "role": "right_frame"},
+			{"at": right_frame, "height": 230.0, "role": "right_frame"},
 			{"at": center + Vector2(1.90, -6.80), "height": 590.0},
 			{"at": center + Vector2(4.00, -5.70), "height": 590.0},
 		]

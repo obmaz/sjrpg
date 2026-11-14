@@ -645,6 +645,7 @@ func _layout_class() -> void:
 		[resource, 26 if roomy else 24, 14]
 	]:
 		_font(entry[0], float(entry[1]), float(entry[2]))
+	action_h = EntryUi.fit_action(start_button, action_h, css)
 	for cls: String in class_buttons:
 		var button: Button = class_buttons[cls]
 		_font(button, 30, 17)

@@ -63,7 +63,18 @@ func _buttons_fit(select: Control, dimensions: Vector2i) -> void:
 				and select.details.get_global_rect().end.y < select.start_button.get_global_rect().position.y)
 		else:
 			check("landscape keeps illustration alongside the complete controls", select.showcase.get_global_rect().end.x < select.details.get_global_rect().position.x)
-		check("class information and tabs keep separate bounds", not select.details.get_global_rect().intersects(select.class_buttons["mage"].get_global_rect()) and not select.start_button.get_global_rect().intersects(select.slot_switch.get_global_rect()))
+		var info_clear: bool = not select.details.get_global_rect().intersects(select.class_buttons["mage"].get_global_rect())
+		var actions_clear: bool = not select.start_button.get_global_rect().intersects(select.slot_switch.get_global_rect())
+		if not info_clear or not actions_clear:
+			print("FAIL ENTRY_CLASS_BOUNDS_DIAG ", JSON.stringify({
+				"view": str(dimensions), "details": str(select.details.get_global_rect()),
+				"tab": str(select.class_buttons["mage"].get_global_rect()),
+				"start": str(select.start_button.get_global_rect()),
+				"start_minimum": str(select.start_button.get_combined_minimum_size()),
+				"slots": str(select.slot_switch.get_global_rect())
+			}))
+		check("class information and tabs keep separate bounds %s" % dimensions, info_clear)
+		check("class start and slot navigation keep separate touch targets %s" % dimensions, actions_clear)
 	else:
 		var clipping: Rect2 = select.slot_scroll.get_global_rect()
 		check("save scroll and fixed footer remain separate and safe", bounds.encloses(clipping) and bounds.encloses(select.slot_footer.get_global_rect()) and not clipping.intersects(select.slot_footer.get_global_rect()))
