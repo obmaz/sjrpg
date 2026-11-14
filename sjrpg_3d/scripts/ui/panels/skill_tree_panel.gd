@@ -195,7 +195,7 @@ func _layout_nodes() -> void:
 
 ## Canvas labels do not inherit PanelFrame's control font boost.
 func graph_css_scale() -> float:
-	return UiMetrics.units_per_display_pixel(get_viewport())
+	return display_pixel_scale()
 
 
 static func graph_font_size(preferred: int, css_scale: float) -> int:

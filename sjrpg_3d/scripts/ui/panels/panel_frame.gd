@@ -180,11 +180,16 @@ func frame_max_width() -> float:
 	return MAX_WIDTH
 
 
+## 공통 프레임과 패널 고유의 그림·터치가 동일한 표시 배율을 사용한다.
+func display_pixel_scale() -> float:
+	return UiMetrics.units_per_display_pixel(get_viewport())
+
+
 func _layout() -> void:
 	if _sizing or not is_instance_valid(footer):
 		return
 	_sizing = true
-	var scale := UiMetrics.units_per_display_pixel(get_viewport())
+	var scale := display_pixel_scale()
 	_fit_widgets(self, scale)
 	var view := get_viewport().get_visible_rect().size
 	var m := safe_margins(get_viewport())

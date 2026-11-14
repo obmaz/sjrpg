@@ -4,7 +4,7 @@ extends TestCase
 class PhoneTree:
 	extends SkillTreePanel
 	var test_css_scale := 2.25
-	func graph_css_scale() -> float:
+	func display_pixel_scale() -> float:
 		return test_css_scale
 
 
@@ -70,7 +70,11 @@ func run() -> void:
 		else:
 			panel.test_css_scale = 720.0 / 320.0 if dimensions.y > dimensions.x else 1280.0 / 568.0
 		panel._fit()
+		# Run the common pass after the graph pass as deferred layout can do.
+		# Both must retain the same 44dp target through every rotation.
+		panel._layout()
 		await _frames(5)
+		check("skill graph and common frame use the same display scale", is_equal_approx(panel.graph_css_scale(), panel.display_pixel_scale()))
 		for node in panel._detail.find_children("*", "Control", true, false):
 			var control := node as Control
 			if control is Label or control is Button:

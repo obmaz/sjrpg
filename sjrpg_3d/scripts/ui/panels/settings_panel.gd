@@ -300,10 +300,6 @@ func _refresh_screen_orientation() -> void:
 			button.disabled = bool(state.get("pending", false))
 
 
-func display_pixel_scale() -> float:
-	return UiMetrics.units_per_display_pixel(get_viewport())
-
-
 func _fit_display_option_targets() -> void:
 	var touch := ceilf(44.0 * display_pixel_scale())
 	for button: Button in _zoom_buttons + _screen_orientation_buttons:
