@@ -144,6 +144,8 @@ func _ready() -> void:
 	display.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	display.texture = viewport.get_texture()
 	display.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	Prefs.graphics_changed.connect(_apply_toon_style)
+	_apply_toon_style()
 	_layer.add_child(display)
 	_setup_light()
 	_setup_materials()
@@ -929,3 +931,14 @@ func render_activity() -> Dictionary:
 		"render_width": viewport.size.x, "render_height": viewport.size.y,
 		"pixels": viewport.size.x * viewport.size.y, "update_mode": viewport.render_target_update_mode,
 		"dirty": _presentation_dirty}
+
+
+## Compare a banded world image without changing shared model materials or HUD.
+func _apply_toon_style() -> void:
+	if Prefs.toon_style:
+		if display.material == null:
+			var material := ShaderMaterial.new()
+			material.shader = preload("res://assets/materials/effects/toon_preview.gdshader")
+			display.material = material
+	else:
+		display.material = null

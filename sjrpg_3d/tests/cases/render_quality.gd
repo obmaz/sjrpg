@@ -10,6 +10,14 @@ func run() -> void:
 	var hud_before: Vector2 = game.hud.minimap.size
 	var gold := GameState.gold
 	var renderer: WorldRenderer3D = game.world_renderer
+	var old_toon := Prefs.toon_style
+	Prefs.set_toon_style(true)
+	check("toon preview affects only the native world display", renderer.display.material is ShaderMaterial and renderer._layer.layer < game.hud.layer)
+	var config := ConfigFile.new()
+	check("toon comparison persists in device preferences", config.load(Prefs.settings_path) == OK and config.get_value("device", "toon_style", false))
+	Prefs.set_toon_style(false)
+	check("disabling toon restores the unfiltered display", renderer.display.material == null)
+	Prefs.set_toon_style(old_toon)
 	var native_size := renderer.viewport.size
 	var native_view := renderer.camera.size
 	var source_viewport: Viewport = game.player.get_viewport()

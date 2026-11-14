@@ -65,6 +65,7 @@ func _rebuild() -> void:
 	fps_toggle.name = "ShowFps"
 	body.add_child(fps_toggle)
 	body.add_child(_toggle("절약 화질", Prefs.low_resolution, Prefs.set_low_resolution))
+	body.add_child(_toggle("툰 스타일 · 후처리", Prefs.toon_style, Prefs.set_toon_style))
 	body.add_child(_toggle("타격 진동", Prefs.haptics_enabled, Prefs.set_haptics))
 	body.add_child(_toggle("동작 줄이기", Prefs.reduce_motion, Prefs.set_reduce_motion))
 	_haptics_test_button = _action_row("진동 확인", func(): Prefs.pulse("hurt", true))
