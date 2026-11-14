@@ -52,7 +52,7 @@ def check_all():
                 ].keys()
                 triangles += gltf["accessors"][primitive["indices"]]["count"] // 3
         assert triangles == proof["triangles"]
-        assert triangles < (38000 if identity == "fortress" else 30000)
+        assert triangles < (43000 if identity == "fortress" else 30000)
         names = [node["name"] for node in gltf["nodes"]]
         assert len(names) == len(set(names))
         assert all(

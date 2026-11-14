@@ -12,11 +12,14 @@ var _feedback := ""
 var _feedback_error := false
 var _install_button: Button
 var _fullscreen_button: Button
+var _haptics_test_button: Button
+var _sound_test_button: Button
 var _install_poll := 0.0
 var _zoom_buttons: Array[Button] = []
 var _zoom_grid: GridContainer
 var _screen_orientation_buttons: Array[Button] = []
 var _screen_orientation_grid: GridContainer
+var _gamepad_help_button: Button
 var _version_buttons: Array[Button] = []
 var _toggle_widgets: Array[Dictionary] = []
 
@@ -29,13 +32,16 @@ func setup(g: Node) -> SettingsPanel:
 func _ready() -> void:
 	super._ready()
 	set_header("모험 설정")
+	set_close_visible(false)
 	_rebuild()
 	var footer_text := "모험 계속하기" if game != null else "닫기"
 	add_footer(footer_text, func(): closed.emit(), true)
 	get_viewport().size_changed.connect(_fit_display_option_targets)
+	Gamepad.input_mode_changed.connect(_refresh_gamepad_help)
 
 
 func _rebuild() -> void:
+	set_header("모험 설정")
 	clear_body()
 	_zoom_buttons.clear()
 	_zoom_grid = null
@@ -43,54 +49,38 @@ func _rebuild() -> void:
 	_screen_orientation_grid = null
 	_version_buttons.clear()
 	_toggle_widgets.clear()
-	body.add_child(PanelFrame.section("화면"))
 	_fullscreen_button = _action_row("전체화면 켜기", _request_fullscreen)
 	_fullscreen_button.name = "FullscreenToggle"
 	body.add_child(_fullscreen_button)
 	_refresh_fullscreen()
-	body.add_child(_screen_orientation_card())
+	body.add_child(_screen_orientation_options())
 	_refresh_screen_orientation()
-	body.add_child(UiKit.divider())
 	if OS.has_feature("web"):
 		body.add_child(_version_card())
-		body.add_child(UiKit.divider())
-		body.add_child(PanelFrame.section("기기에 설치"))
 		_install_button = _action_row("이 기기에 설치", _request_install)
 		body.add_child(_install_button)
 		_refresh_install()
-		body.add_child(UiKit.divider())
-	body.add_child(PanelFrame.section("화면과 타격감"))
-	body.add_child(_world_zoom_card())
-	var fps_toggle := _toggle("FPS 표시", Prefs.show_fps, func(on):
-		Prefs.set_show_fps(on)
-		_rebuild())
+	body.add_child(_world_zoom_options())
+	var fps_toggle := _toggle("FPS 표시", Prefs.show_fps, Prefs.set_show_fps)
 	fps_toggle.name = "ShowFps"
 	body.add_child(fps_toggle)
-	body.add_child(_toggle("절약 화질", Prefs.low_resolution, func(on):
-		Prefs.set_low_resolution(on)
-		_rebuild()))
-	body.add_child(_toggle("타격 진동", Prefs.haptics_enabled, func(on):
-		Prefs.set_haptics(on)
-		_rebuild()))
-	body.add_child(_toggle("동작 줄이기", Prefs.reduce_motion, func(on):
-		Prefs.set_reduce_motion(on)
-		_rebuild()))
-	body.add_child(_action_row("진동 확인", func(): Prefs.pulse("hurt", true), Prefs.vibration_supported() and Prefs.haptics_enabled))
-	body.add_child(_toggle("배경 음악", Prefs.music_enabled, func(on):
-		Prefs.set_music(on)
-		_rebuild()))
+	body.add_child(_toggle("절약 화질", Prefs.low_resolution, Prefs.set_low_resolution))
+	body.add_child(_toggle("타격 진동", Prefs.haptics_enabled, Prefs.set_haptics))
+	body.add_child(_toggle("동작 줄이기", Prefs.reduce_motion, Prefs.set_reduce_motion))
+	_haptics_test_button = _action_row("진동 확인", func(): Prefs.pulse("hurt", true))
+	body.add_child(_haptics_test_button)
+	body.add_child(_toggle("배경 음악", Prefs.music_enabled, Prefs.set_music))
 	body.add_child(_toggle("전투 효과음", Prefs.sound_enabled, func(on):
 		Prefs.set_sound(on)
 		if on:
-			SoundFx.play("loot", true)
-		_rebuild()))
-	body.add_child(_action_row("효과음 확인", func(): SoundFx.play("impact", true), Prefs.sound_enabled))
+			SoundFx.play("loot", true)))
+	_sound_test_button = _action_row("효과음 확인", func(): SoundFx.play("impact", true))
+	body.add_child(_sound_test_button)
+	_refresh_test_actions()
 	if game != null and is_instance_valid(game) and "dungeon" in game and game.dungeon != null and game.dungeon.active:
 		body.add_child(_action_row("동굴에서 나가기", func():
 			closed.emit()
 			game.dungeon.leave("동굴 입구로 돌아왔습니다")))
-	body.add_child(UiKit.divider())
-	body.add_child(PanelFrame.section("진행"))
 	if _feedback != "":
 		var feedback := PanelFrame.wrap_label(_feedback, 16, Color(1.0, 0.69, 0.63) if _feedback_error else Color(0.71, 1, 0.69))
 		feedback.name = "SaveFeedback"
@@ -106,8 +96,9 @@ func _rebuild() -> void:
 		body.add_child(_action_row("저장하고 타이틀로", func(): title_requested.emit()))
 		var danger := _action_row("새 모험 준비", func(): _confirm_restart())
 		body.add_child(danger)
-	body.add_child(UiKit.divider())
-	body.add_child(_action_row("게임패드 조작 안내", _show_gamepad_help))
+	_gamepad_help_button = _action_row("게임패드 조작 안내", _show_gamepad_help)
+	body.add_child(_gamepad_help_button)
+	_refresh_gamepad_help(Gamepad.using_gamepad)
 	body.add_child(_action_row("아트 출처 · 라이선스", _show_asset_credits))
 	_fit_display_option_targets()
 	_publish_version_buttons.call_deferred()
@@ -192,7 +183,7 @@ func _confirm_restart() -> void:
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval("window.__sjrpgVersionButtons = null")
 	clear_body()
-	body.add_child(PanelFrame.section("새 모험을 시작할까요?"))
+	set_header("새 모험을 시작할까요?")
 	body.add_child(PanelFrame.wrap_label("현재 모험을 저장하고 슬롯 선택으로 이동합니다. 빈 슬롯에서 새 모험을 시작할 수 있으며 기존 모험은 그대로 유지됩니다.", 18))
 	body.add_child(_action_row("저장하고 슬롯 선택으로", func(): restart_requested.emit()))
 	body.add_child(_action_row("취소", func(): _rebuild()))
@@ -215,91 +206,81 @@ func _action_row(text: String, on_press: Callable, enabled := true) -> Button:
 	b.custom_minimum_size = Vector2(0, 76)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	b.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	b.disabled = not enabled
 	b.pressed.connect(on_press)
 	return b
 
 
-func _world_zoom_card() -> Control:
-	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UiKit.card_style())
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
-	card.add_child(column)
-	column.add_child(PanelFrame.wrap_label("화면 확대", 22))
+func _world_zoom_options() -> Control:
 	_zoom_grid = GridContainer.new()
 	_zoom_grid.columns = 3
 	_zoom_grid.add_theme_constant_override("h_separation", 12)
 	_zoom_grid.add_theme_constant_override("v_separation", 12)
 	_zoom_grid.resized.connect(_fit_display_option_targets)
-	column.add_child(_zoom_grid)
 	var group := ButtonGroup.new()
 	for amount: float in Prefs.WORLD_ZOOMS:
-		var button := UiKit.button("%s×" % ("1" if is_equal_approx(amount, 1.0) else str(amount)), 22)
-		button.custom_minimum_size = Vector2(0, 76)
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.toggle_mode = true
+		var button := _option_button("%s×" % ("1" if is_equal_approx(amount, 1.0) else str(amount)))
 		button.button_group = group
-		button.button_pressed = is_equal_approx(Prefs.world_zoom, amount)
 		button.set_meta("world_zoom", amount)
-		UiKit.style_button(button, false, button.button_pressed)
 		button.pressed.connect(_choose_world_zoom.bind(amount))
 		_zoom_grid.add_child(button)
 		_zoom_buttons.append(button)
-	return card
+	_refresh_world_zoom()
+	return _zoom_grid
 
 
-func _screen_orientation_card() -> Control:
-	var card := PanelContainer.new()
-	card.name = "ScreenOrientation"
-	card.add_theme_stylebox_override("panel", UiKit.card_style())
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
-	card.add_child(column)
-	column.add_child(PanelFrame.wrap_label("화면 방향", 22))
+func _screen_orientation_options() -> Control:
 	_screen_orientation_grid = GridContainer.new()
+	_screen_orientation_grid.name = "ScreenOrientation"
 	_screen_orientation_grid.columns = 3
 	_screen_orientation_grid.add_theme_constant_override("h_separation", 12)
 	_screen_orientation_grid.add_theme_constant_override("v_separation", 12)
 	_screen_orientation_grid.resized.connect(_fit_display_option_targets)
-	column.add_child(_screen_orientation_grid)
 	var group := ButtonGroup.new()
 	var labels := {"auto": "자동", "landscape": "가로", "portrait": "세로"}
 	for choice: String in Prefs.SCREEN_ORIENTATIONS:
-		var button := UiKit.button(str(labels[choice]), 21)
+		var button := _option_button(str(labels[choice]))
 		button.name = "Orientation_" + choice
-		button.custom_minimum_size = Vector2(0, 76)
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.toggle_mode = true
 		button.button_group = group
 		button.button_pressed = Prefs.screen_orientation == choice
 		button.set_meta("screen_orientation", choice)
 		button.set_meta("gamepad_key", "screen_orientation:" + choice)
-		UiKit.style_button(button, false, button.button_pressed)
 		button.pressed.connect(_choose_screen_orientation.bind(choice))
 		_screen_orientation_grid.add_child(button)
 		_screen_orientation_buttons.append(button)
-	return card
+	return _screen_orientation_grid
 
 
 func _choose_screen_orientation(choice: String) -> void:
 	Prefs.set_screen_orientation(choice, true)
-	_rebuild()
+	_refresh_screen_orientation()
 
 
 func _refresh_screen_orientation() -> void:
 	var state := Prefs.screen_orientation_state()
 	for button: Button in _screen_orientation_buttons:
 		if is_instance_valid(button) and not button.is_queued_for_deletion():
+			_set_option_selected(button, str(button.get_meta("screen_orientation")) == Prefs.screen_orientation)
 			button.disabled = bool(state.get("pending", false))
 
 
 func _fit_display_option_targets() -> void:
 	_fit_toggle_rows()
-	var touch := ceilf(UiKit.ACTION_TOUCH_DP * display_pixel_scale())
+	var scale := display_pixel_scale()
+	var touch := ceilf(UiKit.ACTION_TOUCH_DP * scale)
 	for button: Button in _zoom_buttons + _screen_orientation_buttons:
 		if is_instance_valid(button) and not button.is_queued_for_deletion():
 			button.custom_minimum_size = Vector2(touch, maxf(76.0, touch))
+			for state: String in ["normal", "hover", "pressed", "disabled", "focus"]:
+				var skin := button.get_theme_stylebox(state)
+				skin.content_margin_top = ceilf(4.0 * scale)
+				skin.content_margin_bottom = ceilf(20.0 * scale)
+				skin.content_margin_left = ceilf(4.0 * scale)
+				skin.content_margin_right = ceilf(4.0 * scale)
+			var mark := button.get_node("OptionSelected") as Label
+			mark.add_theme_font_size_override("font_size", ceili(14.0 * scale))
+			mark.offset_bottom = -4.0 * scale
 	for grid: GridContainer in [_zoom_grid, _screen_orientation_grid]:
 		if not is_instance_valid(grid) or grid.is_queued_for_deletion():
 			continue
@@ -314,7 +295,53 @@ func _fit_display_option_targets() -> void:
 
 func _choose_world_zoom(amount: float) -> void:
 	Prefs.set_world_zoom(amount)
-	_rebuild()
+	_refresh_world_zoom()
+
+
+func _refresh_world_zoom() -> void:
+	for button: Button in _zoom_buttons:
+		if is_instance_valid(button) and not button.is_queued_for_deletion():
+			_set_option_selected(button, is_equal_approx(float(button.get_meta("world_zoom")), Prefs.world_zoom))
+
+
+## 무테 옵션의 선택 표시는 고정된 아래 공간을 사용해 재배치를 막는다.
+func _option_button(text: String) -> Button:
+	var button := UiKit.button(text, 22)
+	button.custom_minimum_size = Vector2(0, 76)
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.toggle_mode = true
+	for state: String in ["normal", "hover", "pressed", "disabled", "focus"]:
+		button.add_theme_stylebox_override(state, StyleBoxEmpty.new())
+	for state: String in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+		button.add_theme_color_override(state, UiKit.TEXT)
+	var mark := Label.new()
+	mark.name = "OptionSelected"
+	mark.text = "선택"
+	mark.add_theme_font_override("font", UiKit.BOLD_FONT)
+	mark.add_theme_color_override("font_color", UiKit.TEXT)
+	mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	mark.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	button.add_child(mark)
+	mark.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	return button
+
+
+func _set_option_selected(button: Button, selected: bool) -> void:
+	button.set_pressed_no_signal(selected)
+	(button.get_node("OptionSelected") as Label).visible = selected
+
+
+func _refresh_test_actions() -> void:
+	if is_instance_valid(_haptics_test_button) and not _haptics_test_button.is_queued_for_deletion():
+		_haptics_test_button.disabled = not Prefs.vibration_supported() or not Prefs.haptics_enabled
+	if is_instance_valid(_sound_test_button) and not _sound_test_button.is_queued_for_deletion():
+		_sound_test_button.disabled = not Prefs.sound_enabled
+
+
+func _refresh_gamepad_help(using_gamepad: bool) -> void:
+	if is_instance_valid(_gamepad_help_button) and not _gamepad_help_button.is_queued_for_deletion():
+		_gamepad_help_button.visible = using_gamepad
 
 
 func _version_card() -> Control:
@@ -322,7 +349,6 @@ func _version_card() -> Control:
 	if OS.has_feature("android"):
 		return card  # The edition chooser is a web page; the Android app ships the 3D adventure only.
 	card.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
-	card.add_child(PanelFrame.section("모험 선택"))
 	if OS.has_feature("web"):
 		var select := UiKit.button("저장하고 선택 화면으로", 20)
 		select.name = "VersionSelect"
@@ -342,7 +368,7 @@ func _open_edition(edition: String) -> void:
 ## 설정 이름과 ON/OFF만 표시하며 좁은 폭에서는 스위치를 다음 줄로 배치한다.
 func _toggle(label: String, on: bool, on_change: Callable) -> Control:
 	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UiKit.card_style(on))
+	card.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	var holder := PanelContainer.new()
 	holder.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	card.add_child(holder)
@@ -356,13 +382,7 @@ func _toggle(label: String, on: bool, on_change: Callable) -> Control:
 	hit.button_pressed = on
 	for state: String in ["normal", "hover", "pressed", "disabled"]:
 		hit.add_theme_stylebox_override(state, StyleBoxEmpty.new())
-	var focus := StyleBoxFlat.new()
-	focus.bg_color = Color.TRANSPARENT
-	focus.border_color = UiKit.GOLD
-	focus.set_border_width_all(2)
-	focus.set_corner_radius_all(6)
-	hit.add_theme_stylebox_override("focus", focus)
-	hit.pressed.connect(func(): on_change.call(not on))
+	hit.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	holder.add_child(hit)
 	var row := BoxContainer.new()
 	row.name = "SwitchLayout"
@@ -389,6 +409,15 @@ func _toggle(label: String, on: bool, on_change: Callable) -> Control:
 	pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	pill.resized.connect(pill.queue_redraw)
 	row.add_child(pill)
+	# 같은 위젯을 갱신해 손가락이 있던 위치와 현재 스크롤을 유지한다.
+	hit.pressed.connect(func():
+		var next := not pill.on
+		on_change.call(next)
+		pill.on = next
+		hit.set_pressed_no_signal(next)
+		hit.tooltip_text = "%s · %s" % [label, "켜짐" if next else "꺼짐"]
+		pill.queue_redraw()
+		_refresh_test_actions())
 	_toggle_widgets.append({"row": row, "pill": pill, "hit": hit, "title": title})
 	row.resized.connect(_fit_toggle_rows)
 	return card

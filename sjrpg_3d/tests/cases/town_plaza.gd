@@ -64,6 +64,7 @@ func run() -> void:
 		)
 	check("two houses offer the alternative courtyard frontage", right_facing >= 2)
 	_audit_actual_clearance(game)
+	_audit_gate_roads(game)
 	for id: String in TownPlazaPlan3D.SERVICES:
 		var at := TownPlazaPlan3D.approach(id)
 		var name: String = TownPlazaPlan3D.SERVICES[id]["npc"]
@@ -99,6 +100,9 @@ func run() -> void:
 			check("shop has actual merchandise meshes", int(visual.report["goods_count"]) >= 40)
 			var roof := visual.get_node("Geometry/House_market_shop_slate") as MeshInstance3D
 			check("ridge caps share the roof offset", roof.mesh.get_aabb().end.z <= 1.7)
+			var slate := roof.material_override as ShaderMaterial
+			check("rebaked market preserves its approved slate variant",
+				slate != null and int(slate.get_shader_parameter("cell")) == 1)
 		else:
 			check(
 				"forge has large furnace opening",
@@ -185,6 +189,7 @@ func _audit_actual_clearance(game: Node) -> void:
 		wall_parts.append(_ground_rect(box))
 	var minimum_building := INF
 	var minimum_wall := INF
+	var minimum_gate := INF
 	for key: String in buildings:
 		var roof: Rect2 = buildings[key]
 		for other: String in buildings:
@@ -192,15 +197,65 @@ func _audit_actual_clearance(game: Node) -> void:
 				minimum_building = minf(minimum_building, _gap(roof, buildings[other]))
 		for wall: Rect2 in wall_parts:
 			minimum_wall = minf(minimum_wall, _gap(roof, wall))
+		for route: Dictionary in TownPlazaPlan3D.gate_routes(game.village):
+			var center: Vector2 = route["points"][0]
+			minimum_gate = minf(minimum_gate, _gap(roof, Rect2(center, Vector2.ZERO)))
 	check(
 		"actual roof silhouettes leave building alleys",
 		buildings.size() == 7 and minimum_building >= 1.2,
 		str(minimum_building)
 	)
 	check("actual eaves clear inner wall walks", minimum_wall >= 1.0, str(minimum_wall))
+	check("all actual house and service roofs leave at least five metres around every gate",
+		minimum_gate >= 5.0, str(minimum_gate))
 	print(
 		"ART_AUDIT TOWN_ROOF_CLEARANCE ",
 		JSON.stringify(
-			{"roofs": buildings, "building_gap_m": minimum_building, "wall_gap_m": minimum_wall}
+			{"roofs": buildings, "building_gap_m": minimum_building, "wall_gap_m": minimum_wall,
+			"gate_gap_m": minimum_gate}
 		)
 	)
+
+
+func _audit_gate_roads(game: Node) -> void:
+	var village: Village = game.village
+	var spatial: SpatialWorld3D = game.spatial_world
+	var routes := TownPlazaPlan3D.gate_routes(village)
+	check("every actual town gate has a plaza approach", routes.size() == 4)
+	check("the fountain plaza has room for circulation and meeting NPCs",
+		TownPlazaPlan3D.PLAZA.get_area() >= 320.0)
+	for route: Dictionary in routes:
+		var points: PackedVector2Array = route["points"]
+		var center := points[0]
+		var destination := points[1]
+		var direction := (destination - center).normalized()
+		var outside := center - direction * 2.5
+		var mapped := true
+		for fraction: float in [0.0, .25, .5, .75, 1.0]:
+			var projected := Iso.project(center.lerp(destination, fraction) * WorldSpace3D.GROUND_UNITS_PER_METER)
+			mapped = mapped and Geometry2D.is_point_in_polygon(projected, village.map_roads[0])
+		check("map paving reaches the real aperture and plaza for gate %s" % route["gate"], mapped)
+		var start := Iso.project(outside * WorldSpace3D.GROUND_UNITS_PER_METER)
+		var finish := Iso.project(destination * WorldSpace3D.GROUND_UNITS_PER_METER)
+		var entered := spatial.move_actor(start, finish, Player.RADIUS)
+		var exited := spatial.move_actor(finish, start, Player.RADIUS)
+		check("native hero capsule passes both ways along gate-to-plaza route %s" % route["gate"],
+			entered.distance_to(finish) < 2.0 and exited.distance_to(start) < 2.0,
+			"enter=%s exit=%s" % [entered.distance_to(finish), exited.distance_to(start)])
+		check("gate road endpoint belongs to the actual safe plaza %s" % route["gate"],
+			Geometry2D.is_point_in_polygon(finish, village.safe_zone))
+	for index: int in [1, 3]:
+		var at := WorldSpace3D.projected_to_world(village.gate_points[index])
+		var bounds := TownPlazaPlan3D.TOWN_INTERIOR
+		check("expanded gate agrees with expanded safety region %d" % index,
+			at.z > bounds.end.y if index == 1 else at.x > bounds.end.x)
+	var memory_chest: Chest = game.chests[7]
+	var memory := memory_chest.position
+	var ring := Chest.COLLISION_RADIUS + Player.RADIUS + 12.0
+	# 최종 기준점은 ChestPlacement가 기존 장애물을 피해 최대11×30 지면 단위 안에서 정한다.
+	check("east memory chest keeps its stable reward index and planned field anchor",
+		memory_chest.index == 7 and memory.is_equal_approx(village.chest_points[7])
+		and Iso.unproject(memory).distance_to(Village.MEMORY_SPOTS[2]) <= 330.1)
+	check("east memory chest stays in the field after the wall moves",
+		not Geometry2D.is_point_in_polygon(memory, village.safe_zone)
+		and not spatial.blocked(memory + Iso.project(Vector2(ring, 0)), Player.RADIUS))

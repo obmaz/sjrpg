@@ -45,10 +45,11 @@ var safe_zone: PackedVector2Array
 var spawn_point := Vector2.ZERO
 var chest_points: Array[Vector2] = []
 ## 숲의 기억 상자: 서쪽 · 북쪽 · 동쪽 길 (ground units).
-## East chest stays outside the gate-snapped wall: its old u1450 was inside the
-## 64-unit wall footprint. +30u is the smallest whole-unit shift preserving SKIN
-## around the enlarged native chest cylinder; reward/save index7 is unchanged.
-const MEMORY_SPOTS := [Vector2(-1900.0, 130.0), Vector2(180.0, -1900.0), Vector2(1480.0, 260.0)]
+## 동쪽 상자는 확장된 성벽 바깥의 같은 여유를 유지한다. 보상/저장 index7은 그대로다.
+const MEMORY_SPOTS := [
+	Vector2(-1900.0, 130.0), Vector2(180.0, -1900.0),
+	Vector2(1480.0 + TownPlazaPlan3D.WALL_EXTENSION.x * WorldSpace3D.GROUND_UNITS_PER_METER, 260.0)
+]
 var gate_points: Array[Vector2] = []
 ## Wall-end centre of each gate's two wings in ground units: gate -> [Vector2, Vector2].
 var gate_ends: Array = []
@@ -140,23 +141,13 @@ func _build_chest_points() -> void:
 
 # ───────── ground ─────────
 
-func _box(a_uv: Vector2, b_uv: Vector2) -> PackedVector2Array:
-	var a := ground(a_uv)
-	var b := ground(b_uv)
-	return PackedVector2Array([a, Vector2(b.x, a.y), b, Vector2(a.x, b.y)])
-
-
 ## Reference limestone laid on the actual projected walkable ground.
 ## The material has no baked shadow patches; actual tree casters shade it separately.
 func _build_paving(layer: Node2D) -> void:
 	var group := Node2D.new()
 	group.z_index = 1
 	layer.add_child(group)
-	var merged := ChapelPlan3D.polygon(TownPlazaPlan3D.PLAZA)
-	for index in merged.size():
-		merged[index] *= WorldSpace3D.GROUND_UNITS_PER_METER
-	for other in [_box(Vector2(0.02, 0.453), Vector2(0.96, 0.547)), _box(Vector2(0.453, 0.06), Vector2(0.547, 0.94))]:
-		merged = Geometry2D.merge_polygons(merged, other)[0]
+	var merged := TownPlazaPlan3D.paving(self)
 	var stone := Polygon2D.new()
 	stone.polygon = merged
 	map_roads.append(_project_polygon(merged))
@@ -172,11 +163,12 @@ func _build_paving(layer: Node2D) -> void:
 	var dirt := ForestArt.texture("earth")
 	var north_bank := Iso.unproject(bridge.axis_point(1.0))
 	var south_bank := Iso.unproject(bridge.axis_point(0.0))
+	var exits := TownPlazaPlan3D.gate_routes(self)
 	var roads := [
-		[ground(Vector2(.5,.10)), Vector2(0,-3400), 132.0],
-		[ground(Vector2(.04,.5)), Vector2(-3400,-60), 132.0],
-		[ground(Vector2(.94,.5)), Vector2(9600,-60), 132.0],
-		[ground(Vector2(.5,.90)), Vector2(0,2600), 132.0],
+		[exits[0]["points"][0] * WorldSpace3D.GROUND_UNITS_PER_METER, Vector2(0,-3400), 132.0],
+		[exits[2]["points"][0] * WorldSpace3D.GROUND_UNITS_PER_METER, Vector2(-3400,-60), 132.0],
+		[exits[3]["points"][0] * WorldSpace3D.GROUND_UNITS_PER_METER, Vector2(9600,-60), 132.0],
+		[exits[1]["points"][0] * WorldSpace3D.GROUND_UNITS_PER_METER, Vector2(0,2600), 132.0],
 		[Vector2(0,2600), Vector2(ForestRegion.BRIDGE_U,2600), 110.0],
 		[Vector2(ForestRegion.BRIDGE_U,2600), north_bank, 95.0],
 		[north_bank, south_bank, 95.0],
@@ -320,7 +312,7 @@ func _build_walls(world: Node2D) -> void:
 		var run: Array = data["wall_runs"][r]
 		var pts: Array[Vector2] = []
 		for p in run:
-			pts.append(ground(Vector2(p[0], p[1])))
+			pts.append(TownPlazaPlan3D.wall_ground(self, Vector2(p[0], p[1])))
 		pts[0] = _snap_to_gate(pts[0], run_gates[r][0])
 		pts[pts.size() - 1] = _snap_to_gate(pts[pts.size() - 1], run_gates[r][1])
 		for i in range(1, pts.size()):
@@ -379,7 +371,7 @@ func _build_gates(world: Node2D) -> void:
 		var def: Dictionary = data["sprites"][key]
 		var info: Dictionary = data["gates"][key]
 		var s := IsoSprite.new().setup(def, float(def["world_height"]))
-		s.position = point(uv)
+		s.position = Iso.project(TownPlazaPlan3D.wall_ground(self, uv))
 		for strip in def["slices"]:
 			world.add_child(s.make_strip(strip[0], strip[1], Vector2(strip[2], strip[3])))
 		gate_points.append(s.position)
@@ -697,7 +689,11 @@ func _build_npcs(world: Node2D) -> void:
 
 ## Trees, plants and rocks of the surrounding stage-1 forest field.
 func build_field(world: Node2D, field: Rect2, rng: RandomNumberGenerator) -> void:
-	var town := Rect2(ground(Vector2(-0.05, 0.0)), Vector2(extent * 1.1, extent))
+	# 새 성벽 안쪽에도 필드 나무/바위가 생기지 않게 같은 미터 범위를 사용한다.
+	var town := TownPlazaPlan3D.TOWN_INTERIOR.grow(2.6)
+	town.position *= WorldSpace3D.GROUND_UNITS_PER_METER
+	town.size *= WorldSpace3D.GROUND_UNITS_PER_METER
+	town = town.merge(Rect2(ground(Vector2(-0.05, 0.0)), Vector2(extent * 1.1, extent)))
 	var placed: Array[Vector2] = []
 	var tree_cells := {}
 	var attempts := 0

@@ -58,7 +58,7 @@ func run() -> void:
 	# Inspect actual draw rectangles in both opposite runs; collision overlaps remain intentional.
 	for run_index in [0, 3]:
 		var corner: Array = village.data["wall_runs"][run_index][1]
-		var center := village.point(Vector2(corner[0], corner[1]))
+		var center := Iso.project(TownPlazaPlan3D.wall_ground(village, Vector2(corner[0], corner[1])))
 		var bounded := true
 		var nearby := 0
 		for wall in walls:

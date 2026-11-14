@@ -258,7 +258,7 @@ static func style_button(button: Button, primary := false, selected := false, co
 	var already_fitting := bool(button.get_meta("ui_generated_fitting", false))
 	button.set_meta("ui_generated_fitting", true)
 	button.set_meta("ui_compact_button", compact)
-	for state: String in ["normal", "hover", "pressed", "disabled", "focus"]:
+	for state: String in ["normal", "hover", "pressed", "disabled"]:
 		var skin := GeneratedSkin.new()
 		skin.configure("button", primary, selected)
 		if state == "pressed":
@@ -266,6 +266,10 @@ static func style_button(button: Button, primary := false, selected := false, co
 		elif state == "disabled":
 			skin.tint = Color(0.5, 0.5, 0.5)
 		button.add_theme_stylebox_override(state, skin)
+	# Focus is an overlay; repeating the banner here doubles its painted border.
+	var focus := StyleBoxFlat.new()
+	focus.bg_color = Color.TRANSPARENT
+	button.add_theme_stylebox_override("focus", focus)
 	for state: String in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
 		button.add_theme_color_override(state, Color("fff2d1") if primary or selected else TEXT)
 	button.add_theme_color_override("font_disabled_color", Color("a69e8c"))

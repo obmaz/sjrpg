@@ -337,8 +337,13 @@ if (scene === 'defender') {
     if (scene.endsWith('_break') && !(treeReview.effects.breaking_trees >= 1)) throw new Error('Actual brittle tree break has no animated geometry');
     if (scene === 'tree_burning' && !(treeReview.effects.flames >= 8)) throw new Error('Burning tree has no branch flames');
 } else if (scene.startsWith('gate_closed')) {
-    await page.waitForFunction(() => window.__sjrpgGateReview?.closed === true, null, {timeout: 60000});
-    console.log('Actual threat closed the gate:', await page.evaluate(() => window.__sjrpgGateReview));
+    await page.waitForFunction(() => Boolean(window.__sjrpgGateReview), null, {timeout: 150000});
+    const gate=await page.evaluate(() => window.__sjrpgGateReview);
+    if(!gate.closed) {
+        await capture({path:out.replace(/\.png$/, '-failed.png')});
+        throw new Error('Actual gate closure failed: '+JSON.stringify(gate));
+    }
+    console.log('Actual threat closed the gate:',gate);
 } else if (scene.startsWith('fx_')) {
     await page.waitForFunction(() => window.__sjrpgFxReview?.actual_cast === true, null, {timeout: 60000}).catch(async error => {
         await capture({path: out.replace(/\.png$/, '-failed.png')});

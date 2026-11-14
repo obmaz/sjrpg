@@ -2,6 +2,7 @@ extends TestCase
 ## Save-state geometry and guarded callbacks; browser harness supplies real input/visual proof.
 const REVIEW := preload("res://scripts/inspection/save_layout_review.gd")
 const SELECT := preload("res://scripts/ui/screens/class_select.gd")
+const TITLE := preload("res://scripts/ui/screens/title_screen.gd")
 const EPS := 1.5
 
 
@@ -18,7 +19,10 @@ func _layout_check(select: Control, view: SubViewport, scenario: String) -> void
 	check("save title and subtitle stay separate " + label, select.heading.get_global_rect().end.y <= select.subtitle.get_global_rect().position.y + EPS)
 	check("wrapped subtitle stays above the real scrolling list " + label, select.subtitle.get_global_rect().end.y <= list.position.y + EPS)
 	check("footer context stays separate from its main action " + label, _inside(footer, select.slot_context.get_global_rect()) and select.slot_context.get_global_rect().end.y <= select.continue_button.get_global_rect().position.y + EPS)
+	check("main action remains fully inside its fixed footer after every rotation " + label,
+		_inside(footer, select.continue_button.get_global_rect()))
 	check("save sheet exposes exactly four real source rows " + label, select.slot_buttons.size() == 4 and select.slot_bands.size() == 4)
+	check("touch list never follows an incidental pressed-row focus", not select.slot_scroll.follow_focus)
 	if not select._slot_overflow:
 		var last_row: Rect2 = select.slot_bands[3].get_global_rect()
 		check("all-visible save cards fill the body up to the fixed action on unfolded screens " + label,
@@ -64,11 +68,64 @@ func _layout_check(select: Control, view: SubViewport, scenario: String) -> void
 		if index > 0:
 			check("measured save rows do not overlap " + label, select.slot_bands[index - 1].get_global_rect().end.y < box.position.y)
 		row.grab_focus()
+		# 패드는 선택 행을 명시적으로 드러낸다. 터치 포커스는 스크롤을 바꾸지 않는다.
+		var old_gamepad: bool = Gamepad.using_gamepad
+		Gamepad.using_gamepad = true
+		select._reveal_focused_slot()
+		Gamepad.using_gamepad = old_gamepad
 		await _frames(3)
 		if not _inside(list, row.get_global_rect()):
 			print("FAIL SAVE_FOCUS_DIAG ", JSON.stringify({"scenario": label, "slot": index + 1, "clip_before": str(list), "clip_now": str(select.slot_scroll.get_global_rect()), "row": str(row.get_global_rect()), "scroll": select.slot_scroll.scroll_vertical, "max": select.slot_scroll.get_v_scroll_bar().max_value, "page": select.slot_scroll.get_v_scroll_bar().page}))
-		check("keyboard focus brings every actual row fully into the list " + label, _inside(list, row.get_global_rect()))
+		check("explicit controller navigation brings every actual row fully into the list " + label, _inside(list, row.get_global_rect()))
 	check("scrolling never moves the fixed footer " + label, select.slot_footer.get_global_rect().is_equal_approx(footer))
+
+
+func _touch_focus_check(select: Control, view: SubViewport) -> void:
+	var old_gamepad: bool = Gamepad.using_gamepad
+	Gamepad.using_gamepad = false
+	view.size = Vector2i(568, 320)
+	await _frames(5)
+	select.slot_buttons[0].grab_focus()
+	select.slot_scroll.scroll_vertical = ceili(select.slot_scroll.get_v_scroll_bar().max_value)
+	await _frames(3)
+	var before: int = select.slot_scroll.scroll_vertical
+	check("touch scroll fixture actually overflows", before > 0)
+	select._layout()
+	select._queue_slot_reveal()
+	select._reveal_focused_slot()
+	await _frames(6)
+	check("touch list remains scrolled away from the previously pressed row after relayout",
+		select.slot_scroll.scroll_vertical == before)
+	Gamepad.using_gamepad = old_gamepad
+
+
+func _entry_action_rotation_check(view: SubViewport) -> void:
+	var title := TITLE.new()
+	view.add_child(title)
+	var initial_height := 0.0
+	for dimensions in [Vector2i(720, 1280), Vector2i(768, 896), Vector2i(896, 768), Vector2i(720, 1280)]:
+		view.size = dimensions
+		await _frames(5)
+		var area := Rect2(Vector2.ZERO, Vector2(dimensions))
+		var previous := Rect2()
+		var height := title._btn_new_game.size.y
+		var scale := UiMetrics.units_per_display_pixel(view)
+		for button: Button in [title._btn_new_game, title._btn_load_game, title._btn_settings]:
+			var bounds := button.get_global_rect()
+			check("same title actions fit after phone/Fold rotation %s/%s" % [dimensions, button.text],
+				_inside(area, bounds) and is_equal_approx(bounds.size.y, height)
+				and bounds.size.y / scale >= 55.9)
+			if previous.has_area():
+				check("title actions retain a full touch gap after rotation %s" % dimensions,
+					(bounds.position.y - previous.end.y) / scale >= UiKit.ACTION_GAP_DP - EPS)
+			previous = bounds
+		if dimensions == Vector2i(720, 1280):
+			if initial_height == 0.0:
+				initial_height = height
+			else:
+				check("returning to the phone restores the original title action height", is_equal_approx(height, initial_height))
+	title.queue_free()
+	await _frames(2)
 
 
 func _modal_check(select: Control, view: SubViewport) -> void:
@@ -145,6 +202,7 @@ func run() -> void:
 	var view := SubViewport.new()
 	view.size = Vector2i(720, 1280)
 	add_child(view)
+	await _entry_action_rotation_check(view)
 	var select: Control
 	for scenario: String in REVIEW.SCENARIOS:
 		check("prepare actual independent file scenario " + scenario, REVIEW.prepare_scenario(scenario))
@@ -158,12 +216,20 @@ func run() -> void:
 		var hero := GameState.hero_class
 		var gold := GameState.gold
 		var active := GameState.active_slot
+		var initial_action_height := 0.0
 		for dimensions in [Vector2i(720, 1280), Vector2i(1280, 720), Vector2i(540, 960), Vector2i(568, 320), Vector2i(320, 568), Vector2i(360, 640), Vector2i(768, 896), Vector2i(896, 768), Vector2i(800, 800), Vector2i(344, 883), Vector2i(883, 344), Vector2i(720, 1280)]:
 			view.size = dimensions
 			await _frames(4)
 			await _layout_check(select, view, scenario)
+			if dimensions == Vector2i(720, 1280):
+				if initial_action_height == 0.0:
+					initial_action_height = select.continue_button.size.y
+				else:
+					check("returning to the phone restores the original continue action height " + scenario,
+						is_equal_approx(select.continue_button.size.y, initial_action_height))
 		check("layout, focus and rotation preserve exact save bytes " + scenario, REVIEW.file_hashes() == before and GameState.hero_class == hero and GameState.gold == gold and GameState.active_slot == active)
 		if scenario == "mixed":
+			await _touch_focus_check(select, view)
 			var foreign := Control.new()
 			foreign.focus_mode = Control.FOCUS_ALL
 			foreign.size = Vector2(24, 24)

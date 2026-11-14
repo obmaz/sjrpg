@@ -26,9 +26,16 @@ func run() -> void:
 	hidden.hide()
 	outer.body.add_child(hidden)
 	await _frames(2)
+	Gamepad.using_gamepad = false
+	nav._process(0.11)
+	nav._refresh()
+	var touch_focus := first.get_theme_stylebox("focus") as StyleBoxFlat
+	check("touch selection has no controller outline", touch_focus != null and touch_focus.border_width_left == 0)
 	Gamepad.using_gamepad = true
 	nav._process(0.11)
 	nav._refresh()
+	var pad_focus := first.get_theme_stylebox("focus") as StyleBoxFlat
+	check("real controller keeps a visible focus outline", pad_focus != null and pad_focus.border_width_left == 2)
 	var snapshot := nav.review_snapshot()
 	check("ordered scope excludes disabled hidden and queued actions",
 		snapshot["target_keys"].has("first") and snapshot["target_keys"].has("last")

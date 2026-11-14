@@ -5,7 +5,7 @@
   "inputs": [
     {
       "path": "tools/assets/architecture/bake.gd",
-      "sha256": "d355919aecf937643d25faa45a1cecd5a32032978cfc775139a2545e6e0281a8"
+      "sha256": "9b482fa4b655360037852cde1d11c33e2cfe94a66b47e514301ecd1a9d629169"
     },
     {
       "path": "tools/assets/architecture/chapel_builder.gd",
@@ -29,7 +29,11 @@
     },
     {
       "path": "scripts/world/village.gd",
-      "sha256": "a9bcfa834930107f3ffcad0b00eaffecadac15904c7e159adbdab847da842de9"
+      "sha256": "1eb35ccf995e1459e22b2a160375b7f75bc6be39f3043a8debe0927b275bd8d1"
+    },
+    {
+      "path": "scripts/world/geometry/town_plaza_plan_3d.gd",
+      "sha256": "5002acf1aa44ce6d032b5a1acf9539639fe66ac4fc87eda40965ede2c834df6c"
     },
     {
       "path": "scripts/world/forest_region.gd",
@@ -93,10 +97,5 @@
   ],
   "units": "metres; +Y up; existing +Z front and foot datum",
   "materialPolicy": "GLB contains neutral PBR slots; visual.tscn binds original Godot shaders and shared textures without image copies.",
-  "collisionPolicy": "existing Native plans and SpatialWorld3D own collision; visual asset contains no physics bodies",
-  "placementCompatibility": {
-    "reason": "Shared metre poses rotate nw/ne/sw +90 degrees and spread village courtyards. Original local GLB geometry, layout, metre dimensions, pivot, collision ownership and scene are unchanged; shop selects the existing blue-grey slate cell through its material resource.",
-    "modelGeometryChanged": false,
-    "placementPlan": "scripts/world/geometry/town_plaza_plan_3d.gd"
-  }
+  "collisionPolicy": "existing Native plans and SpatialWorld3D own collision; visual asset contains no physics bodies"
 }

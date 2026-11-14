@@ -70,12 +70,14 @@ func _rebuild() -> void:
 			scroll.scroll_vertical = 0)
 		_build_inventory()
 	if can_shop:
-		add_footer("가방" if shopping else "상점", func():
+		var switch := UiKit.button("가방" if shopping else "상점", 22)
+		switch.pressed.connect(func():
 			shopping = not shopping
 			selected = null
 			selected_offer = ""
 			message = ""
-			_rebuild(), false, 1.0)
+			_rebuild())
+		body.add_child(switch)
 	add_footer("모험 계속하기", func(): closed.emit(), true, 2.0)
 	_refresh_icons(body)
 

@@ -92,15 +92,18 @@ func _refresh() -> void:
 	_buttons = found
 	for button: Control in _buttons:
 		button.focus_mode = Control.FOCUS_ALL
-		if not button.has_meta("gamepad_focus_style"):
+		var previous: Variant = button.get_meta("gamepad_focus_style") if button.has_meta("gamepad_focus_style") else null
+		if (not previous is StyleBoxFlat or previous != button.get_theme_stylebox("focus")
+			or bool(button.get_meta("gamepad_focus_active", false)) != Gamepad.using_gamepad):
 			var border := StyleBoxFlat.new()
 			border.bg_color = Color(0, 0, 0, 0)
 			border.border_color = Color("e2c28a")
-			border.set_border_width_all(2)
+			border.set_border_width_all(2 if Gamepad.using_gamepad else 0)
 			border.set_corner_radius_all(5)
 			border.set_expand_margin_all(3)
 			button.add_theme_stylebox_override("focus", border)
-			button.set_meta("gamepad_focus_style", true)
+			button.set_meta("gamepad_focus_style", border)
+			button.set_meta("gamepad_focus_active", Gamepad.using_gamepad)
 	if not Gamepad.using_gamepad or _buttons.is_empty():
 		return
 	var focused := get_viewport().gui_get_focus_owner()
@@ -158,6 +161,7 @@ func _mode_changed(active: bool) -> void:
 		var focus := get_viewport().gui_get_focus_owner()
 		if focus != null:
 			focus.release_focus()
+		_refresh()
 
 
 func _back() -> void:

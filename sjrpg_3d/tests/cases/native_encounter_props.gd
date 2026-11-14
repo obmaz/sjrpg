@@ -113,8 +113,9 @@ func _chest_clearance(game: Node, props: EncounterPropRenderer3D) -> void:
 	check("every enlarged chest uses a ground-aligned native blocker matching the new envelope", colliders_match and reports.size() == game.chests.size())
 	check("all enlarged chest bodies and complete lid sweeps clear existing walls and props", all_clear, JSON.stringify(reports))
 	check("every enlarged chest retains a real capsule approach and adjacent walking passage", all_approachable, JSON.stringify(reports))
-	var route_start := Iso.project(Vector2(1530, 160))
-	var route_finish := Iso.project(Vector2(1530, 360))
+	var east_extension := TownPlazaPlan3D.WALL_EXTENSION.x * WorldSpace3D.GROUND_UNITS_PER_METER
+	var route_start := Iso.project(Vector2(1530 + east_extension, 160))
+	var route_finish := Iso.project(Vector2(1530 + east_extension, 360))
 	var route_forward := world.move_actor(route_start, route_finish, Player.RADIUS)
 	var route_backward := world.move_actor(route_finish, route_start, Player.RADIUS)
 	check("the east memory chest keeps the existing exterior corridor walkable both ways", not game.in_town(route_start) and not game.in_town(route_finish) and WorldSpace3D.projected_to_world(route_forward).distance_to(WorldSpace3D.projected_to_world(route_finish)) < 0.04 and WorldSpace3D.projected_to_world(route_backward).distance_to(WorldSpace3D.projected_to_world(route_start)) < 0.04)

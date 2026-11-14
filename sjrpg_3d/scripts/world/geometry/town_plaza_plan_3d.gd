@@ -2,13 +2,15 @@ class_name TownPlazaPlan3D
 extends RefCounted
 ## 미터 단위 마을 배치. 표시·충돌·주민·마당은 같은 중심과 Y 회전을 공유한다.
 ## 성벽 안쪽 보행 범위. 가장자리로 옮긴 주민도 마을 안전 구역에 포함한다.
-const TOWN_INTERIOR := Rect2(-21.0, -19.2, 41.0, 36.2)
-const PLAZA := Rect2(-7.2, -7.0, 14.4, 14.5)
+const WALL_EXTENSION := Vector2(10.0, 10.0)
+const TOWN_INTERIOR := Rect2(-21.0, -19.2, 51.0, 46.2)
+const PLAZA := Rect2(-8.5, -7.5, 18.0, 18.0)
+const GATE_ROAD_HALF_WIDTH := 1.65
 const LEGACY_CENTERS := {
 	"nw": Vector2(-15.0, 9.0),
 	"ne": Vector2(-6.0, -12.6),
-	"sw": Vector2(3.8, 12.4),
-	"se": Vector2(14.8, 11.7),
+	"sw": Vector2(-6.0, 19.0),
+	"se": Vector2(19.0, 18.0),
 }
 ## +90°는 로컬 +Z 정면을 월드 +X, 즉 화면 우하단으로 돌린다.
 const LEGACY_YAWS := {"nw": PI * .5, "ne": PI * .5, "sw": PI * .5, "se": 0.0}
@@ -21,7 +23,7 @@ const WOODLAND_TREES := [
 	Vector2(6.9, -17.0),
 	Vector2(10.5, -16.0),
 	Vector2(-18.1, 13.1),
-	Vector2(10.2, 14.7)
+	Vector2(13.0, 23.5)
 ]
 const SERVICES := {
 	"market_shop":
@@ -33,12 +35,57 @@ const SERVICES := {
 	},
 	"open_smithy":
 	{
-		"center": Vector2(14.2, -5.2),
+		"center": Vector2(22.0, -7.5),
 		"size": Vector2(8.0, 8.0),
 		"npc": "대장장이",
 		"approach": Vector2(0.7, 4.65)
 	},
 }
+
+
+## 원본 UV는 보존하고 동·남 성곽만 바깥으로 옮긴다. 지붕·문 크기는 늘리지 않는다.
+static func wall_ground(village: Village, uv: Vector2) -> Vector2:
+	var at := village.ground(uv)
+	if uv.x > .75:
+		at.x += WALL_EXTENSION.x * WorldSpace3D.GROUND_UNITS_PER_METER
+	if uv.y > .75:
+		at.y += WALL_EXTENSION.y * WorldSpace3D.GROUND_UNITS_PER_METER
+	return at
+
+
+## 실제 성문 개구부에서 광장 가장자리까지의 넓은 축. 외부 길도 이 출발점을 읽는다.
+static func gate_routes(village: Village) -> Array[Dictionary]:
+	var routes: Array[Dictionary] = []
+	for index in village.gate_passages.size():
+		var center := Vector2.ZERO
+		for point: Vector2 in village.gate_passages[index]:
+			center += Iso.unproject(point) / WorldSpace3D.GROUND_UNITS_PER_METER
+		center /= village.gate_passages[index].size()
+		var destination := center.clamp(PLAZA.position + Vector2.ONE, PLAZA.end - Vector2.ONE)
+		routes.append({
+			"gate": index,
+			"points": PackedVector2Array([center, destination]),
+			"width": GATE_ROAD_HALF_WIDTH * 2.0
+		})
+	return routes
+
+
+## 둥근 광장 모서리와 성문 길을 같은 다각형으로 합쳐 지도/거리장에 전달한다.
+static func paving(village: Village) -> PackedVector2Array:
+	var rounded := Geometry2D.offset_polygon(
+		ChapelPlan3D.polygon(PLAZA.grow(-1.0)), 1.0, Geometry2D.JOIN_ROUND
+	)
+	var merged: PackedVector2Array = rounded[0]
+	for route: Dictionary in gate_routes(village):
+		var polygons := Geometry2D.offset_polyline(
+			route["points"], GATE_ROAD_HALF_WIDTH, Geometry2D.JOIN_ROUND, Geometry2D.END_ROUND
+		)
+		var joined := Geometry2D.merge_polygons(merged, polygons[0])
+		assert(joined.size() == 1, "성문 길은 분수 광장에 이어져야 합니다.")
+		merged = joined[0]
+	for index in merged.size():
+		merged[index] *= WorldSpace3D.GROUND_UNITS_PER_METER
+	return merged
 
 
 static func frame(id: String) -> Transform3D:

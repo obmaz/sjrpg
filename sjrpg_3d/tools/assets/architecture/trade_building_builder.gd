@@ -12,12 +12,16 @@ func make(presenter: Node, root: Node3D, id: String) -> Dictionary:
 	var unit := BoxMesh.new()
 	unit.size = Vector3.ONE
 	_box_arrays = unit.surface_get_arrays(0)
+	var roof := BuildingSurfaceMaterials.roof_material("shop" if id == "market_shop" else "smith")
+	# 전용 상점은 기존에 채택한 청회색 슬레이트를 재제작 때도 보존한다.
+	if id == "market_shop":
+		roof.set_shader_parameter("cell", 1)
 	_materials = {
 		"stone": presenter._materials["village_stone"],
 		"wood": presenter._materials["door_shop"],
 		"iron": presenter._materials["iron"],
 		"glass": presenter._materials["glass"],
-		"slate": BuildingSurfaceMaterials.roof_material("shop" if id == "market_shop" else "smith"),
+		"slate": roof,
 		"wall":
 		BuildingSurfaceMaterials.material(
 			"shop" if id == "market_shop" else "smith", Vector3(6.8, 3.7, 4.4), -1, 1.7

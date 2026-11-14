@@ -73,23 +73,26 @@ void fragment() {
 	vec2 uv = ground_world / 2.56;
 	vec3 grass = grass_surface(ground_world,0.0);
 	vec2 town_edge = min(ground_world-town_bounds.xy,town_bounds.zw-ground_world);
-	float settled = smoothstep(-1.5,1.0,min(town_edge.x,town_edge.y));
+	// 성벽 바깥의 식생 전이는 긴 직선 띠 대신 완만한 군락으로 풀린다.
+	float settlement_edge = min(town_edge.x,town_edge.y);
+	settlement_edge += (ground_noise(ground_world*.62)-.5)*1.5;
+	settlement_edge += (ground_noise(ground_world*2.4)-.5)*.32;
+	float settled = smoothstep(-1.8,1.4,settlement_edge);
 	vec3 woodland_grass = woodland(ground_world,vec2(1.0),2.1);
 	grass = mix(grass,woodland_grass,mix(.48,.72,ground_noise(ground_world/4.0))*settled);
 	vec3 color = grass;
 	float paving_relief = 0.0;
 	if (d < 1.5) {
-		vec2 town_edge = min(ground_world-town_bounds.xy,town_bounds.zw-ground_world);
-		float town = smoothstep(-0.8,1.2,min(town_edge.x,town_edge.y));
+		float town = smoothstep(-0.8,1.2,settlement_edge);
 		vec3 paving = paving_surface(ground_world,town);
 		paving = mix(paving,woodland(ground_world,vec2(0.0),1.2),town*.95);
-		float irregular = (ground_noise(ground_world*1.65)-.5)*mix(1.55,.48,town);
+		float irregular = (ground_noise(ground_world*1.65)-.5)*mix(1.55,.80,town);
 		float edge_d = d+irregular;
-		float feather = mix(.85,.32,town);
+		float feather = mix(.85,.48,town);
 		float cover = 1.0-smoothstep(-feather,feather,edge_d);
 		// 바깥길은 빠진 돌·흙 패치와 길 안까지 들어온 풀로 중심선의 반복도 깬다.
 		float encroach = smoothstep(.57,.77,ground_noise(ground_world/1.45+vec2(5.0)));
-		encroach *= mix(.72,.13,town)*smoothstep(-1.7,-.10,d+ground_noise(ground_world*2.0)*.6);
+		encroach *= mix(.72,.22,town)*smoothstep(-1.7,-.10,d+ground_noise(ground_world*2.0)*.6);
 		vec3 soil = texture(earth_texture,ground_world/2.56).rgb;
 		paving = mix(paving,soil,encroach*.44);
 		paving = mix(paving,grass,encroach*.78);

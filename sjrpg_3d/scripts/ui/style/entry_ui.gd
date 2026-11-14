@@ -6,6 +6,31 @@ const HEROES := {"warrior": "res://assets/ui/entry/warrior.webp", "mage": "res:/
 const TEXT := Color("e7dfd0")
 const MUTED := Color("a69e93")
 const BRONZE := Color("a38660")
+const ACTION_FONT_SIZE := 24.0
+const ACTION_FONT_DP := 18.0
+
+static func action_height(unit: float, display_scale: float) -> float:
+	return maxf(72.0 * unit, UiKit.ACTION_TOUCH_DP * display_scale)
+
+## 회전 전 최소 높이·스킨 여백을 함께 복원한 뒤 고정 영역이 예약할 실제 높이를 돌려준다.
+static func fit_action(button: Button, requested_height: float, display_scale: float) -> float:
+	# 지연된 공용 refit도 지금 화면의 배율을 사용해야 한다.
+	button.set_meta("ui_generated_scale", display_scale)
+	var normal := button.get_theme_stylebox("normal") as UiKit.GeneratedSkin
+	var height := requested_height
+	if normal != null:
+		var text_height := maxf(0.0, button.get_minimum_size().y
+			- normal.get_content_margin(SIDE_TOP) - normal.get_content_margin(SIDE_BOTTOM))
+		height = maxf(height, ceilf(maxf(44.0 * display_scale, text_height / 0.52)))
+	# 공용 자동 맞춤은 최소 크기를 늘리기만 하므로 각 화면의 목표부터 다시 확정한다.
+	button.custom_minimum_size = Vector2(0.0, height)
+	for state: String in ["normal", "hover", "pressed", "disabled", "focus"]:
+		var skin := button.get_theme_stylebox(state) as UiKit.GeneratedSkin
+		if skin != null:
+			skin.set_unit(display_scale)
+			skin.set_button_geometry(height, false)
+	button.update_minimum_size()
+	return maxf(height, button.get_combined_minimum_size().y)
 
 static func image(path: String) -> Texture2D:
 	return load(path) as Texture2D if ResourceLoader.exists(path) else null

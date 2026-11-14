@@ -2,8 +2,8 @@ class_name PanelFrame
 extends Control
 ## Mobile-first panel scaffold shared by 가방 · 스킬 · 설정: dim backdrop, a framed panel
 ## that fills the phone screen (respecting the safe area) and caps its width on
-## wide screens, a header with a big close button, tabs, a scrolling body and a
-## footer of 64px+ touch buttons.
+## wide screens, a header, tabs, a scrolling body and fixed bottom actions.
+## A footer return action replaces the redundant header close button.
 
 signal closed
 
@@ -122,7 +122,7 @@ func _ready() -> void:
 	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.scroll_deadzone = 14
-	scroll.follow_focus = true
+	scroll.follow_focus = false
 	body_holder.add_child(scroll)
 	body = VBoxContainer.new()
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -240,6 +240,11 @@ func _layout() -> void:
 	_sizing = false
 
 
+func set_close_visible(value: bool) -> void:
+	_close.visible = value
+	_request_layout()
+
+
 func set_compact() -> void:
 	compact = true
 	_request_layout()
@@ -280,7 +285,10 @@ func add_footer(text: String, on_press: Callable, primary := false, weight := 1.
 	b.custom_minimum_size = Vector2(0, MIN_TOUCH + 10.0)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b.size_flags_stretch_ratio = weight
-	UiKit.style_button(b, primary)
+	var returns_to_game := text in ["모험 계속하기", "탐험 계속하기", "계속 탐험하기", "닫기", "대화 마치기", "돌아가기", "취소 / 돌아가기"]
+	UiKit.style_button(b, primary and not returns_to_game)
+	if returns_to_game:
+		set_close_visible(false)
 	b.pressed.connect(on_press)
 	footer.add_child(b)
 	_request_layout()

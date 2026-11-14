@@ -5,7 +5,7 @@
   "inputs": [
     {
       "path": "tools/assets/architecture/bake.gd",
-      "sha256": "d355919aecf937643d25faa45a1cecd5a32032978cfc775139a2545e6e0281a8"
+      "sha256": "9b482fa4b655360037852cde1d11c33e2cfe94a66b47e514301ecd1a9d629169"
     },
     {
       "path": "tools/assets/architecture/fortress_builder.gd",
@@ -29,7 +29,11 @@
     },
     {
       "path": "scripts/world/village.gd",
-      "sha256": "a9bcfa834930107f3ffcad0b00eaffecadac15904c7e159adbdab847da842de9"
+      "sha256": "1eb35ccf995e1459e22b2a160375b7f75bc6be39f3043a8debe0927b275bd8d1"
+    },
+    {
+      "path": "scripts/world/geometry/town_plaza_plan_3d.gd",
+      "sha256": "5002acf1aa44ce6d032b5a1acf9539639fe66ac4fc87eda40965ede2c834df6c"
     },
     {
       "path": "scripts/world/forest_region.gd",
@@ -41,17 +45,17 @@
     },
     {
       "path": "scripts/world/geometry/fortress_plan_3d.gd",
-      "sha256": "2ef4ef473119e7f4b44322b606ba6b328a8eba1087c0faeff1be07ef26989523"
+      "sha256": "1e02633148a11b894430d10ecc759d38921f2a916c7b4247d070962f52ad8e0c"
     }
   ],
   "outputs": [
     {
       "path": "model.glb",
-      "sha256": "3d9ea6d429702538515d5caa275f54b016e1d0d5b2afa0fd92fee551ceeb8038"
+      "sha256": "e1422648e3c2b5cfae43a35913fde21d257b3cc5a8616877ee603f33e3c6a6a7"
     },
     {
       "path": "layout.tres",
-      "sha256": "bf24c5c8373c71ea8141f9b552d807e7b92bf6699bafaec3d67404c5b905c2de"
+      "sha256": "b5923623fad4bd0f35c88f43918ab9814a03436c1dc590f4429b6a19eb501985"
     },
     {
       "path": "visual.tscn",
@@ -78,7 +82,7 @@
       "sha256": "d6a3ec2daca36e57b3df97357bf1da501d2ba14c73207f2a075def187c8c9707"
     }
   ],
-  "triangles": 37472,
+  "triangles": 41200,
   "meshes": 20,
   "materialRoles": [
     "wood",
@@ -88,10 +92,5 @@
   ],
   "units": "metres; +Y up; existing +Z front and foot datum",
   "materialPolicy": "GLB contains neutral PBR slots; visual.tscn binds original Godot shaders and shared textures without image copies.",
-  "collisionPolicy": "existing Native plans and SpatialWorld3D own collision; visual asset contains no physics bodies",
-  "placementCompatibility": {
-    "reason": "Shared metre poses rotate nw/ne/sw +90 degrees and spread village courtyards. Original local GLB geometry, layout, metre dimensions, pivot, collision ownership and scene are unchanged; shop selects the existing blue-grey slate cell through its material resource.",
-    "modelGeometryChanged": false,
-    "placementPlan": "scripts/world/geometry/town_plaza_plan_3d.gd"
-  }
+  "collisionPolicy": "existing Native plans and SpatialWorld3D own collision; visual asset contains no physics bodies"
 }

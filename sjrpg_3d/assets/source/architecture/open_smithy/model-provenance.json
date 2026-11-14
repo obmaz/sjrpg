@@ -5,7 +5,7 @@
   "inputs": [
     {
       "path": "tools/assets/architecture/bake.gd",
-      "sha256": "d355919aecf937643d25faa45a1cecd5a32032978cfc775139a2545e6e0281a8"
+      "sha256": "9b482fa4b655360037852cde1d11c33e2cfe94a66b47e514301ecd1a9d629169"
     },
     {
       "path": "tools/assets/architecture/bake_trade_buildings.gd",
@@ -13,7 +13,7 @@
     },
     {
       "path": "tools/assets/architecture/trade_building_builder.gd",
-      "sha256": "755855bbff9283dba713172de720a7751c17452a8e177502d3e7a0c744a66f67"
+      "sha256": "3f476d8f44b7dca6cfc84b99c6b687e64477633415f866efc2f5e4edc2a84e18"
     },
     {
       "path": "tools/assets/architecture/house_builder.gd",
@@ -25,7 +25,7 @@
     },
     {
       "path": "scripts/world/geometry/town_plaza_plan_3d.gd",
-      "sha256": "b4384f6a2171c89472fae6631bf130bc5908701d77d40eadacc6c293e0227050"
+      "sha256": "5002acf1aa44ce6d032b5a1acf9539639fe66ac4fc87eda40965ede2c834df6c"
     },
     {
       "path": "assets/models/architecture/shared/house_plan.gd",
@@ -103,10 +103,5 @@
   ],
   "units": "metres; +Y up; +Z front; ground origin",
   "materialPolicy": "Shared village textures plus generated 4x4 workshop atlas. GLB neutral slots; Godot scene material bindings.",
-  "collisionPolicy": "TownPlazaPlan3D blockers/posts shared with model and SpatialWorld3D; open smithy floor traversable",
-  "placementCompatibility": {
-    "reason": "Shared metre poses rotate nw/ne/sw +90 degrees and spread village courtyards. Original local GLB geometry, layout, metre dimensions, pivot, collision ownership and scene are unchanged; shop selects the existing blue-grey slate cell through its material resource.",
-    "modelGeometryChanged": false,
-    "placementPlan": "scripts/world/geometry/town_plaza_plan_3d.gd"
-  }
+  "collisionPolicy": "TownPlazaPlan3D blockers/posts shared with model and SpatialWorld3D; open smithy floor traversable"
 }

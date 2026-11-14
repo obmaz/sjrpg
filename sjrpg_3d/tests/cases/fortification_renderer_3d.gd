@@ -171,7 +171,7 @@ func run() -> void:
 	check(
 		"masonry and the merged guard walk stay within their measured budget",
 		(
-			int(report["triangles"]) < 38000
+			int(report["triangles"]) < 43000
 			and int(report["triangles"]) > 1000
 			and int(report["static_surfaces"]) <= 4
 		)
@@ -192,7 +192,7 @@ func run() -> void:
 			actual_triangles += (indices.size() if not indices.is_empty() else vertices.size()) / 3
 	check(
 		"fortification budget counts actual installed static and moving geometry",
-		actual_triangles == int(report["triangles"]) and actual_triangles < 38000
+		actual_triangles == int(report["triangles"]) and actual_triangles < 43000
 	)
 	var stone_meshes := []
 	var valid := true

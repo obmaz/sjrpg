@@ -34,6 +34,7 @@ func _process(delta: float) -> void:
 			view - Vector2(margins.x + margins.z, margins.y + margins.w))),
 		"paused": get_tree().paused, "native_ready": _game.get("native_ready"),
 		"hud_targets": targets, "world_zoom": Prefs.world_zoom, "gold": GameState.gold,
+		"screen_orientation": Prefs.screen_orientation,
 		"panel": {}
 	}
 	var panel: PanelFrame = hud._panel
@@ -90,7 +91,9 @@ func _panel_snapshot(panel: PanelFrame) -> Dictionary:
 		var font := control.get_theme_font("font")
 		var inner := _content_rect(control, "normal") if control is Button else box
 		var skin: UiKit.GeneratedSkin = control.get_theme_stylebox("normal") as UiKit.GeneratedSkin if control is Button else null
+		var normal: StyleBox = control.get_theme_stylebox("normal") if control is Button else null
 		controls.append({
+			"id": control.get_instance_id(),
 			"path": str(panel.get_path_to(control)), "kind": "button" if control is Button else "label",
 			"text": words, "rect": _rect(box), "clip": _rect(clip),
 			"visible_rect": _rect(box.intersection(clip)), "font": font_size,
@@ -99,6 +102,11 @@ func _panel_snapshot(panel: PanelFrame) -> Dictionary:
 			"content_rect": _rect(inner),
 			"text_height": font.get_multiline_string_size(words, HORIZONTAL_ALIGNMENT_LEFT, maxf(1.0, inner.size.x), font_size).y,
 			"art_source": skin.drawn_source_path() if skin != null else "",
+			"style": normal.get_class() if normal != null else "",
+			"world_zoom": control.get_meta("world_zoom") if control.has_meta("world_zoom") else null,
+			"screen_orientation": control.get_meta("screen_orientation") if control.has_meta("screen_orientation") else null,
+			"selected": control.button_pressed if control is Button else false,
+			"text_centered": control.alignment == HORIZONTAL_ALIGNMENT_CENTER if control is Button else false,
 			"input_ignored": control.mouse_filter == Control.MOUSE_FILTER_IGNORE,
 			"wrap": int(control.get("autowrap_mode")),
 			"in_body": panel.body_holder.is_ancestor_of(control),
@@ -112,7 +120,7 @@ func _panel_snapshot(panel: PanelFrame) -> Dictionary:
 		"content_rect": _rect(_content_rect(panel._panel, "panel")),
 		"header": _rect(panel._header.get_global_rect()),
 		"title": _rect(panel.title_label.get_global_rect()),
-		"close": _rect(panel._header.get_child(-1).get_global_rect()),
+		"close": _rect(panel._close.get_global_rect()) if is_instance_valid(panel._close) and panel._close.is_visible_in_tree() else [],
 		"body_holder": _rect(panel.body_holder.get_global_rect()),
 		"body_scroll": _rect(panel.scroll.get_global_rect()), "body": _rect(panel.body.get_global_rect()),
 		"footer": _rect(panel.footer.get_global_rect()), "controls": controls, "scrolls": scrolls,

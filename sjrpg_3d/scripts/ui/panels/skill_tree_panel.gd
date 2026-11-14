@@ -73,10 +73,6 @@ func _ready() -> void:
 	_detail.add_theme_constant_override("separation", 8)
 	detail_scroll.add_child(_detail)
 
-	add_footer("스킬 초기화", func():
-		if GameState.invested_points() > 0:
-			GameState.reset_skills()
-			_refresh(), false, 1.0)
 	add_footer("모험 계속하기", func(): closed.emit(), true, 2.0)
 
 	get_viewport().size_changed.connect(_fit)
@@ -349,6 +345,7 @@ func _build_detail() -> void:
 		child.queue_free()
 	if _selected == "" or GameState.skill(_selected).is_empty():
 		_detail.add_child(UiKit.label("기술을 눌러 정보를 확인하세요", 18))
+		_add_reset_action()
 		_fit_detail_type()
 		return
 	var s := GameState.skill(_selected)
@@ -427,7 +424,17 @@ func _build_detail() -> void:
 			row.add_child(b)
 		_detail.add_child(PanelFrame.wrap_label("같은 버튼을 다시 누르면 해제합니다", 15, UiKit.MUTED))
 
+	_add_reset_action()
 	_fit_detail_type()
+
+
+func _add_reset_action() -> void:
+	var reset := UiKit.button("스킬 초기화", 21)
+	reset.disabled = GameState.invested_points() == 0
+	reset.pressed.connect(func():
+		GameState.reset_skills()
+		_refresh())
+	_detail.add_child(reset)
 
 
 func _fit_detail_type() -> void:

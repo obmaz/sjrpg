@@ -533,40 +533,101 @@ func preview_defender_feedback() -> void:
 
 ## Actual threat scan and door animation; the dummy cannot attack during visual review.
 func preview_gate_closure(index: int) -> void:
-	await _game.get_tree().create_timer(4.0, false).timeout
+	# 원화/가림 셰이더 준비는 장치마다 다르다. 준비 전의 고정 프레임 수를
+	# 성문 동작 시간으로 사용하지 않고 실제 운영 월드가 처리 가능한지 기다린다.
+	var preparation_started := Time.get_ticks_msec()
+	while is_instance_valid(_game) and not _game.is_queued_for_deletion():
+		if _game.native_ready and not Gamepad.loading_blocked() and _game.can_process() and _game.town_gates.can_process() and _game.town_gates.is_processing():
+			break
+		if Time.get_ticks_msec() - preparation_started >= 120000:
+			_publish_gate_review(index, null, "preparation_timeout")
+			return
+		await _game.get_tree().process_frame
+	if not is_instance_valid(_game) or _game.is_queued_for_deletion():
+		return
+	_game.encounters.set_process(false)
+	_game.quest_runtime.set_process(false)
 	for enemy in _game.enemies:
 		enemy.queue_free()
 	_game.enemies.clear()
 	_game._spawn_timer = 10000.0
-	_game.player.position = _game.village.spawn_point
+	_game.hud.controls.release_all()
+	_game.player.move_input = Vector2.ZERO
+	_game.player.held_slots.clear()
+	_game.player.set_process(false)
+	_game.spatial_world.teleport_source_actor(_game.player, _game.village.spawn_point, Player.RADIUS)
+	# 이전 적의 네이티브 몸체가 물리 공간에서 제거된 뒤 새 위협을 배치한다.
+	await _game.get_tree().physics_frame
+	await _game.get_tree().process_frame
+	if not is_instance_valid(_game) or _game.is_queued_for_deletion():
+		return
 	var at: Vector2 = _game.village.gate_points[index]
 	_inspection.focus_point = at + Vector2(0, 20)
 	_game.camera.position = _inspection.focus_point
 	_game.camera.reset_smoothing()
-	var direction: Vector2 = (at - _game.village.spawn_point).normalized()
+	_game.camera.force_update_scroll()
+	var normal := FortificationRenderer3D._outward_normal(
+		_game.village.safe_zone, WorldSpace3D.projected_to_world(at)
+	)
+	var direction := Iso.project(Vector2(normal.x, normal.z)).normalized()
 	var target := Enemy.new()
 	target.setup(_game, "goblin", 1)
 	target.position = at + direction * 140.0
-	_game.world.add_child(target)
-	_game.enemies.append(target)
+	target.is_threat = true
 	target.stun(60.0)
 	target.set_process(false)
-	for frame in 300:
+	_game.world.add_child(target)
+	_game.enemies.append(target)
+	_game.spatial_world.teleport_source_actor(target, target.position, target.radius, true)
+	await _game.get_tree().physics_frame
+	await _game.get_tree().process_frame
+	if not is_instance_valid(_game) or _game.is_queued_for_deletion():
+		return
+	var started := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - started < 15000:
 		await _game.get_tree().process_frame
-		if _game.town_gates.closed[index] and _game.town_gates.progress[index] >= 0.99:
-			JavaScriptBridge.eval(
-				(
-					"window.__sjrpgGateReview = "
-					+ JSON.stringify(
-						{
-							"gate": index,
-							"closed": true,
-							"progress": _game.town_gates.progress[index]
-						}
-					)
-				)
-			)
+		if not is_instance_valid(_game) or _game.is_queued_for_deletion():
 			return
+		if _game.town_gates.closed[index] and _game.town_gates.progress[index] >= 0.99:
+			_publish_gate_review(index, target, "closed")
+			return
+	_publish_gate_review(index, target, "closure_timeout")
+
+
+## 검수 실패도 관측한 실제 상태로 남긴다. 문 상태나 운영 시계를 주입하지 않는다.
+func _publish_gate_review(index: int, target: Enemy, reason: String) -> void:
+	if not OS.has_feature("web") or not is_instance_valid(_game):
+		return
+	var gates: TownGateRuntime = _game.town_gates
+	var distance := INF
+	var target_state := {"valid": is_instance_valid(target)}
+	if is_instance_valid(target):
+		for polygon: PackedVector2Array in gates._walls:
+			distance = minf(distance, TownGateRuntime.distance_to_polygon(target.position, polygon))
+		target_state["position"] = [target.position.x, target.position.y]
+		target_state["dead"] = target.dead
+		target_state["queued"] = target.is_queued_for_deletion()
+		var body := _game.spatial_world.actor_bodies.get(target.get_instance_id()) as CharacterBody3D
+		if is_instance_valid(body):
+			var projected := WorldSpace3D.world_to_projected(body.position)
+			target_state["body_position"] = [projected.x, projected.y]
+	var state := {
+		"gate": index,
+		"closed": gates.closed[index] and gates.progress[index] >= .99,
+		"reason": reason,
+		"paused": _game.get_tree().paused,
+		"nativeReady": _game.native_ready,
+		"loading": Gamepad.loading_blocked(),
+		"game_can_process": _game.can_process(),
+		"gates_can_process": gates.can_process(),
+		"gates_processing": gates.is_processing(),
+		"target": target_state,
+		"distance": distance if is_finite(distance) else -1.0,
+		"danger": gates.danger,
+		"hero_access": gates.hero_access[index],
+		"progress": gates.progress[index]
+	}
+	JavaScriptBridge.eval("window.__sjrpgGateReview = " + JSON.stringify(state))
 
 
 ## Explicit art review only: real deaths keep all five body illustrations visible in the plaza.

@@ -9,6 +9,7 @@ var load_only := true
 var selected_slot := -1
 var _summaries: Array = []
 var _slot_cards: Array[PanelContainer] = []
+var _slot_selection_marks: Array[Label] = []
 var _load_button: Button
 var _notice_label: Label
 
@@ -33,6 +34,7 @@ func _refresh_data() -> void:
 func _rebuild() -> void:
 	clear_body()
 	_slot_cards.clear()
+	_slot_selection_marks.clear()
 
 	var notice_text := "이어갈 수호자 슬롯을 선택하세요." if load_only else "현재 모험을 저장하고 다른 수호자로 전환합니다."
 	_notice_label = PanelFrame.wrap_label(notice_text, 17, UiKit.MUTED)
@@ -54,7 +56,7 @@ func _rebuild() -> void:
 
 	_load_button = UiKit.button("선택한 모험 불러오기", 24)
 	_load_button.custom_minimum_size.y = 68
-	UiKit.style_button(_load_button, true)
+	EntryUi.style(_load_button)
 	_load_button.disabled = (selected_slot < 1)
 	_load_button.pressed.connect(_on_load_pressed)
 	body.add_child(_load_button)
@@ -66,7 +68,7 @@ func _create_slot_card(slot_num: int, summary: Dictionary) -> PanelContainer:
 	var is_selected := (selected_slot == slot_num)
 
 	var card := PanelContainer.new()
-	var style := UiKit.card_style(is_selected, not occupied and not is_selected)
+	var style := UiKit.card_style(false, not occupied)
 	card.add_theme_stylebox_override("panel", style)
 
 	var row := HBoxContainer.new()
@@ -74,15 +76,23 @@ func _create_slot_card(slot_num: int, summary: Dictionary) -> PanelContainer:
 	card.add_child(row)
 
 	# 슬롯 번호 배지
+	var badge_column := VBoxContainer.new()
+	badge_column.custom_minimum_size = Vector2(76, 0)
+	badge_column.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(badge_column)
 	var badge := Label.new()
-	badge.text = "%d" % slot_num
+	badge.text = str(slot_num)
 	badge.add_theme_font_override("font", UiKit.BOLD_FONT)
 	badge.add_theme_font_size_override("font_size", 28)
-	badge.add_theme_color_override("font_color", Color("c9af7c") if is_selected else UiKit.MUTED)
-	badge.custom_minimum_size = Vector2(36, 0)
+	badge.add_theme_color_override("font_color", UiKit.MUTED)
 	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	row.add_child(badge)
+	badge_column.add_child(badge)
+	var selection_mark := UiKit.label("선택됨", 14, UiKit.MUTED)
+	selection_mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	selection_mark.modulate.a = 1.0 if is_selected else 0.0
+	badge_column.add_child(selection_mark)
+	_slot_selection_marks.append(selection_mark)
 
 	var info_col := VBoxContainer.new()
 	info_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -101,7 +111,7 @@ func _create_slot_card(slot_num: int, summary: Dictionary) -> PanelContainer:
 		var loc: String = "숲 필드" if summary.get("location") == "forest" else "어두운 동굴"
 
 		var title_text := "슬롯 %d · Lv.%d %s" % [slot_num, level, hero_name]
-		var title := UiKit.label(title_text, 20, Color("f0ece1") if is_selected else UiKit.TEXT, true)
+		var title := UiKit.label(title_text, 20, UiKit.TEXT, true)
 		info_col.add_child(title)
 
 		var sub_text := "위치: %s" % loc
@@ -127,7 +137,11 @@ func _create_slot_card(slot_num: int, summary: Dictionary) -> PanelContainer:
 		select.add_theme_stylebox_override(state, StyleBoxEmpty.new())
 	select.pressed.connect(func():
 		selected_slot = slot_num
-		_rebuild()
+		# 선택할 때 전체 목록을 재생성하면 스크롤 위치·진행 중인 터치가 사라진다.
+		# 고정 폭 번호 영역의 글자만 바꾸고 원화·행 배치는 유지한다.
+		for index in _slot_selection_marks.size():
+			_slot_selection_marks[index].modulate.a = 1.0 if selected_slot == index + 1 else 0.0
+		_load_button.disabled = false
 	)
 	card.add_child(select)
 

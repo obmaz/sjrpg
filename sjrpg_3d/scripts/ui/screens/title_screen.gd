@@ -14,7 +14,6 @@ var _start: Button
 var _btn_new_game: Button
 var _btn_load_game: Button
 var _btn_settings: Button
-var _time := 0.0
 var _started := false
 var _layout_pending := false
 var _web_start: JavaScriptObject
@@ -43,22 +42,22 @@ func _ready() -> void:
 	_subtitle = _label("어둠에 잠긴 숲, 당신의 여정이 시작됩니다", 24, Color("d0cbbd"))
 	_subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
-	_btn_new_game = UiKit.button("새로운 모험", 26)
+	_btn_new_game = UiKit.button("새로운 모험", int(EntryUi.ACTION_FONT_SIZE))
 	_btn_new_game.custom_minimum_size = Vector2.ZERO
-	EntryUi.style(_btn_new_game, true)
+	EntryUi.style(_btn_new_game)
 	_btn_new_game.pressed.connect(_on_new_game_pressed)
 	add_child(_btn_new_game)
 	_start = _btn_new_game
 
-	_btn_load_game = UiKit.button("모험 불러오기", 22)
+	_btn_load_game = UiKit.button("모험 불러오기", int(EntryUi.ACTION_FONT_SIZE))
 	_btn_load_game.custom_minimum_size = Vector2.ZERO
-	EntryUi.style(_btn_load_game, false)
+	EntryUi.style(_btn_load_game)
 	_btn_load_game.pressed.connect(_on_load_game_pressed)
 	add_child(_btn_load_game)
 
-	_btn_settings = UiKit.button("모험 설정", 20)
+	_btn_settings = UiKit.button("모험 설정", int(EntryUi.ACTION_FONT_SIZE))
 	_btn_settings.custom_minimum_size = Vector2.ZERO
-	EntryUi.style(_btn_settings, false)
+	EntryUi.style(_btn_settings)
 	_btn_settings.pressed.connect(_on_settings_pressed)
 	add_child(_btn_settings)
 
@@ -98,38 +97,39 @@ func _layout() -> void:
 	var bottom := area.end.y - maxf(48.0 * unit, 12.0 * css)
 
 	# 논리 해상도가 큰 웹·Android에서도 실제 손가락 크기로 조작할 수 있게 한다.
-	var btn_settings_h := maxf(64.0 * unit, 44.0 * css)
-	var btn_load_h := maxf(68.0 * unit, 48.0 * css)
-	var btn_new_h := maxf(76.0 * unit, (56.0 if portrait else 48.0) * css)
-	var gap := maxf(12.0 * unit, 6.0 * css)
+	var action_h := EntryUi.action_height(unit, css)
+	for button: Button in [_btn_new_game, _btn_load_game, _btn_settings]:
+		_font(button, EntryUi.ACTION_FONT_SIZE * unit, EntryUi.ACTION_FONT_DP * css)
+		action_h = maxf(action_h, EntryUi.fit_action(button, action_h, css))
+	for button: Button in [_btn_new_game, _btn_load_game, _btn_settings]:
+		EntryUi.fit_action(button, action_h, css)
+	var gap := maxf(12.0 * unit, UiKit.ACTION_GAP_DP * css)
 
-	var settings_y := bottom - btn_settings_h
-	var load_y := settings_y - gap - btn_load_h
-	var new_y := load_y - gap - btn_new_h
+	var settings_y := bottom - action_h
+	var load_y := settings_y - gap - action_h
+	var new_y := load_y - gap - action_h
 
 	_btn_settings.position = Vector2(left, settings_y)
-	_btn_settings.size = Vector2(width, btn_settings_h)
-	_font(_btn_settings, 20.0 * unit, 16.0 * css)
+	_btn_settings.size = Vector2(width, action_h)
 
 	_btn_load_game.position = Vector2(left, load_y)
-	_btn_load_game.size = Vector2(width, btn_load_h)
-	_font(_btn_load_game, 22.0 * unit, 16.0 * css)
+	_btn_load_game.size = Vector2(width, action_h)
 
 	_btn_new_game.position = Vector2(left, new_y)
-	_btn_new_game.size = Vector2(width, btn_new_h)
-	_font(_btn_new_game, 26.0 * unit, 18.0 * css)
+	_btn_new_game.size = Vector2(width, action_h)
 
 	_font(_subtitle, 24.0 * unit, 14.0 * css)
 	_font(_title, 60.0 * unit, (32.0 if portrait else 28.0) * css)
 	_font(_chapter, 23.0 * unit, 14.0 * css)
 	var cursor := new_y - maxf(24.0 * unit, 10.0 * css)
+	var copy_gap := maxf(12.0 * unit, 6.0 * css)
 	for label: Label in [_subtitle, _title, _chapter]:
 		var height := label.get_theme_font("font").get_multiline_string_size(
 			label.text, HORIZONTAL_ALIGNMENT_CENTER, width,
 			label.get_theme_font_size("font_size")
 		).y + 2.0
 		EntryUi.place(label, Rect2(Vector2(left, cursor - height), Vector2(width, height)))
-		cursor -= height + gap
+		cursor -= height + copy_gap
 	_publish_buttons()
 
 
@@ -181,12 +181,6 @@ func _control_probe(control: Control) -> Dictionary:
 		"rect": [rect.position.x, rect.position.y, rect.size.x, rect.size.y],
 		"font_size": control.get_theme_font_size("font_size")
 	}
-
-
-func _process(delta: float) -> void:
-	_time += delta
-	if _start != null:
-		_start.self_modulate = Color(1, 1, 1, 1.0 if Prefs.reduce_motion else 0.94 + 0.06 * sin(_time * 1.7))
 
 
 func _begin() -> void:

@@ -54,6 +54,15 @@ func run() -> void:
 			)
 			check("title menu keeps a usable touch height %s/%s" % [dimensions, button.text], buttons[index].size.y + 0.1 >= touch_minimum)
 			check("title menu copy remains readable", buttons[index].get_theme_font_size("font_size") >= 16)
+			check("all title actions share the same touch size and type %s/%s" % [dimensions, button.text],
+				button.size.is_equal_approx(buttons[0].size)
+				and button.get_theme_font_size("font_size") == buttons[0].get_theme_font_size("font_size")
+				and button.get_theme_font("font") == buttons[0].get_theme_font("font"))
+			var skin := button.get_theme_stylebox("normal") as UiKit.GeneratedSkin
+			var first_skin := buttons[0].get_theme_stylebox("normal") as UiKit.GeneratedSkin
+			check("all title actions share the same delivered artwork",
+				skin != null and first_skin != null and skin.source_path == first_skin.source_path)
+			check("title actions have no individual pulse or color emphasis", button.self_modulate == Color.WHITE)
 			if index > 0:
 				check(
 					"title menus do not overlap",
@@ -77,6 +86,8 @@ func run() -> void:
 				check("title copy does not overlap %s/%s" % [dimensions, caption.text], previous.get_global_rect().end.y <= caption.get_global_rect().position.y)
 			previous = caption
 		check("title subtitle and the first action remain separate", previous.get_global_rect().end.y <= buttons[0].get_global_rect().position.y)
+	var title_skin := root.current._btn_load_game.get_theme_stylebox("normal") as UiKit.GeneratedSkin
+	var title_font: Font = root.current._btn_load_game.get_theme_font("font")
 	root.current._btn_load_game.pressed.emit()
 	await _frames(2)
 	var menus := _panels(root)
@@ -90,6 +101,11 @@ func run() -> void:
 			and menus.is_empty()
 		)
 	):
+		var continue_skin := root.current.continue_button.get_theme_stylebox("normal") as UiKit.GeneratedSkin
+		check("continue uses the actual title action artwork and font",
+			continue_skin != null and title_skin != null
+			and continue_skin.source_path == title_skin.source_path
+			and root.current.continue_button.get_theme_font("font") == title_font)
 		root.handle_system_back()
 		await _frames(2)
 		check("continue Back returns to title", _is_title(root.current))
@@ -389,6 +405,18 @@ func _failed_save_keeps_settings() -> void:
 	settings._open_save_load_dialog()
 	await _frames(2)
 	var dialog: SaveLoadPanel = _panels(settings)[0]
+	var cards_before: Array = dialog._slot_cards.duplicate()
+	dialog.scroll.scroll_vertical = ceili(dialog.scroll.get_v_scroll_bar().max_value)
+	await _frames(2)
+	var scroll_before: int = dialog.scroll.scroll_vertical
+	var select := dialog.find_child("SelectSaveSlot%d" % GameState.active_slot, true, false) as Button
+	check("saved adventure exposes its actual selectable row", select != null and not select.disabled)
+	if select != null:
+		select.pressed.emit()
+		await _frames(2)
+		check("selecting a saved adventure keeps the existing cards and scroll offset",
+			dialog._slot_cards == cards_before and dialog.scroll.scroll_vertical == scroll_before
+			and not dialog._load_button.disabled)
 	dialog.selected_slot = GameState.active_slot
 	var original := GameState.save_path
 	var slot := GameState.active_slot

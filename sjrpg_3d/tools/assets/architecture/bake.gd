@@ -236,6 +236,7 @@ func _record(id: String, folder: String, data: Dictionary) -> void:
 		"scripts/core/iso.gd",
 		"scripts/core/world_space_3d.gd",
 		"scripts/world/village.gd",
+		"scripts/world/geometry/town_plaza_plan_3d.gd",
 		"scripts/world/forest_region.gd",
 		"assets/data/village.json"
 	]

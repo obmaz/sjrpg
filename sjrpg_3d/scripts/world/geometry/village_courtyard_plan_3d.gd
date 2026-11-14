@@ -104,7 +104,7 @@ static func _site(
 	}
 
 
-## 집 앞 판석을 실제 광장까지 잇는다. 남쪽 골목은 남서 집 앞도 함께 지나간다.
+## 집 앞 판석을 실제 광장까지 잇는다. 새 남쪽 주거지는 성문 축 옆 골목으로 연결한다.
 static func lanes(village: Village) -> Array[Dictionary]:
 	var ends := {}
 	for site: Dictionary in sites(village):
@@ -115,7 +115,7 @@ static func lanes(village: Village) -> Array[Dictionary]:
 	var routes: Array[Dictionary] = [
 		{
 			"id": "northwest_lane",
-			"points": PackedVector2Array([ends["nw"], Vector2(-9.1, 8.6), Vector2(-7.0, 7.0)])
+			"points": PackedVector2Array([ends["nw"], Vector2(-7.5, 9.0)])
 		},
 		{
 			"id": "southern_lane",
@@ -123,13 +123,20 @@ static func lanes(village: Village) -> Array[Dictionary]:
 			PackedVector2Array(
 				[
 					ends["se"],
-					Vector2(12.0, 15.2),
-					Vector2(10.1, 15.1),
-					Vector2(8.6, 13.2),
-					Vector2(8.6, 8.5),
-					Vector2(7.0, 6.8)
+					Vector2(14.0, 22.0),
+					Vector2(10.0, 22.0),
+					Vector2(6.0, 22.0),
+					Vector2(2.0, 22.0),
+					Vector2(0.0, 22.0),
+					Vector2(0.0, 17.0),
+					Vector2(0.0, 12.0),
+					Vector2(0.0, 9.0)
 				]
 			)
+		},
+		{
+			"id": "stable_lane",
+			"points": PackedVector2Array([ends["sw"], Vector2(0, 19), Vector2(0, 14), Vector2(0, 9)])
 		},
 	]
 	for route: Dictionary in routes:

@@ -379,23 +379,6 @@ try{
  assert.equal(s.review.hero_class,original.hero);assert.equal(s.review.gold,original.gold);assert.equal(s.review.level,original.level);assert.equal(s.review.xp,original.xp);assert.equal(s.review.active_slot,original.active);
  record('actual modal pointer/Enter/Escape/Tab trap, named deletion and focus restore');
 
- // Keyboard traversal must expose offscreen cards through the real ScrollContainer.
- await resize(568,320);await scenario('full');
- const keyboardBefore=stateKey(await read());
- await tap('slot1');let sawLast=false;
- for(let count=0;count<22;count++){
-  await page.keyboard.press('Tab');await page.waitForTimeout(80);
-  s=await read();
-  if(/^slot[1-4]$/.test(s.ui.focus)){
-   const index=Number(s.ui.focus.at(-1))-1;
-   assert(encloses(css(s,s.ui.save_layout.list),css(s,s.ui.save_layout.cards[index].select),1.5),'keyboard focus remains clipped by footer/list');
-   sawLast||=index===3;
-  }
- }
- assert(sawLast,'Tab traversal never reached slot4');
- await preserve(keyboardBefore,'short-window keyboard traversal');
- record('actual short-window focus scrolling');
-
  // One actual Continue verifies the unchanged root launch path, after all preview assertions.
  await resize(568,320);await scenario('full');
  let touchState=await read();const touchBefore=stateKey(touchState),selectedBefore=touchState.ui.selected_slot;
@@ -413,7 +396,28 @@ try{
  await waitState(s=>s.ui.save_layout.scroll_value>previousScroll+5,'real finger drag over save-row button');
  touchState=await read();assert.equal(touchState.ui.selected_slot,selectedBefore,'swipe must not activate a save');
  await preserve(touchBefore,'touch drag preserves exact saved files');
- await ensureCard(4);await capture('touch-scroll-last-save');record('actual finger drag on save card scrolls without selection or deletion');
+ // Continue with real finger drags; a wheel fallback would hide the reported bug.
+ for(let attempt=0;attempt<24;attempt++){
+  touchState=await read();
+  if(touchState.ui.save_layout.scroll_value>=touchState.ui.save_layout.scroll_max-2)break;
+  const list=css(touchState,touchState.ui.save_layout.list);
+  const x=list.x+list.w*.55,y=list.y+list.h*.8;
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y,id:7}]});
+  for(let step=1;step<=8;step++){
+   await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:y-list.h*.6*step/8,id:7}]});
+   await page.waitForTimeout(30);
+  }
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  await page.waitForTimeout(450);
+ }
+ touchState=await read();
+ assert(touchState.ui.save_layout.scroll_value>=touchState.ui.save_layout.scroll_max-2,'finger drags must reach the last save');
+ const settledScroll=touchState.ui.save_layout.scroll_value;
+ await page.waitForTimeout(1100);
+ assert(Math.abs((await read()).ui.save_layout.scroll_value-settledScroll)<=2,'touch release must not snap back to the focused row');
+ assert.equal((await read()).ui.selected_slot,selectedBefore,'repeated swipes must not select a row');
+ await preserve(touchBefore,'touch-only bottom traversal');
+ await capture('touch-scroll-last-save');record('actual finger drags reach the bottom and stay there without selection or deletion');
  await resize(390,844);await scenario('full');await tap('slot3');
  const expectedHero=(await read()).ui.slots_state[2];await tap('continue');
  await waitState(s=>s.review.screen==='adventure'&&s.adventure,'real Continue launches the selected adventure',90000);

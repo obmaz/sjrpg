@@ -64,18 +64,24 @@ try {
  await page.waitForFunction(()=>window.__sjrpgAdventureReady && window.__sjrpg3dReady && window.__sjrpgPanelLayout?.native_ready && window.__sjrpgEntryLoading?.visible===false,null,{timeout:120000});
  async function closePanel() {
   let state=await read();if(!state.panel?.rect)return;
-  await tapRect(state,state.panel.close);
+  const footer=state.panel.controls.find(c=>c.kind==='button' && c.in_footer && !c.disabled && /^(모험 계속하기|탐험 계속하기|계속 탐험하기|닫기|돌아가기|대화 마치기|취소 \/ 돌아가기)$/.test(c.text) && area(c.visible_rect)>0);
+  if(footer)await tapRect(state,footer.visible_rect);
+  else if(state.panel.close?.length===4)await tapRect(state,state.panel.close);
+  else throw new Error(`Panel has neither an actual resume/close footer nor visible close X: ${state.panel.type}`);
   await page.waitForFunction(()=>!window.__sjrpgPanelLayout?.panel?.rect,null,{timeout:15000});
  }
- // 구현의 실제 바인딩: Game._unhandled_input B/T/Escape. 일지는 HUD bar_quests 터치.
+ // 게임 메뉴는 키보드 단축키 없이 실제 HUD 터치 위치로 연다.
  async function openPanel(kind) {
   await closePanel();
   if(kind==='pause') {
    await page.evaluate(()=>document.querySelector('canvas').blur());
-  } else if(kind==='journal') {
-   const state=await read(),p=state.hud_targets.bar_quests,size=page.viewportSize();
+  } else if(['bag','skills','journal','settings'].includes(kind)) {
+   const key={bag:'bar_bag',skills:'bar_skills',journal:'bar_quests',settings:'bar_gear'}[kind];
+   const state=await read(),p=state.hud_targets[key],size=page.viewportSize();
+   if(!p)throw new Error(`Missing actual HUD touch target ${key}`);
    await page.touchscreen.tap(p[0]/state.viewport[0]*size.width,p[1]/state.viewport[1]*size.height);
-  } else await page.keyboard.press({bag:'b',skills:'t',settings:'Escape',map:'m'}[kind]);
+  } else if(kind==='map')await page.keyboard.press('m');
+  else throw new Error(`Unknown panel review kind ${kind}`);
   await page.waitForFunction(()=>!!window.__sjrpgPanelLayout?.panel?.rect,null,{timeout:15000});
   await page.waitForTimeout(400);
   const state=await read();
@@ -86,8 +92,8 @@ try {
  function audit(state, issues) {
   const p=state.panel,scale=state.scale;
   if(!contains(state.safe,p.rect))issues.push('frame exceeds safe viewport');
-  for(const key of ['header','close','footer','body_holder'])if(!contains(p.rect,p[key]))issues.push(`${key} exceeds panel`);
-  for(const key of ['header','close','footer','body_holder'])if(p.content_rect&&!contains(p.content_rect,p[key]))issues.push(`${key} overlaps decorative frame`);
+  for(const key of ['header','close','footer','body_holder'])if(p[key]?.length===4&&!contains(p.rect,p[key]))issues.push(`${key} exceeds panel`);
+  for(const key of ['header','close','footer','body_holder'])if(p[key]?.length===4&&p.content_rect&&!contains(p.content_rect,p[key]))issues.push(`${key} overlaps decorative frame`);
   if(p.body_holder[3]/scale<40)issues.push('scroll body has less than 40 display pixels of height');
   for(const c of p.controls) {
    if(!area(c.visible_rect))continue;
@@ -106,6 +112,9 @@ try {
     if(c.text_height>c.content_rect[3]+1.1)issues.push(`button text overlaps painted border: ${c.text}`);
    }
   }
+  for(const c of p.controls.filter(c=>c.kind==='button'&&['진동 확인','효과음 확인'].includes(c.text))) {
+   if(!c.text_centered||Math.abs(c.rect[0]+c.rect[2]/2-p.body[0]-p.body[2]/2)>1.1)issues.push(`settings action is not centered: ${c.text}`);
+  }
   for(const scroll of p.scrolls) {if(scroll.v_bar_visible||scroll.h_bar_visible)issues.push(`native scrollbar remains visible: ${scroll.path}`);if(!scroll.arrow_cues)issues.push(`scroll is missing arrow cues: ${scroll.path}`);}
   for(const scroll of p.scrolls)if(scroll.horizontal_disabled && scroll.content.length && scroll.content[2]>scroll.rect[2]+1.1)issues.push(`horizontal scroll-content overflow: ${scroll.path}`);
  }
@@ -119,6 +128,101 @@ try {
    const name=`settings-${width}x${height}-switch-${toggle.on?'on':'off'}-present.png`;
    await page.screenshot({path:`${out}/${name}`,timeout:60000});
    result.toggle_states.push({...toggle,file:name,scope:'Visible state appearance; no toggle activation performed'});
+  }
+ }
+ async function seekControl(predicate) {
+  for(let attempt=0;attempt<35;attempt++) {
+   const state=await read();
+   const target=state.panel?.controls?.find(c=>c.kind==='button' && predicate(c));
+   const body=state.panel?.body_scroll;
+   if(!body)throw new Error('Detail review lost its actual panel');
+   const visible=target?.visible_rect;
+   const threshold=target ? (target.rect[3]<=body[3]-8*state.scale ? target.rect[3]-.5 : Math.min(target.rect[3]*.7,Math.max(12*state.scale,body[3]*.6))) : 0;
+   if(target && visible[2]>=target.rect[2]*.8 && visible[3]>=threshold)return {state,target};
+   const direction=target && target.rect[1]+target.rect[3]/2<body[1]+body[3]/2 ? 1 : -1;
+   const start=[body[0]+body[2]*.25,body[1]+body[3]*(direction<0?.7:.2),body[2]*.5,body[3]*.1];
+   const correction=target ? (target.rect[1]<body[1] ? body[1]-target.rect[1] : body[1]+body[3]-target.rect[1]-target.rect[3])/state.scale : direction*220;
+   const distance=Math.min(220,body[3]/state.scale*.55,Math.max(12,Math.abs(correction)*.4));
+   detailFlow.push({event:'seek',attempt,key:target?.key,text:target?.text,rect:target?.rect,visible_rect:target?.visible_rect,body,dy:direction*distance});
+   await swipe(state,start,direction*distance);
+  }
+  throw new Error('Actual touch scrolling could not expose requested detail button');
+ }
+ async function tapControl(predicate, beforeTap=null) {
+  let {state,target}=await seekControl(predicate);
+  // A touch immediately after a swipe can stop inertia instead of activating.
+  // Observe three stable probe samples, then recompute the real clipped target.
+  let previous='',stable=0;
+  for(let attempt=0;attempt<24;attempt++) {
+   state=await fresh(state.frame);
+   target=state.panel?.controls?.find(c=>c.kind==='button' && predicate(c));
+   if(!target)throw new Error('Requested button vanished while waiting for touch-scroll settlement');
+   const geometry=JSON.stringify([target.rect.map(v=>Math.round(v)),state.panel.scrolls.map(scroll=>Math.round(scroll.vertical))]);
+   stable=geometry===previous ? stable+1 : 0;
+   previous=geometry;
+   if(stable>=3)break;
+  }
+  if(stable<3)throw new Error(`Touch scrolling never settled before ${target.text||target.key||target.path}`);
+  if(target.disabled)throw new Error(`Actual detail button is disabled: ${target.text||target.path}`);
+  if(!area(target.visible_rect))throw new Error(`Actual detail button is clipped: ${target.text||target.path}`);
+  const trace={event:'tap',at:new Date().toISOString(),path:target.path,key:target.key,text:target.text,rect:target.rect,visible_rect:target.visible_rect,point:point(state,target.visible_rect),panel:state.panel.type,phase:await page.evaluate(()=>window.__sjrpgExpedition?.phase),scrolls:state.panel.scrolls.map(({path,vertical,maximum})=>({path,vertical,maximum}))};
+  detailFlow.push(trace);
+  console.log(`PANEL_DETAIL_TAP ${JSON.stringify(trace)}`);
+  if(beforeTap)await beforeTap(state,target);
+  await tapRect(state,target.visible_rect);
+  await page.waitForTimeout(450);
+  trace.after=await page.evaluate(()=>({phase:window.__sjrpgExpedition?.phase,panel:window.__sjrpgPanelLayout?.panel?.type,focus:window.__sjrpgGamepadReview?.focus}));
+  return target;
+ }
+ function stableSettingsSnapshot(state) {
+  return {
+   panel:state.panel.id,viewport:state.viewport,
+   buttons:state.panel.controls.filter(c=>c.kind==='button').map(({id,path,text,rect,art_source,style})=>({id,path,text,rect,art_source,style})),
+   scrolls:state.panel.scrolls.map(({path,vertical,maximum})=>({path,vertical,maximum}))
+  };
+ }
+ async function reviewSettingsChoices(result,width,height) {
+  const choices=[...[.5,.75,1,1.25,1.5].map(value=>({key:'world_zoom',value})),...['auto','landscape','portrait'].map(value=>({key:'screen_orientation',value}))];
+  result.settings_choices=[];
+  for(const {key,value} of choices) {
+   let before;
+   const target=await tapControl(control=>control[key]===value,state=>{before=stableSettingsSnapshot(state);});
+   await page.waitForFunction(({key,value})=>{
+    const state=window.__sjrpgPanelLayout;
+    return state?.[key]===value && state.panel?.controls?.some(control=>control.kind==='button'&&control[key]===value&&control.selected)
+     && (key!=='screen_orientation'||state.panel.controls.filter(control=>control.screen_orientation!==null).every(control=>!control.disabled));
+   },{key,value},{timeout:15000});
+   const state=await fresh((await read()).frame),after=stableSettingsSnapshot(state);
+   const issue=message=>result.issues.push(`settings ${key}=${value}: ${message}`);
+   if(before.panel!==after.panel)issue('choice rebuilt the settings panel');
+   if(JSON.stringify(before.viewport)!==JSON.stringify(after.viewport))issue('choice changed the review viewport');
+   if(before.buttons.length!==after.buttons.length)issue('choice changed the control count');
+   const fullscreenTitle=await page.evaluate(()=>window.SjrpgFullscreen?.state()?.title);
+   for(const original of before.buttons) {
+    const current=after.buttons.find(button=>button.path===original.path);
+    if(!current||current.id!==original.id) {issue(`choice replaced button ${original.text||original.path}`);continue;}
+    // 방향 잠금이 요구하는 전체화면 전환은 실제 브라우저 상태 문구만 갱신한다.
+    const fullscreenStateLabel=key==='screen_orientation'&&original.path.endsWith('/FullscreenToggle')&&current.text===fullscreenTitle;
+    if((current.text!==original.text&&!fullscreenStateLabel)||current.art_source!==original.art_source||current.style!==original.style)issue(`choice changed button text or artwork ${original.text||original.path}`);
+    if(current.rect.some((number,index)=>Math.abs(number-original.rect[index])>1.1))issue(`choice moved or resized button ${original.text||original.path}`);
+   }
+   for(const original of before.scrolls) {
+    const current=after.scrolls.find(scroll=>scroll.path===original.path);
+    if(!current||Math.abs(current.vertical-original.vertical)>1.1||Math.abs(current.maximum-original.maximum)>1.1)issue(`choice changed settled scroll ${original.path}`);
+   }
+   const selected=state.panel.controls.filter(control=>control.kind==='button'&&control[key]!==null&&control.selected);
+   if(selected.length!==1||selected[0][key]!==value)issue('choice is not represented by one current selection');
+   const actual=state.panel.controls.find(control=>control.id===target.id);
+   if(actual?.style!=='StyleBoxEmpty'||actual.art_source)issue('option unexpectedly acquired a frame or generated banner');
+   audit(state,result.issues);
+   result.settings_choices.push({key,value,target:target.id,before,after});
+  }
+  await page.screenshot({path:`${out}/settings-${width}x${height}-choices.png`,timeout:60000});
+  // 방향 잠금이 켠 전체화면은 실제 버튼으로 해제한 뒤 다음 기기 비율을 모사한다.
+  if(await page.evaluate(()=>Boolean(document.fullscreenElement))) {
+   await tapControl(control=>control.path.endsWith('/FullscreenToggle'));
+   await page.waitForFunction(()=>!document.fullscreenElement,null,{timeout:15000});
+   await page.waitForTimeout(500);
   }
  }
  for(const [width,height] of sizes) {
@@ -160,6 +264,7 @@ try {
     }
     result.bottom=await read();audit(result.bottom,result.issues);
     await page.screenshot({path:`${out}/${kind}-${width}x${height}-bottom.png`,timeout:60000});
+    if(kind==='settings')await reviewSettingsChoices(result,width,height);
     result.issues=[...new Set(result.issues)];
    } catch(error) {result.issues.push(String(error));}
    failures.push(...result.issues.map(issue=>`${kind} ${width}x${height}: ${issue}`));
@@ -176,49 +281,6 @@ try {
    await page.setViewportSize({width,height});
    await page.waitForFunction(size=>{const s=window.__sjrpgPanelLayout;return s && Math.abs(s.viewport[0]/s.viewport[1]-size[0]/size[1])<.01;},[width,height]);
    await page.waitForTimeout(450);
-  }
-  async function seekControl(predicate) {
-   for(let attempt=0;attempt<35;attempt++) {
-    const state=await read();
-    const target=state.panel?.controls?.find(c=>c.kind==='button' && predicate(c));
-    const body=state.panel?.body_scroll;
-    if(!body)throw new Error('Detail review lost its actual panel');
-    const visible=target?.visible_rect;
-    const threshold=target ? (target.rect[3]<=body[3]-8*state.scale ? target.rect[3]-.5 : Math.min(target.rect[3]*.7,Math.max(12*state.scale,body[3]*.6))) : 0;
-    if(target && visible[2]>=target.rect[2]*.8 && visible[3]>=threshold)return {state,target};
-    const direction=target && target.rect[1]+target.rect[3]/2<body[1]+body[3]/2 ? 1 : -1;
-    const start=[body[0]+body[2]*.25,body[1]+body[3]*(direction<0?.7:.2),body[2]*.5,body[3]*.1];
-    const correction=target ? (target.rect[1]<body[1] ? body[1]-target.rect[1] : body[1]+body[3]-target.rect[1]-target.rect[3])/state.scale : direction*220;
-    const distance=Math.min(220,body[3]/state.scale*.55,Math.max(12,Math.abs(correction)*.4));
-    detailFlow.push({event:'seek',attempt,key:target?.key,text:target?.text,rect:target?.rect,visible_rect:target?.visible_rect,body,dy:direction*distance});
-    await swipe(state,start,direction*distance);
-   }
-   throw new Error('Actual touch scrolling could not expose requested detail button');
-  }
-  async function tapControl(predicate) {
-   let {state,target}=await seekControl(predicate);
-   // A touch immediately after a swipe can stop inertia instead of activating.
-   // Observe three stable probe samples, then recompute the real clipped target.
-   let previous='',stable=0;
-   for(let attempt=0;attempt<24;attempt++) {
-    state=await fresh(state.frame);
-    target=state.panel?.controls?.find(c=>c.kind==='button' && predicate(c));
-    if(!target)throw new Error('Requested button vanished while waiting for touch-scroll settlement');
-    const geometry=JSON.stringify([target.rect.map(v=>Math.round(v)),state.panel.scrolls.map(scroll=>Math.round(scroll.vertical))]);
-    stable=geometry===previous ? stable+1 : 0;
-    previous=geometry;
-    if(stable>=3)break;
-   }
-   if(stable<3)throw new Error(`Touch scrolling never settled before ${target.text||target.key||target.path}`);
-   if(target.disabled)throw new Error(`Actual detail button is disabled: ${target.text||target.path}`);
-   if(!area(target.visible_rect))throw new Error(`Actual detail button is clipped: ${target.text||target.path}`);
-   const trace={event:'tap',at:new Date().toISOString(),path:target.path,key:target.key,text:target.text,rect:target.rect,visible_rect:target.visible_rect,point:point(state,target.visible_rect),panel:state.panel.type,phase:await page.evaluate(()=>window.__sjrpgExpedition?.phase),scrolls:state.panel.scrolls.map(({path,vertical,maximum})=>({path,vertical,maximum}))};
-   detailFlow.push(trace);
-   console.log(`PANEL_DETAIL_TAP ${JSON.stringify(trace)}`);
-   await tapRect(state,target.visible_rect);
-   await page.waitForTimeout(450);
-   trace.after=await page.evaluate(()=>({phase:window.__sjrpgExpedition?.phase,panel:window.__sjrpgPanelLayout?.panel?.type,focus:window.__sjrpgGamepadReview?.focus}));
-   return target;
   }
   async function recordDetail(kind,width,height,work) {
    const result={viewport:[width,height],kind,issues:[],scope:'Actual touch input in the isolated review save; expedition objective, not legacy quest cards'};

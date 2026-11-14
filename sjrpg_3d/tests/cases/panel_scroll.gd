@@ -72,6 +72,7 @@ func run() -> void:
 	check("bulk body construction uses a bounded number of layout passes",
 		layout_passes >= 1 and layout_passes <= 4)
 	check("coalesced layout still measures the completed body", batch.size.y > 100.0)
+	check("touch focus does not pull the body scroll", not panel.scroll.follow_focus)
 	panel.body.remove_child(batch)
 	batch.queue_free()
 	await _frames(2)
@@ -149,9 +150,9 @@ func _generated_button_insets() -> void:
 			button.get_theme_font_size("font_size")).x
 		for state: String in ["normal", "hover", "pressed", "disabled", "focus"]:
 			var skin := button.get_theme_stylebox(state) as UiKit.GeneratedSkin
-			if state == "focus" and button.has_meta("gamepad_focus_style"):
+			if state == "focus":
 				var outline := button.get_theme_stylebox(state) as StyleBoxFlat
-				check("controller focus remains a separate transparent outline",
+				check("focus is a separate transparent overlay",
 					outline != null and is_zero_approx(outline.bg_color.a))
 				continue
 			if not check("painted button state keeps its generated source " + state, skin != null):
@@ -171,6 +172,16 @@ func _generated_button_insets() -> void:
 			float(button.get_theme_font_size("font_size")) / panel.display_pixel_scale() >= 14.0
 			and button.size.y / panel.display_pixel_scale() >= 44.0)
 	view.queue_free()
+	await _frames(2)
+	GameState.new_game("mage")
+	for menu: PanelFrame in [SkillTreePanel.new(), BagPanel.new()]:
+		add_child(menu)
+		await _frames(6)
+		check("game menu uses only a fixed full-width resume action",
+			menu.footer.get_child_count() == 1 and not menu._close.visible
+			and menu.footer.get_child(0).text == "모험 계속하기"
+			and absf(menu.footer.get_child(0).size.x - menu.footer.size.x) < 1.0)
+		menu.free()
 	await _frames(2)
 
 

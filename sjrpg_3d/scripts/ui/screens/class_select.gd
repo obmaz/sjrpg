@@ -147,7 +147,9 @@ func _ready() -> void:
 	slot_scroll.name = "SaveListScroll"
 	slot_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	slot_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	slot_scroll.follow_focus = true
+	# 터치로 눌렀던 행이 스와이프 뒤 다시 따라오지 않게 한다.
+	# 패드의 명시적 이동만 _reveal_focused_slot에서 현재 행을 드러낸다.
+	slot_scroll.follow_focus = false
 	slot_scroll.scroll_started.connect(func(): _slot_dragging = true)
 	slot_scroll.scroll_ended.connect(func(): _slot_dragging = false)
 	slot_scroll.clip_contents = true
@@ -380,7 +382,7 @@ func _update() -> void:
 		slot_meta_labels[index].text = meta
 		slot_status_labels[index].text = status
 		slot_buttons[index].text = "%02d    %s\n        %s" % [index + 1, title, meta]
-		SelectionUi.slot_style(slot_bands[index], slot_buttons[index], selected_slot == index + 1)
+		SelectionUi.slot_style(slot_bands[index], slot_buttons[index])
 		_quiet_row_text(slot_buttons[index])
 		SelectionUi.style(delete_buttons[index])
 		for state in ["normal", "hover", "pressed", "focus", "disabled"]:
@@ -1002,8 +1004,7 @@ func _layout_slots() -> void:
 	showcase.show()
 	_hero_backdrop.hide()
 	hero_art.texture = SelectionUi.hero_image(selected_class)
-	var roomy := portrait and area.size.x / css >= 360.0
-	_font(continue_button, 42 if roomy else 34, 22 if roomy else 18)
+	_font(continue_button, EntryUi.ACTION_FONT_SIZE, EntryUi.ACTION_FONT_DP)
 	_font(slot_context, 23, 14)
 	slot_context.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var identity := (
@@ -1016,7 +1017,7 @@ func _layout_slots() -> void:
 	var plain_context_h := _measure(slot_context, width, 0.0, plain_context)
 	var header_end := _layout_header(area, left, width, portrait, compact)
 	var context_h := _measure(slot_context, width)
-	var action_h := maxf((100.0 if roomy else 88.0) * u, (56.0 if roomy else 48.0) * css)
+	var action_h := EntryUi.fit_action(continue_button, EntryUi.action_height(u, css), css)
 	var footer_h := context_h + gap * 2.0 + action_h
 	var bottom_gap := maxf(outer, area.size.y * 0.055) if portrait else outer
 	var footer_y := area.end.y - bottom_gap - footer_h
@@ -1149,7 +1150,7 @@ func _layout_slots() -> void:
 
 
 func _queue_slot_reveal() -> void:
-	if _slot_reveal_pending or not is_inside_tree():
+	if _slot_reveal_pending or not is_inside_tree() or not Gamepad.using_gamepad:
 		return
 	_slot_reveal_pending = true
 	get_tree().process_frame.connect(_after_slot_focus_frame, CONNECT_ONE_SHOT)
@@ -1161,7 +1162,7 @@ func _after_slot_focus_frame() -> void:
 
 func _reveal_focused_slot() -> void:
 	_slot_reveal_pending = false
-	if not is_inside_tree() or is_queued_for_deletion() or _stage != "slots" or _slot_dragging:
+	if not is_inside_tree() or is_queued_for_deletion() or _stage != "slots" or _slot_dragging or not Gamepad.using_gamepad:
 		return
 	var focused := get_viewport().gui_get_focus_owner() as Button
 	if focused != null and (slot_buttons.has(focused) or delete_buttons.has(focused)):

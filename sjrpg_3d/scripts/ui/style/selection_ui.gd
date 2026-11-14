@@ -100,12 +100,14 @@ static func control_skin(kind: String) -> StyleBoxTexture:
 
 
 static func style(button: Button, primary := false, selected := false) -> void:
+	# 시작·이어가기 행동은 타이틀과 같은 원화·글꼴을 사용한다.
+	if primary:
+		EntryUi.style(button)
+		return
 	button.add_theme_font_override("font", TITLE_FONT)
 	button.add_theme_constant_override("outline_size", 0)
 	var normal: StyleBox
-	if primary:
-		normal = control_skin("primary")
-	elif button.name in ["warrior", "mage"] or selected:
+	if button.name in ["warrior", "mage"] or selected:
 		normal = control_skin("tab_selected" if selected else "tab_idle")
 	elif button.name == "SelectionBack":
 		normal = control_skin("back")
@@ -141,8 +143,9 @@ static func style(button: Button, primary := false, selected := false) -> void:
 			button.add_theme_color_override(state, Color(1, 1, 1, 0))
 
 
-static func slot_style(band: Control, button: Button, selected: bool) -> void:
-	var box := concept_skin("slot_selected" if selected else "slot")
+static func slot_style(band: Control, button: Button) -> void:
+	# 저장 선택은 행의 '선택됨' 문구로 알린다. 터치 선택/포커스로 테두리를 바꾸지 않는다.
+	var box := concept_skin("slot")
 	band.add_theme_stylebox_override("panel", box)
 	band.queue_redraw()
 	for state in ["normal", "hover", "pressed", "focus", "disabled"]:

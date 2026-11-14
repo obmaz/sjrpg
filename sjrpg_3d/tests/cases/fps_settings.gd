@@ -43,11 +43,18 @@ func run() -> void:
 	await _frames(2)
 	var panel: SettingsPanel = game.hud._panel
 	var hero_position: Vector2 = game.player.position
+	var switch_row := panel.find_child("ShowFps", true, false)
+	panel.scroll.scroll_vertical = 160
+	await _frames(2)
+	var scroll_position := panel.scroll.scroll_vertical
 	_toggle(panel)
 	await _frames(3)
 	check("actual setting enables the existing counter while preserving the paused game",
 		Prefs.show_fps and counter.visible and counter.is_processing()
 		and get_tree().paused and game.player.position == hero_position)
+	check("toggling a device preference keeps the same row and scroll position",
+		panel.find_child("ShowFps", true, false) == switch_row
+		and panel.scroll.scroll_vertical == scroll_position)
 	loaded = PrefsScript.new()
 	loaded.settings_path = TEST_PATH
 	add_child(loaded)
@@ -84,6 +91,9 @@ func run() -> void:
 	_toggle(panel)
 	await _frames(3)
 	check("turning FPS off stops polling immediately", not Prefs.show_fps and not counter.visible and not counter.is_processing() and counter.text.is_empty())
+	check("the same FPS switch can be changed repeatedly without stale state",
+		panel.find_child("ShowFps", true, false) == switch_row
+		and not (switch_row.find_child("SwitchPill", true, false) as SettingsPanel.Pill).on)
 	game.hud.close_panel()
 	view.queue_free()
 	await _frames(2)
