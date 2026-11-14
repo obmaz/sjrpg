@@ -51,6 +51,8 @@ func _layout_check(select: Control, view: SubViewport, scenario: String) -> void
 		check("visible row labels retain their own measured space " + label, contained)
 		var text_bottom := meta.get_global_rect().end.y if meta.is_visible_in_tree() else title.get_global_rect().end.y
 		var text_center := (title.get_global_rect().position.y + text_bottom) * 0.5
+		if absf(text_center - row.get_global_rect().get_center().y) > EPS:
+			print("FAIL SAVE_CENTER_DIAG ", JSON.stringify({"case": label, "slot": index + 1, "row": str(row.get_global_rect()), "title": str(title.get_global_rect()), "meta": str(meta.get_global_rect()), "metrics": select._slot_text_metrics(index), "meta_lines": meta.get_line_count(), "font": meta.get_theme_font_size("font_size"), "boost": UiKit.boost}))
 		check("identity and metadata stay centered together in their real save target " + label,
 			absf(text_center - row.get_global_rect().get_center().y) <= EPS)
 		check("only real occupied saves show a second metadata line " + label, meta.is_visible_in_tree() == bool(summaries[index]["occupied"]))

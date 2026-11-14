@@ -54,6 +54,8 @@ var _slot_css := 1.0
 var _slot_safe := Rect2()
 var _delete_target := 0
 var _slot_relayout_pending := false
+var _slot_reveal_pending := false
+var _slot_dragging := false
 var _slot_overflow := false
 var _probe_queued := false
 var _probe_flushes := 0
@@ -146,6 +148,8 @@ func _ready() -> void:
 	slot_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	slot_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	slot_scroll.follow_focus = true
+	slot_scroll.scroll_started.connect(func(): _slot_dragging = true)
+	slot_scroll.scroll_ended.connect(func(): _slot_dragging = false)
 	slot_scroll.clip_contents = true
 	slot_scroll.scroll_deadzone = 10
 	add_child(slot_scroll)
@@ -190,7 +194,7 @@ func _ready() -> void:
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.reparent(band, false)
 		slot_buttons.append(row)
-		row.focus_entered.connect(func(): slot_scroll.ensure_control_visible(row))
+		row.focus_entered.connect(_queue_slot_reveal)
 		row.resized.connect(func(): _place_slot_labels(number - 1))
 		slot_number_labels.append(_label("%02d" % number, 28, EntryUi.BRONZE, true, row))
 		slot_title_labels.append(_label("", 26, EntryUi.TEXT, true, row))
@@ -555,28 +559,15 @@ func _setup_presentation() -> void:
 
 
 func _measure(label: Label, width: float, minimum := 0.0, text_override := "") -> float:
-	var font := label.get_theme_font("font")
-	var flags := (
-		TextServer.BREAK_MANDATORY | TextServer.BREAK_WORD_BOUND | TextServer.BREAK_ADAPTIVE
-	)
-	return maxf(
-		minimum,
-		(
-			(
-				font
-				. get_multiline_string_size(
-					label.text if text_override.is_empty() else text_override,
-					HORIZONTAL_ALIGNMENT_LEFT,
-					maxf(width, 1.0),
-					label.get_theme_font_size("font_size"),
-					-1,
-					flags
-				)
-				. y
-			)
-			+ 2.0
-		)
-	)
+	var paragraph := TextParagraph.new()
+	paragraph.break_flags = TextServer.BREAK_MANDATORY | TextServer.BREAK_WORD_BOUND | TextServer.BREAK_ADAPTIVE
+	paragraph.width = maxf(width, 1.0)
+	paragraph.add_string(label.text if text_override.is_empty() else text_override,
+		label.get_theme_font("font"), label.get_theme_font_size("font_size"), label.language)
+	# Label의 줄간격은 Font/TextParagraph 크기에 포함되지 않는다. 세 줄 이상에서
+	# 실제 최소 높이가 예측을 넘으면 중앙 정렬도 어긋나므로 함께 계산한다.
+	var gaps := maxi(0, paragraph.get_line_count() - 1)
+	return maxf(minimum, paragraph.get_size().y + gaps * label.get_theme_constant("line_spacing") + 2.0)
 
 
 func _layout_header(area: Rect2, left: float, width: float, portrait: bool, compact: bool) -> float:
@@ -1114,7 +1105,10 @@ func _layout_slots() -> void:
 		var gutter := viewport_skin.get_content_margin(SIDE_LEFT) + viewport_skin.get_content_margin(SIDE_RIGHT)
 		if scrollbar.visible:
 			gutter += maxf(scrollbar.get_combined_minimum_size().x, scrollbar.size.x)
-		row.size.x = maxf(1.0, width - gutter - (_slot_touch if remove.visible else 0.0))
+		# Scroll/BoxContainer는 실제 자식 폭을 정수 픽셀로 배치한다. 소수 폭으로
+		# 미리 줄바꿈하면 정렬 뒤 폭과 번갈아 바뀌며 행 높이·포커스가 흔들린다.
+		var content_width := ceilf(maxf(1.0, width - gutter))
+		row.size.x = maxf(1.0, content_width - (ceilf(_slot_touch) if remove.visible else 0.0))
 		var text_metrics := _slot_text_metrics(index)
 		var row_h := ceilf(maxf(row_minimum, _slot_pad * 2.0 + text_metrics["height"]))
 		natural_heights.append(row_h)
@@ -1148,7 +1142,30 @@ func _layout_slots() -> void:
 	if _slot_overflow != overflowing:
 		_slot_overflow = overflowing
 		_queue_slot_layout()
+	# 줄바꿈으로 위쪽 행 높이가 달라지면 focus_entered 때의 위치가 오래될 수 있다.
+	# 컨테이너 정렬 뒤에 현재 포커스를 다시 드러낸다. 스크롤 값 변경은 재배치를 요청하지 않는다.
+	_queue_slot_reveal()
 	_queue_publish_buttons()
+
+
+func _queue_slot_reveal() -> void:
+	if _slot_reveal_pending or not is_inside_tree():
+		return
+	_slot_reveal_pending = true
+	get_tree().process_frame.connect(_after_slot_focus_frame, CONNECT_ONE_SHOT)
+
+
+func _after_slot_focus_frame() -> void:
+	_reveal_focused_slot.call_deferred()
+
+
+func _reveal_focused_slot() -> void:
+	_slot_reveal_pending = false
+	if not is_inside_tree() or is_queued_for_deletion() or _stage != "slots" or _slot_dragging:
+		return
+	var focused := get_viewport().gui_get_focus_owner()
+	if focused != null and (slot_buttons.has(focused) or delete_buttons.has(focused)):
+		slot_scroll.ensure_control_visible(focused)
 
 
 func _place_slot_labels(index: int) -> void:
