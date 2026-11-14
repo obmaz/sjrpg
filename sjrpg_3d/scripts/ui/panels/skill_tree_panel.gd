@@ -103,14 +103,17 @@ func frame_max_width() -> float:
 func _fit() -> void:
 	var scale := graph_css_scale()
 	var side := _node_side()
-	var tree_width := maxf(TREE_MIN_WIDTH, TIER_LABEL_WIDTH + 12.0 + 3.0 * (side + 16.0))
-	var gap := maxi(12, roundi(8.0 * scale))
+	var tree_width := maxf(TREE_MIN_WIDTH, TIER_LABEL_WIDTH + 12.0 + 3.0 * (side + 16.0 + UiKit.ACTION_GAP_DP * scale))
+	var gap := maxi(12, roundi(UiKit.ACTION_GAP_DP * scale))
 	_layout_box.add_theme_constant_override("separation", gap)
-	_detail.add_theme_constant_override("separation", maxi(8, roundi(6.0 * scale)))
+	_detail.add_theme_constant_override("separation", maxi(8, roundi(UiKit.ACTION_GAP_DP * scale)))
 	_tree.custom_minimum_size = Vector2(tree_width, _tier_height() * TIERS.size() + TREE_PADDING * 2.0)
 	# Decide from the actual content width in display units: near-square folds and
 	# phone landscape cannot support two readable columns inside the capped frame.
-	_layout_box.vertical = body_holder.size.x < tree_width + 280.0 * scale + gap
+	# 짧은 가로 화면에서는 상세의 가독 폭을 지키고 커진 트리를 가로 스크롤한다.
+	_layout_box.vertical = body_holder.size.x < (168.0 + 280.0) * scale + gap
+	_detail_panel.custom_minimum_size.x = 0.0 if _layout_box.vertical else 280.0 * scale
+	_detail_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL if _layout_box.vertical else Control.SIZE_FILL
 	_tree_scroll.size_flags_stretch_ratio = 1.15 if _layout_box.vertical else tree_width
 	_detail_panel.size_flags_stretch_ratio = 1.0 if _layout_box.vertical else 280.0 * scale
 	_tree_scroll.custom_minimum_size.y = 0.0
@@ -123,7 +126,7 @@ func _node_side() -> float:
 	var scale := graph_css_scale()
 	var rank_font := graph_font_size(18, scale)
 	var ribbon_width := UiKit.BOLD_FONT.get_string_size("20/20", HORIZONTAL_ALIGNMENT_LEFT, -1, rank_font).x + 10.0
-	return maxf(ribbon_width, maxf(NODE_SIDE, ceilf(44.0 * scale) - 16.0))
+	return maxf(ribbon_width, maxf(NODE_SIDE, ceilf(UiKit.ACTION_TOUCH_DP * scale) - 16.0))
 
 
 func _tier_height() -> float:
@@ -454,7 +457,7 @@ func _fit_detail_type() -> void:
 			var original: Vector2 = button.get_meta("woodland_base_minimum")
 			# Containers align child rectangles to whole logical pixels. Round up
 			# before layout so a fractional 44dp target cannot become 43.9dp.
-			var touch := ceilf(44.0 * graph_css_scale())
+			var touch := ceilf(UiKit.ACTION_TOUCH_DP * graph_css_scale())
 			button.custom_minimum_size = Vector2(maxf(original.x, touch), maxf(original.y, touch))
 			button.clip_text = false
 			button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

@@ -1,0 +1,31 @@
+{
+  "prompt": "Create ONE small standalone game UI SCROLL ARROW emblem, pointing DOWN. Transparent background. Use the attached approved fantasy game screenshot for mood only, and attached bronze button for exact muted antique-bronze metal family. Frontal flat UI view, not isometric. A crisply readable broad V-shaped downward chevron with shallow carved bevel and restrained warm ivory-bronze highlights, tiny dark steel recesses; elegant medieval craftsmanship. Subtle small decorative center ridge, readable when displayed at 24 px wide. No circle, no square plate, no border, no letters, no text, no number, no scene, no extra buttons. Occupy central 75% width and 50% height; generous true transparent padding. Single arrow only, centered. Avoid bright yellow, glow, gradients fading into opaque background, cheap flat vector look. Deliver transparent PNG. The same arrow will be flipped vertically at runtime for UP and rotated for LEFT/RIGHT so keep symmetric left-right geometry.",
+  "references": [
+    "assets/source/style/approved-game-reference.jpg",
+    "assets/ui/woodland_panels/button_bronze_secondary.png"
+  ],
+  "source": "generated.png",
+  "runtime": "assets/ui/woodland_panels/scroll_arrow.png",
+  "packing": {
+    "alphaThreshold": 128,
+    "paddingPx": 32,
+    "crop": [
+      225,
+      298,
+      1308,
+      825
+    ],
+    "output": [
+      256,
+      125
+    ],
+    "resampling": "Lanczos"
+  },
+  "purpose": "기존 청동 UI와 어울리는 스크롤 남은 방향 표시. 엔진에서 회전해 같은 원화를 재사용한다.",
+  "sha256": {
+    "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+    "assets/ui/woodland_panels/button_bronze_secondary.png": "ff1a0966f6ae742f7e77d9541f2fc26b3e272b45b77da41536f446aa2980655f",
+    "assets/ui/woodland_panels/scroll_arrow.png": "29a01360b2eb294191e68c27b2a2bf57270d1710eafc4a49b78680d39e65570a",
+    "generated.png": "f95bfe8caf5eaac00abae100be41cda8c6b8e61b7dec1d85cb86819186a9e089"
+  }
+}

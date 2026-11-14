@@ -5,6 +5,9 @@ extends RefCounted
 const BOLD_FONT := preload("res://assets/fonts/NanumGothic-ExtraBold.ttf")
 ## Panels raise this so text stays readable on phones (720-wide portrait ≈ 0.57 css px per unit).
 static var boost := 1.0
+## 화면 CSS px / Android dp 기준의 메뉴 조작 크기와 이웃 조작 간격.
+const ACTION_TOUCH_DP := 56.0
+const ACTION_GAP_DP := 12.0
 const GOLD := Color("c9af7c")
 const INK := Color("211c16")
 const TEXT := Color("e9dfc9")
@@ -96,6 +99,7 @@ class GeneratedSkin:
 	var selected := false
 	var button_compact := false
 	var button_height := 0.0
+	var short_frame := false
 	var _last_drawn_source := ""
 
 	func configure(role: String, is_primary := false, is_selected := false) -> void:
@@ -119,7 +123,7 @@ class GeneratedSkin:
 
 	func _apply_margins() -> void:
 		var horizontal := 34.0 if kind == "frame" else 16.0
-		var vertical := 34.0 if kind == "frame" else 12.0
+		var vertical := (16.0 if short_frame else 34.0) if kind == "frame" else 12.0
 		if kind == "button":
 			horizontal = 8.0 if button_compact else (button_height * 0.55 / unit if button_height > 0.0 else 24.0)
 			vertical = 8.0 if button_compact else (button_height * 0.24 / unit if button_height > 0.0 else 10.0)
@@ -208,7 +212,8 @@ class GeneratedSkin:
 		if kind == "frame":
 			# 메인 면도 같은 원화의 청회색 균열 슬레이트를 사용한다. 장식 없는 내부만 늘린다.
 			_piece(item, FRAME, rect.grow(-10.0 * unit), Rect2(144, 64, 363, 278))
-			_nine(item, rect, source_path, 144.0, 42.0 * unit, 42.0 * unit * 44.0 / 144.0)
+			var corner := (24.0 if short_frame else 42.0) * unit
+			_nine(item, rect, source_path, 144.0, corner, corner * 44.0 / 144.0)
 		elif kind == "card":
 			var texture := _texture(source_path)
 			_piece(item, source_path, rect.grow(-8.0 * unit),

@@ -11,15 +11,12 @@ var game: Node
 var _feedback := ""
 var _feedback_error := false
 var _install_button: Button
-var _install_hint: Label
 var _fullscreen_button: Button
-var _fullscreen_hint: Label
 var _install_poll := 0.0
 var _zoom_buttons: Array[Button] = []
 var _zoom_grid: GridContainer
 var _screen_orientation_buttons: Array[Button] = []
 var _screen_orientation_grid: GridContainer
-var _screen_orientation_hint: Label
 var _version_buttons: Array[Button] = []
 var _toggle_widgets: Array[Dictionary] = []
 
@@ -50,9 +47,6 @@ func _rebuild() -> void:
 	_fullscreen_button = _action_row("전체화면 켜기", _request_fullscreen)
 	_fullscreen_button.name = "FullscreenToggle"
 	body.add_child(_fullscreen_button)
-	_fullscreen_hint = PanelFrame.wrap_label("전체화면 상태를 확인하고 있습니다.", 15, UiKit.MUTED)
-	_fullscreen_hint.name = "FullscreenHint"
-	body.add_child(_fullscreen_hint)
 	_refresh_fullscreen()
 	body.add_child(_screen_orientation_card())
 	_refresh_screen_orientation()
@@ -63,32 +57,29 @@ func _rebuild() -> void:
 		body.add_child(PanelFrame.section("기기에 설치"))
 		_install_button = _action_row("이 기기에 설치", _request_install)
 		body.add_child(_install_button)
-		_install_hint = PanelFrame.wrap_label("브라우저의 설치 기능을 확인하고 있습니다.", 15, UiKit.MUTED)
-		body.add_child(_install_hint)
 		_refresh_install()
 		body.add_child(UiKit.divider())
 	body.add_child(PanelFrame.section("화면과 타격감"))
 	body.add_child(_world_zoom_card())
-	var fps_toggle := _toggle("FPS 표시", "화면 왼쪽 아래에 현재 프레임 수를 표시합니다.", Prefs.show_fps, func(on):
+	var fps_toggle := _toggle("FPS 표시", Prefs.show_fps, func(on):
 		Prefs.set_show_fps(on)
 		_rebuild())
 	fps_toggle.name = "ShowFps"
 	body.add_child(fps_toggle)
-	body.add_child(_toggle("절약 화질", "배경·캐릭터 해상도를 낮춰 속도를 높입니다. 글자·버튼은 선명하게 유지합니다.", Prefs.low_resolution, func(on):
+	body.add_child(_toggle("절약 화질", Prefs.low_resolution, func(on):
 		Prefs.set_low_resolution(on)
 		_rebuild()))
-	body.add_child(_toggle("타격 진동", "공격 적중 · 피격 · 스킬 사용" if Prefs.vibration_supported() else "이 기기에서는 진동을 지원하지 않습니다.", Prefs.haptics_enabled, func(on):
+	body.add_child(_toggle("타격 진동", Prefs.haptics_enabled, func(on):
 		Prefs.set_haptics(on)
 		_rebuild()))
-	body.add_child(_toggle("동작 줄이기", "HUD 장식 회전·맥박 대신 고정 표시", Prefs.reduce_motion, func(on):
+	body.add_child(_toggle("동작 줄이기", Prefs.reduce_motion, func(on):
 		Prefs.set_reduce_motion(on)
 		_rebuild()))
 	body.add_child(_action_row("진동 확인", func(): Prefs.pulse("hurt", true), Prefs.vibration_supported() and Prefs.haptics_enabled))
-	body.add_child(PanelFrame.wrap_label("진동은 지원되는 기기에서 동작하며, 선택한 설정은 이 기기에 저장됩니다.", 15, UiKit.MUTED))
-	body.add_child(_toggle("배경 음악", "마을 · 들판 · 동굴", Prefs.music_enabled, func(on):
+	body.add_child(_toggle("배경 음악", Prefs.music_enabled, func(on):
 		Prefs.set_music(on)
 		_rebuild()))
-	body.add_child(_toggle("전투 효과음", "공격 · 피격 · 획득", Prefs.sound_enabled, func(on):
+	body.add_child(_toggle("전투 효과음", Prefs.sound_enabled, func(on):
 		Prefs.set_sound(on)
 		if on:
 			SoundFx.play("loot", true)
@@ -100,7 +91,6 @@ func _rebuild() -> void:
 			game.dungeon.leave("동굴 입구로 돌아왔습니다")))
 	body.add_child(UiKit.divider())
 	body.add_child(PanelFrame.section("진행"))
-	body.add_child(PanelFrame.wrap_label("5초마다 이 기기에 자동 저장합니다. 네 개의 슬롯에서 모험을 따로 이어 하거나 새로 시작할 수 있습니다. 기존 모험은 직접 삭제하기 전까지 유지됩니다.", 15, UiKit.MUTED))
 	if _feedback != "":
 		var feedback := PanelFrame.wrap_label(_feedback, 16, Color(1.0, 0.69, 0.63) if _feedback_error else Color(0.71, 1, 0.69))
 		feedback.name = "SaveFeedback"
@@ -116,10 +106,9 @@ func _rebuild() -> void:
 		body.add_child(_action_row("저장하고 타이틀로", func(): title_requested.emit()))
 		var danger := _action_row("새 모험 준비", func(): _confirm_restart())
 		body.add_child(danger)
-	body.add_child(PanelFrame.section("게임패드 조작"))
-	body.add_child(PanelFrame.wrap_label("LS 이동 · RS 조준\nA 기본 공격 / 확인 · B 회피 / 뒤로\nX · Y · RB · RT 보조 기술 1–4\nLT 대화 / 상호작용 · LB 체력 물약 · ↑ 자원 물약\n← 가방 · → 의뢰 · ↓ 스킬\nMenu 설정 · View 지도\n메뉴에서는 LS / 방향키로 선택하고 A로 확인합니다.", 16, UiKit.MUTED))
 	body.add_child(UiKit.divider())
-	_add_asset_credits()
+	body.add_child(_action_row("게임패드 조작 안내", _show_gamepad_help))
+	body.add_child(_action_row("아트 출처 · 라이선스", _show_asset_credits))
 	_fit_display_option_targets()
 	_publish_version_buttons.call_deferred()
 
@@ -153,7 +142,7 @@ func _refresh_fullscreen() -> void:
 	var state := Prefs.fullscreen_state()
 	_fullscreen_button.text = str(state.get("title", "전체화면 켜기"))
 	_fullscreen_button.disabled = not bool(state.get("supported", false)) or bool(state.get("pending", false))
-	_fullscreen_hint.text = str(state.get("detail", ""))
+	_fullscreen_button.tooltip_text = str(state.get("detail", ""))
 
 
 func _publish_version_buttons() -> void:
@@ -175,6 +164,10 @@ func _publish_version_buttons() -> void:
 
 
 func _request_install() -> void:
+	if _install_button.text.contains("안내"):
+		var help := _information_panel("기기에 설치")
+		help.body.add_child(PanelFrame.wrap_label(_install_button.tooltip_text, 18))
+		return
 	# Call synchronously from Button.pressed; the JS bridge invokes prompt before awaiting a result.
 	JavaScriptBridge.eval("if (window.SjrpgInstall) window.SjrpgInstall.request();")
 	_refresh_install()
@@ -191,7 +184,7 @@ func _refresh_install() -> void:
 		return
 	_install_button.text = str(parsed.get("title", "이 기기에 설치"))
 	_install_button.disabled = str(parsed.get("status", "manual")) in ["installed", "prompting"]
-	_install_hint.text = str(parsed.get("detail", ""))
+	_install_button.tooltip_text = str(parsed.get("detail", ""))
 
 
 func _confirm_restart() -> void:
@@ -234,7 +227,6 @@ func _world_zoom_card() -> Control:
 	column.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
 	card.add_child(column)
 	column.add_child(PanelFrame.wrap_label("화면 확대", 22))
-	column.add_child(PanelFrame.wrap_label("배경·캐릭터의 크기를 조절합니다. 글자·버튼 크기는 유지됩니다.", 15, UiKit.MUTED))
 	_zoom_grid = GridContainer.new()
 	_zoom_grid.columns = 3
 	_zoom_grid.add_theme_constant_override("h_separation", 12)
@@ -265,9 +257,6 @@ func _screen_orientation_card() -> Control:
 	column.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
 	card.add_child(column)
 	column.add_child(PanelFrame.wrap_label("화면 방향", 22))
-	_screen_orientation_hint = PanelFrame.wrap_label("", 15, UiKit.MUTED)
-	_screen_orientation_hint.name = "ScreenOrientationHint"
-	column.add_child(_screen_orientation_hint)
 	_screen_orientation_grid = GridContainer.new()
 	_screen_orientation_grid.columns = 3
 	_screen_orientation_grid.add_theme_constant_override("h_separation", 12)
@@ -299,10 +288,7 @@ func _choose_screen_orientation(choice: String) -> void:
 
 
 func _refresh_screen_orientation() -> void:
-	if not is_instance_valid(_screen_orientation_hint) or _screen_orientation_hint.is_queued_for_deletion():
-		return
 	var state := Prefs.screen_orientation_state()
-	_screen_orientation_hint.text = str(state.get("detail", ""))
 	for button: Button in _screen_orientation_buttons:
 		if is_instance_valid(button) and not button.is_queued_for_deletion():
 			button.disabled = bool(state.get("pending", false))
@@ -310,7 +296,7 @@ func _refresh_screen_orientation() -> void:
 
 func _fit_display_option_targets() -> void:
 	_fit_toggle_rows()
-	var touch := ceilf(44.0 * display_pixel_scale())
+	var touch := ceilf(UiKit.ACTION_TOUCH_DP * display_pixel_scale())
 	for button: Button in _zoom_buttons + _screen_orientation_buttons:
 		if is_instance_valid(button) and not button.is_queued_for_deletion():
 			button.custom_minimum_size = Vector2(touch, maxf(76.0, touch))
@@ -337,7 +323,6 @@ func _version_card() -> Control:
 		return card  # The edition chooser is a web page; the Android app ships the 3D adventure only.
 	card.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
 	card.add_child(PanelFrame.section("모험 선택"))
-	card.add_child(PanelFrame.wrap_label("현재 모험을 저장한 뒤 선택 화면으로 돌아갑니다.", 15, UiKit.MUTED))
 	if OS.has_feature("web"):
 		var select := UiKit.button("저장하고 선택 화면으로", 20)
 		select.name = "VersionSelect"
@@ -354,8 +339,8 @@ func _open_edition(edition: String) -> void:
 		show_save_error(GameState.save_error)
 
 
-## 원래 제목·설명과 ON/OFF 스위치를 유지하며 좁은 폭에서는 위아래로 배치한다.
-func _toggle(label: String, hint: String, on: bool, on_change: Callable) -> Control:
+## 설정 이름과 ON/OFF만 표시하며 좁은 폭에서는 스위치를 다음 줄로 배치한다.
+func _toggle(label: String, on: bool, on_change: Callable) -> Control:
 	var card := PanelContainer.new()
 	card.add_theme_stylebox_override("panel", UiKit.card_style(on))
 	var holder := PanelContainer.new()
@@ -385,19 +370,17 @@ func _toggle(label: String, hint: String, on: bool, on_change: Callable) -> Cont
 	holder.add_child(row)
 	var text := VBoxContainer.new()
 	text.name = "SwitchCopy"
+	text.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	text.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
 	row.add_child(text)
 	var title := PanelFrame.wrap_label(label, 22)
+	title.set_meta("ui_action_label", true)
 	title.add_theme_font_override("font", UiKit.BOLD_FONT)
 	title.custom_minimum_size.x = 0
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	text.add_child(title)
-	var description := PanelFrame.wrap_label(hint, 15, UiKit.MUTED)
-	description.custom_minimum_size.x = 0
-	description.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	text.add_child(description)
 	var pill := Pill.new()
 	pill.name = "SwitchPill"
 	pill.on = on
@@ -406,25 +389,27 @@ func _toggle(label: String, hint: String, on: bool, on_change: Callable) -> Cont
 	pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	pill.resized.connect(pill.queue_redraw)
 	row.add_child(pill)
-	_toggle_widgets.append({"row": row, "pill": pill, "hit": hit})
+	_toggle_widgets.append({"row": row, "pill": pill, "hit": hit, "title": title})
 	row.resized.connect(_fit_toggle_rows)
 	return card
 
 
 func _fit_toggle_rows() -> void:
 	var scale := display_pixel_scale()
-	var gap := maxi(12, ceili(8.0 * scale))
+	var gap := maxi(12, ceili(UiKit.ACTION_GAP_DP * scale))
 	for widgets: Dictionary in _toggle_widgets:
 		var row: BoxContainer = widgets["row"]
 		var pill: Pill = widgets["pill"]
 		var hit: Button = widgets["hit"]
 		if not is_instance_valid(row) or row.is_queued_for_deletion():
 			continue
-		hit.custom_minimum_size = Vector2(0, ceilf(44.0 * scale))
-		pill.font_pixels = maxi(21, ceili(14.0 * scale))
-		pill.custom_minimum_size = Vector2(maxf(112.0, ceilf(72.0 * scale)), maxf(58.0, ceilf(36.0 * scale)))
+		hit.custom_minimum_size = Vector2(0, ceilf(UiKit.ACTION_TOUCH_DP * scale))
+		pill.font_pixels = maxi(21, ceili(16.0 * scale))
+		pill.custom_minimum_size = Vector2(maxf(112.0, ceilf(88.0 * scale)), maxf(58.0, ceilf(48.0 * scale)))
 		row.add_theme_constant_override("separation", gap)
-		row.vertical = row.size.x < 180.0 * scale + pill.custom_minimum_size.x + gap
+		var title: Label = widgets["title"]
+		var title_width := title.get_theme_font("font").get_string_size(title.text, HORIZONTAL_ALIGNMENT_LEFT, -1, title.get_theme_font_size("font_size")).x
+		row.vertical = row.size.x < title_width + pill.custom_minimum_size.x + gap
 		pill.queue_redraw()
 
 
@@ -454,8 +439,8 @@ class Pill:
 
 
 ## 채택한 자산의 저작자·원본·라이선스와 수정 표기를 설정에서 읽을 수 있게 한다.
-func _add_asset_credits() -> void:
-	body.add_child(PanelFrame.section("아트 출처"))
+func _show_asset_credits() -> void:
+	var panel := _information_panel("아트 출처 · 라이선스")
 	for kind: String in DirAccess.get_directories_at("res://assets/models/enemies"):
 		var path := "res://assets/models/enemies/%s/asset.json" % kind
 		if not FileAccess.file_exists(path):
@@ -464,4 +449,18 @@ func _add_asset_credits() -> void:
 		var credit: String = "%s: %s · %s\n원본: %s\n라이선스: %s\n게임용으로 수정해 사용했습니다." % [source["display_name"], source["author"], source["license"], source["source_url"], source["license_url"]]
 		var label := PanelFrame.wrap_label(credit, 15, UiKit.MUTED)
 		label.set_meta("asset_credit", true)
-		body.add_child(label)
+		panel.body.add_child(label)
+
+
+func _information_panel(title: String) -> PanelFrame:
+	var panel := PanelFrame.new()
+	add_child(panel)
+	panel.set_header(title)
+	panel.add_footer("닫기", panel.queue_free, true)
+	panel.closed.connect(panel.queue_free)
+	return panel
+
+
+func _show_gamepad_help() -> void:
+	var panel := _information_panel("게임패드 조작")
+	panel.body.add_child(PanelFrame.wrap_label("LS 이동 · RS 조준\nA 기본 공격 / 확인 · B 회피 / 뒤로\nX · Y · RB · RT 보조 기술 1–4\nLT 대화 / 상호작용 · LB 체력 물약 · ↑ 자원 물약\n← 가방 · → 의뢰 · ↓ 스킬\nMenu 설정 · View 지도\n메뉴에서는 LS / 방향키로 선택하고 A로 확인합니다.", 18))

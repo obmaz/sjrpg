@@ -92,7 +92,7 @@ try {
   for(const c of p.controls) {
    if(!area(c.visible_rect))continue;
    if(c.text && c.font/scale<13.99)issues.push(`text below 14 display pixels: ${c.text} (${c.font/scale})`);
-   if(c.kind==='button' && !c.disabled && (c.rect[2]/scale<43.9 || c.rect[3]/scale<43.9))issues.push(`target below 44 display pixels: ${c.text||c.key||c.path}`);
+   if(c.kind==='button' && !c.disabled && !c.input_ignored && (c.rect[2]/scale<55.9 || c.rect[3]/scale<55.9))issues.push(`target below 56 display pixels: ${c.text||c.key||c.path}`);
    // 스크롤 탭의 원래 사각형은 클립 밖으로 이어져도 된다. 실제 그려진 범위를 검사한다.
    const visible=c.visible_rect;
    if(visible[0]<p.rect[0]-1.1 || visible[0]+visible[2]>p.rect[0]+p.rect[2]+1.1)issues.push(`horizontal panel overflow: ${c.text||c.path}`);
@@ -105,6 +105,7 @@ try {
     if(c.text_height>c.content_rect[3]+1.1)issues.push(`button text overlaps painted border: ${c.text}`);
    }
   }
+  for(const scroll of p.scrolls) {if(scroll.v_bar_visible||scroll.h_bar_visible)issues.push(`native scrollbar remains visible: ${scroll.path}`);if(!scroll.arrow_cues)issues.push(`scroll is missing arrow cues: ${scroll.path}`);}
   for(const scroll of p.scrolls)if(scroll.horizontal_disabled && scroll.content.length && scroll.content[2]>scroll.rect[2]+1.1)issues.push(`horizontal scroll-content overflow: ${scroll.path}`);
  }
  async function captureToggleState(result,state,kind,width,height) {

@@ -4,7 +4,7 @@
 설정 안의 불러오기 모달은 `SettingsPanel`이 닫힘과 해제를 소유합니다. 게임 중 슬롯 전환은
 `Game.load_slot()`이 현재 진행의 저장에 성공한 뒤 HUD를 닫고, `Main`이 대상 저장의 읽기 결과를 확인합니다.
 
-`UiMetrics`가 웹 CSS px·Android dp를 논리 좌표로 환산하고, `UiKit`과 `PanelFrame`이 전체 패널의 색·간격·가독 글꼴·헤더/본문/고정 푸터를 공유합니다. `UiKit.GeneratedSkin`은 기존 생성형 원화의 자르기 좌표, 화면상 장식 크기, 콘텐츠 여백을 분리해 모서리 비율을 보존합니다. 버튼의 여백 갱신은 재진입을 막고 지연 병합해 중간 상태가 레이아웃에 반영되지 않게 합니다. 화면 비율·스크롤·검수 계약은 [모바일 UI](mobile-ui.md)를 따릅니다.
+`UiMetrics`가 웹 CSS px·Android dp를 논리 좌표로 환산하고, `UiKit`과 `PanelFrame`이 전체 패널의 색·간격·가독 글꼴·헤더/본문/고정 푸터를 공유합니다. `UiKit.GeneratedSkin`은 기존 생성형 원화의 자르기 좌표, 화면상 장식 크기, 콘텐츠 여백을 분리해 모서리 비율을 보존합니다. 메뉴 조작의 최소 크기·이웃 간격은 `UiKit.ACTION_TOUCH_DP`·`ACTION_GAP_DP`로 공유하고 `PanelFrame`이 버튼 행·그리드의 표시 배율을 적용합니다. 버튼의 여백 갱신은 재진입을 막고 지연 병합해 중간 상태가 레이아웃에 반영되지 않게 합니다. 화면 비율·스크롤·검수 계약은 [모바일 UI](mobile-ui.md)를 따릅니다.
 
 `SelectionUi`는 선택 화면의 전용 재질을 소유합니다. 버튼·탭·뒤로가기는 `assets/ui/entry/controls/`의 생성형 정제 이미지이며, 원본·추출 좌표·생성 문구는 [선택 화면 기준](selection-screen-design.md)을 따릅니다.
 

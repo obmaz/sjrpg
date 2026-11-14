@@ -141,6 +141,7 @@ func _ready() -> void:
 	add_child(slot_surface)
 	move_child(slot_surface, 2)
 	slot_scroll = ScrollContainer.new()
+	ScrollArrows.prepare(slot_scroll)
 	slot_scroll.name = "SaveListScroll"
 	slot_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	slot_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO

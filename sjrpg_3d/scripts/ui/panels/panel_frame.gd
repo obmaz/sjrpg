@@ -27,6 +27,7 @@ var _column: VBoxContainer
 var _header: HBoxContainer
 var _titles: VBoxContainer
 var _close: Button
+var _header_divider: Control
 var _sizing := false
 var _layout_pending := false
 var _tab_buttons: Array[Button] = []
@@ -99,7 +100,8 @@ func _ready() -> void:
 	close.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	close.pressed.connect(func(): closed.emit())
 	_header.add_child(close)
-	_column.add_child(UiKit.divider())
+	_header_divider = UiKit.divider()
+	_column.add_child(_header_divider)
 
 	tab_scroll = ScrollContainer.new()
 	tab_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
@@ -191,18 +193,25 @@ func _layout() -> void:
 		return
 	_sizing = true
 	var scale := display_pixel_scale()
-	_fit_widgets(self, scale)
 	var view := get_viewport().get_visible_rect().size
+	var short_screen := view.y / scale < 400.0
+	var generated_frame := _panel.get_theme_stylebox("panel") as UiKit.GeneratedSkin
+	if generated_frame != null:
+		generated_frame.short_frame = short_screen
+	_header_divider.visible = not short_screen
+	_fit_widgets(self, scale)
 	var m := safe_margins(get_viewport())
 	var pad := maxf(12.0, 8.0 * scale)
 	var inside := 34.0 * scale
+	var vertical_inside := (16.0 if short_screen else 34.0) * scale
 	var surface := _panel.get_theme_stylebox("panel")
 	for side: int in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
-		if not is_equal_approx(surface.get_content_margin(side), inside):
-			surface.set_content_margin(side, inside)
-	_set_separation(_column, roundi(maxf(18.0, 9.0 * scale)))
+		if not is_equal_approx(surface.get_content_margin(side), vertical_inside if side in [SIDE_TOP, SIDE_BOTTOM] else inside):
+			surface.set_content_margin(side, vertical_inside if side in [SIDE_TOP, SIDE_BOTTOM] else inside)
+	_set_separation(_column, roundi(maxf(18.0, (8.0 if short_screen else 12.0) * scale)))
+	_set_separation(body, ceili(UiKit.ACTION_GAP_DP * scale))
 	_set_separation(_titles, roundi(maxf(TITLE_GAP, 5.0 * scale)))
-	_close.custom_minimum_size = Vector2.ONE * maxf(MIN_TOUCH, ceilf(44.0 * scale))
+	_close.custom_minimum_size = Vector2.ONE * maxf(MIN_TOUCH, ceilf(UiKit.ACTION_TOUCH_DP * scale))
 	var left := pad + m.x
 	var top := pad + m.y
 	var right := pad + m.z
@@ -299,14 +308,23 @@ func _fit_widgets(node: Node, scale: float) -> void:
 	if node is Control and node.has_meta("ui_font_base"):
 		var control := node as Control
 		var preferred: int = control.get_meta("ui_font_base")
-		var font_size := maxi(preferred, ceili(14.0 * scale))
+		var font_size := maxi(preferred, ceili((16.0 if control is Button or control.has_meta("ui_action_label") else 14.0) * scale))
 		if control.get_theme_font_size("font_size") != font_size:
 			control.add_theme_font_size_override("font_size", font_size)
-		if control is Button and control.has_meta("ui_touch"):
-			if not control.has_meta("ui_min_height"):
-				control.set_meta("ui_min_height", control.custom_minimum_size.y)
-			var minimum: float = control.get_meta("ui_min_height")
-			control.custom_minimum_size.y = maxf(minimum, ceilf(44.0 * scale))
+	if node is Button and node.mouse_filter != Control.MOUSE_FILTER_IGNORE:
+		var action := node as Button
+		if not action.has_meta("ui_min_height"):
+			action.set_meta("ui_min_height", action.custom_minimum_size.y)
+			action.set_meta("ui_min_width", action.custom_minimum_size.x)
+		var minimum: float = action.get_meta("ui_min_height")
+		action.custom_minimum_size.x = maxf(float(action.get_meta("ui_min_width", 0.0)), ceilf(UiKit.ACTION_TOUCH_DP * scale))
+		action.custom_minimum_size.y = maxf(minimum, ceilf(UiKit.ACTION_TOUCH_DP * scale))
+	if node is BoxContainer and node.get_children().any(func(child: Node): return child is Button):
+		_set_separation(node as BoxContainer, ceili(UiKit.ACTION_GAP_DP * scale))
+	elif node is GridContainer and node.get_children().any(func(child: Node): return child is Button):
+		for constant: String in ["h_separation", "v_separation"]:
+			if node.get_theme_constant(constant) != ceili(UiKit.ACTION_GAP_DP * scale):
+				node.add_theme_constant_override(constant, ceili(UiKit.ACTION_GAP_DP * scale))
 	if node is Control:
 		UiKit.fit_generated(node as Control, scale)
 	for child: Node in node.get_children():
@@ -318,6 +336,8 @@ func _set_separation(box: BoxContainer, value: int) -> void:
 		box.add_theme_constant_override("separation", value)
 
 func _prepare_scroll_button(node: Node) -> void:
+	if node is ScrollContainer and is_ancestor_of(node):
+		ScrollArrows.prepare(node as ScrollContainer)
 	ScrollTouchSupport.prepare_button(node, self)
 	if is_ancestor_of(node):
 		_request_layout()

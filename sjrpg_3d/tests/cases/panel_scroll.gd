@@ -120,6 +120,7 @@ func run() -> void:
 	panel.queue_free()
 	await _frames(2)
 	await _generated_button_insets()
+	await _arrow_scroll_state()
 
 
 
@@ -169,5 +170,29 @@ func _generated_button_insets() -> void:
 		check("generated footer preserves 14dp text and 44dp touch size",
 			float(button.get_theme_font_size("font_size")) / panel.display_pixel_scale() >= 14.0
 			and button.size.y / panel.display_pixel_scale() >= 44.0)
+	view.queue_free()
+	await _frames(2)
+
+
+func _arrow_scroll_state() -> void:
+	var view := SubViewport.new()
+	view.size = Vector2i(720, 1558)
+	add_child(view)
+	var panel := PhoneFrame.new()
+	view.add_child(panel)
+	for index: int in 40:
+		panel.body.add_child(PanelFrame.wrap_label("스크롤 항목 %d" % index, 20))
+	panel.add_footer("닫기", func(): pass, true)
+	await _frames(8)
+	var arrows: ScrollArrows
+	for child: Node in panel.scroll.get_children(true):
+		if child is ScrollArrows:
+			arrows = child as ScrollArrows
+	check("scrolling keeps its actual range while native bars stay hidden", panel.scroll.vertical_scroll_mode == ScrollContainer.SCROLL_MODE_SHOW_NEVER and not panel.scroll.get_v_scroll_bar().visible and panel.scroll.get_v_scroll_bar().max_value > panel.scroll.get_v_scroll_bar().page)
+	if check("overflow has the generated direction cues", arrows != null):
+		check("top of list shows only the remaining downward direction", arrows._remaining.x == 0.0 and arrows._remaining.y == 1.0)
+		panel.scroll.scroll_vertical = 100000
+		await _frames(6)
+		check("end of list reverses cues from actual scroll position", arrows._remaining.x == 1.0 and arrows._remaining.y == 0.0)
 	view.queue_free()
 	await _frames(2)

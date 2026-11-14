@@ -107,11 +107,13 @@ func run() -> void:
 			grid.columns = 1
 			grid.size.x = width
 			settings._fit_display_option_targets()
-			var minimum := 44.0 * settings.display_pixel_scale()
+			var minimum := 56.0 * settings.display_pixel_scale()
 			for button: Button in grid.get_children():
 				minimum = maxf(minimum, button.get_combined_minimum_size().x)
 			var gap := float(grid.get_theme_constant("h_separation"))
 			check("folded settings choices keep their measured width", grid.columns * minimum + (grid.columns - 1) * gap <= width + 1.0 or grid.columns == 1)
+	for copy: Label in settings.body.find_children("*", "Label", true, false):
+		check("settings omit passive explanations", not copy.text.contains("해상도를") and not copy.text.contains("자동 저장") and not copy.text.contains("배경·캐릭터") and not copy.text.contains("현재 프레임"))
 	var toggle := settings.find_child("ShowFps", true, false)
 	var toggle_actions := toggle.find_children("*", "Button", true, false)
 	check("settings toggle keeps one focusable whole-card action", toggle_actions.size() == 1 and (toggle_actions[0] as Button).focus_mode == Control.FOCUS_ALL)
@@ -124,7 +126,7 @@ func run() -> void:
 		settings._fit_toggle_rows()
 		check("settings switch copy and pill adapt to available width", switch_layout.vertical == (width == 260.0))
 		check("settings pill keeps readable ON/OFF text", float(switch_pill.font_pixels) / settings.display_pixel_scale() >= 14.0)
-		check("whole-card switch keeps a 44dp touch height", (toggle_actions[0] as Button).custom_minimum_size.y / settings.display_pixel_scale() >= 44.0)
+		check("whole-card switch keeps a 56dp touch height", (toggle_actions[0] as Button).custom_minimum_size.y / settings.display_pixel_scale() >= 56.0)
 	view.queue_free()
 	await _frames(2)
 	await _check_run_choices()

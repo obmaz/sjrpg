@@ -35,6 +35,8 @@ func run() -> void:
 			and settings.find_child("CurrentEdition", true, false) == null
 		)
 	)
+	settings._show_asset_credits()
+	await _frames(2)
 	var credit_count := 0
 	var golem_credit := false
 	for label: Label in settings.find_children("*", "Label", true, false):

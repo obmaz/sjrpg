@@ -69,6 +69,9 @@ func _panel_snapshot(panel: PanelFrame) -> Dictionary:
 			scrolls.append({
 				"path": str(panel.get_path_to(control)), "rect": _rect(control.get_global_rect()),
 				"vertical": container.scroll_vertical,
+				"v_bar_visible": bar.is_visible_in_tree(),
+				"h_bar_visible": container.get_h_scroll_bar().is_visible_in_tree(),
+				"arrow_cues": container.has_meta("scroll_arrows"),
 				"maximum": maxf(0.0, bar.max_value - bar.page), "page": bar.page,
 				"horizontal_disabled": container.horizontal_scroll_mode == ScrollContainer.SCROLL_MODE_DISABLED,
 				"content": _rect(content.get_global_rect()) if content != null else []
@@ -96,6 +99,7 @@ func _panel_snapshot(panel: PanelFrame) -> Dictionary:
 			"content_rect": _rect(inner),
 			"text_height": font.get_multiline_string_size(words, HORIZONTAL_ALIGNMENT_LEFT, maxf(1.0, inner.size.x), font_size).y,
 			"art_source": skin.drawn_source_path() if skin != null else "",
+			"input_ignored": control.mouse_filter == Control.MOUSE_FILTER_IGNORE,
 			"wrap": int(control.get("autowrap_mode")),
 			"in_body": panel.body_holder.is_ancestor_of(control),
 			"in_footer": panel.footer.is_ancestor_of(control),

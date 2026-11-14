@@ -26,14 +26,13 @@ func run() -> void:
 		view.size = dimensions
 		await _frames(3)
 		var button := panel.find_child("FullscreenToggle", true, false) as Button
-		var hint := panel.find_child("FullscreenHint", true, false) as Label
-		if not check("settings expose one actual fullscreen button and status hint %s" % dimensions, button != null and hint != null):
+		if not check("settings expose one actual fullscreen button without passive subtext %s" % dimensions, button != null and panel.find_child("FullscreenHint", true, false) == null):
 			continue
 		var bounds := button.get_global_rect()
 		check("fullscreen is a visible 64px+ top settings action %s" % dimensions, button.is_visible_in_tree() and bounds.size.y >= 64.0 and Rect2(Vector2.ZERO, Vector2(dimensions)).encloses(bounds) and button.get_index() == 1)
 		var state := Prefs.fullscreen_state()
-		check("fullscreen button and hint reflect real supported state %s" % dimensions, button.text == str(state["title"]) and button.disabled == (not bool(state["supported"]) or bool(state["pending"])) and not hint.text.is_empty())
-		check("settings expose all orientation choices while paused", panel._screen_orientation_buttons.size() == 3 and panel.find_child("ScreenOrientationHint", true, false) != null)
+		check("fullscreen button reflects real supported state %s" % dimensions, button.text == str(state["title"]) and button.disabled == (not bool(state["supported"]) or bool(state["pending"])))
+		check("settings expose all orientation choices while paused", panel._screen_orientation_buttons.size() == 3 and panel.find_child("ScreenOrientationHint", true, false) == null)
 		for choice: Button in panel._screen_orientation_buttons:
 			check("orientation choices remain touchable after layout rotation %s" % dimensions, choice.size.y >= 64.0 and panel._panel.get_global_rect().encloses(choice.get_global_rect()))
 		check("settings rotation keeps the same paused adventure", get_tree().paused and game.world_renderer == renderer and game.player.position == position and is_equal_approx(game.player.hp, hp))
