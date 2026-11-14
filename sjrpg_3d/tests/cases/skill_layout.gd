@@ -1,6 +1,12 @@
 extends TestCase
 ## Skill trees must remain readable/touchable on a short landscape viewport, including the last tier.
 
+class PhoneSkills:
+	extends SkillTreePanel
+
+	func display_pixel_scale() -> float:
+		return 720.0 / 390.0
+
 func run() -> void:
 	var view := SubViewport.new()
 	view.size = Vector2i(720, 1280)
@@ -87,5 +93,29 @@ func run() -> void:
 	view.push_input(down, true)
 	await _frames(2)
 	check("a new tap still works after the scroll container claimed a gesture", panel._selected == target)
+	view.queue_free()
+	await _frames(2)
+	await _warrior_detail_focus()
+
+
+func _warrior_detail_focus() -> void:
+	var view := SubViewport.new()
+	view.size = Vector2i(1558, 720)
+	add_child(view)
+	GameState.delete_save()
+	GameState.new_game("warrior")
+	var panel := PhoneSkills.new()
+	view.add_child(panel)
+	await _frames(5)
+	var node: Button = panel._pad_nodes["cleave"]
+	node.grab_focus()
+	node.pressed.emit()
+	await _frames(4)
+	var focus := view.gui_get_focus_owner()
+	var detail_scroll := panel._detail.get_parent() as ScrollContainer
+	check("landscape warrior detail action is fully visible after graph activation", focus != null
+		and panel._detail.is_ancestor_of(focus)
+		and detail_scroll.get_global_rect().grow(1.0).encloses(focus.get_global_rect()),
+		"focus=%s clip=%s" % [focus.get_global_rect() if focus != null else Rect2(), detail_scroll.get_global_rect()])
 	view.queue_free()
 	await _frames(2)

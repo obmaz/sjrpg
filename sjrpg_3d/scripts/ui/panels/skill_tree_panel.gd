@@ -512,6 +512,15 @@ func _rebuild_pad_nodes() -> void:
 
 
 func _focus_detail() -> void:
+	# Newly rebuilt controls need one container layout before scrolling to them.
+	# A bound one-shot disconnects if the panel closes before the next frame.
+	if not get_tree().process_frame.is_connected(_focus_detail_after_layout):
+		get_tree().process_frame.connect(_focus_detail_after_layout, CONNECT_ONE_SHOT)
+
+
+func _focus_detail_after_layout() -> void:
+	if not is_inside_tree():
+		return
 	for child: Node in _detail.find_children("*", "Button", true, false):
 		var button := child as Button
 		if not button.is_queued_for_deletion() and not button.disabled:
