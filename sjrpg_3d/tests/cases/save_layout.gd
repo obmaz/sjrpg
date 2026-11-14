@@ -164,6 +164,15 @@ func run() -> void:
 			await _layout_check(select, view, scenario)
 		check("layout, focus and rotation preserve exact save bytes " + scenario, REVIEW.file_hashes() == before and GameState.hero_class == hero and GameState.gold == gold and GameState.active_slot == active)
 		if scenario == "mixed":
+			var foreign := Control.new()
+			foreign.focus_mode = Control.FOCUS_ALL
+			foreign.size = Vector2(24, 24)
+			select.add_child(foreign)
+			foreign.grab_focus()
+			var scroll_before: int = select.slot_scroll.scroll_vertical
+			select._reveal_focused_slot()
+			check("unrelated custom control focus never changes the save list", view.gui_get_focus_owner() == foreign and select.slot_scroll.scroll_vertical == scroll_before)
+			foreign.free()
 			await _modal_check(select, view)
 			await _short_modal_check(select, view)
 		select.queue_free()

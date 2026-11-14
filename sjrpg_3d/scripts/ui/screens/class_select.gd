@@ -1163,7 +1163,7 @@ func _reveal_focused_slot() -> void:
 	_slot_reveal_pending = false
 	if not is_inside_tree() or is_queued_for_deletion() or _stage != "slots" or _slot_dragging:
 		return
-	var focused := get_viewport().gui_get_focus_owner()
+	var focused := get_viewport().gui_get_focus_owner() as Button
 	if focused != null and (slot_buttons.has(focused) or delete_buttons.has(focused)):
 		slot_scroll.ensure_control_visible(focused)
 
