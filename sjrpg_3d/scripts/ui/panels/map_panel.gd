@@ -20,6 +20,7 @@ var _scope := false
 var _places_label: Label
 var _review_clock := 0.0
 var _reveal_frames := 0
+var _view_button: Button
 
 
 func setup(g: Node) -> MapPanel:
@@ -29,6 +30,10 @@ func setup(g: Node) -> MapPanel:
 
 func _ready() -> void:
 	super._ready()
+	_view_button = UiKit.button("보기", 17)
+	_view_button.custom_minimum_size = Vector2.ZERO
+	_view_button.pressed.connect(_show_view_controls)
+	trailing.add_child(_view_button)
 	_rebuild()
 	add_footer("탐험 계속하기", _close_map, true)
 	body_holder.resized.connect(_layout_map)
@@ -47,7 +52,8 @@ func _rebuild() -> void:
 	_scope = game.dungeon.active
 	if _scope:
 		_tab = 0
-	set_header("바람 동굴 지도" if _scope else "숲의 지도", "번호 또는 장소를 누르면 확대 · 지도를 끌어 이동")
+	set_header("바람 동굴 지도" if _scope else "숲의 지도")
+	_view_button.disabled = _tab != 0
 	set_tabs(["동굴 지도"] if _scope else ["장소 찾기", "안식처·워프"], _tab, _tab_selected)
 	clear_body()
 	if is_instance_valid(_map_area):
@@ -79,15 +85,6 @@ func _rebuild() -> void:
 	canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	canvas.place_selected.connect(_select_place)
 	_map_column.add_child(canvas)
-	var controls := HBoxContainer.new()
-	controls.add_theme_constant_override("separation", 6)
-	_map_column.add_child(controls)
-	for choice: Array in [["전체", "all"], ["내 위치", "player"], ["-", "out"], ["+", "in"]]:
-		var button := UiKit.button(choice[0], 17)
-		button.custom_minimum_size = Vector2(64, 64)
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.pressed.connect(_map_action.bind(choice[1]))
-		controls.add_child(button)
 	_selected = PanelFrame.wrap_label("목록에서 장소를 선택하세요", 16, UiKit.GOLD)
 	_selected.custom_minimum_size.y = 36
 	_map_column.add_child(_selected)
@@ -197,6 +194,25 @@ func _reveal_selected() -> void:
 	var row: Control = _rows.get(selected_id)
 	if row != null:
 		_list_scroll.ensure_control_visible(row)
+
+
+## 네 조작을 한 줄에 압축하지 않고 요청했을 때 큰 버튼으로 표시한다.
+func _show_view_controls() -> void:
+	if canvas == null:
+		return
+	var panel := PanelFrame.new()
+	add_child(panel)
+	panel.set_header("지도 보기")
+	for choice: Array in [["전체 지도", "all"], ["내 위치", "player"], ["확대", "in"], ["축소", "out"]]:
+		var button := UiKit.button(choice[0], 22)
+		button.custom_minimum_size.x = 0.0
+		var action := str(choice[1])
+		button.pressed.connect(func():
+			_map_action(action)
+			panel.queue_free())
+		panel.body.add_child(button)
+	panel.add_footer("닫기", panel.queue_free, true)
+	panel.closed.connect(panel.queue_free)
 
 
 func _map_action(action: String) -> void:

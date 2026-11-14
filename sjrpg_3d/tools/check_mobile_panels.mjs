@@ -75,11 +75,11 @@ try {
   } else if(kind==='journal') {
    const state=await read(),p=state.hud_targets.bar_quests,size=page.viewportSize();
    await page.touchscreen.tap(p[0]/state.viewport[0]*size.width,p[1]/state.viewport[1]*size.height);
-  } else await page.keyboard.press({bag:'b',skills:'t',settings:'Escape'}[kind]);
+  } else await page.keyboard.press({bag:'b',skills:'t',settings:'Escape',map:'m'}[kind]);
   await page.waitForFunction(()=>!!window.__sjrpgPanelLayout?.panel?.rect,null,{timeout:15000});
   await page.waitForTimeout(400);
   const state=await read();
-  const expected={bag:'/bag_panel.gd',skills:'/skill_tree_panel.gd',journal:'/journal_panel.gd',settings:'/settings_panel.gd',pause:'/panel_frame.gd'}[kind];
+  const expected={bag:'/bag_panel.gd',skills:'/skill_tree_panel.gd',journal:'/journal_panel.gd',settings:'/settings_panel.gd',pause:'/panel_frame.gd',map:'/map_panel.gd'}[kind];
   if(!state.panel.type.endsWith(expected)) throw new Error(`${kind}: actual input opened ${state.panel.type}`);
   return state;
  }
@@ -187,7 +187,10 @@ try {
     if(target && visible[2]>=target.rect[2]*.8 && visible[3]>=threshold)return {state,target};
     const direction=target && target.rect[1]+target.rect[3]/2<body[1]+body[3]/2 ? 1 : -1;
     const start=[body[0]+body[2]*.25,body[1]+body[3]*(direction<0?.7:.2),body[2]*.5,body[3]*.1];
-    await swipe(state,start,direction*Math.min(220,body[3]/state.scale*.55));
+    const correction=target ? (target.rect[1]<body[1] ? body[1]-target.rect[1] : body[1]+body[3]-target.rect[1]-target.rect[3])/state.scale : direction*220;
+    const distance=Math.min(220,body[3]/state.scale*.55,Math.max(12,Math.abs(correction)*.4));
+    detailFlow.push({event:'seek',attempt,key:target?.key,text:target?.text,rect:target?.rect,visible_rect:target?.visible_rect,body,dy:direction*distance});
+    await swipe(state,start,direction*distance);
    }
    throw new Error('Actual touch scrolling could not expose requested detail button');
   }
@@ -224,7 +227,7 @@ try {
     await work(result);
     result.final=await read();audit(result.final,result.issues);
     await page.screenshot({path:`${out}/${kind}-${width}x${height}.png`,timeout:60000});
-   } catch(error) {result.issues.push(String(error));}
+   } catch(error) {result.issues.push(String(error));result.failure_state=await read();await page.screenshot({path:`${out}/${kind}-${width}x${height}-failure.png`,timeout:60000});}
    result.issues=[...new Set(result.issues)];
    failures.push(...result.issues.map(issue=>`${kind} ${width}x${height}: ${issue}`));
    console.log(`PANEL_REVIEW ${kind} ${width}x${height} issues=${result.issues.length}`);
@@ -261,9 +264,10 @@ try {
   const flowStage=name=>{flowStep=name;detailFlow.push({event:'step',name,at:new Date().toISOString()});console.log(`PANEL_DETAIL_STEP ${name}`);};
   try {
    flowStage('tap-contract');
+   const previousLoadingSequence=await page.evaluate(()=>window.__sjrpgEntryLoading?.sequence??0);
    await tapControl(c=>/\/contract_hearth$/.test(c.path));
    flowStage('wait-contract-reload-starter');
-   await page.waitForFunction(()=>window.__sjrpgPanelLayout?.native_ready && window.__sjrpgExpedition?.phase==='starter' && window.__sjrpgPanelLayout?.panel?.controls?.some(c=>/\/draft_/.test(c.path)),null,{timeout:120000});
+   await page.waitForFunction(previous=>window.__sjrpgEntryLoading?.sequence>previous && window.__sjrpgEntryLoading?.visible===false && window.__sjrpgPanelLayout?.native_ready && window.__sjrpgExpedition?.phase==='starter' && window.__sjrpgPanelLayout?.panel?.controls?.some(c=>/\/draft_/.test(c.path)),previousLoadingSequence,{timeout:180000});
    flowStage('tap-starter-draft');
    await tapControl(c=>/\/draft_/.test(c.path));
    flowStage('wait-missions-after-starter');

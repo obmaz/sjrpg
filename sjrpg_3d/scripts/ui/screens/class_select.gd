@@ -1110,7 +1110,10 @@ func _layout_slots() -> void:
 		remove.custom_minimum_size = Vector2(_slot_touch, _slot_touch)
 		slot_bands[index].add_theme_constant_override("separation", 0)
 		var scrollbar := slot_scroll.get_v_scroll_bar()
-		var gutter := maxf(scrollbar.get_combined_minimum_size().x, scrollbar.size.x)
+		var viewport_skin := slot_scroll.get_theme_stylebox("panel")
+		var gutter := viewport_skin.get_content_margin(SIDE_LEFT) + viewport_skin.get_content_margin(SIDE_RIGHT)
+		if scrollbar.visible:
+			gutter += maxf(scrollbar.get_combined_minimum_size().x, scrollbar.size.x)
 		row.size.x = maxf(1.0, width - gutter - (_slot_touch if remove.visible else 0.0))
 		var text_metrics := _slot_text_metrics(index)
 		var row_h := ceilf(maxf(row_minimum, _slot_pad * 2.0 + text_metrics["height"]))
