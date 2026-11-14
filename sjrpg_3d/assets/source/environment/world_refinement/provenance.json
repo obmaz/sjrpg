@@ -28,7 +28,8 @@
     "chapel": "실제 사용자 approved-game-reference.jpg를 직접 참고한 돌출 입구·두 박공·굵은 종탑. 창·문·세공은 생성형 전체 면 원화. 바닥0.28m·왼쪽3단 계단·L자 몸체를 표시와 물리에 공유.",
     "fountain": "모든 정점·물줄기·source footprint 2배. 중심 유지, root scale 단위값.",
     "walls": "2D 원본의 열린 원형 망루·양쪽 석조 흉벽·목재 바닥과 외측 아치 음각. 몸체 반경1.30m, 전망 바닥4.25m, 성가퀴 정상5.15m. 닫힌 원뿔 지붕은 사용하지 않는다. 상부 난간은 FortressPlan3D.crown_parts의 같은 부피로 제작/SOLID에 연결한다. 기존 화살창·돌 받침·8개 상부 통로·독립 문짝을 유지한다.",
-    "medieval_craft": "주택의 실제 폭 덧문·경첩·처마 사선 버팀·단조 문띠와 직업별 길드 문장, 예배당의 입구 등기구, 성문 탑 실제 외측 면에 붙는 숲 문장. 공통 풍화 참나무·무광 철을 기존 GLB 재질에 합치며 광원·텍스처·보행 충돌은 추가하지 않는다."
+    "medieval_craft": "주택의 실제 폭 덧문·경첩·처마 사선 버팀·단조 문띠와 직업별 길드 문장, 예배당의 입구 등기구, 성문 탑 실제 외측 면에 붙는 숲 문장. 공통 풍화 참나무·무광 철을 기존 GLB 재질에 합치며 광원·텍스처·보행 충돌은 추가하지 않는다.",
+    "wall_footing": "실제 wall_footprints 분절을 최대16개 균일값으로 전달해 바닥에 폭이 달라지는 흙·쇄석·이끼를 혼합한다. 성문 포장을 비우며 추가 메시·충돌체는 없다."
   },
   "shared_grass": {
     "manifest": "assets/source/materials/grass/provenance.json",
@@ -83,11 +84,11 @@
     },
     {
       "path": "assets/materials/terrain/ground.gdshader",
-      "sha256": "172cad94ab9e1caf15bbc391c350dfeef51d3a357565f41af805e01f5feb4489"
+      "sha256": "f78f3608da7efcfe091e6103cd86820a1f7aaa9ca03afcec621386e5b1988aa4"
     },
     {
       "path": "scripts/rendering/terrain/ground_renderer_3d.gd",
-      "sha256": "b182fd4eec1d069d1acc310a2964db11b613135d251c16600df0a329a368f904"
+      "sha256": "b18ece971dda7e58733f1355b9aed0e50a5ddf6c7f0d19b4f91a55be3b2dffae"
     },
     {
       "path": "assets/materials/water/river.gdshader",
