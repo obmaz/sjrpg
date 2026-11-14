@@ -619,11 +619,13 @@ if (args.rotate === '1') {
         const ticks = await page.evaluate(() => window.__sjrpg3dProbe.physics_ticks);
         await page.setViewportSize(size);
         try {
+        // Software GPU readback can delay the half-second simulation probe.
+        // Keep requiring new physics and the actual resized native buffer.
         await page.waitForFunction(({landscape, ticks}) => {
             const p = window.__sjrpg3dProbe;
             return p?.native_active && p.physics_ticks > ticks &&
                 (p.native_width > p.native_height) === landscape;
-        }, {landscape: size.width > size.height, ticks}, {timeout: 15000});
+        }, {landscape: size.width > size.height, ticks}, {timeout: 90000});
         } catch(error) {
             console.log('ROTATION_FAILURE '+JSON.stringify(await page.evaluate(()=>({
                 probe:window.__sjrpg3dProbe,visible:document.visibilityState,focused:document.hasFocus(),active:document.activeElement?.id,
