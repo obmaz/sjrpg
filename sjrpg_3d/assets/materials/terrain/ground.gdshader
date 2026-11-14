@@ -3,6 +3,8 @@ shader_type spatial;
 render_mode cull_back;
 uniform sampler2D distance_field : filter_linear, repeat_disable;
 uniform vec4 town_bounds;
+uniform int wall_footprint_count;
+uniform vec4 wall_footprints[16];
 uniform sampler2D woodland_atlas : source_color, filter_linear_mipmap_anisotropic, repeat_disable;
 #include "res://assets/materials/grass/variety.gdshaderinc"
 
@@ -124,6 +126,27 @@ void fragment() {
 		slopes = mix(slopes,riverbed,smoothstep(1.35,1.80,-ground_height));
 		vec3 descent = texture(earth_texture,uv).rgb*vec3(0.62,0.60,0.54);
 		color = mix(color,mix(slopes,descent,smoothstep(1.5,1.9,water_distance)),smoothstep(0.01,0.14,-ground_height));
+	}
+	// 실제 벽 밑에만 폭이 달라지는 흙·쇄석·이끼를 섞는다. 성문 포장은 비워 둔다.
+	if (ground_height >= -0.015 && abs(settlement_edge) < 4.0) {
+		float footing_distance = 100.0;
+		for (int i=0; i<16; i++) {
+			if (i >= wall_footprint_count) { break; }
+			vec4 wall = wall_footprints[i];
+			vec2 q = abs(ground_world-(wall.xy+wall.zw)*.5)-(wall.zw-wall.xy)*.5;
+			footing_distance = min(footing_distance,length(max(q,vec2(0.0)))+min(max(q.x,q.y),0.0));
+		}
+		float patches = ground_noise(ground_world*1.45);
+		float width = mix(.32,1.05,patches);
+		float footing = (1.0-smoothstep(width*.18,width,footing_distance))*smoothstep(-.5,.3,d);
+		if (footing > .001) {
+			vec3 dirt = texture(earth_texture,ground_world/1.8).rgb*vec3(.65,.62,.52);
+			vec3 gravel = texture(rock_texture,ground_world*1.7).rgb*vec3(.76,.75,.65);
+			vec3 moss = grass*vec3(.66,.76,.57);
+			vec3 base = mix(dirt,gravel,smoothstep(.43,.64,ground_noise(ground_world*6.3))*.70);
+			base = mix(base,moss,smoothstep(.53,.77,patches)*.65);
+			color = mix(color,base,footing*.88);
+		}
 	}
 	vec3 site = (world_to_cave*vec4(ground_world.x,ground_height,ground_world.y,1.0)).xyz;
 	float zone = 1.0-smoothstep(0.82,1.12,length(vec2(site.x/16.0,(site.z-2.0)/24.0)));

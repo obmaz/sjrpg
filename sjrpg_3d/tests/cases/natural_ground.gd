@@ -21,6 +21,8 @@ func run() -> void:
 		)
 	)
 	var material := ground.material_override as ShaderMaterial
+	check("wall footing reads the actual wall segments including gate openings",
+		material.get_shader_parameter("wall_footprint_count") == game.village.wall_footprints.size())
 	check(
 		"ten distinct grass families share the original native floor",
 		(

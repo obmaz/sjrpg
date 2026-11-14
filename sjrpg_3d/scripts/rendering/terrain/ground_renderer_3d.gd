@@ -49,6 +49,18 @@ static func build(renderer: Node) -> MeshInstance3D:
 		)
 	)
 	material.set_shader_parameter("distance_field", load("res://" + str(record["field"])))
+	# 성문을 포함한 실제 성벽 분절만 따라가며 열린 통행부에는 접지 띠를 만들지 않는다.
+	var wall_bounds := PackedVector4Array()
+	for footprint: PackedVector2Array in renderer.game.village.wall_footprints:
+		var points := PackedVector2Array()
+		for point: Vector2 in footprint:
+			points.append(Iso.unproject(point) / WorldSpace3D.GROUND_UNITS_PER_METER)
+		var bounds := Iso.poly_bounds(points)
+		wall_bounds.append(Vector4(bounds.position.x, bounds.position.y, bounds.end.x, bounds.end.y))
+	assert(wall_bounds.size() <= 16, "성벽 접지 셰이더의 분절 예산을 확인하세요.")
+	material.set_shader_parameter("wall_footprint_count", wall_bounds.size())
+	wall_bounds.resize(16)
+	material.set_shader_parameter("wall_footprints", wall_bounds)
 	material.set_shader_parameter("shore_field", load("res://" + str(record["shore_field"])))
 	material.set_shader_parameter(
 		"rock_texture", load("res://assets/materials/terrain/rock_base.webp")
