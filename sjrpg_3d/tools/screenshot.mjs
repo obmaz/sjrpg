@@ -433,31 +433,24 @@ if (scene === 'bag' || scene === 'shop') {
         if (state.panel?.script?.endsWith('/bag_panel.gd')) { opened = true; break; }
         if (state.panel?.script) {
             const close = state.panel.buttons.find(b => b.text === '닫기') ??
-                state.panel.buttons.find(b => b.text === '×');
+                state.panel.buttons.find(b => b.text === '×') ??
+                state.panel.buttons.find(b => b.text === '모험 계속하기');
             if (!close) throw new Error('Visible popup has no actual close control');
             await tap(vp.width * (close.rect[0] + close.rect[2]/2) / state.viewport[0],
                 vp.height * (close.rect[1] + close.rect[3]/2) / state.viewport[1]);
         } else {
-            await page.locator('canvas').focus();
-            await page.keyboard.down('b');
-            await page.waitForTimeout(180);
-            await page.keyboard.up('b');
+            // B near a merchant opens the shop. Use the actual HUD action for
+            // the requested view instead of clicking an off-screen mode switch.
+            const key = scene === 'shop' ? 'near_shop' : 'bar_bag';
+            const center = state.touch?.[key];
+            if (!center) throw new Error('Actual equipment HUD action is unavailable: ' + key);
+            await tap(vp.width * center[0] / state.viewport[0],
+                vp.height * center[1] / state.viewport[1]);
         }
         await page.waitForTimeout(500);
     }
     if (!opened) throw new Error('EQUIPMENT_OPEN_FAILURE ' + JSON.stringify(await page.evaluate(() => window.__sjrpgGamepadReview)));
     const shopping = scene === 'shop';
-    if (await page.evaluate(() => window.__sjrpgGamepadReview.panel.shopping) !== shopping) {
-        const target = await page.evaluate(text => {
-            const state = window.__sjrpgGamepadReview;
-            const button = state.panel.buttons.find(b => b.text === text);
-            if (!button) return null;
-            return [(button.rect[0] + button.rect[2] / 2) / state.viewport[0],
-                (button.rect[1] + button.rect[3] / 2) / state.viewport[1]];
-        }, shopping ? '상점' : '가방');
-        if (!target) throw new Error('Actual equipment mode switch is unavailable');
-        await tap(vp.width * target[0], vp.height * target[1]);
-    }
     await page.waitForFunction(want => window.__sjrpgGamepadReview?.panel?.shopping === want, shopping, {timeout: 15000});
     await page.waitForTimeout(650);
     console.log('EQUIPMENT_PANEL_ACTUAL ' + JSON.stringify(await page.evaluate(() => window.__sjrpgGamepadReview.panel)));
