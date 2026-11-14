@@ -124,7 +124,10 @@ func run() -> void:
 		controls.redraw_requests > buttons and controls._near_name == "워프게이트")
 
 	area = hud.area_redraw_requests
-	player.position = Iso.project(Vector2(1800, 0))
+	# 고정된 옛 경계 좌표 대신 현재 성곽의 바깥 지점을 사용한다.
+	var outside := Vector3(TownPlazaPlan3D.TOWN_INTERIOR.end.x + 4.0, 0.0, 0.0)
+	player.position = WorldSpace3D.world_to_projected(outside)
+	check("area redraw fixture is outside the actual expanded town", not game.in_town(player.position))
 	_tick(hud, controls)
 	check("a changed world area invalidates its label", hud.area_redraw_requests > area and hud._area_name == "마을 외곽")
 	area = hud.area_redraw_requests
