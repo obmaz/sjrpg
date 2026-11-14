@@ -4,6 +4,8 @@
 설정 안의 불러오기 모달은 `SettingsPanel`이 닫힘과 해제를 소유합니다. 게임 중 슬롯 전환은
 `Game.load_slot()`이 현재 진행의 저장에 성공한 뒤 HUD를 닫고, `Main`이 대상 저장의 읽기 결과를 확인합니다.
 
+`UiMetrics`가 웹 CSS px·Android dp를 논리 좌표로 환산하고, `UiKit`과 `PanelFrame`이 전체 패널의 색·간격·가독 글꼴·헤더/본문/고정 푸터를 공유합니다. 화면 비율·스크롤·검수 계약은 [모바일 UI](mobile-ui.md)를 따릅니다.
+
 `SelectionUi`는 선택 화면의 전용 재질을 소유합니다. 버튼·탭·뒤로가기는 `assets/ui/entry/controls/`의 생성형 정제 이미지이며, 원본·추출 좌표·생성 문구는 [선택 화면 기준](selection-screen-design.md)을 따릅니다.
 
 `ForestTreeRuntime`이 일반 숲 나무의 원소·내구도·재생·저장을 소유합니다.

@@ -16,7 +16,7 @@ const visualFailures=[];
 const out=path.resolve(process.argv[3]||'build/save-layout-review');
 await mkdir(out,{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']});
-const context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1});
+const context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1,hasTouch:true});
 const page=await context.newPage();
 const errors=[];const errorDetails=[];const captures=[];const checks=[];let failure=null;
 const cdp=await context.newCDPSession(page);await cdp.send('Log.enable');
@@ -214,7 +214,7 @@ function inspectVisual(label,callback){
  catch(error){visualFailures.push({label,error:String(error)});console.error('ENTRY_VISUAL_CHECK_FAIL '+label+' '+String(error));}
 }
 async function focusedVisual(){
- const sizes=[[390,844],[844,390],[320,568],[568,320]];
+ const sizes=[[390,844],[844,390],[320,568],[568,320],[344,883],[883,344],[768,896],[896,768],[800,800]];
  for(const name of ['empty','mixed','full','corrupt','backup']){
   await resize(390,844);const before=stateKey(await scenario(name));
   if(name==='mixed'){await tap('slot3');await waitState(s=>s.ui.selected_slot===3,'selected mage save preview');}
@@ -397,6 +397,23 @@ try{
  record('actual short-window focus scrolling');
 
  // One actual Continue verifies the unchanged root launch path, after all preview assertions.
+ await resize(568,320);await scenario('full');
+ let touchState=await read();const touchBefore=stateKey(touchState),selectedBefore=touchState.ui.selected_slot;
+ const touchList=css(touchState,touchState.ui.save_layout.list);
+ const touchRow=css(touchState,touchState.ui.save_layout.cards[0].select);
+ const touchX=Math.max(touchList.x+12,Math.min(touchRow.x+touchRow.w*0.6,endX(touchList)-12));
+ const touchY=Math.min(endY(touchList)-8,Math.max(touchList.y+16,touchRow.y+touchRow.h*0.6));
+ const previousScroll=touchState.ui.save_layout.scroll_value;
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:touchX,y:touchY,id:7}]});
+ for(let step=1;step<=15;step++){
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:touchX,y:touchY-step*7,id:7}]});
+  await page.waitForTimeout(16);
+ }
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+ await waitState(s=>s.ui.save_layout.scroll_value>previousScroll+5,'real finger drag over save-row button');
+ touchState=await read();assert.equal(touchState.ui.selected_slot,selectedBefore,'swipe must not activate a save');
+ await preserve(touchBefore,'touch drag preserves exact saved files');
+ await ensureCard(4);await capture('touch-scroll-last-save');record('actual finger drag on save card scrolls without selection or deletion');
  await resize(390,844);await scenario('full');await tap('slot3');
  const expectedHero=(await read()).ui.slots_state[2];await tap('continue');
  await waitState(s=>s.review.screen==='adventure'&&s.adventure,'real Continue launches the selected adventure',90000);

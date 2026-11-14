@@ -131,6 +131,7 @@ func _draft() -> void:
 	if cards.is_empty():
 		body.add_child(wrap_label("선택지를 저장하지 못했습니다. 창을 닫고 다시 열어 주세요.", 19, Color.SALMON))
 	for card: Dictionary in cards:
+		body.add_child(UiKit.divider())
 		var skill_id: String = card["id"] if card["kind"] == "skill" else card["skill"]
 		var skill := GameState.skill(skill_id)
 		var name_text: String
@@ -208,7 +209,8 @@ func _debrief() -> void:
 func _action(text: String, id: String, callback: Callable) -> void:
 	var button := UiKit.button(text, 21)
 	button.name = id
-	button.custom_minimum_size.y = 76
+	button.custom_minimum_size = Vector2(0, 76)
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	button.pressed.connect(
 		func():

@@ -16,6 +16,7 @@ var _btn_load_game: Button
 var _btn_settings: Button
 var _time := 0.0
 var _started := false
+var _layout_pending := false
 var _web_start: JavaScriptObject
 var _web_entry: JavaScriptObject
 
@@ -37,9 +38,10 @@ func _ready() -> void:
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(shade)
-	_chapter = _label("제1장 · 숲의 부름", 23, EntryUi.BRONZE)
+	_chapter = _label("제1장 · 숲의 부름", 23, Color("d7bd8e"))
 	_title = _label("자연의 수호자", 60, UiKit.TEXT, true)
-	_subtitle = _label("어둠에 잠긴 숲, 당신의 여정이 시작됩니다", 24, EntryUi.MUTED)
+	_subtitle = _label("어둠에 잠긴 숲, 당신의 여정이 시작됩니다", 24, Color("d0cbbd"))
+	_subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
 	_btn_new_game = UiKit.button("새로운 모험", 26)
 	_btn_new_game.custom_minimum_size = Vector2.ZERO
@@ -61,6 +63,8 @@ func _ready() -> void:
 	add_child(_btn_settings)
 
 	resized.connect(_layout)
+	for control: Control in [_chapter, _title, _subtitle, _btn_new_game, _btn_load_game, _btn_settings]:
+		control.minimum_size_changed.connect(_queue_layout)
 	_layout()
 	if OS.has_feature("web"):
 		_web_entry = JavaScriptBridge.get_interface("__sjrpgEntry")
@@ -85,16 +89,19 @@ func _layout() -> void:
 		return
 	var margins := PanelFrame.safe_margins(get_viewport())
 	var area := Rect2(Vector2(margins.x, margins.y), size - Vector2(margins.x + margins.z, margins.y + margins.w))
-	var unit := minf(area.size.x / 720.0, area.size.y / 1280.0) if area.size.y > area.size.x else minf(area.size.x / 1080.0, area.size.y / 720.0)
-	var width := minf(area.size.x - 64.0 * unit, 620.0 * unit) if area.size.y > area.size.x else minf(area.size.x * 0.44, 620.0 * unit)
-	var left := area.get_center().x - width * 0.5 if area.size.y > area.size.x else area.position.x + area.size.x * 0.52
-	var bottom := area.end.y - 48.0 * unit
+	var portrait := area.size.y > area.size.x
+	var unit := minf(area.size.x / 720.0, area.size.y / 1280.0) if portrait else minf(area.size.x / 1080.0, area.size.y / 720.0)
+	var css := _css_scale()
+	var outer := maxf(32.0 * unit, 12.0 * css)
+	var width := minf(area.size.x - outer * 2.0, 620.0 * unit) if portrait else minf(area.size.x * 0.44, 620.0 * unit)
+	var left := area.get_center().x - width * 0.5 if portrait else area.position.x + area.size.x * 0.52
+	var bottom := area.end.y - maxf(48.0 * unit, 12.0 * css)
 
-	# 폰 및 데스크톱 모두 64px+ 이상의 안전한 터치 타깃 보장
-	var btn_settings_h := maxf(64.0 * unit, 64.0)
-	var btn_load_h := maxf(68.0 * unit, 66.0)
-	var btn_new_h := maxf(76.0 * unit, 72.0)
-	var gap := 12.0 * unit
+	# 논리 해상도가 큰 웹·Android에서도 실제 손가락 크기로 조작할 수 있게 한다.
+	var btn_settings_h := maxf(64.0 * unit, 44.0 * css)
+	var btn_load_h := maxf(68.0 * unit, 48.0 * css)
+	var btn_new_h := maxf(76.0 * unit, (56.0 if portrait else 48.0) * css)
+	var gap := maxf(12.0 * unit, 6.0 * css)
 
 	var settings_y := bottom - btn_settings_h
 	var load_y := settings_y - gap - btn_load_h
@@ -102,31 +109,51 @@ func _layout() -> void:
 
 	_btn_settings.position = Vector2(left, settings_y)
 	_btn_settings.size = Vector2(width, btn_settings_h)
-	_btn_settings.add_theme_font_size_override("font_size", roundi(20.0 * unit))
+	_font(_btn_settings, 20.0 * unit, 16.0 * css)
 
 	_btn_load_game.position = Vector2(left, load_y)
 	_btn_load_game.size = Vector2(width, btn_load_h)
-	_btn_load_game.add_theme_font_size_override("font_size", roundi(22.0 * unit))
+	_font(_btn_load_game, 22.0 * unit, 16.0 * css)
 
 	_btn_new_game.position = Vector2(left, new_y)
 	_btn_new_game.size = Vector2(width, btn_new_h)
-	_btn_new_game.add_theme_font_size_override("font_size", roundi(26.0 * unit))
+	_font(_btn_new_game, 26.0 * unit, 18.0 * css)
 
-	var subtitle_bottom := new_y - 24.0 * unit
-	_subtitle.position = Vector2(left, subtitle_bottom - 36.0 * unit)
-	_subtitle.size = Vector2(width, 36.0 * unit)
-	_subtitle.add_theme_font_size_override("font_size", roundi(24.0 * unit))
-
-	var title_bottom := _subtitle.position.y - 12.0 * unit
-	_title.position = Vector2(left, title_bottom - 76.0 * unit)
-	_title.size = Vector2(width, 76.0 * unit)
-	_title.add_theme_font_size_override("font_size", roundi(60.0 * unit))
-
-	var chapter_bottom := _title.position.y - 8.0 * unit
-	_chapter.position = Vector2(left, chapter_bottom - 34.0 * unit)
-	_chapter.size = Vector2(width, 34.0 * unit)
-	_chapter.add_theme_font_size_override("font_size", roundi(23.0 * unit))
+	_font(_subtitle, 24.0 * unit, 14.0 * css)
+	_font(_title, 60.0 * unit, (32.0 if portrait else 28.0) * css)
+	_font(_chapter, 23.0 * unit, 14.0 * css)
+	var cursor := new_y - maxf(24.0 * unit, 10.0 * css)
+	for label: Label in [_subtitle, _title, _chapter]:
+		var height := label.get_theme_font("font").get_multiline_string_size(
+			label.text, HORIZONTAL_ALIGNMENT_CENTER, width,
+			label.get_theme_font_size("font_size")
+		).y + 2.0
+		EntryUi.place(label, Rect2(Vector2(left, cursor - height), Vector2(width, height)))
+		cursor -= height + gap
 	_publish_buttons()
+
+
+func _font(control: Control, base: float, minimum: float) -> void:
+	var pixels := ceili(maxf(base, minimum))
+	if control.get_theme_font_size("font_size") != pixels:
+		control.add_theme_font_size_override("font_size", pixels)
+
+
+func _queue_layout() -> void:
+	if _layout_pending:
+		return
+	_layout_pending = true
+	_settle_layout.call_deferred()
+
+
+func _settle_layout() -> void:
+	_layout_pending = false
+	# 회전 직후 글꼴/줄바꿈 최소 크기가 갱신되면 이전 폭·높이를 버리고 다시 맞춘다.
+	_layout()
+
+
+func _css_scale() -> float:
+	return UiMetrics.units_per_display_pixel(get_viewport())
 
 
 func _publish_buttons() -> void:
@@ -134,12 +161,26 @@ func _publish_buttons() -> void:
 		return
 	var dimensions := get_viewport_rect().size
 	var buttons := {}
+	var layout := {"viewport": [dimensions.x, dimensions.y], "dp_scale": _css_scale(), "controls": {}}
 	for key: String in ["new_game", "load_game", "settings"]:
 		var button: Button = {"new_game": _btn_new_game, "load_game": _btn_load_game,
 			"settings": _btn_settings}[key]
 		var center := button.get_global_rect().get_center() / dimensions
 		buttons[key] = [center.x, center.y]
+		layout["controls"][key] = _control_probe(button)
+	for key: String in ["chapter", "title", "subtitle"]:
+		var caption: Label = {"chapter": _chapter, "title": _title, "subtitle": _subtitle}[key]
+		layout["controls"][key] = _control_probe(caption)
 	JavaScriptBridge.eval("window.__sjrpgTitleButtons = " + JSON.stringify(buttons))
+	JavaScriptBridge.eval("window.__sjrpgTitleLayout = " + JSON.stringify(layout))
+
+
+func _control_probe(control: Control) -> Dictionary:
+	var rect := control.get_global_rect()
+	return {
+		"rect": [rect.position.x, rect.position.y, rect.size.x, rect.size.y],
+		"font_size": control.get_theme_font_size("font_size")
+	}
 
 
 func _process(delta: float) -> void:

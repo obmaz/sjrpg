@@ -7,10 +7,12 @@ const HEROES := {
 	"mage": "res://assets/ui/entry/selection-mage.webp"
 }
 const TITLE_FONT := preload("res://assets/fonts/NanumMyeongjo-Bold.ttf")
-const BODY_FONT := preload("res://assets/fonts/NanumMyeongjo-Regular.ttf")
+# 작은 역할·설명·저장 정보는 폰에서도 획이 유지되는 공용 고딕을 사용한다.
+const BODY_FONT := preload("res://assets/fonts/NanumGothic-Regular.ttf")
 const INK := Color("101a19")
 const IVORY := Color("e7e1d1")
-const MUTED := Color("b5b4a0")
+const MUTED := Color("d0cbbd")
+const ROLE := Color("d7bd8e")
 const BRONZE := Color("a68b5b")
 const PORTRAIT_BLEND := """
 shader_type canvas_item;

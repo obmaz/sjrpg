@@ -24,7 +24,14 @@ async function inline(name,data){
 async function bounded(promise,label,ms){
  let timer;try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error(label+' timed out after '+ms+'ms')),ms);})]);}finally{clearTimeout(timer);}
 }
-for(const operation of ['load','create'])for(const profile of [{name:'portrait',width:390,height:844,dpr:1},{name:'landscape-retina',width:844,height:390,dpr:2}]){
+const operationFilter=process.env.ENTRY_LOADING_OPERATIONS?.split(',');
+const profileFilter=process.env.ENTRY_LOADING_PROFILES?.split(',');
+const readyTimeout=Number(process.env.ENTRY_LOADING_READY_TIMEOUT_MS||90000);
+assert(Number.isFinite(readyTimeout)&&readyTimeout>=1000&&readyTimeout<=300000,'valid loading review timeout');
+const operations=['load','create'].filter(name=>!operationFilter||operationFilter.includes(name));
+const profiles=[{name:'portrait',width:390,height:844,dpr:1},{name:'landscape-retina',width:844,height:390,dpr:2}].filter(profile=>!profileFilter||profileFilter.includes(profile.name));
+assert(operations.length&&profiles.length,'loading review filters must select actual cases');
+for(const operation of operations)for(const profile of profiles){
  const result={name:operation+'-'+profile.name,operation,profile,events:[],frames:[],checks:[],errors:[]};proof.cases.push(result);
  const context=await browser.newContext({viewport:{width:profile.width,height:profile.height},deviceScaleFactor:profile.dpr});
  const page=await context.newPage();activePage=page;const cdp=await context.newCDPSession(page);
@@ -127,7 +134,9 @@ for(const operation of ['load','create'])for(const profile of [{name:'portrait',
   console.log('ENTRY_LOADING_STAGE '+JSON.stringify({name:result.name,stage:'boot'}));
   await page.goto(base.href,{waitUntil:'domcontentloaded'});
   await wait(s=>s.title&&s.entry&&s.review?.ready,'fresh title and isolated fixture',90000);
-  await page.locator('#entry-start').click();
+  const titleButton=await page.evaluate(()=>window.__sjrpgTitleButtons?.load_game);
+  assert(titleButton,'actual title load control exists');
+  await page.mouse.click(titleButton[0]*profile.width,titleButton[1]*profile.height);
   await wait(s=>s.ui?.stage==='slots'&&s.review.screen==='selection','actual save list');
   // Actual orientation round-trip before entry: preserve the selected slot and footer.
   await page.setViewportSize({width:profile.height,height:profile.width});
@@ -149,7 +158,7 @@ for(const operation of ['load','create'])for(const profile of [{name:'portrait',
   const clickedAt=Date.now();result.clicked_at=clickedAt;
   // Two real pointer activations; the immediate overlay and root guard own suppression.
   await page.mouse.dblclick(...point,{delay:30});
-  const ready=await wait(s=>s.adventure&&s.review.screen==='adventure'&&s.loading?.visible===false,'native adventure ready and overlay dismissed',90000);
+  const ready=await wait(s=>s.adventure&&s.review.screen==='adventure'&&s.loading?.visible===false,'native adventure ready and overlay dismissed',readyTimeout);
   console.log('ENTRY_LOADING_STAGE '+JSON.stringify({name:result.name,stage:'native-ready',frames:frames.length,loading:ready.loading}));
   await bounded(Promise.allSettled(pending),'pre-stop CDP acknowledgements',10000);
   await page.waitForTimeout(120);
@@ -272,7 +281,7 @@ for(const operation of ['load','create'])for(const profile of [{name:'portrait',
   await writeFile(path.join(out,'proof.json'),JSON.stringify(proof,null,2));
  }
 }
-proof.passed=proof.cases.length===4&&proof.cases.every(c=>!c.failure&&c.errors.length===0);
+proof.passed=proof.cases.length===operations.length*profiles.length&&proof.cases.every(c=>!c.failure&&c.errors.length===0);
 await writeFile(path.join(out,'proof.json'),JSON.stringify(proof,null,2));
 console.log((proof.passed?'ENTRY_LOADING_PASS ':'ENTRY_LOADING_FAIL ')+JSON.stringify({cases:proof.cases.length,checks:proof.cases.reduce((sum,c)=>sum+c.checks.length,0),errors:proof.errors.length}));
 await browser.close();

@@ -188,6 +188,11 @@ func apply() -> void:
 			review.start.call_deferred(_game)
 		elif option == "reward_preview" and value in ["1", "levelup"]:
 			scenes.preview_reward.call_deferred(value)
+		elif option == "ui_layout_review" and value == "1":
+			var source: Script = load("res://scripts/inspection/panel_ui_review.gd")
+			var observer: Node = source.new()
+			observer.call("setup", _game)
+			add_child(observer)
 		elif option == "village_review" and value == "1":
 			VillageReviewSnapshot.publish.call_deferred(_game)
 		elif option == "gold":

@@ -1,7 +1,7 @@
 class_name BagPanel
 extends PanelFrame
 ## 모험가의 가방 (원본 EquipmentPanel): 착용 장비 · 보관함(24칸) · 탭 · 장착/잠금/판매,
-## 마을 상인 곁에서는 상점(무기 · 방어구 · 부적 · 물약)으로 전환. 축복(수련)은 아직 없음.
+## 마을 상인 곁에서는 상점(무기 · 방어구 · 부적 · 물약 · 축복)으로 전환합니다.
 
 const INV_TABS := ["전체", "신규", "무기", "방어구", "부적", "잠금"]
 const SHOP_TABS := ["무기", "방어구", "부적", "물약", "축복"]
@@ -34,6 +34,7 @@ func _ready() -> void:
 		tab = 1
 		_new_items = GameState.unseen.duplicate()
 	closed.connect(func(): GameState.save_game())
+	get_viewport().size_changed.connect(func(): _refresh_icons(body))
 	_rebuild()
 
 
@@ -47,8 +48,8 @@ func _rebuild() -> void:
 		c.queue_free()
 	for c in footer.get_children():
 		c.queue_free()
-	var gold_label := UiKit.label("● %s G" % HudArt.fmt(GameState.gold), 22, UiKit.GOLD, true)
-	trailing.add_child(gold_label)
+	# Currency belongs to the scrolling summary so long balances cannot squeeze the title.
+	body.add_child(PanelFrame.wrap_label("보유 골드 · %s G" % HudArt.fmt(GameState.gold), 18, UiKit.GOLD))
 	if shopping:
 		set_header("상점", "%s · 보관함 %d/%d" % [GameState.class_info()["name"], GameState.inventory.size(), Gear.CAPACITY])
 		set_tabs(SHOP_TABS, shop_tab, func(i):
@@ -76,6 +77,7 @@ func _rebuild() -> void:
 			message = ""
 			_rebuild(), false, 1.0)
 	add_footer("모험 계속하기", func(): closed.emit(), true, 2.0)
+	_refresh_icons(body)
 
 
 # ───────────────────────── inventory ─────────────────────────
@@ -88,6 +90,7 @@ func _build_inventory() -> void:
 		var empty := UiKit.label(
 			"확인하지 않은 새 장비가 없습니다" if tab == 1 else ("잠근 장비가 없습니다" if tab == 5 else "이 부위에 보관한 장비가 없습니다"),
 			19, UiKit.MUTED)
+		empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		empty.custom_minimum_size = Vector2(0, 90)
 		body.add_child(empty)
@@ -120,14 +123,15 @@ func _filtered() -> Array[Gear]:
 func _overview() -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 8)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 14)
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	var row := HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", 14)
+	row.add_theme_constant_override("v_separation", 12)
 	box.add_child(row)
 	for slot in SLOTS:
 		var cell := GearCell.new()
 		cell.setup(GameState.equipped.get(slot), slot)
-		cell.custom_minimum_size = Vector2(100, 100)
+		_prepare_icon(cell, 56.0)
+		cell.tooltip_text = str(Gear.SLOT_NAMES.get(slot, slot))
 		var s: String = slot
 		cell.pressed.connect(func():
 			var g: Gear = GameState.equipped.get(s)
@@ -135,7 +139,14 @@ func _overview() -> Control:
 				tab = 0
 				selected = g
 				_rebuild())
-		row.add_child(cell)
+		var slot_box := VBoxContainer.new()
+		slot_box.add_theme_constant_override("separation", 8)
+		row.add_child(slot_box)
+		slot_box.add_child(cell)
+		var slot_label := PanelFrame.wrap_label(str(Gear.SLOT_NAMES.get(s, s)), 16, UiKit.MUTED)
+		slot_label.custom_minimum_size.x = 0
+		slot_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		slot_box.add_child(slot_label)
 		var pad := Button.new()
 		pad.name = "Equipped_" + s
 		pad.tooltip_text = str(Gear.SLOT_NAMES.get(s, s))
@@ -153,9 +164,9 @@ func _overview() -> Control:
 	stats.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	stats.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
 	box.add_child(stats)
-	stats.add_child(UiKit.label("공격력 %s    방어 %s" % [HudArt.stat(GameState.attack_power()), HudArt.stat(GameState.defense())], 19))
-	stats.add_child(UiKit.label("생명 %s    %s %s" % [HudArt.stat(GameState.max_hp()), _res(), HudArt.res(GameState.max_resource())], 19))
-	var hint := UiKit.label("착용한 칸을 누르면 상세를 봅니다", 14, UiKit.MUTED)
+	stats.add_child(PanelFrame.wrap_label("공격력 %s · 방어 %s" % [HudArt.stat(GameState.attack_power()), HudArt.stat(GameState.defense())], 19))
+	stats.add_child(PanelFrame.wrap_label("생명 %s · %s %s" % [HudArt.stat(GameState.max_hp()), _res(), HudArt.res(GameState.max_resource())], 19))
+	var hint := PanelFrame.wrap_label("착용한 칸을 누르면 상세를 봅니다", 16, UiKit.MUTED)
 	stats.add_child(hint)
 	return box
 
@@ -185,7 +196,7 @@ func _gear_row(g: Gear, offer: bool, price := 0) -> Control:
 	holder.add_child(top)
 	var cell := GearCell.new()
 	cell.setup(g, "")
-	cell.custom_minimum_size = Vector2(100, 100)
+	_prepare_icon(cell, 48.0)
 	cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top.add_child(cell)
 	var text := VBoxContainer.new()
@@ -222,6 +233,7 @@ func _gear_row(g: Gear, offer: bool, price := 0) -> Control:
 		tags.append("%s 전용" % ("전사" if g.base["cls"] == "warrior" else "마법사"))
 	if not tags.is_empty():
 		var tag_label := UiKit.label(" · ".join(tags), 18, Color(1, 0.88, 0.5) if offer else Color(0.55, 0.95, 0.78))
+		tag_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		tag_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		text.add_child(tag_label)
 	# The whole top row is the tap target (the action buttons below stay separate).
@@ -261,13 +273,19 @@ func _detail(g: Gear, offer: bool, price: int) -> Control:
 	if g.slot() == "weapon":
 		var profile := g.melee_profile()
 		box.add_child(PanelFrame.wrap_label("무기 근접 공격 · 사거리 %.1f걸음 · 타격 폭 %.0f° · 공격 간격 %.2f초 (일시 강화 제외)" % [profile["range"] / 40.0, rad_to_deg(profile["arc"]) * 2.0, profile["tempo"]], 15, UiKit.MUTED))
-	var actions := HBoxContainer.new()
+	var actions := BoxContainer.new()
+	actions.name = "EquipmentActions"
 	actions.add_theme_constant_override("separation", 8)
+	actions.resized.connect(func(): _fit_actions(actions))
+	actions.minimum_size_changed.connect(func(): _fit_actions.call_deferred(actions))
 	box.add_child(actions)
 	if offer:
 		var poor := GameState.gold < price
 		var full := GameState.inventory.size() >= Gear.CAPACITY
-		var buy := UiKit.button("구매 · %s G" % HudArt.fmt(price) if not (poor or full) else ("골드가 부족합니다" if poor else "보관함이 가득 찼습니다"), 20)
+		if poor or full:
+			box.add_child(PanelFrame.wrap_label("골드가 부족합니다" if poor else "보관함이 가득 찼습니다", 18, UiKit.GOLD))
+		var buy := UiKit.button("구매 · %s G" % HudArt.fmt(price), 20)
+		buy.set_meta("gamepad_key", "buy:%d" % g.base["index"])
 		buy.custom_minimum_size = Vector2(0, 70)
 		buy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		buy.disabled = poor or full or not GameState.can_equip(g)
@@ -281,9 +299,11 @@ func _detail(g: Gear, offer: bool, price: int) -> Control:
 			game.player.refresh_stats()
 			_rebuild())
 		actions.add_child(buy)
+		_fit_actions(actions)
 		return box
 	var equipped := GameState.is_equipped(g)
 	var equip := UiKit.button("착용 중" if equipped else ("착용" if GameState.can_equip(g) else "착용 불가"), 20)
+	equip.set_meta("gamepad_key", "equip:%d" % g.serial)
 	equip.custom_minimum_size = Vector2(0, 70)
 	equip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	equip.disabled = equipped or not GameState.can_equip(g)
@@ -294,6 +314,7 @@ func _detail(g: Gear, offer: bool, price: int) -> Control:
 		_rebuild())
 	actions.add_child(equip)
 	var lock := UiKit.button("잠금 해제" if g.locked else "잠금", 20)
+	lock.set_meta("gamepad_key", "lock:%d" % g.serial)
 	lock.custom_minimum_size = Vector2(0, 70)
 	lock.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lock.pressed.connect(func():
@@ -302,6 +323,7 @@ func _detail(g: Gear, offer: bool, price: int) -> Control:
 	actions.add_child(lock)
 	var can_sell := not (g.locked or equipped)
 	var sell := UiKit.button("판매 · %d G" % g.sale_value(), 20)
+	sell.set_meta("gamepad_key", "sell:%d" % g.serial)
 	sell.custom_minimum_size = Vector2(0, 70)
 	sell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sell.disabled = not can_sell
@@ -313,7 +335,47 @@ func _detail(g: Gear, offer: bool, price: int) -> Control:
 			game.player.refresh_stats()
 			_rebuild())
 	actions.add_child(sell)
+	_fit_actions(actions)
 	return box
+
+
+static func _prepare_icon(icon: Control, dp: float) -> void:
+	icon.set_meta("inventory_icon_dp", dp)
+	icon.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var side := dp * UiMetrics.units_per_display_pixel(icon.get_viewport())
+	icon.custom_minimum_size = Vector2.ONE * side
+	icon.resized.connect(func():
+		var updated := dp * UiMetrics.units_per_display_pixel(icon.get_viewport())
+		icon.custom_minimum_size = Vector2.ONE * updated
+		icon.queue_redraw())
+
+
+static func _refresh_icons(root: Node) -> void:
+	for child: Node in root.get_children():
+		if child is Control and child.has_meta("inventory_icon_dp"):
+			var dp := float(child.get_meta("inventory_icon_dp"))
+			child.custom_minimum_size = Vector2.ONE * dp * UiMetrics.units_per_display_pixel(child.get_viewport())
+			child.queue_redraw()
+		_refresh_icons(child)
+
+
+func _fit_actions(actions: BoxContainer) -> void:
+	if not is_instance_valid(actions) or actions.is_queued_for_deletion():
+		return
+	var needed := 0.0
+	var count := 0
+	for child in actions.get_children():
+		if child is Control and not child.is_queued_for_deletion():
+			needed += child.get_combined_minimum_size().x
+			count += 1
+	needed += maxf(0.0, count - 1) * actions.get_theme_constant("separation")
+	# A horizontal minimum may already have expanded the row past its parent.
+	# Use the fixed scroll viewport as the upper bound, excluding card insets.
+	var available := minf(actions.size.x, maxf(1.0, scroll.size.x - 32.0))
+	var stack := needed > available
+	if actions.vertical != stack:
+		actions.vertical = stack
 
 
 # ───────────────────────── shop ─────────────────────────
@@ -376,7 +438,7 @@ func _potion_offer(id: String, title: String, sub: String, price: int, maxed := 
 	col.add_child(holder)
 	var hit := Button.new()
 	hit.flat = true
-	hit.focus_mode = Control.FOCUS_NONE
+	hit.focus_mode = Control.FOCUS_ALL
 	holder.add_child(hit)
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 12)
@@ -385,7 +447,7 @@ func _potion_offer(id: String, title: String, sub: String, price: int, maxed := 
 	var icon := PotionCell.new()
 	icon.energy = id == "energy"
 	icon.kind = id
-	icon.custom_minimum_size = Vector2(100, 100)
+	_prepare_icon(icon, 48.0)
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top.add_child(icon)
 	var text := VBoxContainer.new()
@@ -393,7 +455,8 @@ func _potion_offer(id: String, title: String, sub: String, price: int, maxed := 
 	text.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
 	text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top.add_child(text)
-	var t := UiKit.label(title, 21, Color(0.95, 0.92, 0.8), true)
+	var t := UiKit.label(title, 21, UiKit.TEXT, true)
+	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	text.add_child(t)
 	var s := UiKit.label(sub, 18, UiKit.TEXT)
@@ -411,7 +474,10 @@ func _potion_offer(id: String, title: String, sub: String, price: int, maxed := 
 		_rebuild())
 	if expanded:
 		var poor := GameState.gold < price
-		var buy := UiKit.button(("구매 · %d G" % price) if not (poor or maxed) else ("수련 한계입니다 (레벨 3마다 +1)" if maxed else "골드가 부족합니다"), 20)
+		if poor or maxed:
+			col.add_child(PanelFrame.wrap_label("수련 한계입니다 · 레벨 3마다 한도가 1 증가합니다" if maxed else "골드가 부족합니다", 18, UiKit.GOLD))
+		var buy := UiKit.button("구매 · %d G" % price, 20)
+		buy.set_meta("gamepad_key", "purchase:" + id)
 		buy.custom_minimum_size = Vector2(0, 70)
 		buy.disabled = poor or maxed
 		buy.pressed.connect(func():
@@ -485,14 +551,18 @@ class GearCell:
 		var rect := Rect2(Vector2.ZERO, size)
 		draw_style_box(UiKit.panel_style(Color("151511"), Color(col, 0.8), 5), rect)
 		if gear == null:
-			var name: String = Gear.SLOT_NAMES.get(slot, "")
-			draw_string(UiKit.BOLD_FONT, Vector2(0, size.y * 0.58), name, HORIZONTAL_ALIGNMENT_CENTER, size.x, 22, UiKit.MUTED)
 			return
 		var inner := rect.grow(-6.0)
 		GearArt.draw(self, gear.base, inner, Color.WHITE if GameState.can_equip(gear) else Color(0.5, 0.5, 0.5))
 		if gear.weapon_level > 0:
-			draw_rect(Rect2(3, 3, 52, 24), Color(0.08, 0.07, 0.05, 0.92), true)
-			draw_string(UiKit.BOLD_FONT, Vector2(6, 23), "Lv.%d" % gear.weapon_level, HORIZONTAL_ALIGNMENT_LEFT, 48, 18, Color(0.93, 0.89, 0.8))
+			var pixel_scale := UiMetrics.units_per_display_pixel(get_viewport())
+			var font_size := ceili(14.0 * pixel_scale)
+			var level_text := "Lv.%d" % gear.weapon_level
+			var badge_width := UiKit.BOLD_FONT.get_string_size(level_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x + 6.0 * pixel_scale
+			# Full weapon levels also appear in wrapped row stats; keep the icon unobscured.
+			if badge_width <= size.x:
+				draw_rect(Rect2(Vector2.ZERO, Vector2(badge_width, 19.0 * pixel_scale)), Color(0.08, 0.07, 0.05, 0.96), true)
+				draw_string(UiKit.BOLD_FONT, Vector2(3.0, 15.0) * pixel_scale, level_text, HORIZONTAL_ALIGNMENT_LEFT, badge_width, font_size, UiKit.TEXT)
 		if GameState.is_equipped(gear):
 			draw_circle(Vector2(size.x - 12, 12), 8.0, Color(0.55, 0.9, 0.77))
 		elif gear.locked:

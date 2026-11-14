@@ -40,6 +40,7 @@ func _clean_slots() -> void:
 
 
 func run() -> void:
+	await _native_layout()
 	var old_path := GameState.slot_path(1)
 	var old_slot := GameState.active_slot
 	GameState.save_path = "user://tests/entry-loading.json"
@@ -164,3 +165,22 @@ func run() -> void:
 	_clean_slots()
 	GameState.save_path = old_path
 	GameState.select_slot(old_slot)
+
+
+func _native_layout() -> void:
+	var view := SubViewport.new()
+	view.size = Vector2i(320, 568)
+	add_child(view)
+	var overlay := preload("res://scripts/ui/screens/entry_loading.gd").new().setup("continue", 1, "mage", 991)
+	view.add_child(overlay)
+	overlay.set_phase("world")
+	for dimensions in [Vector2i(320, 568), Vector2i(568, 320), Vector2i(344, 883), Vector2i(883, 344), Vector2i(768, 896), Vector2i(896, 768), Vector2i(800, 800)]:
+		view.size = dimensions
+		await _frames(4)
+		var bounds := Rect2(Vector2.ZERO, Vector2(dimensions))
+		var panel: Rect2 = overlay._panel.get_global_rect()
+		check("native loading remains fully within the display " + str(dimensions), bounds.encloses(panel))
+		for label: Label in [overlay._title, overlay._status, overlay._note]:
+			check("loading text remains readable and inside its card " + str(dimensions), panel.encloses(label.get_global_rect()) and label.get_theme_font_size("font_size") >= 14 and label.size.y + 1.0 >= label.get_minimum_size().y)
+	view.queue_free()
+	await _frames(2)

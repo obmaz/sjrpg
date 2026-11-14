@@ -17,6 +17,10 @@ var _active := true
 var _status: Label
 var _panel: PanelContainer
 var _native_root: Control
+var _native_center: CenterContainer
+var _title: Label
+var _note: Label
+var _box: VBoxContainer
 var _web := false
 
 const WEB_UI := """
@@ -33,7 +37,7 @@ const WEB_UI := """
    const old=document.getElementById('sjrpg-entry-loading');if(old)old.remove();
    if(!document.getElementById('sjrpg-entry-loading-css')){
     const style=document.createElement('style');style.id='sjrpg-entry-loading-css';
-    style.textContent='#sjrpg-entry-loading{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:max(20px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));background:#080b10;background-position:center;background-size:cover;color:#e7dfd0;font-family:"Apple SD Gothic Neo","Malgun Gothic",sans-serif;outline:none;touch-action:none;user-select:none;-webkit-user-select:none;box-sizing:border-box}#sjrpg-entry-loading .entry-load-card{box-sizing:border-box;width:min(100%,440px);padding:28px 24px;border:1px solid #756348;border-radius:5px;background:#171e1cf2;text-align:center;box-shadow:0 12px 40px #0008}#sjrpg-entry-loading h2{font-size:clamp(22px,5vw,30px);margin:16px 0 14px;font-weight:700;line-height:1.35}#sjrpg-entry-loading-status{font-size:16px;line-height:1.6;margin:0;color:#e7dfd0;overflow-wrap:anywhere}#sjrpg-entry-loading .entry-load-note{font-size:13px;line-height:1.6;margin:16px 0 0;color:#afa28c}#sjrpg-entry-loading-spinner{display:block;margin:auto;width:30px;height:30px;box-sizing:border-box;border:2px solid #75634866;border-top-color:#c9af7c;border-right-color:#a48b63;border-radius:50%;animation:sjrpgEntrySpin 1.1s linear infinite;will-change:transform}#sjrpg-entry-loading .entry-load-track{height:4px;margin-top:24px;background:#080c0c;overflow:hidden;border-radius:2px}#sjrpg-entry-loading .entry-load-fill{display:block;width:35%;height:100%;background:linear-gradient(90deg,#756348,#c9af7c);animation:sjrpgEntrySweep 1.8s ease-in-out infinite;will-change:transform}@keyframes sjrpgEntrySpin{to{transform:rotate(360deg)}}@keyframes sjrpgEntrySweep{0%{transform:translateX(-105%)}100%{transform:translateX(390%)}}#sjrpg-entry-loading.reduce-motion #sjrpg-entry-loading-spinner,#sjrpg-entry-loading.reduce-motion .entry-load-fill{animation:none}@media(prefers-reduced-motion:reduce){#sjrpg-entry-loading-spinner,#sjrpg-entry-loading .entry-load-fill{animation:none}}@media(max-height:400px){#sjrpg-entry-loading .entry-load-card{padding:16px 24px}#sjrpg-entry-loading h2{margin:10px 0;font-size:22px}#sjrpg-entry-loading .entry-load-track{margin-top:16px}#sjrpg-entry-loading .entry-load-note{margin-top:10px}}';
+    style.textContent='#sjrpg-entry-loading{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:max(20px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));background:#080b10;background-position:center;background-size:cover;color:#e7dfd0;font-family:"Apple SD Gothic Neo","Malgun Gothic",sans-serif;outline:none;touch-action:pan-y;user-select:none;-webkit-user-select:none;box-sizing:border-box}#sjrpg-entry-loading .entry-load-card{box-sizing:border-box;width:min(100%,440px);max-height:100%;overflow-y:auto;overscroll-behavior:contain;padding:28px 24px;border:1px solid #756348;border-radius:5px;background:#171e1cf2;text-align:center;box-shadow:0 12px 40px #0008}#sjrpg-entry-loading h2{font-size:clamp(22px,5vw,30px);margin:16px 0 14px;font-weight:700;line-height:1.35}#sjrpg-entry-loading-status{font-size:16px;line-height:1.6;margin:0;color:#e7dfd0;overflow-wrap:anywhere}#sjrpg-entry-loading .entry-load-note{font-size:14px;line-height:1.6;margin:16px 0 0;color:#c8c7bb}#sjrpg-entry-loading-spinner{display:block;margin:auto;width:30px;height:30px;box-sizing:border-box;border:2px solid #75634866;border-top-color:#c9af7c;border-right-color:#a48b63;border-radius:50%;animation:sjrpgEntrySpin 1.1s linear infinite;will-change:transform}#sjrpg-entry-loading .entry-load-track{height:4px;margin-top:24px;background:#080c0c;overflow:hidden;border-radius:2px}#sjrpg-entry-loading .entry-load-fill{display:block;width:35%;height:100%;background:linear-gradient(90deg,#756348,#c9af7c);animation:sjrpgEntrySweep 1.8s ease-in-out infinite;will-change:transform}@keyframes sjrpgEntrySpin{to{transform:rotate(360deg)}}@keyframes sjrpgEntrySweep{0%{transform:translateX(-105%)}100%{transform:translateX(390%)}}#sjrpg-entry-loading.reduce-motion #sjrpg-entry-loading-spinner,#sjrpg-entry-loading.reduce-motion .entry-load-fill{animation:none}@media(prefers-reduced-motion:reduce){#sjrpg-entry-loading-spinner,#sjrpg-entry-loading .entry-load-fill{animation:none}}@media(max-height:400px){#sjrpg-entry-loading .entry-load-card{padding:16px 24px}#sjrpg-entry-loading h2{margin:10px 0;font-size:22px}#sjrpg-entry-loading .entry-load-track{margin-top:16px}#sjrpg-entry-loading .entry-load-note{margin-top:10px}}';
     document.head.appendChild(style);
    }
    const el=document.createElement('section');el.id='sjrpg-entry-loading';el.tabIndex=-1;el.setAttribute('role','status');el.setAttribute('aria-live','polite');el.setAttribute('aria-label','모험 준비');
@@ -111,6 +115,7 @@ func _build_native() -> void:
 	EntryUi.backdrop(_native_root)
 	EntryUi.shade(_native_root, 0.97)
 	var center := CenterContainer.new()
+	_native_center = center
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	center.mouse_filter = Control.MOUSE_FILTER_STOP
 	_native_root.add_child(center)
@@ -118,14 +123,17 @@ func _build_native() -> void:
 	_panel.add_theme_stylebox_override("panel", UiKit.panel_style(Color("171e1c"), EntryUi.BRONZE, 5))
 	center.add_child(_panel)
 	var box := VBoxContainer.new()
+	_box = box
 	box.add_theme_constant_override("separation", 16)
 	_panel.add_child(box)
 	var title := EntryUi.label("모험을 준비합니다", 30, EntryUi.TEXT, true)
+	_title = title
 	title.name = "LoadingTitle"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(title)
 	_status = EntryUi.label("", 22, EntryUi.TEXT)
+	_status.name = "LoadingStatus"
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_status)
@@ -140,7 +148,10 @@ func _build_native() -> void:
 	progress.add_theme_stylebox_override("background", track)
 	progress.add_theme_stylebox_override("fill", fill)
 	box.add_child(progress)
-	var note := EntryUi.label("잠시만 기다려 주세요.", 16, EntryUi.MUTED)
+	var note := EntryUi.label("잠시만 기다려 주세요.", 16, UiKit.MUTED)
+	_note = note
+	note.name = "LoadingNote"
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(note)
 	get_viewport().size_changed.connect(_fit_native)
@@ -152,9 +163,23 @@ func _fit_native() -> void:
 	if _panel == null:
 		return
 	var view := get_viewport().get_visible_rect().size
-	var width := maxf(120.0, minf(520.0, view.x - 48.0))
+	var scale := UiMetrics.units_per_display_pixel(get_viewport())
+	var safe := PanelFrame.safe_margins(get_viewport())
+	var outer := 14.0 * scale
+	_native_center.offset_left = safe.x + outer
+	_native_center.offset_top = safe.y + outer
+	_native_center.offset_right = -safe.z - outer
+	_native_center.offset_bottom = -safe.w - outer
+	var width := maxf(64.0, minf(440.0 * scale, view.x - safe.x - safe.z - outer * 2.0))
 	_panel.custom_minimum_size = Vector2(width, 0)
-	# Container minimums follow real wrapped text; fixed proportional heights are not used.
+	var compact := view.y / scale < 360.0
+	var skin := UiKit.panel_style(Color("14211f"), EntryUi.BRONZE, 5)
+	skin.set_content_margin_all((12.0 if compact else 20.0) * scale)
+	_panel.add_theme_stylebox_override("panel", skin)
+	_box.add_theme_constant_override("separation", roundi((8.0 if compact else 12.0) * scale))
+	for item in [[_title, 22 if compact else 26], [_status, 16], [_note, 14]]:
+		(item[0] as Label).add_theme_font_size_override("font_size", ceili(float(item[1]) * scale))
+	# 최대 폭 안에서 실제 줄바꿈 높이를 사용한다. 고정 높이로 상태 문구를 자르지 않는다.
 
 
 func set_phase(value: String) -> void:

@@ -54,6 +54,7 @@ var _slot_css := 1.0
 var _slot_safe := Rect2()
 var _delete_target := 0
 var _slot_relayout_pending := false
+var _slot_overflow := false
 var _probe_queued := false
 var _probe_flushes := 0
 var _probe_writes := 0
@@ -99,11 +100,12 @@ func _ready() -> void:
 	details.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(details)
 	hero_name = _label("", 40, EntryUi.TEXT, true, details)
-	role = _label("", 23, EntryUi.BRONZE, false, details)
+	role = _label("", 23, SelectionUi.ROLE, false, details)
+	role.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	description = _label("", 24, EntryUi.TEXT, false, details)
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	health = _label("", 22, EntryUi.MUTED, false, details)
-	resource = _label("", 22, EntryUi.MUTED, false, details)
+	health = _label("", 22, SelectionUi.MUTED, false, details)
+	resource = _label("", 22, SelectionUi.MUTED, false, details)
 	for cls: String in ["warrior", "mage"]:
 		class_buttons[cls] = _button(GameState.CLASSES[cls]["name"], func(): select_class(cls))
 		class_buttons[cls].name = cls
@@ -163,7 +165,7 @@ func _ready() -> void:
 	footer_skin.border_width_top = 1
 	slot_footer.add_theme_stylebox_override("panel", footer_skin)
 	add_child(slot_footer)
-	slot_context = _label("", 22, EntryUi.MUTED)
+	slot_context = _label("", 22, SelectionUi.MUTED)
 	slot_context.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	slot_context.minimum_size_changed.connect(_queue_slot_layout)
 	for index in 4:
@@ -194,10 +196,8 @@ func _ready() -> void:
 		slot_title_labels.back().clip_text = true
 		slot_title_labels.back().text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		slot_number_labels.back().horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		var meta := _label("", 22, EntryUi.MUTED, false, row)
-		meta.clip_text = true
+		var meta := _label("", 22, SelectionUi.MUTED, false, row)
 		meta.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		meta.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		meta.minimum_size_changed.connect(_queue_slot_layout)
 		slot_meta_labels.append(meta)
 		slot_status_labels.append(_label("", 20, EntryUi.BRONZE, false, row))
@@ -213,6 +213,9 @@ func _ready() -> void:
 		icon.draw.connect(func(): _draw_delete_icon(icon))
 		icon.resized.connect(icon.queue_redraw)
 		delete_buttons.append(remove)
+		# 이 목록은 PanelFrame 밖에 있으므로 버튼·중간 band의 드래그 전달을 직접 준비한다.
+		ScrollTouchSupport.prepare_button(row, self)
+		ScrollTouchSupport.prepare_button(remove, self)
 
 	start_button = _button("", _choose, true)
 	continue_button = _button("이어 하기", _request_continue, true)
@@ -550,7 +553,7 @@ func _setup_presentation() -> void:
 	slot_footer.add_theme_stylebox_override("panel", footer_skin)
 
 
-func _measure(label: Label, width: float, minimum := 0.0) -> float:
+func _measure(label: Label, width: float, minimum := 0.0, text_override := "") -> float:
 	var font := label.get_theme_font("font")
 	var flags := (
 		TextServer.BREAK_MANDATORY | TextServer.BREAK_WORD_BOUND | TextServer.BREAK_ADAPTIVE
@@ -561,7 +564,7 @@ func _measure(label: Label, width: float, minimum := 0.0) -> float:
 			(
 				font
 				. get_multiline_string_size(
-					label.text,
+					label.text if text_override.is_empty() else text_override,
 					HORIZONTAL_ALIGNMENT_LEFT,
 					maxf(width, 1.0),
 					label.get_theme_font_size("font_size"),
@@ -586,7 +589,7 @@ func _layout_header(area: Rect2, left: float, width: float, portrait: bool, comp
 	var narrow := portrait and area.size.x / css < 360.0
 	_font(brand_label, 32 if portrait else 29, 15 if narrow else 16)
 	_font(heading, 58 if portrait else 52, (27 if narrow else 30) if portrait else 23)
-	_font(subtitle, 26 if portrait and not narrow else 23, 14 if portrait and not narrow else 12)
+	_font(subtitle, 26 if portrait and not narrow else 23, 14)
 	for label: Label in [brand_label, heading, subtitle]:
 		var shadow_y := maxi(1, roundi(css))
 		if label.get_theme_constant("shadow_offset_y") != shadow_y:
@@ -596,8 +599,10 @@ func _layout_header(area: Rect2, left: float, width: float, portrait: bool, comp
 	back_button.tooltip_text = (
 		"저장 슬롯 목록으로 돌아가기" if _stage == "class" and _class_back_to_slots else "처음 화면으로 돌아가기"
 	)
-	EntryUi.place(back_button, Rect2(area.position + Vector2.ONE * outer, Vector2.ONE * touch))
-	var gutter := touch + gap if portrait else 0.0
+	var back_minimum := back_button.get_combined_minimum_size()
+	var back_side := maxf(touch, maxf(back_minimum.x, back_minimum.y))
+	EntryUi.place(back_button, Rect2(area.position + Vector2.ONE * outer, Vector2.ONE * back_side))
+	var gutter := back_side + gap if portrait else 0.0
 	var header_w := maxf(1.0, width - gutter * 2.0)
 	var brand_h := _measure(brand_label, header_w) if brand_label.visible else 0.0
 	var title_y := top + brand_h + (maxf(gap, area.size.y * 0.016) if brand_label.visible else 0.0)
@@ -637,13 +642,13 @@ func _layout_class() -> void:
 	var right := area.position.x + outer if portrait else area.position.x + area.size.x * 0.53
 	var width := area.size.x - outer * 2.0 if portrait else area.end.x - outer - right
 	for entry in [
-		[slot_switch, 23, 13],
+		[slot_switch, 23, 14],
 		[start_button, 42 if roomy else 34, 22 if roomy else 18],
 		[hero_name, 52 if roomy else 44, 27 if roomy else 24],
-		[role, 28 if roomy else 24, 15 if roomy else 12],
-		[description, 26 if roomy else 23, 14 if roomy else 12],
-		[health, 26 if roomy else 24, 14 if roomy else 12],
-		[resource, 26 if roomy else 24, 14 if roomy else 12]
+		[role, 28 if roomy else 24, 15 if roomy else 14],
+		[description, 26 if roomy else 23, 14],
+		[health, 26 if roomy else 24, 14],
+		[resource, 26 if roomy else 24, 14]
 	]:
 		_font(entry[0], float(entry[1]), float(entry[2]))
 	for cls: String in class_buttons:
@@ -696,7 +701,9 @@ func _layout_class() -> void:
 	)
 	var inside := width - pad * 2.0
 	var name_h := _measure(hero_name, inside) if hero_name.visible else 0.0
-	var role_h := _measure(role, inside)
+	var header_icon_size := maxf(74.0 * u, 40.0 * css) if hero_name.visible else 0.0
+	var name_indent := header_icon_size + gap if hero_name.visible else 0.0
+	var role_h := _measure(role, inside - name_indent)
 	var desc_h := _measure(description, inside)
 	var chip_h := maxf(
 		(44.0 if _class_compact else 52.0) * u,
@@ -726,16 +733,16 @@ func _layout_class() -> void:
 	EntryUi.place(details, Rect2(Vector2(right, info_y), Vector2(width, info_h)))
 	EntryUi.place(info_surface, Rect2(Vector2.ZERO, details.size))
 	var cursor := pad
-	var name_indent := 0.0
 	identity_icon.visible = hero_name.visible
 	identity_icon.texture = SelectionUi.class_icon(selected_class)
 	if hero_name.visible:
-		var icon_size := maxf(74.0 * u, 40.0 * css)
-		name_indent = icon_size + gap
 		var header_h := name_h + detail_gap * 0.4 + role_h
 		EntryUi.place(
 			identity_icon,
-			Rect2(Vector2(pad, cursor + (header_h - icon_size) * 0.5), Vector2.ONE * icon_size)
+			Rect2(
+				Vector2(pad, cursor + (header_h - header_icon_size) * 0.5),
+				Vector2.ONE * header_icon_size
+			)
 		)
 		EntryUi.place(
 			hero_name,
@@ -912,13 +919,7 @@ func _refresh_disabled() -> void:
 
 
 func _css_scale() -> float:
-	if OS.has_feature("web"):
-		var width: Variant = JavaScriptBridge.eval("window.innerWidth", true)
-		if (width is float or width is int) and float(width) > 0.0:
-			return size.x / float(width)
-	if DisplayServer.get_name() == "headless":
-		return 1.0
-	return size.x / maxf(1.0, float(DisplayServer.window_get_size().x))
+	return UiMetrics.units_per_display_pixel(get_viewport())
 
 
 func _font(control: Control, base: float, css_minimum: float) -> void:
@@ -1011,14 +1012,16 @@ func _layout_slots() -> void:
 	hero_art.texture = SelectionUi.hero_image(selected_class)
 	var roomy := portrait and area.size.x / css >= 360.0
 	_font(continue_button, 42 if roomy else 34, 22 if roomy else 18)
-	_font(slot_context, 23, 12)
+	_font(slot_context, 23, 14)
 	slot_context.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var identity := (
 		"%s Lv.%d" % [GameState.CLASSES[str(summary["class"])]["name"], int(summary["level"])]
 		if bool(summary["valid"])
 		else ("확인이 필요한 저장" if bool(summary["occupied"]) else "새로운 모험")
 	)
-	slot_context.text = "선택한 모험  |  %02d. %s" % [selected_slot, identity]
+	var plain_context := "선택한 모험  |  %02d. %s" % [selected_slot, identity]
+	slot_context.text = plain_context + ("\n↕ 밀어서 더 보기" if _slot_overflow else "")
+	var plain_context_h := _measure(slot_context, width, 0.0, plain_context)
 	var header_end := _layout_header(area, left, width, portrait, compact)
 	var context_h := _measure(slot_context, width)
 	var action_h := maxf((100.0 if roomy else 88.0) * u, (56.0 if roomy else 48.0) * css)
@@ -1084,7 +1087,8 @@ func _layout_slots() -> void:
 		Rect2(Vector2(left, footer_y + context_h + gap * 2.0), Vector2(width, action_h))
 	)
 	slot_list.add_theme_constant_override("separation", roundi(gap))
-	var content_h := float(roundi(gap) * (slot_bands.size() - 1))
+	var natural_content_h := float(roundi(gap) * (slot_bands.size() - 1))
+	var natural_heights: Array[float] = []
 	for button: Button in class_buttons.values():
 		button.hide()
 	for index in 4:
@@ -1097,7 +1101,7 @@ func _layout_slots() -> void:
 			[remove, 20, 12],
 			[slot_number_labels[index], 34, 18],
 			[slot_title_labels[index], 28, 14],
-			[slot_meta_labels[index], 22, 12],
+			[slot_meta_labels[index], 22, 14],
 			[slot_status_labels[index], 18, 10],
 			[slot_empty_marks[index], 44, 26]
 		]:
@@ -1107,18 +1111,26 @@ func _layout_slots() -> void:
 		var scrollbar := slot_scroll.get_v_scroll_bar()
 		var gutter := maxf(scrollbar.get_combined_minimum_size().x, scrollbar.size.x)
 		row.size.x = maxf(1.0, width - gutter - (_slot_touch if remove.visible else 0.0))
-		_place_slot_labels(index)
-		var labels_h := (
-			slot_meta_labels[index].position.y + slot_meta_labels[index].size.y + _slot_pad
-		)
-		var row_h := maxf(
-			row_minimum, labels_h if bool(_summaries[index]["occupied"]) else row_minimum
-		)
+		var text_metrics := _slot_text_metrics(index)
+		var row_h := ceilf(maxf(row_minimum, _slot_pad * 2.0 + text_metrics["height"]))
+		natural_heights.append(row_h)
+		natural_content_h += row_h
+	# 네 행이 모두 들어가는 화면은 카드 높이를 나누어 고정 행동까지 자연스럽게 연결한다.
+	# 자연 최소 높이는 텍스트 측정값뿐이며, 중앙 배치한 자식 위치를 다시 읽지 않는다.
+	var plain_footer_h := plain_context_h + gap * 2.0 + action_h
+	var plain_list_h := area.end.y - bottom_gap - plain_footer_h - gap - list_y
+	var overflowing := natural_content_h > plain_list_h + 1.0
+	var expansion := 0.0 if overflowing else floorf(maxf(0.0, plain_list_h - natural_content_h) / 4.0)
+	var content_h := float(roundi(gap) * (slot_bands.size() - 1))
+	for index in 4:
+		var row := slot_buttons[index]
+		var row_h := natural_heights[index] + expansion
 		row.custom_minimum_size = Vector2(0, row_h)
 		slot_bands[index].custom_minimum_size.y = row_h
 		row.update_minimum_size()
 		slot_bands[index].update_minimum_size()
 		content_h += slot_bands[index].get_combined_minimum_size().y
+		_place_slot_labels(index)
 		slot_bands[index].queue_sort()
 		slot_bands[index].queue_redraw()
 	# 회전 직후에는 위·아래 컨테이너의 최소 크기 신호가 서로 다른 프레임에 온다.
@@ -1128,6 +1140,10 @@ func _layout_slots() -> void:
 	slot_list.size.y = content_h
 	slot_list.queue_sort()
 	slot_scroll.queue_sort()
+	# 힌트가 차지한 높이를 제외하고 판정해야 회전 뒤에도 불필요한 안내가 남지 않는다.
+	if _slot_overflow != overflowing:
+		_slot_overflow = overflowing
+		_queue_slot_layout()
 	_queue_publish_buttons()
 
 
@@ -1147,9 +1163,10 @@ func _place_slot_labels(index: int) -> void:
 	var meta := slot_meta_labels[index]
 	var status := slot_status_labels[index]
 	var number_w := maxf(42.0 * _unit, 25.0 * _slot_css)
-	var left := pad + _slot_badge + gap + number_w + gap
-	var text_w := maxf(1.0, row.size.x - left - pad)
-	var title_h := title.get_combined_minimum_size().y
+	var text_metrics := _slot_text_metrics(index)
+	var left: float = text_metrics["left"]
+	var text_w: float = text_metrics["width"]
+	var title_h: float = text_metrics["title_height"]
 	var has_save := bool(_summaries[index]["valid"])
 	var occupied := bool(_summaries[index]["occupied"])
 	slot_portrait_frames[index].show()
@@ -1165,17 +1182,33 @@ func _place_slot_labels(index: int) -> void:
 		number, Rect2(Vector2(pad + _slot_badge + gap, portrait_y), Vector2(number_w, _slot_badge))
 	)
 	number.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	var title_y := pad if occupied else maxf(pad, (row.size.y - title_h) * 0.5)
+	var title_y := maxf(pad, (row.size.y - text_metrics["height"]) * 0.5)
 	EntryUi.place(title, Rect2(Vector2(left, title_y), Vector2(text_w, title_h)))
-	var meta_h := _measure(meta, text_w, 20.0 * _unit)
+	var meta_h: float = text_metrics["meta_height"]
 	EntryUi.place(
 		meta,
 		Rect2(
-			Vector2(left, pad + title_h + maxf(6.0 * _unit, 3.0 * _slot_css)),
+			Vector2(left, title_y + title_h + maxf(6.0 * _unit, 3.0 * _slot_css)),
 			Vector2(text_w, meta_h)
 		)
 	)
 	meta.visible = occupied
+
+
+func _slot_text_metrics(index: int) -> Dictionary:
+	var title := slot_title_labels[index]
+	var number_w := maxf(42.0 * _unit, 25.0 * _slot_css)
+	var left := _slot_pad + _slot_badge + _slot_gap + number_w + _slot_gap
+	var width := maxf(1.0, slot_buttons[index].size.x - left - _slot_pad)
+	var title_h := title.get_theme_font("font").get_height(title.get_theme_font_size("font_size")) + 2.0
+	var meta_h := _measure(slot_meta_labels[index], width, 20.0 * _unit)
+	var text_h := title_h
+	if bool(_summaries[index]["occupied"]):
+		text_h += maxf(6.0 * _unit, 3.0 * _slot_css) + meta_h
+	return {
+		"left": left, "width": width, "title_height": title_h,
+		"meta_height": meta_h, "height": text_h
+	}
 
 
 func _draw_delete_icon(icon: Control) -> void:
@@ -1310,6 +1343,8 @@ func _save_layout_probe() -> Dictionary:
 		"list": _rect(slot_scroll),
 		"footer": _rect(slot_footer),
 		"context": _rect(slot_context),
+		"context_text": slot_context.text,
+		"overflow": _slot_overflow,
 		"scroll_value": slot_scroll.scroll_vertical,
 		"scroll_max": maxi(0, ceili(bar.max_value - bar.page)),
 		"css_scale": _slot_css,

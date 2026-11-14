@@ -66,10 +66,9 @@ func _create_slot_card(slot_num: int, summary: Dictionary) -> PanelContainer:
 	var is_selected := (selected_slot == slot_num)
 
 	var card := PanelContainer.new()
-	var path := UiKit.TEX_SLOT_SELECTED if is_selected else UiKit.TEX_SLOT_NORMAL
-	var style := UiKit.texture_stylebox(path, 25, 25, 25, 25)
+	var style := UiKit.panel_style(UiKit.SURFACE_RAISED if is_selected else UiKit.SURFACE, UiKit.GOLD if is_selected else UiKit.EDGE)
 	if not occupied and not is_selected:
-		style.modulate_color = Color(0.65, 0.65, 0.65, 0.75)
+		style.border_color = UiKit.EDGE.darkened(0.25)
 	style.content_margin_left = 18
 	style.content_margin_right = 18
 	style.content_margin_top = 14
@@ -120,9 +119,9 @@ func _create_slot_card(slot_num: int, summary: Dictionary) -> PanelContainer:
 		var sub := PanelFrame.wrap_label(sub_text, 15, UiKit.MUTED)
 		info_col.add_child(sub)
 	else:
-		var empty_title := UiKit.label("슬롯 %d · 비어 있는 슬롯" % slot_num, 19, Color("6b6559"), true)
+		var empty_title := UiKit.label("슬롯 %d · 비어 있는 슬롯" % slot_num, 19, UiKit.MUTED, true)
 		info_col.add_child(empty_title)
-		var empty_sub := PanelFrame.wrap_label("저장된 모험 기록이 없습니다." if load_only else "새로운 수호자를 생성할 수 있습니다.", 14, Color("555045"))
+		var empty_sub := PanelFrame.wrap_label("저장된 모험 기록이 없습니다." if load_only else "새로운 수호자를 생성할 수 있습니다.", 14, UiKit.MUTED)
 		info_col.add_child(empty_sub)
 
 	# 손가락을 댄 순간 목록을 재생성하면 스크롤이 끊긴다. 기본 버튼의 해제/드래그 취소를 쓴다.

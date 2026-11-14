@@ -52,7 +52,16 @@ static func run(game: Node, which: String) -> void:
 				break
 			await game.get_tree().physics_frame
 	# 실제 새 공격의 명중 직후 정지하고 같은 애니메이션의 중간 자세를 표시한다.
-	game.get_tree().paused = true
+	var motion := false
+	if is_instance_valid(game.inspection):
+		var options: Dictionary = game.inspection.get("_parameters")
+		motion = which == "burning" and str(options.get("tree_motion", "")) == "1"
+	if motion:
+		# 상태 수명만 고정하고 실제 렌더러의 화염 시계는 진행하는 검수 전용 재생이다.
+		game.set_process(false)
+		game.player.set_process(false)
+	else:
+		game.get_tree().paused = true
 	for frame in 3:
 		await game.get_tree().process_frame
 	game.world_renderer.request_redraw()
@@ -61,6 +70,7 @@ static func run(game: Node, which: String) -> void:
 		game.world_renderer._tree_damage.breakup.sync(0.24)
 	var data := {
 		"ready": true,
+		"motion": motion,
 		"expected": "felled" if breaking else ("charred" if which == "burned" else which),
 		"state": game.forest_trees.state(key),
 		"actual_cast": attacks > 0,

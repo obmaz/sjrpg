@@ -19,6 +19,11 @@ func _layout_check(select: Control, view: SubViewport, scenario: String) -> void
 	check("wrapped subtitle stays above the real scrolling list " + label, select.subtitle.get_global_rect().end.y <= list.position.y + EPS)
 	check("footer context stays separate from its main action " + label, _inside(footer, select.slot_context.get_global_rect()) and select.slot_context.get_global_rect().end.y <= select.continue_button.get_global_rect().position.y + EPS)
 	check("save sheet exposes exactly four real source rows " + label, select.slot_buttons.size() == 4 and select.slot_bands.size() == 4)
+	if not select._slot_overflow:
+		var last_row: Rect2 = select.slot_bands[3].get_global_rect()
+		check("all-visible save cards fill the body up to the fixed action on unfolded screens " + label,
+			footer.position.y - last_row.end.y <= 40.0
+			and _inside(list, last_row))
 	var summaries := GameState.slot_summaries()
 	for index in 4:
 		var row: Button = select.slot_buttons[index]
@@ -30,16 +35,29 @@ func _layout_check(select: Control, view: SubViewport, scenario: String) -> void
 		var box := band.get_global_rect()
 		check("real row width remains inside its scroll clip " + label, box.position.x >= list.position.x - EPS and box.end.x <= list.end.x + EPS)
 		check("real row hitbox remains usable " + label, row.size.y >= 44.0 and row.size.x >= 44.0)
-		check("row has structured, readable identity and metadata " + label, title.get_theme_font_size("font_size") >= 14 and meta.get_theme_font_size("font_size") >= 12 and not title.text.is_empty() and not meta.text.is_empty() and not number.text.is_empty())
+		check("save rows and intermediate containers pass real finger drags to their list " + label,
+			row.mouse_filter == Control.MOUSE_FILTER_PASS
+			and band.mouse_filter == Control.MOUSE_FILTER_PASS
+			and select.slot_list.mouse_filter == Control.MOUSE_FILTER_PASS)
+		check("row has structured, readable identity and metadata " + label, title.get_theme_font_size("font_size") >= 14 and meta.get_theme_font_size("font_size") >= 14 and not title.text.is_empty() and not meta.text.is_empty() and not number.text.is_empty())
 		check("row text has enough measured height " + label, title.size.y + EPS >= title.get_combined_minimum_size().y and meta.size.y + EPS >= meta.get_combined_minimum_size().y)
+		if meta.is_visible_in_tree():
+			check("saved time and recovery instructions show every wrapped line " + label,
+				meta.get_visible_line_count() == meta.get_line_count())
 		var metadata_fits := not meta.is_visible_in_tree() or (_inside(row.get_global_rect(), meta.get_global_rect()) and title.get_global_rect().end.y <= meta.get_global_rect().position.y + EPS)
 		var contained := _inside(row.get_global_rect(), title.get_global_rect()) and metadata_fits and not number.get_global_rect().intersects(title.get_global_rect())
 		if not contained:
 			print("FAIL SAVE_TEXT_DIAG ", JSON.stringify({"label": label, "slot": index + 1, "row": str(row.get_global_rect()), "band": str(box), "title": str(title.get_global_rect()), "meta": str(meta.get_global_rect()), "number": str(number.get_global_rect()), "status": str(select.slot_status_labels[index].get_global_rect()), "minimum": str(meta.get_combined_minimum_size())}))
 		check("visible row labels retain their own measured space " + label, contained)
+		var text_bottom := meta.get_global_rect().end.y if meta.is_visible_in_tree() else title.get_global_rect().end.y
+		var text_center := (title.get_global_rect().position.y + text_bottom) * 0.5
+		check("identity and metadata stay centered together in their real save target " + label,
+			absf(text_center - row.get_global_rect().get_center().y) <= EPS)
 		check("only real occupied saves show a second metadata line " + label, meta.is_visible_in_tree() == bool(summaries[index]["occupied"]))
 		check("delete exists only for occupied source files " + label, remove.is_visible_in_tree() == bool(summaries[index]["occupied"]))
 		if remove.is_visible_in_tree():
+			check("dragging over the separate delete target can scroll without consuming the gesture " + label,
+				remove.mouse_filter == Control.MOUSE_FILTER_PASS)
 			check("select and delete have distinct usable targets " + label, not row.get_global_rect().intersects(remove.get_global_rect()) and remove.size.x >= 44.0 and remove.size.y >= 44.0 and _inside(box, remove.get_global_rect()))
 		if index > 0:
 			check("measured save rows do not overlap " + label, select.slot_bands[index - 1].get_global_rect().end.y < box.position.y)
@@ -138,7 +156,7 @@ func run() -> void:
 		var hero := GameState.hero_class
 		var gold := GameState.gold
 		var active := GameState.active_slot
-		for dimensions in [Vector2i(720, 1280), Vector2i(1280, 720), Vector2i(540, 960), Vector2i(568, 320), Vector2i(360, 640), Vector2i(720, 1280)]:
+		for dimensions in [Vector2i(720, 1280), Vector2i(1280, 720), Vector2i(540, 960), Vector2i(568, 320), Vector2i(320, 568), Vector2i(360, 640), Vector2i(768, 896), Vector2i(896, 768), Vector2i(800, 800), Vector2i(344, 883), Vector2i(883, 344), Vector2i(720, 1280)]:
 			view.size = dimensions
 			await _frames(4)
 			await _layout_check(select, view, scenario)

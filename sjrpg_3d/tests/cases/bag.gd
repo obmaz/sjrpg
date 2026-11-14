@@ -131,6 +131,7 @@ func run() -> void:
 		game.hud.close_panel()
 		game.queue_free()
 		await _frames(2)
+	await _responsive_content()
 
 
 ## 120° 기준: 지면에 닿는 모든 원화는 보정 후 변 각도가 ±30°에서 2.5° 이내여야 합니다.
@@ -144,3 +145,53 @@ func _comparison_count(node: Node, expected: String) -> int:
 	for child in node.get_children():
 		count += _comparison_count(child, expected)
 	return count
+
+
+## Item actions, long quest statuses and vendor content must fit the actual body
+## at cover-screen, landscape and open Fold aspect ratios.
+func _responsive_content() -> void:
+	GameState.new_game("warrior")
+	GameState.gold = 1234567
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(344, 883)
+	add_child(viewport)
+	var bag := BagPanel.new()
+	viewport.add_child(bag)
+	bag.tab = 0
+	bag.selected = GameState.equipped["weapon"]
+	bag.selected.locked = true
+	bag._rebuild()
+	for dimensions in [Vector2i(344, 883), Vector2i(883, 344), Vector2i(768, 896), Vector2i(896, 768), Vector2i(800, 800), Vector2i(320, 568), Vector2i(568, 320)]:
+		viewport.size = dimensions
+		await _frames(8)
+		check("inventory body fits scroll width %s" % dimensions, bag.body.size.x <= bag.scroll.size.x + 1.0)
+		var actions := bag.body.find_child("EquipmentActions", true, false) as BoxContainer
+		check("inventory actions remain available %s" % dimensions, actions != null and actions.get_child_count() == 3)
+		if actions != null:
+			var scale := UiMetrics.units_per_display_pixel(viewport)
+			var previous: Button = null
+			var bounds := bag.scroll.get_global_rect()
+			for action: Button in actions.get_children():
+				var rect := action.get_global_rect()
+				check("equipment action fits body %s" % dimensions, rect.position.x >= bounds.position.x - 1.0 and rect.end.x <= bounds.end.x + 1.0)
+				check("equipment action has a 44dp touch target %s" % dimensions, action.size.x >= 44.0 * scale and action.size.y >= 44.0 * scale)
+				check("equipment action preserves full text width %s" % dimensions, action.size.x + 1.0 >= action.get_combined_minimum_size().x)
+				if previous != null:
+					check("equipment actions do not overlap %s" % dimensions, not rect.intersects(previous.get_global_rect()))
+				previous = action
+		bag.scroll.scroll_vertical = 100000
+		await _frames(2)
+		check("expanded equipment last action is reachable %s" % dimensions, bag.body.get_global_rect().end.y <= bag.scroll.get_global_rect().end.y + 1.0)
+		bag.scroll.scroll_vertical = 0
+	bag.queue_free()
+	await _frames(2)
+	var journal := JournalPanel.new()
+	viewport.add_child(journal)
+	journal.clear_body()
+	journal.body.add_child(journal._bar("첫 파수꾼 · 숲길 정화", "NPC 의뢰를 해결하고 파수꾼을 쓰러뜨리면 제1장을 완료합니다.", 0.5, "서쪽 숲 공터에서 도전 · 의뢰 3개 완료 후 해금"))
+	for dimensions in [Vector2i(344, 883), Vector2i(768, 896), Vector2i(896, 768), Vector2i(800, 800), Vector2i(320, 568)]:
+		viewport.size = dimensions
+		await _frames(6)
+		check("long journal status fits body %s" % dimensions, journal.body.size.x <= journal.scroll.size.x + 1.0)
+	viewport.queue_free()
+	await _frames(2)

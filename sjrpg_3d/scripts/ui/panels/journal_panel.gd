@@ -15,7 +15,7 @@ func _ready() -> void:
 	super._ready()
 	set_header("제1장 · 숲과 초원", "퀘스트 일지")
 	if game != null:
-		var contract := UiKit.button("원정 · 계약 / 진행 / 보상", 23)
+		var contract := UiKit.button("원정 열기", 23)
 		contract.custom_minimum_size.y = 76
 		contract.pressed.connect(func(): closed.emit(); game.hud.open_expedition.call_deferred())
 		body.add_child(contract)
@@ -35,7 +35,7 @@ func _ready() -> void:
 	for i in MemoryPanel.MEMORIES.size():
 		var m: Dictionary = MemoryPanel.MEMORIES[i]
 		var opened := GameState.opened_chests.has(MemoryPanel.FIRST_CHEST + i)
-		body.add_child(PanelFrame.wrap_label(("%s — %s" % [m["title"], m["story"]]) if opened else ("찾지 못한 기억 · %s" % m["hint"]), 17, Color(0.95, 0.9, 0.78) if opened else Color(0.6, 0.7, 0.66)))
+		body.add_child(PanelFrame.wrap_label(("%s — %s" % [m["title"], m["story"]]) if opened else ("찾지 못한 기억 · %s" % m["hint"]), 18, UiKit.TEXT if opened else UiKit.MUTED))
 	body.add_child(PanelFrame.wrap_label("발견한 상자 %d / %d" % [GameState.opened_chests.size(), 9], 20, Color(1, 0.88, 0.5)))
 	body.add_child(PanelFrame.wrap_label("모험가 Lv.%d %s" % [GameState.level, GameState.class_info()["name"]], 20, Color(0.78, 0.92, 0.85)))
 	add_footer("모험 계속하기", func(): closed.emit(), true)
@@ -47,13 +47,15 @@ func _bar(title: String, sub: String, ratio: float, tag: String) -> Control:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 6)
 	card.add_child(col)
-	var head := HBoxContainer.new()
+	# Progress tags can be full sentences; keep them on their own wrapped line.
+	var head := VBoxContainer.new()
+	head.add_theme_constant_override("separation", 8)
 	col.add_child(head)
 	var t := UiKit.label(title, 22, Color(0.95, 0.92, 0.8), true)
 	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	head.add_child(t)
-	head.add_child(UiKit.label(tag, 17, Color(1, 0.88, 0.5)))
+	head.add_child(PanelFrame.wrap_label(tag, 18, UiKit.GOLD))
 	col.add_child(PanelFrame.wrap_label(sub, 17, UiKit.MUTED))
 	var bar := ProgressBar.new()
 	bar.show_percentage = false

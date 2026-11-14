@@ -36,6 +36,7 @@ static func price(g: Gear) -> int:
 
 func _ready() -> void:
 	super._ready()
+	get_viewport().size_changed.connect(func(): BagPanel._refresh_icons(body))
 	_rebuild()
 
 
@@ -53,11 +54,12 @@ func _rebuild() -> void:
 		c.queue_free()
 	for c in footer.get_children():
 		c.queue_free()
-	trailing.add_child(UiKit.label("● %s G" % HudArt.fmt(GameState.gold), 22, UiKit.GOLD, true))
+	body.add_child(PanelFrame.wrap_label("보유 골드 · %s G" % HudArt.fmt(GameState.gold), 18, UiKit.GOLD))
 	set_header("대장간", "무기 강화 · 실패해도 무기 보존")
 	var weapons := _weapons()
 	if weapons.is_empty():
 		var l := UiKit.label("강화할 무기가 없습니다", 20, Color(0.7, 0.8, 0.76))
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		l.custom_minimum_size = Vector2(0, 120)
 		body.add_child(l)
@@ -68,6 +70,7 @@ func _rebuild() -> void:
 	if message != "":
 		body.add_child(PanelFrame.wrap_label(message, 19, Color(1, 0.88, 0.55)))
 	add_footer("돌아가기", func(): closed.emit(), true)
+	BagPanel._refresh_icons(body)
 
 
 func _row(g: Gear) -> Control:
@@ -82,7 +85,9 @@ func _row(g: Gear) -> Control:
 	col.add_child(holder)
 	var hit := Button.new()
 	hit.flat = true
-	hit.focus_mode = Control.FOCUS_NONE
+	hit.focus_mode = Control.FOCUS_ALL
+	hit.set_meta("gamepad_key", "smith:%d" % g.serial)
+	hit.tooltip_text = g.display_name()
 	hit.pressed.connect(func():
 		selected = null if expanded else g
 		message = ""
@@ -94,7 +99,7 @@ func _row(g: Gear) -> Control:
 	holder.add_child(top)
 	var cell := BagPanel.GearCell.new()
 	cell.setup(g, "")
-	cell.custom_minimum_size = Vector2(100, 100)
+	BagPanel._prepare_icon(cell, 48.0)
 	cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top.add_child(cell)
 	var text := VBoxContainer.new()
@@ -112,6 +117,7 @@ func _row(g: Gear) -> Control:
 	if g.locked:
 		tags.append("잠금")
 	var t := UiKit.label(" · ".join(tags), 18, Color(0.55, 0.95, 0.78))
+	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	text.add_child(t)
 	if expanded:

@@ -3,11 +3,11 @@ extends PanelFrame
 ## 스킬 트리 (원본: lib/src/ui/skills_panel.dart · skill_tree.dart · skill_tree_layout.dart).
 ## Three schools of six level tiers (1·6·12·18·24·30), prerequisite arrows,
 ## learning with skill points, and equipping to the main / auxiliary slots.
-## 폰 세로 화면에서는 트리(위) + 상세(아래)로 나뉘고 가로에서는 좌우로 나뉩니다.
+## 실제 본문 폭이 충분할 때 좌우로, 접힌 화면에서는 트리(위) + 상세(아래)로 나뉩니다.
 
 const TIERS := [1, 6, 12, 18, 24, 30]
 const NODE_SIDE := 84.0
-const TIER_HEIGHT := 128.0
+const TIER_HEIGHT := 150.0
 const TREE_PADDING := 18.0
 const TIER_LABEL_WIDTH := 70.0
 const TREE_MIN_WIDTH := 400.0
@@ -19,10 +19,11 @@ var _tree: Control
 var _tree_scroll: ScrollContainer
 var _gesture_index := -2
 var _gesture_start := Vector2.ZERO
-var _gesture_scroll := 0
+var _gesture_scroll := Vector2i.ZERO
 var _gesture_node := ""
 var _gesture_dragged := false
 var _detail: VBoxContainer
+var _detail_panel: PanelContainer
 var _layout_box: BoxContainer
 var _pad_nodes: Dictionary = {}
 var _nodes := {}  # id -> Rect2 in _tree coordinates
@@ -42,7 +43,7 @@ func _ready() -> void:
 	_tree_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_tree_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_tree_scroll.size_flags_stretch_ratio = 1.15
-	_tree_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_tree_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	_tree_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	_tree_scroll.scroll_deadzone = int(TAP_SLOP)
 	_tree_scroll.scroll_started.connect(_cancel_tree_gesture)
@@ -58,15 +59,15 @@ func _ready() -> void:
 		_tree.queue_redraw())
 	_tree_scroll.add_child(_tree)
 
-	var detail_panel := PanelContainer.new()
-	detail_panel.add_theme_stylebox_override("panel", UiKit.panel_style())
-	detail_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	detail_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_layout_box.add_child(detail_panel)
+	_detail_panel = PanelContainer.new()
+	_detail_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	_detail_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_detail_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_layout_box.add_child(_detail_panel)
 	var detail_scroll := ScrollContainer.new()
 	detail_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	detail_scroll.scroll_deadzone = 14
-	detail_panel.add_child(detail_scroll)
+	_detail_panel.add_child(detail_scroll)
 	_detail = VBoxContainer.new()
 	_detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_detail.add_theme_constant_override("separation", 8)
@@ -79,6 +80,7 @@ func _ready() -> void:
 	add_footer("모험 계속하기", func(): closed.emit(), true, 2.0)
 
 	get_viewport().size_changed.connect(_fit)
+	body_holder.resized.connect(_fit)
 	_fit()
 	_selected = GameState.slots[0]
 	_tab = _tab_of(_selected)
@@ -91,11 +93,41 @@ func _unhandled_input(event: InputEvent) -> void:
 		closed.emit()
 
 
+func frame_max_width() -> float:
+	var view := get_viewport_rect().size
+	# A short landscape needs both work areas beside each other. The general
+	# 880-unit reading cap would waste several hundred display pixels on a phone.
+	return maxf(MAX_WIDTH, 1000.0 * graph_css_scale()) if view.x > view.y else MAX_WIDTH
+
+
 func _fit() -> void:
-	var size := get_viewport_rect().size
-	_layout_box.vertical = size.y > size.x
-	_tree_scroll.custom_minimum_size.y = 240.0 if _layout_box.vertical else 0.0
+	var scale := graph_css_scale()
+	var side := _node_side()
+	var tree_width := maxf(TREE_MIN_WIDTH, TIER_LABEL_WIDTH + 12.0 + 3.0 * (side + 16.0))
+	var gap := maxi(12, roundi(8.0 * scale))
+	_layout_box.add_theme_constant_override("separation", gap)
+	_detail.add_theme_constant_override("separation", maxi(8, roundi(6.0 * scale)))
+	_tree.custom_minimum_size = Vector2(tree_width, _tier_height() * TIERS.size() + TREE_PADDING * 2.0)
+	# Decide from the actual content width in display units: near-square folds and
+	# phone landscape cannot support two readable columns inside the capped frame.
+	_layout_box.vertical = body_holder.size.x < tree_width + 280.0 * scale + gap
+	_tree_scroll.size_flags_stretch_ratio = 1.15 if _layout_box.vertical else tree_width
+	_detail_panel.size_flags_stretch_ratio = 1.0 if _layout_box.vertical else 280.0 * scale
+	_tree_scroll.custom_minimum_size.y = 0.0
+	_layout_nodes()
+	_tree.queue_redraw()
 	_fit_detail_type()
+
+
+func _node_side() -> float:
+	var scale := graph_css_scale()
+	var rank_font := graph_font_size(18, scale)
+	var ribbon_width := UiKit.BOLD_FONT.get_string_size("20/20", HORIZONTAL_ALIGNMENT_LEFT, -1, rank_font).x + 10.0
+	return maxf(ribbon_width, maxf(NODE_SIDE, ceilf(44.0 * scale) - 16.0))
+
+
+func _tier_height() -> float:
+	return maxf(TIER_HEIGHT, _node_side() + UiKit.BOLD_FONT.get_height(graph_font_size(18, graph_css_scale())) + 18.0)
 
 
 func _tab_labels() -> Array:
@@ -149,9 +181,10 @@ func _layout_nodes() -> void:
 	_nodes.clear()
 	var width := maxf(_tree.size.x, TREE_MIN_WIDTH)
 	var col_w := (width - TIER_LABEL_WIDTH - 12.0) / 3.0
+	var side := _node_side()
 	for slot in _tab_slots(_tab):
-		var center := Vector2(TIER_LABEL_WIDTH + (slot[2] + 0.5) * col_w, TREE_PADDING + slot[1] * TIER_HEIGHT + 56.0)
-		_nodes[slot[0]] = Rect2(center - Vector2.ONE * NODE_SIDE / 2.0, Vector2.ONE * NODE_SIDE)
+		var center := Vector2(TIER_LABEL_WIDTH + (slot[2] + 0.5) * col_w, TREE_PADDING + slot[1] * _tier_height() + side * 0.5 + 14.0)
+		_nodes[slot[0]] = Rect2(center - Vector2.ONE * side / 2.0, Vector2.ONE * side)
 
 	for id: String in _pad_nodes:
 		if _nodes.has(id) and is_instance_valid(_pad_nodes[id]):
@@ -162,17 +195,11 @@ func _layout_nodes() -> void:
 
 ## Canvas labels do not inherit PanelFrame's control font boost.
 func graph_css_scale() -> float:
-	if OS.has_feature("web"):
-		var width: Variant = JavaScriptBridge.eval("window.innerWidth", true)
-		if (width is float or width is int) and float(width) > 0.0:
-			return get_viewport_rect().size.x / float(width)
-	if DisplayServer.get_name() == "headless":
-		return 1.0
-	return get_viewport_rect().size.x / maxf(1.0, float(get_window().size.x))
+	return UiMetrics.units_per_display_pixel(get_viewport())
 
 
 static func graph_font_size(preferred: int, css_scale: float) -> int:
-	return maxi(preferred, ceili(12.0 * css_scale))
+	return maxi(preferred, ceili(14.0 * css_scale))
 
 
 func _graph_label(text: String, rect: Rect2, pixels: int, color: Color) -> void:
@@ -189,15 +216,17 @@ func _draw_tree() -> void:
 	var tier_font := graph_font_size(19, scale)
 	var rank_font := graph_font_size(18, scale)
 	var mark_font := graph_font_size(17, scale)
+	var tier_height := _tier_height()
 	for r in TIERS.size():
-		var y := TREE_PADDING + r * TIER_HEIGHT
-		_tree.draw_rect(Rect2(0, y, area.x, TIER_HEIGHT - 2.0), Color(1, 0.9, 0.7, 0.025 if r % 2 == 0 else 0.045))
+		var y := TREE_PADDING + r * tier_height
+		_tree.draw_rect(Rect2(0, y, area.x, tier_height - 2.0), Color(1, 0.9, 0.7, 0.025 if r % 2 == 0 else 0.045))
 		var tier := "Lv.%d" % TIERS[r] if _tab != 3 else ""
 		if not tier.is_empty() and font.get_string_size(tier, HORIZONTAL_ALIGNMENT_LEFT, -1, tier_font).x > TIER_LABEL_WIDTH - 4.0:
-			_graph_label("Lv.", Rect2(0, y + 20.0, TIER_LABEL_WIDTH - 4.0, 32.0), tier_font, UiToneArt.MUTED)
-			_graph_label(str(TIERS[r]), Rect2(0, y + 52.0, TIER_LABEL_WIDTH - 4.0, 32.0), tier_font, UiToneArt.MUTED)
+			var line_height := maxf(32.0, font.get_height(tier_font) + 2.0)
+			_graph_label("Lv.", Rect2(0, y + 14.0, TIER_LABEL_WIDTH - 4.0, line_height), tier_font, UiKit.MUTED)
+			_graph_label(str(TIERS[r]), Rect2(0, y + 14.0 + line_height, TIER_LABEL_WIDTH - 4.0, line_height), tier_font, UiKit.MUTED)
 		else:
-			_graph_label(tier, Rect2(0, y + 32.0, TIER_LABEL_WIDTH - 4.0, 48.0), tier_font, UiToneArt.MUTED)
+			_graph_label(tier, Rect2(0, y + 32.0, TIER_LABEL_WIDTH - 4.0, 48.0), tier_font, UiKit.MUTED)
 	# Prerequisite arrows inside this school.
 	for id in _nodes:
 		var s := GameState.skill(id)
@@ -207,7 +236,7 @@ func _draw_tree() -> void:
 			var from: Rect2 = _nodes[req]
 			var to: Rect2 = _nodes[id]
 			var met := GameState.rank(req) >= int(s["requires"][req])
-			var col := Color(UiToneArt.BRONZE, 0.9) if met else Color(UiToneArt.MUTED, 0.4)
+			var col := Color(UiKit.GOLD, 0.9) if met else Color(UiKit.MUTED, 0.4)
 			# Route outside the rank ribbon so its larger readable text cannot cover a dependency.
 			var edge_x := from.end.x + 8.0
 			var target_x := to.end.x + 8.0
@@ -222,30 +251,30 @@ func _draw_tree() -> void:
 		var rank := GameState.rank(id)
 		var learnable := GameState.learn_block_reason(s) == ""
 		var tint := Color.WHITE if rank > 0 else (Color(0.75, 0.75, 0.75) if learnable else Color(0.35, 0.35, 0.38))
-		_tree.draw_style_box(UiKit.panel_style(UiToneArt.CHARCOAL, UiToneArt.BRONZE.darkened(0.4), 4), rect.grow(3))
+		_tree.draw_style_box(UiKit.panel_style(UiKit.SURFACE, UiKit.GOLD.darkened(0.4), 4), rect.grow(3))
 		SkillIcons.draw(_tree, id, rect.grow(-3), tint)
-		var border := UiToneArt.BRONZE if rank > 0 else UiKit.EDGE
+		var border := UiKit.GOLD if rank > 0 else UiKit.EDGE
 		if learnable:
-			border = UiToneArt.IVORY
+			border = UiKit.TEXT
 		_tree.draw_rect(rect, border, false, 4.0 if id == _selected else 2.0)
 		if id == _selected:
-			_tree.draw_rect(rect.grow(4), UiToneArt.BRONZE, false, 2.0)
+			_tree.draw_rect(rect.grow(4), UiKit.GOLD, false, 2.0)
 		var badge := "%d/%d" % [rank, int(s["limit"])]
 		var badge_size := Vector2(minf(rect.size.x, font.get_string_size(badge, HORIZONTAL_ALIGNMENT_LEFT, -1, rank_font).x + 10.0), font.get_height(rank_font) + 6.0)
 		var badge_rect := Rect2(Vector2(rect.get_center().x - badge_size.x * 0.5, rect.end.y + 4.0), badge_size)
-		_tree.draw_style_box(UiKit.panel_style(UiToneArt.CHARCOAL, UiToneArt.BRONZE.darkened(0.4), 3), badge_rect)
-		_graph_label(badge, badge_rect, rank_font, UiToneArt.IVORY if rank > 0 else UiToneArt.MUTED)
+		_tree.draw_style_box(UiKit.panel_style(UiKit.SURFACE, UiKit.GOLD.darkened(0.4), 3), badge_rect)
+		_graph_label(badge, badge_rect, rank_font, UiKit.TEXT if rank > 0 else UiKit.MUTED)
 		if s["passive"] and not s["basic"]:
 			var passive_size := Vector2(font.get_string_size("P", HORIZONTAL_ALIGNMENT_LEFT, -1, mark_font).x + 8.0, font.get_height(mark_font) + 4.0)
 			var passive_rect := Rect2(rect.position + Vector2(3, 3), passive_size)
-			_tree.draw_style_box(UiKit.panel_style(UiToneArt.CHARCOAL, UiToneArt.BRONZE.darkened(0.4), 3), passive_rect)
-			_graph_label("P", passive_rect, mark_font, UiToneArt.MUTED)
+			_tree.draw_style_box(UiKit.panel_style(UiKit.SURFACE, UiKit.GOLD.darkened(0.4), 3), passive_rect)
+			_graph_label("P", passive_rect, mark_font, UiKit.MUTED)
 		var slot_index: int = GameState.slots.find(id)
 		if slot_index >= 0:
 			var tag := "주" if slot_index == 0 else str(slot_index)
 			var tag_side := maxf(24.0, font.get_height(mark_font) + 6.0)
 			var tag_rect := Rect2(rect.position + Vector2(rect.size.x - 3, 5) - Vector2.ONE * tag_side * 0.5, Vector2.ONE * tag_side)
-			_tree.draw_circle(tag_rect.get_center(), tag_side * 0.5, UiToneArt.BRONZE)
+			_tree.draw_circle(tag_rect.get_center(), tag_side * 0.5, UiKit.GOLD)
 			_graph_label(tag, tag_rect, mark_font, UiKit.INK)
 
 
@@ -261,7 +290,7 @@ func _begin_tree_gesture(index: int, at: Vector2) -> void:
 		return
 	_gesture_index = index
 	_gesture_start = _tree.get_global_transform_with_canvas() * at
-	_gesture_scroll = _tree_scroll.scroll_vertical
+	_gesture_scroll = Vector2i(_tree_scroll.scroll_horizontal, _tree_scroll.scroll_vertical)
 	_gesture_node = _node_at(at)
 	_gesture_dragged = false
 
@@ -280,7 +309,7 @@ func _end_tree_gesture(index: int, at: Vector2) -> void:
 	if index != _gesture_index:
 		return
 	_drag_tree_gesture(at)
-	var tap := not _gesture_dragged and _gesture_scroll == _tree_scroll.scroll_vertical and _node_at(at) == _gesture_node
+	var tap := not _gesture_dragged and _gesture_scroll == Vector2i(_tree_scroll.scroll_horizontal, _tree_scroll.scroll_vertical) and _node_at(at) == _gesture_node
 	var selected := _gesture_node
 	_gesture_index = -2
 	_gesture_node = ""
@@ -357,9 +386,9 @@ func _build_detail() -> void:
 	info.append("습득 레벨 %d" % GameState.required_level_for_rank(s, rank + 1) if rank < int(s["limit"]) else "최고 등급")
 	_detail.add_child(PanelFrame.wrap_label(" · ".join(info), 15, UiKit.MUTED))
 	if rank > 0:
-		_add_effect_line("현재", SkillDefs.describe(_selected, rank), UiToneArt.IVORY)
+		_add_effect_line("현재", SkillDefs.describe(_selected, rank), UiKit.TEXT)
 	if rank < int(s["limit"]):
-		_add_effect_line("다음 등급" if rank > 0 else "1등급", SkillDefs.describe(_selected, rank + 1), UiToneArt.BRONZE)
+		_add_effect_line("다음 등급" if rank > 0 else "1등급", SkillDefs.describe(_selected, rank + 1), UiKit.GOLD)
 
 	var reason := GameState.learn_block_reason(s)
 	var learn := UiKit.button("배우기 (포인트 1)" if rank == 0 else "등급 올리기 (포인트 1)", 21)
@@ -371,7 +400,7 @@ func _build_detail() -> void:
 			_refresh())
 	_detail.add_child(learn)
 	if reason != "":
-		_detail.add_child(PanelFrame.wrap_label(reason, 15, UiToneArt.MUTED))
+		_detail.add_child(PanelFrame.wrap_label(reason, 15, UiKit.MUTED))
 
 	if rank > 0 and GameState.is_assignable(s):
 		_detail.add_child(UiKit.label("장착 슬롯", 16, UiKit.MUTED, true))
@@ -393,7 +422,7 @@ func _build_detail() -> void:
 					GameState.assign_slot(index, _selected)
 				_refresh())
 			row.add_child(b)
-		_detail.add_child(UiKit.label("같은 버튼을 다시 누르면 해제합니다", 13, UiToneArt.MUTED))
+		_detail.add_child(PanelFrame.wrap_label("같은 버튼을 다시 누르면 해제합니다", 15, UiKit.MUTED))
 
 	_fit_detail_type()
 
@@ -401,7 +430,7 @@ func _build_detail() -> void:
 func _fit_detail_type() -> void:
 	if _detail == null:
 		return
-	var minimum := ceili(12.0 * graph_css_scale())
+	var minimum := ceili(14.0 * graph_css_scale())
 	for node in _detail.find_children("*", "Control", true, false):
 		var control := node as Control
 		if not (control is Label or control is Button):
@@ -409,6 +438,9 @@ func _fit_detail_type() -> void:
 		if not control.has_meta("woodland_base_font"):
 			control.set_meta("woodland_base_font", control.get_theme_font_size("font_size"))
 		var pixels := maxi(int(control.get_meta("woodland_base_font")), minimum)
+		# The shared frame may fit its widgets after this custom tree has fitted.
+		# Preserve this tree's measured minimum through that later pass as well.
+		control.set_meta("ui_font_base", pixels)
 		if control.get_theme_font_size("font_size") != pixels:
 			control.add_theme_font_size_override("font_size", pixels)
 		if control is Label:
@@ -420,10 +452,13 @@ func _fit_detail_type() -> void:
 			if not button.has_meta("woodland_base_minimum"):
 				button.set_meta("woodland_base_minimum", button.custom_minimum_size)
 			var original: Vector2 = button.get_meta("woodland_base_minimum")
-			var touch := 44.0 * graph_css_scale()
+			# Containers align child rectangles to whole logical pixels. Round up
+			# before layout so a fractional 44dp target cannot become 43.9dp.
+			var touch := ceilf(44.0 * graph_css_scale())
 			button.custom_minimum_size = Vector2(maxf(original.x, touch), maxf(original.y, touch))
-			button.clip_text = true
-			button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+			button.clip_text = false
+			button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			button.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 			button.tooltip_text = button.text
 
 

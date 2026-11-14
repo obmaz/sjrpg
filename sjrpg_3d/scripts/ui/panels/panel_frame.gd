@@ -25,7 +25,10 @@ var footer: BoxContainer
 var _panel: PanelContainer
 var _column: VBoxContainer
 var _header: HBoxContainer
-var _trim: FrameTrim
+var _titles: VBoxContainer
+var _close: Button
+var _sizing := false
+var _layout_pending := false
 var _tab_buttons: Array[Button] = []
 var _on_tab: Callable
 var compact := false
@@ -36,6 +39,7 @@ func _init() -> void:
 
 
 func _exit_tree() -> void:
+	_layout_pending = false
 	UiKit.boost = 1.0
 	for panel in get_tree().get_nodes_in_group("panel_frames"):
 		if panel != self and not panel.is_queued_for_deletion():
@@ -55,11 +59,11 @@ func _ready() -> void:
 	add_child(dim)
 
 	_panel = PanelContainer.new()
-	var surface := UiKit.texture_stylebox(UiKit.TEX_PANEL_FRAME, 65, 65, 65, 65)
-	surface.content_margin_left = 32
-	surface.content_margin_right = 32
-	surface.content_margin_top = 34
-	surface.content_margin_bottom = 34
+	var surface := UiKit.panel_style(UiKit.SURFACE, UiKit.EDGE, 10)
+	surface.content_margin_left = 24
+	surface.content_margin_right = 24
+	surface.content_margin_top = 24
+	surface.content_margin_bottom = 24
 	_panel.add_theme_stylebox_override("panel", surface)
 	add_child(_panel)
 	_column = VBoxContainer.new()
@@ -69,7 +73,8 @@ func _ready() -> void:
 	_header = HBoxContainer.new()
 	_header.add_theme_constant_override("separation", 16)
 	_column.add_child(_header)
-	var titles := VBoxContainer.new()
+	_titles = VBoxContainer.new()
+	var titles := _titles
 	titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	titles.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	titles.add_theme_constant_override("separation", TITLE_GAP)
@@ -87,18 +92,10 @@ func _ready() -> void:
 	trailing.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_header.add_child(trailing)
 	var close := UiKit.button("×", 30)
+	_close = close
 	close.tooltip_text = "모험으로 돌아가기"
 	close.custom_minimum_size = Vector2(MIN_TOUCH, MIN_TOUCH)
 	close.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	for state in ["normal", "hover", "pressed", "focus"]:
-		var coin := UiKit.panel_style(Color("211e18"), Color("a18a60") if state == "pressed" else Color("6d5c40"), 32)
-		if "raised" in coin:
-			coin.raised = true
-		coin.content_margin_left = 0
-		coin.content_margin_right = 0
-		coin.content_margin_top = 0
-		coin.content_margin_bottom = 0
-		close.add_theme_stylebox_override(state, coin)
 	close.pressed.connect(func(): closed.emit())
 	_header.add_child(close)
 	_column.add_child(UiKit.divider())
@@ -122,6 +119,7 @@ func _ready() -> void:
 	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.scroll_deadzone = 14
+	scroll.follow_focus = true
 	body_holder.add_child(scroll)
 	body = VBoxContainer.new()
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -129,18 +127,14 @@ func _ready() -> void:
 	scroll.add_child(body)
 	body.minimum_size_changed.connect(func():
 		if compact:
-			_layout.call_deferred())
+			_request_layout())
 
 	footer = BoxContainer.new()
 	footer.add_theme_constant_override("separation", 10)
 	_column.add_child(footer)
-	_column.minimum_size_changed.connect(func(): _layout.call_deferred())
+	_column.minimum_size_changed.connect(_request_layout)
 
-	_trim = FrameTrim.new()
-	_trim.visible = false
-	_trim.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_trim)
-	get_viewport().size_changed.connect(_layout)
+	get_viewport().size_changed.connect(_request_layout)
 	_layout()
 
 
@@ -164,15 +158,50 @@ static func safe_margins(viewport: Viewport) -> Vector4:
 		maxf(0.0, window.x - safe.end.x) * k.x, maxf(0.0, window.y - safe.end.y) * k.y)
 
 
+## 한 번의 목록 구성에서 생긴 node/minimum-size 신호는 한 배치로 측정한다.
+func _request_layout() -> void:
+	if _layout_pending or not is_inside_tree() or is_queued_for_deletion():
+		return
+	_layout_pending = true
+	_flush_layout.call_deferred()
+
+
+func _flush_layout() -> void:
+	if not _layout_pending:
+		return
+	_layout_pending = false
+	if not is_inside_tree() or is_queued_for_deletion():
+		return
+	_layout()
+
+
+## 두 작업 영역을 가진 패널만 필요한 폭을 명시한다. 일반 목록은 기존 폭을 유지한다.
+func frame_max_width() -> float:
+	return MAX_WIDTH
+
+
 func _layout() -> void:
+	if _sizing or not is_instance_valid(footer):
+		return
+	_sizing = true
+	var scale := UiMetrics.units_per_display_pixel(get_viewport())
+	_fit_widgets(self, scale)
 	var view := get_viewport().get_visible_rect().size
 	var m := safe_margins(get_viewport())
-	var pad := 18.0 if view.y > view.x else 28.0
+	var pad := maxf(12.0, 8.0 * scale)
+	var inside := maxf(18.0, 12.0 * scale)
+	var surface := _panel.get_theme_stylebox("panel")
+	for side: int in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
+		if not is_equal_approx(surface.get_content_margin(side), inside):
+			surface.set_content_margin(side, inside)
+	_set_separation(_column, roundi(maxf(18.0, 9.0 * scale)))
+	_set_separation(_titles, roundi(maxf(TITLE_GAP, 5.0 * scale)))
+	_close.custom_minimum_size = Vector2.ONE * maxf(MIN_TOUCH, ceilf(44.0 * scale))
 	var left := pad + m.x
 	var top := pad + m.y
 	var right := pad + m.z
 	var bottom := pad + m.w
-	var width := minf(view.x - left - right, MAX_WIDTH)
+	var width := minf(view.x - left - right, frame_max_width())
 	var cx := left + (view.x - left - right) / 2.0
 	var height := view.y - top - bottom
 	trailing.visible = trailing.get_children().any(func(child: Node): return not child.is_queued_for_deletion())
@@ -184,7 +213,6 @@ func _layout() -> void:
 			footer_width += action.get_combined_minimum_size().x
 			actions += 1
 	footer_width += maxf(0.0, actions - 1) * footer.get_theme_constant("separation")
-	var surface := _panel.get_theme_stylebox("panel")
 	footer.vertical = footer_width > width - surface.get_content_margin(SIDE_LEFT) - surface.get_content_margin(SIDE_RIGHT)
 	if compact and body != null:
 		# Measure actual chrome so wrapped subtitles/tabs cannot steal the body space.
@@ -194,22 +222,19 @@ func _layout() -> void:
 	_panel.custom_minimum_size = Vector2.ZERO
 	_panel.position = Vector2(cx - width / 2.0, top + (view.y - top - bottom - height) / 2.0)
 	_panel.size = Vector2(width, height)
-	if _trim != null:
-		_trim.position = _panel.position
-		_trim.size = _panel.size
-		_trim.queue_redraw()
+	_sizing = false
 
 
 func set_compact() -> void:
 	compact = true
-	_layout.call_deferred()
+	_request_layout()
 
 
 func set_header(title: String, subtitle := "") -> void:
 	title_label.text = title
 	subtitle_label.text = subtitle
 	subtitle_label.visible = subtitle != ""
-	_layout.call_deferred()
+	_request_layout()
 
 
 func set_tabs(labels: Array, selected: int, on_select: Callable) -> void:
@@ -226,7 +251,7 @@ func set_tabs(labels: Array, selected: int, on_select: Callable) -> void:
 		b.pressed.connect(func(): _on_tab.call(index))
 		tab_row.add_child(b)
 		_tab_buttons.append(b)
-	_layout.call_deferred()
+	_request_layout()
 
 
 func clear_body() -> void:
@@ -243,13 +268,15 @@ func add_footer(text: String, on_press: Callable, primary := false, weight := 1.
 	UiKit.style_button(b, primary)
 	b.pressed.connect(on_press)
 	footer.add_child(b)
-	_layout.call_deferred()
+	_request_layout()
 	return b
 
 
 ## A tappable full-width section label.
 static func section(text: String) -> Label:
 	var l := UiKit.label(text, 19, UiKit.GOLD, true)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return l
 
 
@@ -261,19 +288,28 @@ static func wrap_label(text: String, size := 18, color := UiKit.TEXT) -> Label:
 	return l
 
 
-## Generated bronze brackets stay inside the existing decorative corner footprint.
-class FrameTrim:
-	extends Control
+## UiKit 기본 서체를 dp 최소값으로 올리되 원래 크기를 보존해 회전 후에도 복원한다.
+func _fit_widgets(node: Node, scale: float) -> void:
+	if node is Control and node.has_meta("ui_font_base"):
+		var control := node as Control
+		var preferred: int = control.get_meta("ui_font_base")
+		var font_size := maxi(preferred, ceili(14.0 * scale))
+		if control.get_theme_font_size("font_size") != font_size:
+			control.add_theme_font_size_override("font_size", font_size)
+		if control is Button and control.has_meta("ui_touch"):
+			if not control.has_meta("ui_min_height"):
+				control.set_meta("ui_min_height", control.custom_minimum_size.y)
+			var minimum: float = control.get_meta("ui_min_height")
+			control.custom_minimum_size.y = maxf(minimum, ceilf(44.0 * scale))
+	for child: Node in node.get_children():
+		_fit_widgets(child, scale)
 
-	func _draw() -> void:
-		for x in [false, true]:
-			for y in [false, true]:
-				var inward := Vector2(-1 if x else 1, -1 if y else 1)
-				var center := Vector2(size.x - 21 if x else 21, size.y - 21 if y else 21)
-				draw_set_transform(center, 0.0, inward)
-				PresentationArt.draw_ui(self, "corner", Vector2.ZERO, 13.0, Color(1, 0.96, 0.86, 0.9))
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
+func _set_separation(box: BoxContainer, value: int) -> void:
+	if box.get_theme_constant("separation") != value:
+		box.add_theme_constant_override("separation", value)
 
 func _prepare_scroll_button(node: Node) -> void:
 	ScrollTouchSupport.prepare_button(node, self)
+	if is_ancestor_of(node):
+		_request_layout()

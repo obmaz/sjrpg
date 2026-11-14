@@ -18,6 +18,7 @@ var _install_poll := 0.0
 var _zoom_buttons: Array[Button] = []
 var _zoom_grid: GridContainer
 var _screen_orientation_buttons: Array[Button] = []
+var _screen_orientation_grid: GridContainer
 var _screen_orientation_hint: Label
 var _version_buttons: Array[Button] = []
 
@@ -41,6 +42,7 @@ func _rebuild() -> void:
 	_zoom_buttons.clear()
 	_zoom_grid = null
 	_screen_orientation_buttons.clear()
+	_screen_orientation_grid = null
 	_version_buttons.clear()
 	body.add_child(PanelFrame.section("화면"))
 	_fullscreen_button = _action_row("전체화면 켜기", _request_fullscreen)
@@ -217,25 +219,23 @@ func _action_row(text: String, on_press: Callable, enabled := true) -> Button:
 	var b := UiKit.button(text, 21)
 	b.custom_minimum_size = Vector2(0, 76)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	b.disabled = not enabled
 	b.pressed.connect(on_press)
 	return b
 
 
 func _world_zoom_card() -> Control:
-	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UiKit.panel_style(UiKit.SURFACE, UiKit.EDGE, 12))
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
-	card.add_child(column)
-	column.add_child(UiKit.label("화면 확대", 22, UiKit.TEXT, true))
-	column.add_child(PanelFrame.wrap_label("배경·캐릭터의 크기를 조절합니다. 글자·버튼 크기는 유지됩니다.", 15, UiKit.MUTED))
+	var card := VBoxContainer.new()
+	card.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
+	card.add_child(PanelFrame.wrap_label("화면 확대", 22))
+	card.add_child(PanelFrame.wrap_label("배경·캐릭터의 크기를 조절합니다. 글자·버튼 크기는 유지됩니다.", 15, UiKit.MUTED))
 	_zoom_grid = GridContainer.new()
 	_zoom_grid.columns = 3
 	_zoom_grid.add_theme_constant_override("h_separation", 12)
 	_zoom_grid.add_theme_constant_override("v_separation", 12)
 	_zoom_grid.resized.connect(_fit_display_option_targets)
-	column.add_child(_zoom_grid)
+	card.add_child(_zoom_grid)
 	var group := ButtonGroup.new()
 	for amount: float in Prefs.WORLD_ZOOMS:
 		var button := UiKit.button("%s×" % ("1" if is_equal_approx(amount, 1.0) else str(amount)), 22)
@@ -253,19 +253,19 @@ func _world_zoom_card() -> Control:
 
 
 func _screen_orientation_card() -> Control:
-	var card := PanelContainer.new()
+	var card := VBoxContainer.new()
 	card.name = "ScreenOrientation"
-	card.add_theme_stylebox_override("panel", UiKit.panel_style(UiKit.SURFACE, UiKit.EDGE, 12))
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
-	card.add_child(column)
-	column.add_child(UiKit.label("화면 방향", 22, UiKit.TEXT, true))
+	card.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
+	card.add_child(PanelFrame.wrap_label("화면 방향", 22))
 	_screen_orientation_hint = PanelFrame.wrap_label("", 15, UiKit.MUTED)
 	_screen_orientation_hint.name = "ScreenOrientationHint"
-	column.add_child(_screen_orientation_hint)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
-	column.add_child(row)
+	card.add_child(_screen_orientation_hint)
+	_screen_orientation_grid = GridContainer.new()
+	_screen_orientation_grid.columns = 3
+	_screen_orientation_grid.add_theme_constant_override("h_separation", 12)
+	_screen_orientation_grid.add_theme_constant_override("v_separation", 12)
+	_screen_orientation_grid.resized.connect(_fit_display_option_targets)
+	card.add_child(_screen_orientation_grid)
 	var group := ButtonGroup.new()
 	var labels := {"auto": "자동", "landscape": "가로", "portrait": "세로"}
 	for choice: String in Prefs.SCREEN_ORIENTATIONS:
@@ -280,7 +280,7 @@ func _screen_orientation_card() -> Control:
 		button.set_meta("gamepad_key", "screen_orientation:" + choice)
 		UiKit.style_button(button, false, button.button_pressed)
 		button.pressed.connect(_choose_screen_orientation.bind(choice))
-		row.add_child(button)
+		_screen_orientation_grid.add_child(button)
 		_screen_orientation_buttons.append(button)
 	return card
 
@@ -305,18 +305,20 @@ func display_pixel_scale() -> float:
 
 
 func _fit_display_option_targets() -> void:
-	var touch := 44.0 * display_pixel_scale()
-	var minimum_width := touch
+	var touch := ceilf(44.0 * display_pixel_scale())
 	for button: Button in _zoom_buttons + _screen_orientation_buttons:
 		if is_instance_valid(button) and not button.is_queued_for_deletion():
 			button.custom_minimum_size = Vector2(touch, maxf(76.0, touch))
-			if button in _zoom_buttons:
-				minimum_width = maxf(minimum_width, button.get_minimum_size().x)
-	if is_instance_valid(_zoom_grid) and not _zoom_grid.is_queued_for_deletion():
-		var gap := float(_zoom_grid.get_theme_constant("h_separation"))
-		var fitting := maxi(1, floori((_zoom_grid.size.x + gap) / (minimum_width + gap)))
-		# Five fit across a wide card; narrow phones use a balanced three/two split.
-		_zoom_grid.columns = 5 if fitting >= 5 else mini(3, fitting)
+	for grid: GridContainer in [_zoom_grid, _screen_orientation_grid]:
+		if not is_instance_valid(grid) or grid.is_queued_for_deletion():
+			continue
+		var minimum_width := touch
+		for button: Button in grid.get_children():
+			minimum_width = maxf(minimum_width, button.get_combined_minimum_size().x)
+		var gap := float(grid.get_theme_constant("h_separation"))
+		var fitting := maxi(1, floori((grid.size.x + gap) / (minimum_width + gap)))
+		# All five zooms can share a wide row; otherwise keep a balanced three/two split.
+		grid.columns = 5 if grid == _zoom_grid and fitting >= 5 else mini(3, fitting)
 
 
 func _choose_world_zoom(amount: float) -> void:
@@ -334,7 +336,8 @@ func _version_card() -> Control:
 	if OS.has_feature("web"):
 		var select := UiKit.button("저장하고 선택 화면으로", 20)
 		select.name = "VersionSelect"
-		select.custom_minimum_size.y = 76
+		select.custom_minimum_size = Vector2(0, 76)
+		select.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		select.pressed.connect(func(): _open_edition(""))
 		card.add_child(select)
 		_version_buttons.append(select)
@@ -346,67 +349,19 @@ func _open_edition(edition: String) -> void:
 		show_save_error(GameState.save_error)
 
 
-## A big switch row: label + hint on the left, ON/OFF pill on the right.
+## One standard action with a wrapping explanation; no fixed-width pill competes with text.
 func _toggle(label: String, hint: String, on: bool, on_change: Callable) -> Control:
-	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UiKit.panel_style(UiKit.SURFACE, UiKit.EDGE if not on else UiKit.GOLD, 12))
-	var holder := PanelContainer.new()
-	holder.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
-	card.add_child(holder)
-	var hit := Button.new()
-	hit.flat = true
+	var card := VBoxContainer.new()
+	card.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
+	var hit := _action_row("%s · %s" % [label, "켜짐" if on else "꺼짐"], func(): on_change.call(not on))
 	hit.set_meta("gamepad_key", "setting:" + label)
 	hit.tooltip_text = label
-	hit.focus_mode = Control.FOCUS_NONE
-	hit.pressed.connect(func(): on_change.call(not on))
-	holder.add_child(hit)
-	var row := HBoxContainer.new()
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_theme_constant_override("separation", 12)
-	holder.add_child(row)
-	var text := VBoxContainer.new()
-	text.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	text.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
-	row.add_child(text)
-	var l := UiKit.label(label, 22, Color(0.95, 0.92, 0.82), true)
-	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	text.add_child(l)
-	var h := UiKit.label(hint, 15, UiKit.MUTED)
-	h.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	text.add_child(h)
-	var pill := Pill.new()
-	pill.on = on
-	pill.custom_minimum_size = Vector2(112, 58)
-	pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_child(pill)
+	hit.toggle_mode = true
+	hit.button_pressed = on
+	UiKit.style_button(hit, false, on)
+	card.add_child(hit)
+	card.add_child(PanelFrame.wrap_label(hint, 15, UiKit.MUTED))
 	return card
-
-
-class Pill:
-	extends Control
-	var on := false
-
-	func _draw() -> void:
-		var r := Rect2(Vector2.ZERO, size)
-		var back := Color("56533a") if on else Color("24251f")
-		var sb := StyleBoxFlat.new()
-		sb.bg_color = back
-		sb.set_corner_radius_all(int(size.y / 2.0))
-		sb.border_color = Color("8c7651")
-		sb.set_border_width_all(2)
-		draw_style_box(sb, r)
-		var knob := Vector2(size.x - size.y / 2.0 if on else size.y / 2.0, size.y / 2.0)
-		draw_circle(knob + Vector2(0, 1), size.y / 2.0 - 4.0, Color("14120d"))
-		draw_circle(knob, size.y / 2.0 - 6.0, UiKit.GOLD)
-		draw_arc(knob, size.y / 2.0 - 8.0, PI * 1.1, TAU, 24, Color("e1cca0"), 1.0, true)
-		var text := "ON" if on else "OFF"
-		var width := UiKit.BOLD_FONT.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 21).x
-		var left := 8.0 if on else size.y
-		var right := size.x - size.y if on else size.x - 8.0
-		draw_string(UiKit.BOLD_FONT, Vector2((left + right - width) / 2.0, size.y * 0.66), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 21, UiKit.TEXT)
 
 
 ## 채택한 자산의 저작자·원본·라이선스와 수정 표기를 설정에서 읽을 수 있게 한다.

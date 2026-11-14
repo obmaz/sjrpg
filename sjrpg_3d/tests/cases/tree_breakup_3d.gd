@@ -13,12 +13,28 @@ func run() -> void:
 		var wood := TreeDamageGeometry3D.mesh(variant, "charred")
 		var low := INF
 		var high := -INF
-		for point in anchors:
-			check("flame anchor lies on the original wood", TreeGeometry3D._points(wood).has(point))
+		var crown: Mesh = TreeGeometry3D.mesh_library()[variant]["mesh"]
+		var toward := Vector3(1.0, 1.0, 1.0).normalized()
+		for index in anchors.size():
+			var point := anchors[index]
+			var source := wood if index < 2 else crown
+			check(
+				"fire sits on the first visible wood or crown surface",
+				_on_visible_surface(source, point, toward)
+			)
 			low = minf(low, point.y)
 			high = maxf(high, point.y)
 		check(
-			"flames reach branches above the trunk base", high - low > wood.get_aabb().size.y * 0.25
+			"flames reach the upper crown rather than the trunk base",
+			high > crown.get_aabb().end.y * 0.75 and high - low > wood.get_aabb().size.y * 0.45
+		)
+		var turned := Transform3D(Basis(Vector3.UP, PI), Vector3(3, 2, 1))
+		var view := Basis(Vector3.RIGHT, -0.6154797) * Basis(Vector3.UP, PI / 4.0)
+		var original_sector := TreeDamageGeometry3D.fire_view_sector(Transform3D.IDENTITY, view)
+		check(
+			"rotated trees select the opposite exposed crown instead of hidden wood",
+			TreeDamageGeometry3D.fire_view_sector(turned, view)
+			== posmod(original_sector + 4, TreeDamageGeometry3D.FIRE_VIEW_SECTORS)
 		)
 		for kind in ["charred", "frozen"]:
 			var source := TreeDamageGeometry3D.mesh(variant, kind)
@@ -84,6 +100,80 @@ func run() -> void:
 			== TreeDebris3D.FIRE_LIMIT * TreeDamageGeometry3D.FLAMES_PER_TREE
 		)
 	)
+	var stable_writes := embers.fire_buffer_writes
+	var advancing_clock: float = embers.fire_material.get_shader_parameter("fire_time")
+	embers.sync(0.2, burning)
+	check("steady burning advances density flow without rewriting any GPU instance buffers", embers.fire_buffer_writes == stable_writes and float(embers.fire_material.get_shader_parameter("fire_time")) > advancing_clock)
+	embers.sync(0.0, burning, Basis(Vector3.UP, PI * 0.5))
+	check("a changed camera direction updates the exposed branch slots", embers.fire_buffer_writes > stable_writes)
+	embers.sync(0.0, burning)
+	stable_writes = embers.fire_buffer_writes
+	var old_frame: Transform3D = burning[0]["transform"]
+	var old_fire_position := embers.fire_poses[0].origin
+	burning[0]["transform"] = Transform3D(Basis.IDENTITY, Vector3(2, 1, 3))
+	embers.sync(0.0, burning)
+	check("a different tree in a reused slot submits its actual new transform", embers.fire_buffer_writes > stable_writes and embers.fire_poses[0].origin.is_equal_approx(old_fire_position + Vector3(2, 1, 3)))
+	burning[0]["transform"] = old_frame
+	embers.sync(0.0, burning)
+	var previous_quality := Prefs.low_resolution
+	Prefs.low_resolution = true
+	embers.sync(0.0, burning)
+	check("low quality caps fire density work at six steps", int(embers.fire_material.get_shader_parameter("density_steps")) == 6)
+	Prefs.low_resolution = false
+	embers.sync(0.0, burning)
+	check("high quality keeps ten fire density steps", int(embers.fire_material.get_shader_parameter("density_steps")) == 10)
+	Prefs.low_resolution = previous_quality
+	embers.sync(0.0, burning)
+	var broad := embers.fire_poses[3].basis
+	var tip := embers.fire_poses[7].basis
+	check("branch fires form broad overlapping clusters and slimmer upper wisps", broad.x.length() / broad.y.length() > 1.3 and tip.x.length() / tip.y.length() < 1.1)
+	var fire_aabb := embers.embers.multimesh.custom_aabb
+	var bounds_cover_motion := true
+	for index in embers.embers.multimesh.visible_instance_count:
+		var pose := embers.fire_poses[index]
+		bounds_cover_motion = bounds_cover_motion and fire_aabb.has_point(pose * Vector3(0, 2.45, 0))
+	check("explicit fire bounds retain rising embers during continuous transform updates", bounds_cover_motion)
+	var fire_mesh := embers.embers.multimesh.mesh
+	check(
+		"fire shares one density volume proxy and two small embers within its geometry budget",
+		fire_mesh.get_aabb().size.z > 0.45 and TreeGeometry3D._triangle_count(fire_mesh) == 20
+	)
+	var fire_arrays := fire_mesh.surface_get_arrays(0)
+	var fire_vertices: PackedVector3Array = fire_arrays[Mesh.ARRAY_VERTEX]
+	var fire_normals: PackedVector3Array = fire_arrays[Mesh.ARRAY_NORMAL]
+	var fire_colors: PackedColorArray = fire_arrays[Mesh.ARRAY_COLOR] if fire_arrays[Mesh.ARRAY_COLOR] != null else PackedColorArray()
+	var explicit_white := fire_colors.size() == fire_vertices.size()
+	for color in fire_colors:
+		explicit_white = explicit_white and color.is_equal_approx(Color.WHITE)
+	check("fire alpha has explicit white vertex colors independent of previously drawn actors", explicit_white)
+	var winding_valid := true
+	var volume := 0.0
+	for triangle in range(0, fire_vertices.size(), 3):
+		var a := fire_vertices[triangle]
+		var b := fire_vertices[triangle + 1]
+		var c := fire_vertices[triangle + 2]
+		winding_valid = winding_valid and (b - a).cross(c - a).dot(fire_normals[triangle]) < -0.000001
+		volume += a.dot(b.cross(c)) / 6.0
+	check("density proxy has outward normals and clockwise exterior faces", winding_valid and volume < -0.01)
+	var stopped_fire := embers.fire_poses[3]
+	var stopped_clock: float = embers.fire_material.get_shader_parameter("fire_time")
+	embers.sync(0.0, burning)
+	check(
+		"paused fire keeps its surface attachment and animation pose",
+		embers.fire_poses[3].is_equal_approx(stopped_fire)
+		and is_equal_approx(float(embers.fire_material.get_shader_parameter("fire_time")), stopped_clock)
+	)
+	Prefs.reduce_motion = true
+	embers.sync(0.1, burning)
+	stopped_fire = embers.fire_poses[3]
+	stopped_clock = embers.fire_material.get_shader_parameter("fire_time")
+	embers.sync(1.0, burning)
+	check(
+		"reduce motion keeps crown fire visible and steady",
+		embers.embers.visible
+		and embers.fire_poses[3].is_equal_approx(stopped_fire)
+		and is_equal_approx(float(embers.fire_material.get_shader_parameter("fire_time")), stopped_clock)
+	)
 	embers.sync(0.1, [])
 	check(
 		"burnout or region change retires every flame",
@@ -92,3 +182,18 @@ func run() -> void:
 	Prefs.reduce_motion = previous_motion
 	root.queue_free()
 	await _frames(2)
+
+
+## 원본 삼각형의 첫 표면에 붙는지 확인해 잎 안쪽 가지로 되돌아가는 회귀를 잡는다.
+func _on_visible_surface(source: Mesh, point: Vector3, toward: Vector3) -> bool:
+	var faces := source.get_faces()
+	var start := point + toward * source.get_aabb().size.length() * 2.0
+	var nearest := INF
+	for index in range(0, faces.size(), 3):
+		var hit: Variant = Geometry3D.segment_intersects_triangle(
+			start, point - toward * 0.01, faces[index], faces[index + 1], faces[index + 2]
+		)
+		if hit != null:
+			var at: Vector3 = hit
+			nearest = minf(nearest, start.distance_to(at))
+	return is_finite(nearest) and absf(start.distance_to(point) - nearest) < 0.002

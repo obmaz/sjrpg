@@ -143,6 +143,8 @@ const device = args.device ?? 'desktop';
 const base = args.url ?? 'http://localhost:8765/3d/';
 const cls = args.class ?? (scene === 'cooldowns' || scene === 'preview3d' || args.preview3d === '1' || inspectionUrl(base).pathname.endsWith('/3d.html') ? 'mage' : 'warrior');
 const out = args.out ?? `shot-${scene}-${device}.png`;
+const startupTimeout=Number(args['startup-timeout']??90000);
+if(!Number.isFinite(startupTimeout)||startupTimeout<1000||startupTimeout>300000)throw new Error('--startup-timeout must be1000–300000 ms');
 const settle = Number(args.settle ?? 9000);
 if (!Number.isFinite(settle) || settle < 500 || settle > 30000) throw new Error('--settle must be 500–30000 ms');
 
@@ -175,6 +177,11 @@ diagnosticLog.on('Log.entryAdded', ({entry}) => {
     }
 });
 const launchURL = inspectionUrl(base);
+if (scene === 'tree_burning' && args['motion-frames']) launchURL.searchParams.set('tree_motion','1');
+if (args['pause-proof']) {
+ if(scene!=='tree_burning'||!args['motion-frames'])throw new Error('--pause-proof requires tree_burning --motion-frames');
+ launchURL.searchParams.set('ui_layout_review','1');
+}
 for (const [key, value] of new URLSearchParams(SCENES[scene])) launchURL.searchParams.set(key, value);
 for (const key of ['quality', 'zoom', 'lighting', 'at', 'atmosphere', 'preview3d', 'village_review']) {
     if (args[key]) launchURL.searchParams.set(key, args[key]);
@@ -296,7 +303,7 @@ if (scene === 'select') {
 if (args.start) await tap(...args.start.split(',').map(Number));
 else await tapEntry('start');
 try {
-    await page.waitForFunction(() => window.__sjrpgAdventureReady === true, null, { timeout: 90000 });
+    await page.waitForFunction(() => window.__sjrpgAdventureReady === true, null, { timeout: startupTimeout });
 } catch (error) {
     console.error('Adventure startup diagnostics:', logs.join('\n'));
     console.error('Entry state:', await page.evaluate(() => ({title:window.__sjrpgTitleReady,entry:window.__sjrpgEntryReady,stage:window.__sjrpgClassButtons?.stage,adventure:window.__sjrpgAdventureReady,probe:window.__sjrpg3dProbe})));
@@ -632,6 +639,32 @@ if (args.rotate === '1') {
         await capture({path: out.replace(/\.png$/, `-${label}.png`)});
     }
     console.log('Live native adventure rotation and return passed');
+}
+if (scene === 'tree_burning' && args['motion-frames']) {
+ const count=Number(args['motion-frames']);
+ if(!Number.isInteger(count)||count<2||count>12)throw new Error('--motion-frames must be2–12');
+ for(let frame=0;frame<count;frame++){
+  await page.waitForTimeout(180);
+  await capture({path:out.replace(/\.png$/,`-motion-${frame}.png`)});
+ }
+ if(args['pause-proof']) {
+  // The inspection observer only reads the real pause dialog and renderer clock.
+  await page.evaluate(()=>document.querySelector('canvas').blur());
+  await page.waitForFunction(()=>window.__sjrpg3dProbe?.paused && window.__sjrpgPanelLayout?.panel?.rect,null,{timeout:15000});
+  const frozen=await page.evaluate(()=>window.__sjrpg3dProbe.forest_tree_damage.fire_uniform_clock);
+  await page.waitForTimeout(500);
+  await capture({path:out.replace(/\.png$/, '-paused.png')});
+  const held=await page.evaluate(()=>window.__sjrpg3dProbe.forest_tree_damage.fire_uniform_clock);
+  if(Math.abs(held-frozen)>.00001)throw new Error('Actual pause advanced tree fire clock');
+  const panel=await page.evaluate(()=>window.__sjrpgPanelLayout);
+  const close=panel.panel.close,css=page.viewportSize();
+  await page.mouse.click((close[0]+close[2]/2)/panel.viewport[0]*css.width,(close[1]+close[3]/2)/panel.viewport[1]*css.height);
+  await page.waitForFunction(clock=>!window.__sjrpg3dProbe?.paused && window.__sjrpg3dProbe?.forest_tree_damage?.fire_uniform_clock>clock+.02,frozen,{timeout:15000});
+  const resumed=await page.evaluate(()=>window.__sjrpg3dProbe.forest_tree_damage.fire_uniform_clock);
+  await capture({path:out.replace(/\.png$/, '-resumed.png')});
+  console.log('TREE_PAUSE_PROOF '+JSON.stringify({frozen,held,resumed}));
+ }
+ console.log('TREE_MOTION_FRAMES '+count+'; gameplay lifetime held, actual visual clock advances');
 }
 const errors = logs.filter((l) => /error/i.test(l));
 if (args['state-out']) {

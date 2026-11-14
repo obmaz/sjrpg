@@ -21,10 +21,29 @@ func _buttons_fit(select: Control, dimensions: Vector2i) -> void:
 	for button: Button in controls:
 		if button.is_visible_in_tree() and (select._stage == "class" or not select.slot_buttons.has(button) and not select.delete_buttons.has(button)):
 			check("visible entry action remains safe and thumb-sized %s/%s" % [dimensions, button.text], bounds.encloses(button.get_global_rect()) and button.size.y >= 64.0 * unit)
-	check("entry Back target never overlaps the actual title rectangle", not select.back_button.get_global_rect().intersects(select.heading.get_global_rect()))
+	var back_clear: bool = not select.back_button.get_global_rect().intersects(select.heading.get_global_rect())
+	if not back_clear:
+		print("FAIL ENTRY_HEADER_DIAG ", JSON.stringify({
+			"view": str(dimensions), "stage": select._stage,
+			"back": str(select.back_button.get_global_rect()),
+			"back_min": str(select.back_button.get_combined_minimum_size()),
+			"back_custom_min": str(select.back_button.custom_minimum_size),
+			"back_font": select.back_button.get_theme_font_size("font_size"),
+			"heading": str(select.heading.get_global_rect()),
+			"heading_min": str(select.heading.get_combined_minimum_size())
+		}))
+	check("entry Back target never overlaps the actual title rectangle %s/%s" % [dimensions, select._stage], back_clear)
 	if select.showcase.is_visible_in_tree():
 		check("entry crops the original illustration without stretching it outside its clipped art region", bounds.encloses(select.showcase.get_global_rect()) and select.hero_art.stretch_mode in [TextureRect.STRETCH_KEEP_ASPECT_CENTERED, TextureRect.STRETCH_KEEP_ASPECT_COVERED] and select.showcase.clip_contents)
 	if select._stage == "class":
+		for label: Label in [select.subtitle, select.role, select.description, select.health, select.resource]:
+			check("small entry copy stays readable and fully visible after rotation",
+				label.get_theme_font_size("font_size") >= 14
+				and label.size.y + 1.5 >= label.get_combined_minimum_size().y
+				and label.get_visible_line_count() == label.get_line_count())
+		for stat: Label in [select.health, select.resource]:
+			check("starting stats fit their chip without cutting off the real value",
+				stat.size.x + 1.5 >= stat.get_combined_minimum_size().x)
 		for cls: String in ["warrior", "mage"]:
 			var tab: Button = select.class_buttons[cls]
 			var symbol: TextureRect = select.class_tab_icons[cls]
@@ -93,7 +112,7 @@ func run() -> void:
 	var emitted: Array[String] = []
 	select.chosen.connect(func(cls: String): emitted.append(cls))
 	var unchanged_class := GameState.hero_class
-	for dimensions in [Vector2i(720, 1280), Vector2i(1280, 720), Vector2i(540, 960), Vector2i(1600, 720), Vector2i(568, 320), Vector2i(720, 1280)]:
+	for dimensions in [Vector2i(720, 1280), Vector2i(1280, 720), Vector2i(540, 960), Vector2i(1600, 720), Vector2i(568, 320), Vector2i(320, 568), Vector2i(390, 844), Vector2i(844, 390), Vector2i(768, 896), Vector2i(896, 768), Vector2i(800, 800), Vector2i(344, 883), Vector2i(883, 344), Vector2i(720, 1280)]:
 		view.size = dimensions
 		await _frames(3)
 		for cls: String in ["warrior", "mage"]:

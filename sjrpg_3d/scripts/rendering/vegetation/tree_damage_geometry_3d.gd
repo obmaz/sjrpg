@@ -9,33 +9,68 @@ static var _fragments: Dictionary = {}
 
 const BREAK_PIECES := 6
 const FLAMES_PER_TREE := 8
+const FIRE_VIEW_SECTORS := 8
 
 
-## 줄기와 가지의 실제 정점에서 높이·방향이 다른 부착점을 고른다.
-static func fire_anchors(variant: int) -> PackedVector3Array:
-	if _fire_anchors.has(variant):
-		return _fire_anchors[variant]
+## 줄기2곳과 수관6곳에 카메라 쪽 첫 삼각형을 고른다.
+## 내부 목재에 붙이면 깊이 검사를 통과한 불도 잎 뒤에 묻힌다.
+## 방향별 실제 표면 교차는 로딩 때만 계산하고 모든 나무가 공유한다.
+static func fire_anchors(variant: int, sector: int = 1) -> PackedVector3Array:
+	var key := "%d:%d" % [variant, sector]
+	if _fire_anchors.has(key):
+		return _fire_anchors[key]
 	var wood := mesh(variant, "charred")
-	var points := TreeGeometry3D._points(wood)
-	var bounds := wood.get_aabb()
+	var crown: Mesh = TreeGeometry3D.mesh_library()[variant]["mesh"]
+	var angle := float(sector) * TAU / float(FIRE_VIEW_SECTORS)
+	var toward := Vector3(cos(angle), 0.70710678, sin(angle)).normalized()
+	var right := Vector3(toward.z, 0.0, -toward.x).normalized()
+	var levels := [0.20, 0.38, 0.48, 0.52, 0.63, 0.67, 0.79, 0.90]
+	var sides := [0.0, 0.0, -0.09, 0.09, -0.08, 0.08, -0.03, 0.02]
 	var anchors := PackedVector3Array()
 	for index in FLAMES_PER_TREE:
-		var angle := float(index) * 2.39996323
-		var level := 0.20 + float(index % 4) * 0.18
+		var source := wood if index < 2 else crown
+		var bounds := source.get_aabb()
 		var target := bounds.get_center()
-		target.y = bounds.position.y + bounds.size.y * level
-		target.x += cos(angle) * bounds.size.x * 0.38
-		target.z += sin(angle) * bounds.size.z * 0.38
-		var nearest := points[0]
-		var distance := INF
-		for point in points:
-			var score := point.distance_squared_to(target)
+		target.y = bounds.position.y + bounds.size.y * float(levels[index])
+		target += right * maxf(bounds.size.x, bounds.size.z) * float(sides[index])
+		anchors.append(_fire_surface_point(source, target, toward))
+	_fire_anchors[key] = anchors
+	return anchors
+
+
+static func _fire_surface_point(source: Mesh, target: Vector3, toward: Vector3) -> Vector3:
+	var reach := source.get_aabb().size.length() * 2.0
+	var start := target + toward * reach
+	var finish := target - toward * reach
+	var faces := source.get_faces()
+	var nearest := Vector3.ZERO
+	var distance := INF
+	for index in range(0, faces.size(), 3):
+		var hit: Variant = Geometry3D.segment_intersects_triangle(
+			start, finish, faces[index], faces[index + 1], faces[index + 2]
+		)
+		if hit != null:
+			var point: Vector3 = hit
+			var score := start.distance_squared_to(point)
 			if score < distance:
 				distance = score
 				nearest = point
-		anchors.append(nearest)
-	_fire_anchors[variant] = anchors
-	return anchors
+	if is_finite(distance):
+		return nearest
+	# 얇고 성긴 꼭대기의 광선이 빗나가면 가장 가까운 실제 정점으로 붙인다.
+	for point in TreeGeometry3D._points(source):
+		var score := point.distance_squared_to(start)
+		if score < distance:
+			distance = score
+			nearest = point
+	return nearest
+
+
+static func fire_view_sector(frame: Transform3D, camera_basis: Basis) -> int:
+	var local := frame.basis.inverse() * camera_basis.z
+	return posmod(
+		roundi(atan2(local.z, local.x) * float(FIRE_VIEW_SECTORS) / TAU), FIRE_VIEW_SECTORS
+	)
 
 
 ## 실제 GLB 삼각형·UV를 보존해 아래 줄기/윗줄기/네 방향 가지로 나눈다.

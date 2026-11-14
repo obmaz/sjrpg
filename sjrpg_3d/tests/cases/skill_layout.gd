@@ -9,7 +9,7 @@ func run() -> void:
 	GameState.new_game("mage")
 	var panel := SkillTreePanel.new()
 	view.add_child(panel)
-	for dimensions in [Vector2i(720, 1280), Vector2i(1280, 720), Vector2i(720, 1560)]:
+	for dimensions in [Vector2i(720, 1280), Vector2i(1280, 720), Vector2i(720, 1560), Vector2i(1280, 1100), Vector2i(1100, 1280)]:
 		view.size = dimensions
 		await _frames(5)
 		var bounds := Rect2(Vector2.ZERO, Vector2(dimensions))

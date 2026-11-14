@@ -24,19 +24,36 @@ func run() -> void:
 	view.add_child(root)
 	root.show_title()
 	await _frames(2)
-	for dimensions: Vector2i in [Vector2i(720, 1280), Vector2i(1280, 720)]:
+	for dimensions: Vector2i in [Vector2i(720, 1280), Vector2i(1280, 720), Vector2i(320, 568), Vector2i(768, 896), Vector2i(896, 768), Vector2i(800, 800), Vector2i(344, 883), Vector2i(883, 344), Vector2i(568, 320)]:
 		view.size = dimensions
 		await _frames(2)
 		var buttons: Array[Button] = [
 			root.current._btn_new_game, root.current._btn_load_game, root.current._btn_settings
 		]
 		var bounds := Rect2(Vector2.ZERO, Vector2(dimensions))
+		var design_unit := (
+			minf(dimensions.x / 720.0, dimensions.y / 1280.0)
+			if dimensions.y > dimensions.x
+			else minf(dimensions.x / 1080.0, dimensions.y / 720.0)
+		)
+		var touch_minimum := maxf(44.0, 64.0 * design_unit)
 		for index in buttons.size():
+			var button := buttons[index]
+			if not bounds.encloses(button.get_global_rect()) or button.size.y + 0.1 < touch_minimum:
+				print("FAIL TITLE_BUTTON_DIAG ", JSON.stringify({
+					"view": str(dimensions), "text": button.text,
+					"rect": str(button.get_global_rect()),
+					"minimum": str(button.get_combined_minimum_size()),
+					"custom_minimum": str(button.custom_minimum_size),
+					"expected_touch": touch_minimum,
+					"font": button.get_theme_font_size("font_size")
+				}))
 			check(
-				"title menu stays inside the viewport",
+				"title menu stays inside the viewport %s/%s" % [dimensions, button.text],
 				bounds.encloses(buttons[index].get_global_rect())
 			)
-			check("title menu keeps a usable touch height", buttons[index].size.y >= 64.0)
+			check("title menu keeps a usable touch height %s/%s" % [dimensions, button.text], buttons[index].size.y + 0.1 >= touch_minimum)
+			check("title menu copy remains readable", buttons[index].get_theme_font_size("font_size") >= 16)
 			if index > 0:
 				check(
 					"title menus do not overlap",
@@ -44,6 +61,22 @@ func run() -> void:
 						buttons[index].get_global_rect()
 					)
 				)
+		var previous: Label
+		for caption: Label in [root.current._chapter, root.current._title, root.current._subtitle]:
+			if not bounds.encloses(caption.get_global_rect()) or (previous != null and previous.get_global_rect().end.y > caption.get_global_rect().position.y):
+				print("FAIL TITLE_COPY_DIAG ", JSON.stringify({
+					"view": str(dimensions), "text": caption.text,
+					"rect": str(caption.get_global_rect()),
+					"minimum": str(caption.get_combined_minimum_size()),
+					"font": caption.get_theme_font_size("font_size"),
+					"previous": str(previous.get_global_rect()) if previous != null else ""
+				}))
+			check("title copy remains fully inside the real viewport %s/%s" % [dimensions, caption.text], bounds.encloses(caption.get_global_rect()))
+			check("title copy keeps every wrapped line visible", caption.get_visible_line_count() == caption.get_line_count())
+			if previous != null:
+				check("title copy does not overlap %s/%s" % [dimensions, caption.text], previous.get_global_rect().end.y <= caption.get_global_rect().position.y)
+			previous = caption
+		check("title subtitle and the first action remain separate", previous.get_global_rect().end.y <= buttons[0].get_global_rect().position.y)
 	root.current._btn_load_game.pressed.emit()
 	await _frames(2)
 	var menus := _panels(root)

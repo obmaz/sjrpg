@@ -31,7 +31,8 @@ func setup(presenter: WorldRenderer3D) -> TreeDamageRenderer3D:
 	for variant in TreeGeometry3D.PATHS.size():
 		for state in ["burning", "frozen", "charred", "ash", "felled"]:
 			renderer._occlusion.prepare_mesh(TreeDamageGeometry3D.mesh(variant, state))
-		TreeDamageGeometry3D.fire_anchors(variant)
+		for sector in TreeDamageGeometry3D.FIRE_VIEW_SECTORS:
+			TreeDamageGeometry3D.fire_anchors(variant, sector)
 		for state in ["charred", "frozen"]:
 			for piece: Mesh in TreeDamageGeometry3D.fragments(variant, state):
 				if piece != null:
@@ -140,6 +141,29 @@ func snapshot() -> Dictionary:
 		"breaking_trees": breakup.active_count(),
 		"breaking_tree_limit": TreeBreakup3D.LIMIT,
 		"flames": debris.embers.multimesh.visible_instance_count,
+		"fire_clock": debris._time,
+		"fire_buffer_writes": debris.fire_buffer_writes,
+		"fire_slot_updates": debris.fire_slot_updates,
+		"fire_uniform_clock": debris.fire_material.get_shader_parameter("fire_time"),
+		"fire_density_steps": debris.fire_material.get_shader_parameter("density_steps"),
+		"fire_visible": debris.embers.visible,
+		"fire_first_custom": _fire_first_custom(),
+		"fire_first_position": _fire_first_position(),
+		"fire_bounds": str(debris.embers.multimesh.custom_aabb),
 		"emitted": debris.emitted,
 		"revision": _revision
 	}
+
+
+func _fire_first_custom() -> Array:
+	if debris.embers.multimesh.visible_instance_count == 0:
+		return []
+	var value := debris.embers.multimesh.get_instance_custom_data(0)
+	return [value.r, value.g, value.b, value.a]
+
+
+func _fire_first_position() -> Array:
+	if debris.embers.multimesh.visible_instance_count == 0:
+		return []
+	var value := debris.embers.multimesh.get_instance_transform(0).origin
+	return [value.x, value.y, value.z]
