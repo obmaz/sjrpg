@@ -30,6 +30,8 @@
 
 ## 환경 준비
 
+CI용 Python 의존성은 `python3 -m pip install -r tools/requirements-ci.txt`로 설치합니다. YAML 검사와 자산 이미지 검사의 PyYAML·Pillow 버전을 로컬과 GitHub에서 함께 고정합니다.
+
 `tools/setup_env.sh`가 새 클론·클라우드 환경 준비의 단일 출처입니다. `.godot-version`의 Godot를 릴리스의 SHA-512로 검증해 `~/.godot-tools/godot-<버전>`에 설치하고 두 프로젝트의 `.godot` 임포트 캐시를 만듭니다(3D는 `sjrpg_3d/tools/import_project.sh`의 텍스처 정책 경계를 그대로 사용). 설치 위치가 각 프로젝트의 `tools/godot.sh`가 찾는 곳과 같아서, CI가 쓰는 `tools/setup_godot.sh`로 설치한 환경과 서로 호환되고 이미 있으면 다운로드를 건너뜁니다.
 
 웹 빌드(`tools/check.sh --export`)에는 `--templates web`(1.3 GB), 포털·웹 셸 검사에는 `--npm`, APK용 템플릿에는 `--templates android`(필요한 항목만 Range로 수신하고, 실패하면 SHA-512로 검증하는 전체 묶음으로 대체)를 더합니다. 템플릿 다운로드는 간헐적 504로 실패할 수 있어 다시 실행하면 이어서 성공하기도 합니다. JDK·Android SDK는 설치하지 않으며 APK 요청이 있을 때 `sjrpg_3d/tools/setup_android.sh`가 맡습니다. `--check`는 아무것도 설치하지 않고 준비 상태만 보고합니다. 에이전트별 환경 설정에는 이 스크립트를 호출하는 한 줄만 두고 설치 절차를 복사하지 않습니다.

@@ -12,6 +12,8 @@ tools/setup_env.sh --project=3d --templates web --npm
 python3 -m pip install -r tools/requirements-ci.txt
 ```
 
+이 목록은 워크플로 YAML 검사에 쓰는 PyYAML과 3D 자산 이미지 검사에 쓰는 Pillow를 함께 고정합니다. GitHub의 새 Python 환경에서도 같은 목록을 설치합니다.
+
 푸시 전에 GitHub와 같은 명령을 실행합니다.
 
 ```sh
