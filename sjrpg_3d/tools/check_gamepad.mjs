@@ -79,7 +79,7 @@ for(const profile of [{name:'portrait-mage-continue',width:390,height:844,dpr:1,
  }
  function record(label){c.checks.push(label);console.log('GAMEPAD_CHECK_PASS '+JSON.stringify({profile:profile.name,label}));}
  async function capture(suffix){
-  const name=profile.name+'-'+suffix,data=await page.screenshot({type:'jpeg',quality:78,scale:'css'});
+  const name=profile.name+'-'+suffix,data=await page.screenshot({type:'jpeg',quality:78,scale:'css',timeout:90000});
   await writeFile(path.join(out,name+'.jpg'),data);const b=data.toString('base64');
   console.log('SJ_GAMEPAD_IMAGE_BEGIN '+name+' image/jpeg '+b.length);
   for(let i=0;i<b.length;i+=16384)console.log('SJ_GAMEPAD_IMAGE_CHUNK '+name+' '+b.slice(i,i+16384));
@@ -100,10 +100,15 @@ for(const profile of [{name:'portrait-mage-continue',width:390,height:844,dpr:1,
   await wait(s=>s.review?.ready&&s.title&&s.entry,'isolated actual title',90000);
   await page.evaluate(()=>window.__sjrpgVirtualXbox.connect());
   await wait(s=>s.review.pad.active_device===0&&s.review.pad.armed,'real Godot detects virtual standard device');
-  await tap(0);await wait(s=>s.review.screen==='selection'&&s.ui?.stage==='slots','A opens actual save selection');
-  let s=await wait(s=>s.review.navigation.focus_inside,'save focus');focused(s);
+  if(!profile.newGame){
+   // 연결만으로 터치 포커스를 빼앗지 않는다. 실제 패드 입력으로 탐색을 시작한다.
+   await tap(13);
+   await focusTo(s=>s.review.navigation.focus_text==='모험 불러오기','title load adventure');
+  }
+  await tap(0);await wait(s=>s.review.screen==='selection'&&s.ui?.stage===(profile.newGame?'class':'slots'),'A opens the selected title action');
+  let s=await wait(s=>s.review.navigation.focus_inside,'entry focus');focused(s);
   const originalFiles=s.review.file_hashes;
-  await focusTo(s=>s.ui.focus==='slot2','empty save2');await tap(0);
+  if(!profile.newGame){await focusTo(s=>s.ui.focus==='slot2','empty save2');await tap(0);}
   await wait(s=>s.ui.stage==='class'&&s.ui.selected_slot===2,'A selects actual empty save');
   await focusTo(s=>s.ui.focus==='warrior','warrior class');await tap(0);
   await wait(s=>s.ui.selected_class==='warrior','A chooses actual warrior');

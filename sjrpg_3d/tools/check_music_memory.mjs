@@ -69,7 +69,10 @@ async function review(){
   page=await context.newPage();page.on('pageerror',error=>report.errors.push(String(error)));page.on('crash',()=>report.errors.push('page-crash'));
   page.on('console',message=>{if(message.type()==='error'||/SCRIPT ERROR|ERROR:|INVALID_(OPERATION|VALUE|ENUM)/.test(message.text()))report.errors.push(message.text());});
   const url=inspectionUrl(base);url.searchParams.set('quality',profile.quality);await page.goto(url.href,{waitUntil:'domcontentloaded'});
-  await wait(s=>s.title&&!s.ready,'normal title');token=(await read()).token;await page.locator('#entry-start').click();
+  await wait(s=>s.title&&!s.ready,'normal title');token=(await read()).token;
+  const titleStart=await page.evaluate(()=>window.__sjrpgTitleButtons?.new_game);
+  if(titleStart)await page.mouse.click(titleStart[0]*profile.width,titleStart[1]*profile.height);
+  else await page.locator('#entry-start').click();
   let selected=await wait(s=>s.entry?.stage==='slots'||s.entry?.stage==='class','normal selection');
   if(selected.entry.stage==='slots'){const empty=selected.entry.slots_state?.find(slot=>!slot.occupied);assert(empty,'fresh browser needs a normal empty slot');await entry('slot'+empty.slot);selected=await wait(s=>s.entry?.selected_slot===empty.slot&&s.entry?.stage==='class','normal new-character selection');}
   assert.equal(selected.entry.stage,'class');await entry('mage');await entry('start');

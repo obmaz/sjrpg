@@ -82,7 +82,7 @@ async function skillTree(label){
  await tapHud('bar_skills');let s=await wait(s=>s.ui?.panel?.nodes?.length>0&&s.ui.paused,'real skill tree');
  await capture(label+'-skills',true);
  const p=s.ui.panel,bounds={x:0,y:0,w:s.window[0],h:s.window[1]};verify(()=>assert(inside(bounds,css(s,p.rect)),label+' panel bounds'),label);
- verify(()=>assert(css(s,p.title).y+css(s,p.title).h<=css(s,p.subtitle).y+1,label+' subtitle spacing'),label);
+ if(p.subtitle_visible&&p.subtitle_text)verify(()=>assert(css(s,p.title).y+css(s,p.title).h<=css(s,p.subtitle).y+1,label+' subtitle spacing'),label);
  const clip=css(s,p.tree_clip);assert(clip.w>40&&clip.h>40,label+' tree scroll viewport');
  const nodes=p.nodes.filter(n=>inside(clip,css(s,n.rect)));
  assert(nodes.length>0,label+' visible skill nodes');for(const node of nodes){const hit=css(s,node.hit_rect);if(!baseline)assert(hit.w>=43.5&&hit.h>=43.5,label+' 44 CSS skill target '+node.id);}
@@ -123,7 +123,9 @@ async function boot(cls,params={},dpr=1){
  for(const[k,v]of Object.entries(params))url.searchParams.set(k,v);
  await page.goto(url.href,{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>window.__sjrpgTitleReady&&window.__sjrpgEntryReady,null,{timeout:90000});
- await page.locator('#entry-start').click();
+ const titleStart=await page.evaluate(()=>window.__sjrpgTitleButtons?.new_game);
+ if(titleStart){const size=page.viewportSize();await page.mouse.click(titleStart[0]*size.width,titleStart[1]*size.height);}
+ else await page.locator('#entry-start').click();
  await page.waitForFunction(()=>window.__sjrpgClassButtons?.stage==='class',null,{timeout:30000});
  for(const key of[cls,'start']){const data=await page.evaluate(key=>({p:window.__sjrpgClassButtons[key],w:innerWidth,h:innerHeight}),key);await page.mouse.click(data.p[0]*data.w,data.p[1]*data.h);await page.waitForTimeout(300);}
  await wait(s=>s.ui?.native&&s.native?.native_active&&s.native?.physics_ticks>0,'actual native adventure',90000);
