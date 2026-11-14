@@ -433,13 +433,13 @@ func _build_detail() -> void:
 func _fit_detail_type() -> void:
 	if _detail == null:
 		return
-	var minimum := ceili(14.0 * graph_css_scale())
 	for node in _detail.find_children("*", "Control", true, false):
 		var control := node as Control
 		if not (control is Label or control is Button):
 			continue
 		if not control.has_meta("woodland_base_font"):
 			control.set_meta("woodland_base_font", control.get_theme_font_size("font_size"))
+		var minimum := ceili((16.0 if control is Button else 14.0) * graph_css_scale())
 		var pixels := maxi(int(control.get_meta("woodland_base_font")), minimum)
 		# The shared frame may fit its widgets after this custom tree has fitted.
 		# Preserve this tree's measured minimum through that later pass as well.
@@ -456,7 +456,7 @@ func _fit_detail_type() -> void:
 				button.set_meta("woodland_base_minimum", button.custom_minimum_size)
 			var original: Vector2 = button.get_meta("woodland_base_minimum")
 			# Containers align child rectangles to whole logical pixels. Round up
-			# before layout so a fractional 44dp target cannot become 43.9dp.
+			# before layout so a fractional 56dp target cannot become 55.9dp.
 			var touch := ceilf(UiKit.ACTION_TOUCH_DP * graph_css_scale())
 			button.custom_minimum_size = Vector2(maxf(original.x, touch), maxf(original.y, touch))
 			button.clip_text = false

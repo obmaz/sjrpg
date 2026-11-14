@@ -92,6 +92,7 @@ try {
   for(const c of p.controls) {
    if(!area(c.visible_rect))continue;
    if(c.text && c.font/scale<13.99)issues.push(`text below 14 display pixels: ${c.text} (${c.font/scale})`);
+   if(c.kind==='button' && c.text && !c.input_ignored && c.font/scale<15.99)issues.push(`button text below 16 display pixels: ${c.text}`);
    if(c.kind==='button' && !c.disabled && !c.input_ignored && (c.rect[2]/scale<55.9 || c.rect[3]/scale<55.9))issues.push(`target below 56 display pixels: ${c.text||c.key||c.path}`);
    // 스크롤 탭의 원래 사각형은 클립 밖으로 이어져도 된다. 실제 그려진 범위를 검사한다.
    const visible=c.visible_rect;

@@ -80,7 +80,8 @@ func run() -> void:
 			if control is Label or control is Button:
 				check("actual skill description/info/effects/slot controls retain 14 display pixels", float(control.get_theme_font_size("font_size")) / panel.test_css_scale >= 14.0)
 			if control is Button:
-				check("real learn and equip buttons retain 44 CSS pixel targets", control.size.x / panel.test_css_scale >= 44.0 and control.size.y / panel.test_css_scale >= 44.0, "view=%s action=%s size=%s minimum=%s scale=%s" % [dimensions, (control as Button).text, control.size, control.custom_minimum_size, panel.test_css_scale])
+				check("custom skill actions preserve the shared 16dp type minimum", float(control.get_theme_font_size("font_size")) / panel.test_css_scale >= 16.0)
+				check("real learn and equip buttons retain 56 CSS pixel targets", control.size.x / panel.test_css_scale >= 56.0 and control.size.y / panel.test_css_scale >= 56.0, "view=%s action=%s size=%s minimum=%s scale=%s" % [dimensions, (control as Button).text, control.size, control.custom_minimum_size, panel.test_css_scale])
 				check("skill action labels wrap instead of being truncated", not (control as Button).clip_text and (control as Button).text_overrun_behavior == TextServer.OVERRUN_NO_TRIMMING)
 		var clipping := panel._detail.get_parent() as ScrollContainer
 		check("larger skill text wraps within the real detail scroll viewport", panel._detail.size.x <= clipping.size.x + 1.0)
