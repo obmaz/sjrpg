@@ -1,6 +1,6 @@
 class_name UiKit
 extends RefCounted
-## 숲빛·차콜 면과 얇은 청동 테두리를 공유하는 메뉴 스타일.
+## 생성형 청동 장식·슬레이트 원화와 실제 콘텐츠 안전 여백을 공유하는 메뉴 스타일.
 
 const BOLD_FONT := preload("res://assets/fonts/NanumGothic-ExtraBold.ttf")
 ## Panels raise this so text stays readable on phones (720-wide portrait ≈ 0.57 css px per unit).
@@ -8,10 +8,10 @@ static var boost := 1.0
 const GOLD := Color("c9af7c")
 const INK := Color("211c16")
 const TEXT := Color("e9dfc9")
-const MUTED := Color("b7b6a8")
-const SURFACE := Color("17211e")
-const SURFACE_RAISED := Color("24312a")
-const EDGE := Color("77664b")
+const MUTED := Color("b8ad97")
+const SURFACE := Color("201e1a")
+const SURFACE_RAISED := Color("2d2820")
+const EDGE := Color("6c5940")
 
 
 ## 실제 콘텐츠 경계와 동일한 얇은 금속 테두리. 원화 모서리를 늘리지 않는다.
@@ -75,36 +75,271 @@ static func texture_stylebox(path: String, left: int, top: int, right: int, bott
 	return box
 
 
-## 얇은 청동 테두리와 숲빛 면으로 선택·주 동작을 구분한다.
-static func style_button(button: Button, primary := false, selected := false) -> void:
-	var face := Color("344537") if primary else (Color("293a31") if selected else Color("202a25"))
-	var edge := GOLD if primary or selected else EDGE
+## 원화의 픽셀 자르기와 표시 배율을 분리해 장식을 콘텐츠 위로 늘리지 않는다.
+class GeneratedSkin:
+	extends StyleBox
+	const ROOT := "res://assets/ui/woodland_panels/"
+	const FRAME := ROOT + "panel_ornate_frame.png"
+	const SLATE := ROOT + "panel_slate_bg.png"
+	const GOLD_BUTTON := ROOT + "button_gold_primary.png"
+	const BRONZE_BUTTON := ROOT + "button_bronze_secondary.png"
+	const COMPACT := ROOT + "frame_bronze_9patch.png"
+	const CARD := ROOT + "slot_card_normal.png"
+	const SELECTED_CARD := ROOT + "slot_card_selected.png"
+	const DIVIDER := ROOT + "divider_ornate.png"
+	static var _textures: Dictionary = {}
+	var kind := "frame"
+	var source_path := FRAME
+	var unit := 1.0
+	var tint := Color.WHITE
+	var primary := false
+	var selected := false
+	var button_compact := false
+	var button_height := 0.0
+	var _last_drawn_source := ""
+
+	func configure(role: String, is_primary := false, is_selected := false) -> void:
+		kind = role
+		primary = is_primary
+		selected = is_selected
+		match kind:
+			"frame": source_path = FRAME
+			"card": source_path = SELECTED_CARD if selected else CARD
+			"button": source_path = GOLD_BUTTON if primary else (SELECTED_CARD if selected else BRONZE_BUTTON)
+			"divider": source_path = DIVIDER
+			_: source_path = COMPACT
+		_apply_margins()
+
+	func set_unit(value: float) -> void:
+		if is_equal_approx(unit, value):
+			return
+		unit = value
+		_apply_margins()
+		emit_changed()
+
+	func _apply_margins() -> void:
+		var horizontal := 34.0 if kind == "frame" else 16.0
+		var vertical := 34.0 if kind == "frame" else 12.0
+		if kind == "button":
+			horizontal = 8.0 if button_compact else (button_height * 0.55 / unit if button_height > 0.0 else 24.0)
+			vertical = 8.0 if button_compact else (button_height * 0.24 / unit if button_height > 0.0 else 10.0)
+		elif kind == "compact":
+			horizontal = 10.0
+			vertical = 8.0
+		elif kind == "divider":
+			horizontal = 0.0
+			vertical = 0.0
+		# setter가 minimum-size/resized 신호를 내기 전에 네 방향의 값을 확정한다.
+		var margin_x := horizontal * unit
+		var margin_y := vertical * unit
+		content_margin_left = margin_x
+		content_margin_right = margin_x
+		content_margin_top = margin_y
+		content_margin_bottom = margin_y
+
+	func set_button_geometry(height: float, compact: bool) -> void:
+		if is_equal_approx(button_height, height) and button_compact == compact:
+			return
+		button_height = height
+		button_compact = compact
+		_apply_margins()
+		emit_changed()
+
+	static func _texture(path: String) -> Texture2D:
+		if not _textures.has(path):
+			_textures[path] = load(path) as Texture2D
+		return _textures[path]
+
+	func _piece(item: RID, path: String, to: Rect2, from: Rect2) -> void:
+		if to.size.x <= 0.0 or to.size.y <= 0.0:
+			return
+		var texture := _texture(path)
+		RenderingServer.canvas_item_add_texture_rect_region(item, to, texture.get_rid(), from, tint)
+
+	func _nine(item: RID, rect: Rect2, path: String, cut: float, corner: float,
+			edge := -1.0) -> void:
+		var texture := _texture(path)
+		var source := texture.get_size()
+		corner = minf(corner, minf(rect.size.x, rect.size.y) * 0.5)
+		var border := corner if edge < 0.0 else minf(edge, corner)
+		# 모서리는 정사각 비율을 유지하고 얇은 변만 늘린다.
+		for x: int in 2:
+			for y: int in 2:
+				_piece(item, path,
+					Rect2(rect.position + Vector2((rect.size.x - corner) * x,
+						(rect.size.y - corner) * y), Vector2.ONE * corner),
+					Rect2(Vector2((source.x - cut) * x, (source.y - cut) * y), Vector2.ONE * cut))
+		for side: int in 2:
+			_piece(item, path, Rect2(rect.position + Vector2(corner, (rect.size.y - border) * side),
+				Vector2(rect.size.x - 2.0 * corner, border)),
+				Rect2(Vector2(cut, (source.y - (44.0 if kind == "frame" else cut)) * side),
+					Vector2(source.x - 2.0 * cut, 44.0 if kind == "frame" else cut)))
+			_piece(item, path, Rect2(rect.position + Vector2((rect.size.x - border) * side, corner),
+				Vector2(border, rect.size.y - 2.0 * corner)),
+				Rect2(Vector2((source.x - (44.0 if kind == "frame" else cut)) * side, cut),
+					Vector2(44.0 if kind == "frame" else cut, source.y - 2.0 * cut)))
+
+	func _band(item: RID, rect: Rect2, path: String, cap: float, middle: float) -> void:
+		var source := _texture(path).get_size()
+		var scale := rect.size.y / source.y
+		var end_width := cap * scale
+		var middle_width := middle * scale
+		var wing := maxf(0.0, (rect.size.x - 2.0 * end_width - middle_width) * 0.5)
+		var center_left := (source.x - middle) * 0.5
+		var source_x := [0.0, cap, center_left, center_left + middle, source.x - cap]
+		var source_w := [cap, center_left - cap, middle, center_left - cap, cap]
+		var target_w := [end_width, wing, middle_width, wing, end_width]
+		var cursor := rect.position.x
+		for index: int in 5:
+			_piece(item, path, Rect2(Vector2(cursor, rect.position.y),
+				Vector2(target_w[index], rect.size.y)),
+				Rect2(Vector2(source_x[index], 0), Vector2(source_w[index], source.y)))
+			cursor += target_w[index]
+
+	func drawn_source_path() -> String:
+		if _last_drawn_source != "":
+			return _last_drawn_source
+		if kind == "button" and button_compact and not (selected and not primary):
+			return COMPACT
+		return source_path
+
+	func _draw(item: RID, rect: Rect2) -> void:
+		_last_drawn_source = source_path
+		if kind == "frame":
+			# 메인 면도 같은 원화의 청회색 균열 슬레이트를 사용한다. 장식 없는 내부만 늘린다.
+			_piece(item, FRAME, rect.grow(-10.0 * unit), Rect2(144, 64, 363, 278))
+			_nine(item, rect, source_path, 144.0, 42.0 * unit, 42.0 * unit * 44.0 / 144.0)
+		elif kind == "card":
+			var texture := _texture(source_path)
+			_piece(item, source_path, rect.grow(-8.0 * unit),
+				Rect2(Vector2.ONE * 36.0, texture.get_size() - Vector2.ONE * 72.0))
+			_nine(item, rect, source_path, 36.0, 12.0 * unit)
+		elif kind == "button" and selected and not primary:
+			# 선택 탭은 원래 금빛 선택 카드로 구분한다. 작은 옵션도 금속 띠를 보존한다.
+			var texture := _texture(SELECTED_CARD)
+			var corner := (6.0 if button_compact else 12.0) * unit
+			_piece(item, SELECTED_CARD, rect.grow(-corner * 0.67),
+				Rect2(Vector2.ONE * 36.0, texture.get_size() - Vector2.ONE * 72.0))
+			_nine(item, rect, SELECTED_CARD, 36.0, corner)
+		elif kind == "button" and not button_compact and rect.size.x >= rect.size.y * 1.9:
+			_band(item, rect, source_path, 110.0, 80.0)
+		elif kind == "divider":
+			_band(item, rect, source_path, 16.0, 209.0)
+		else:
+			_last_drawn_source = COMPACT
+			# 좁은 옵션과 닫기는 긴 버튼의 마름모 끝을 억지로 압축하지 않는다.
+			var slate := _texture(SLATE)
+			var shade := Color(0.78, 0.7, 0.52) if selected or primary else Color.WHITE
+			RenderingServer.canvas_item_add_texture_rect(item, rect.grow(-2.0 * unit),
+				slate.get_rid(), true, tint * shade)
+			_nine(item, rect, COMPACT, 8.0, 5.0 * unit)
+
+
+static func frame_style() -> GeneratedSkin:
+	var skin := GeneratedSkin.new()
+	skin.configure("frame")
+	return skin
+
+
+static func card_style(selected := false, dimmed := false) -> GeneratedSkin:
+	var skin := GeneratedSkin.new()
+	skin.configure("card", false, selected)
+	if dimmed:
+		skin.tint = Color(0.8, 0.8, 0.8)
+	return skin
+
+
+static func style_button(button: Button, primary := false, selected := false, compact := false) -> void:
+	var already_fitting := bool(button.get_meta("ui_generated_fitting", false))
+	button.set_meta("ui_generated_fitting", true)
+	button.set_meta("ui_compact_button", compact)
 	for state: String in ["normal", "hover", "pressed", "disabled", "focus"]:
-		var box := panel_style(face, edge, 6)
-		box.content_margin_left = 18
-		box.content_margin_right = 18
-		box.content_margin_top = 12
-		box.content_margin_bottom = 12
+		var skin := GeneratedSkin.new()
+		skin.configure("button", primary, selected)
 		if state == "pressed":
-			box.bg_color = face.darkened(0.2)
+			skin.tint = Color(0.75, 0.75, 0.75)
 		elif state == "disabled":
-			box.bg_color = SURFACE
-			box.border_color = EDGE.darkened(0.35)
-		button.add_theme_stylebox_override(state, box)
+			skin.tint = Color(0.5, 0.5, 0.5)
+		button.add_theme_stylebox_override(state, skin)
 	for state: String in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
-		button.add_theme_color_override(state, TEXT)
-	button.add_theme_color_override("font_disabled_color", Color("90988c"))
+		button.add_theme_color_override(state, Color("fff2d1") if primary or selected else TEXT)
+	button.add_theme_color_override("font_disabled_color", Color("a69e8c"))
+	if not button.has_meta("ui_generated_fit_hook"):
+		button.set_meta("ui_generated_fit_hook", true)
+		button.resized.connect(func(): _refit_generated(button))
+	button.set_meta("ui_generated_fitting", already_fitting)
+	_request_generated_refit(button)
+
+
+static func _request_generated_refit(control: Control) -> void:
+	if bool(control.get_meta("ui_generated_refit_pending", false)):
+		return
+	control.set_meta("ui_generated_refit_pending", true)
+	_flush_generated_refit.bind(weakref(control)).call_deferred()
+
+
+static func _flush_generated_refit(reference: WeakRef) -> void:
+	var control := reference.get_ref() as Control
+	if control == null or control.is_queued_for_deletion():
+		return
+	control.set_meta("ui_generated_refit_pending", false)
+	_refit_generated(control)
+
+
+static func _refit_generated(control: Control) -> void:
+	var scale := 1.0
+	if control.has_meta("ui_generated_scale"):
+		scale = float(control.get_meta("ui_generated_scale"))
+	else:
+		scale = UiMetrics.units_per_display_pixel(control.get_viewport())
+	fit_generated(control, scale)
+
+
+static func fit_generated(control: Control, scale: float) -> void:
+	control.set_meta("ui_generated_scale", scale)
+	if bool(control.get_meta("ui_generated_fitting", false)):
+		_request_generated_refit(control)
+		return
+	control.set_meta("ui_generated_fitting", true)
+	var names: Array = ["normal", "hover", "pressed", "disabled", "focus"] if control is Button else ["panel"]
+	var button_height := 0.0
+	var compact := false
+	if control is Button:
+		var normal := control.get_theme_stylebox("normal") as GeneratedSkin
+		if normal != null:
+			compact = bool(control.get_meta("ui_compact_button", false))
+			if control.size.x > 0.0 and control.size.y > 0.0:
+				compact = compact or control.size.x < control.size.y * 1.9
+			var text_height := maxf(0.0, control.get_minimum_size().y - normal.get_content_margin(SIDE_TOP) - normal.get_content_margin(SIDE_BOTTOM))
+			# 긴 라벨이 줄바꿈되어도 글자를 원화의 위아래 금속 띠 안쪽에 둔다.
+			button_height = maxf(44.0 * scale, text_height / 0.52) if not compact else 44.0 * scale
+			control.custom_minimum_size.y = maxf(control.custom_minimum_size.y, ceilf(button_height))
+	var face_height := maxf(button_height, control.size.y)
+	for name: String in names:
+		if control.has_theme_stylebox_override(name):
+			var skin := control.get_theme_stylebox(name) as GeneratedSkin
+			if skin != null:
+				skin.set_unit(scale)
+				if skin.kind == "button":
+					skin.set_button_geometry(face_height, compact)
+	if control.has_meta("ui_divider_skin"):
+		var divider_skin: GeneratedSkin = control.get_meta("ui_divider_skin")
+		divider_skin.set_unit(scale)
+		control.custom_minimum_size.y = 14.0 * scale
+		control.queue_redraw()
+	control.set_meta("ui_generated_fitting", false)
 
 
 static func divider() -> Control:
-	var separator := HSeparator.new()
-	var style := StyleBoxLine.new()
-	style.color = Color("5c5946")
-	style.thickness = 1
-	separator.add_theme_stylebox_override("separator", style)
-	separator.custom_minimum_size.y = 2
-	separator.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return separator
+	var divider := Control.new()
+	var skin := GeneratedSkin.new()
+	skin.configure("divider")
+	divider.set_meta("ui_divider_skin", skin)
+	divider.custom_minimum_size.y = 14.0
+	divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	divider.draw.connect(func(): skin.draw(divider.get_canvas_item(), Rect2(Vector2.ZERO, divider.size)))
+	divider.resized.connect(divider.queue_redraw)
+	return divider
 
 
 static func cover(texture: Texture2D) -> TextureRect:

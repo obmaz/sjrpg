@@ -50,10 +50,14 @@ func _exit_tree() -> void:
 func _panel_snapshot(panel: PanelFrame) -> Dictionary:
 	var controls: Array = []
 	var scrolls: Array = []
+	var switches: Array = []
 	for child: Node in panel.find_children("*", "Control", true, false):
 		var control := child as Control
 		if not control.is_visible_in_tree():
 			continue
+		if control.name == "SwitchPill":
+			switches.append({"rect": _rect(control.get_global_rect()), "on": bool(control.get("on")),
+				"font": int(control.get("font_pixels"))})
 		if control is ScrollContainer:
 			var container := control as ScrollContainer
 			var bar := container.get_v_scroll_bar()
@@ -81,12 +85,17 @@ func _panel_snapshot(panel: PanelFrame) -> Dictionary:
 		var words := str(control.get("text"))
 		var font_size := control.get_theme_font_size("font_size")
 		var font := control.get_theme_font("font")
+		var inner := _content_rect(control, "normal") if control is Button else box
+		var skin: UiKit.GeneratedSkin = control.get_theme_stylebox("normal") as UiKit.GeneratedSkin if control is Button else null
 		controls.append({
 			"path": str(panel.get_path_to(control)), "kind": "button" if control is Button else "label",
 			"text": words, "rect": _rect(box), "clip": _rect(clip),
 			"visible_rect": _rect(box.intersection(clip)), "font": font_size,
 			"minimum": _vector(control.get_combined_minimum_size()),
 			"text_width": font.get_string_size(words, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x,
+			"content_rect": _rect(inner),
+			"text_height": font.get_multiline_string_size(words, HORIZONTAL_ALIGNMENT_LEFT, maxf(1.0, inner.size.x), font_size).y,
+			"art_source": skin.drawn_source_path() if skin != null else "",
 			"wrap": int(control.get("autowrap_mode")),
 			"in_body": panel.body_holder.is_ancestor_of(control),
 			"in_footer": panel.footer.is_ancestor_of(control),
@@ -96,13 +105,22 @@ func _panel_snapshot(panel: PanelFrame) -> Dictionary:
 	return {
 		"id": panel.get_instance_id(), "type": panel.get_script().resource_path,
 		"title_text": panel.title_label.text, "rect": _rect(panel._panel.get_global_rect()),
+		"content_rect": _rect(_content_rect(panel._panel, "panel")),
 		"header": _rect(panel._header.get_global_rect()),
 		"title": _rect(panel.title_label.get_global_rect()),
 		"close": _rect(panel._header.get_child(-1).get_global_rect()),
 		"body_holder": _rect(panel.body_holder.get_global_rect()),
 		"body_scroll": _rect(panel.scroll.get_global_rect()), "body": _rect(panel.body.get_global_rect()),
-		"footer": _rect(panel.footer.get_global_rect()), "controls": controls, "scrolls": scrolls
+		"footer": _rect(panel.footer.get_global_rect()), "controls": controls, "scrolls": scrolls,
+		"switches": switches
 	}
+
+
+func _content_rect(control: Control, name: String) -> Rect2:
+	var style := control.get_theme_stylebox(name)
+	var box := control.get_global_rect()
+	return box.grow_individual(-style.get_content_margin(SIDE_LEFT), -style.get_content_margin(SIDE_TOP),
+		-style.get_content_margin(SIDE_RIGHT), -style.get_content_margin(SIDE_BOTTOM))
 
 
 func _vector(value: Vector2) -> Array:

@@ -43,7 +43,7 @@ func _ready() -> void:
 
 func _bar(title: String, sub: String, ratio: float, tag: String) -> Control:
 	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UiKit.panel_style(UiKit.SURFACE, UiKit.EDGE, 12))
+	card.add_theme_stylebox_override("panel", UiKit.card_style())
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 6)
 	card.add_child(col)

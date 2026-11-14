@@ -60,7 +60,7 @@ func _ready() -> void:
 	_tree_scroll.add_child(_tree)
 
 	_detail_panel = PanelContainer.new()
-	_detail_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	_detail_panel.add_theme_stylebox_override("panel", UiKit.card_style())
 	_detail_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_detail_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_layout_box.add_child(_detail_panel)

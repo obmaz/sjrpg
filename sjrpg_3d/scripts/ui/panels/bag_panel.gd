@@ -176,9 +176,7 @@ func _overview() -> Control:
 func _gear_row(g: Gear, offer: bool, price := 0) -> Control:
 	var expanded := (selected_offer == "gear-%d" % g.base["index"]) if offer else selected == g
 	var card := PanelContainer.new()
-	var style := UiKit.panel_style(UiKit.SURFACE_RAISED if expanded else UiKit.SURFACE, UiKit.GOLD if expanded else UiKit.EDGE, 12)
-	style.content_margin_top = 8
-	style.content_margin_bottom = 8
+	var style := UiKit.card_style(expanded)
 	card.add_theme_stylebox_override("panel", style)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 8)
@@ -429,7 +427,7 @@ func _build_shop() -> void:
 func _potion_offer(id: String, title: String, sub: String, price: int, maxed := false) -> Control:
 	var expanded := selected_offer == id
 	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UiKit.panel_style(UiKit.SURFACE_RAISED if expanded else UiKit.SURFACE, UiKit.GOLD if expanded else UiKit.EDGE, 12))
+	card.add_theme_stylebox_override("panel", UiKit.card_style(expanded))
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 8)
 	card.add_child(col)

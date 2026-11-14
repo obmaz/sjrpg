@@ -87,6 +87,7 @@ try {
   const p=state.panel,scale=state.scale;
   if(!contains(state.safe,p.rect))issues.push('frame exceeds safe viewport');
   for(const key of ['header','close','footer','body_holder'])if(!contains(p.rect,p[key]))issues.push(`${key} exceeds panel`);
+  for(const key of ['header','close','footer','body_holder'])if(p.content_rect&&!contains(p.content_rect,p[key]))issues.push(`${key} overlaps decorative frame`);
   if(p.body_holder[3]/scale<40)issues.push('scroll body has less than 40 display pixels of height');
   for(const c of p.controls) {
    if(!area(c.visible_rect))continue;
@@ -96,8 +97,27 @@ try {
    const visible=c.visible_rect;
    if(visible[0]<p.rect[0]-1.1 || visible[0]+visible[2]>p.rect[0]+p.rect[2]+1.1)issues.push(`horizontal panel overflow: ${c.text||c.path}`);
    if(c.text && c.wrap===0 && c.text_width>c.rect[2]+1.1)issues.push(`unwrapped text exceeds control: ${c.text}`);
+   if(c.kind==='button'&&c.text&&c.art_source&&c.content_rect) {
+    const left=c.content_rect[0]-c.rect[0],right=c.rect[0]+c.rect[2]-c.content_rect[0]-c.content_rect[2];
+    const top=c.content_rect[1]-c.rect[1],bottom=c.rect[1]+c.rect[3]-c.content_rect[1]-c.content_rect[3];
+    if(Math.abs(left-right)>1.1||Math.abs(top-bottom)>1.1)issues.push(`generated button has partially updated padding: ${c.text}`);
+    if(c.wrap===0&&c.text_width>c.content_rect[2]+1.1)issues.push(`button text exceeds painted inner face: ${c.text}`);
+    if(c.text_height>c.content_rect[3]+1.1)issues.push(`button text overlaps painted border: ${c.text}`);
+   }
   }
   for(const scroll of p.scrolls)if(scroll.horizontal_disabled && scroll.content.length && scroll.content[2]>scroll.rect[2]+1.1)issues.push(`horizontal scroll-content overflow: ${scroll.path}`);
+ }
+ async function captureToggleState(result,state,kind,width,height) {
+  if(kind!=='settings')return;
+  result.toggle_states??=[];
+  for(const toggle of state.panel.switches||[]) {
+   if(!contains(state.panel.body_scroll,toggle.rect)||result.toggle_states.some(t=>t.on===toggle.on))continue;
+   if(toggle.font/state.scale<13.99)result.issues.push('switch text below 14 display pixels');
+   // 한 화면에 ON/OFF 스위치가 함께 있을 수 있다. 전환 동작 증거가 아닌 상태 외형 캡처다.
+   const name=`settings-${width}x${height}-switch-${toggle.on?'on':'off'}-present.png`;
+   await page.screenshot({path:`${out}/${name}`,timeout:60000});
+   result.toggle_states.push({...toggle,file:name,scope:'Visible state appearance; no toggle activation performed'});
+  }
  }
  for(const [width,height] of sizes) {
   await closePanel();await page.setViewportSize({width,height});
@@ -107,6 +127,7 @@ try {
    const result={viewport:[width,height],kind,issues:[],scrolls:[]};results.push(result);
    try {
     let state=await openPanel(kind);audit(state,result.issues);
+    await captureToggleState(result,state,kind,width,height);
     result.initial=state;
     await page.screenshot({path:`${out}/${kind}-${width}x${height}-top.png`,timeout:60000});
     for(const initialScroll of state.panel.scrolls.filter(s=>s.maximum>1 && s.rect[2]>1 && s.rect[3]>1)) {
@@ -120,11 +141,15 @@ try {
      if(after<=before+1)result.issues.push(`finger swipe did not advance scroll: ${initialScroll.path}`);
      const next={id:state.panel.id,buttons:state.panel.controls.filter(c=>c.kind==='button').map(c=>[c.path,c.text,c.disabled]),zoom:state.world_zoom,gold:state.gold};
      if(JSON.stringify(identity)!==JSON.stringify(next))result.issues.push(`swipe activated a button: ${initialScroll.path}`);
-     for(let attempt=0;attempt<18;attempt++) {
+     // 장식 여백으로 짧아진 가로 본문도 실제 전체 길이에 맞는 수의 손가락 스와이프로 끝까지 확인한다.
+     const distance=Math.min(220,scroll.rect[3]/state.scale*.55);
+     const attempts=Math.min(240,Math.max(18,Math.ceil((scroll.maximum-scroll.vertical)/state.scale/Math.max(1,distance))*2+8));
+     for(let attempt=0;attempt<attempts;attempt++) {
       scroll=state.panel.scrolls.find(s=>s.path===initialScroll.path);
       if(!scroll || scroll.vertical>=scroll.maximum-2)break;
       const rect=[scroll.rect[0]+scroll.rect[2]*.25,scroll.rect[1]+scroll.rect[3]*.65,scroll.rect[2]*.5,scroll.rect[3]*.1];
       state=await swipe(state,rect,-Math.min(220,scroll.rect[3]/state.scale*.55));
+      await captureToggleState(result,state,kind,width,height);
      }
      scroll=state.panel.scrolls.find(s=>s.path===initialScroll.path);
      const reached=!!scroll && scroll.vertical>=scroll.maximum-2;

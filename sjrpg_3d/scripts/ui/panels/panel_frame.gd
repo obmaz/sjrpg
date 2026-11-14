@@ -59,7 +59,7 @@ func _ready() -> void:
 	add_child(dim)
 
 	_panel = PanelContainer.new()
-	var surface := UiKit.panel_style(UiKit.SURFACE, UiKit.EDGE, 10)
+	var surface := UiKit.frame_style()
 	surface.content_margin_left = 24
 	surface.content_margin_right = 24
 	surface.content_margin_top = 24
@@ -94,6 +94,7 @@ func _ready() -> void:
 	var close := UiKit.button("×", 30)
 	_close = close
 	close.tooltip_text = "모험으로 돌아가기"
+	UiKit.style_button(close, false, false, true)
 	close.custom_minimum_size = Vector2(MIN_TOUCH, MIN_TOUCH)
 	close.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	close.pressed.connect(func(): closed.emit())
@@ -194,7 +195,7 @@ func _layout() -> void:
 	var view := get_viewport().get_visible_rect().size
 	var m := safe_margins(get_viewport())
 	var pad := maxf(12.0, 8.0 * scale)
-	var inside := maxf(18.0, 12.0 * scale)
+	var inside := 34.0 * scale
 	var surface := _panel.get_theme_stylebox("panel")
 	for side: int in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
 		if not is_equal_approx(surface.get_content_margin(side), inside):
@@ -251,7 +252,7 @@ func set_tabs(labels: Array, selected: int, on_select: Callable) -> void:
 	for i in labels.size():
 		var b := UiKit.button(labels[i], 20)
 		b.custom_minimum_size = Vector2(maxf(104.0, labels[i].length() * 30.0 + 34.0), MIN_TOUCH)
-		UiKit.style_button(b, false, i == selected)
+		UiKit.style_button(b, false, i == selected, true)
 		var index := i
 		b.pressed.connect(func(): _on_tab.call(index))
 		tab_row.add_child(b)
@@ -306,6 +307,8 @@ func _fit_widgets(node: Node, scale: float) -> void:
 				control.set_meta("ui_min_height", control.custom_minimum_size.y)
 			var minimum: float = control.get_meta("ui_min_height")
 			control.custom_minimum_size.y = maxf(minimum, ceilf(44.0 * scale))
+	if node is Control:
+		UiKit.fit_generated(node as Control, scale)
 	for child: Node in node.get_children():
 		_fit_widgets(child, scale)
 

@@ -114,7 +114,17 @@ func run() -> void:
 			check("folded settings choices keep their measured width", grid.columns * minimum + (grid.columns - 1) * gap <= width + 1.0 or grid.columns == 1)
 	var toggle := settings.find_child("ShowFps", true, false)
 	var toggle_actions := toggle.find_children("*", "Button", true, false)
-	check("settings toggle uses one standard focusable action", toggle_actions.size() == 1 and (toggle_actions[0] as Button).focus_mode == Control.FOCUS_ALL)
+	check("settings toggle keeps one focusable whole-card action", toggle_actions.size() == 1 and (toggle_actions[0] as Button).focus_mode == Control.FOCUS_ALL)
+	var switch_layout := toggle.find_child("SwitchLayout", true, false) as BoxContainer
+	var switch_pill := toggle.find_child("SwitchPill", true, false) as SettingsPanel.Pill
+	check("settings preserve the ON/OFF pill state", switch_pill != null and switch_pill.on == Prefs.show_fps)
+	for width: float in [260.0, 720.0]:
+		switch_layout.vertical = true
+		switch_layout.size.x = width
+		settings._fit_toggle_rows()
+		check("settings switch copy and pill adapt to available width", switch_layout.vertical == (width == 260.0))
+		check("settings pill keeps readable ON/OFF text", float(switch_pill.font_pixels) / settings.display_pixel_scale() >= 14.0)
+		check("whole-card switch keeps a 44dp touch height", (toggle_actions[0] as Button).custom_minimum_size.y / settings.display_pixel_scale() >= 44.0)
 	view.queue_free()
 	await _frames(2)
 	await _check_run_choices()
@@ -153,6 +163,15 @@ func _check_run_choices() -> void:
 			for other: Rect2 in occupied:
 				check("run skill choices do not overlap", not button.get_global_rect().intersects(other))
 			occupied.append(button.get_global_rect())
+		await _frames(12)
+		var settled_sizes: Array[Vector2] = []
+		for button: Button in panel._skill_grid.get_children():
+			settled_sizes.append(button.size)
+		await _frames(12)
+		for index: int in panel._skill_grid.get_child_count():
+			var button: Button = panel._skill_grid.get_child(index)
+			check("wrapped generated skill buttons settle without layout oscillation %s" % dimensions,
+				button.size.is_equal_approx(settled_sizes[index]))
 	var rune_actions := 0
 	for button: Button in panel.body.find_children("*", "Button", true, false):
 		if button.has_meta("gamepad_key") and str(button.get_meta("gamepad_key")).begins_with("run_rune:"):
